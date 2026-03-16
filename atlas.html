@@ -487,7 +487,7 @@ body.nav-collapsed .topbar-menu{display:flex}
 
 
 <script>
-let D,V='dashboard',ME='',dbRef=null,firebaseReady=false,ganttZoom='6m';
+let D,V='dashboard',ME='',dbRef=null,firebaseReady=false,ganttZoom='6m',ganttShowTasks=false;
 const uid=()=>Math.random().toString(36).slice(2,10);
 const today=()=>new Date().toISOString().slice(0,10);
 const esc=s=>s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):'';
@@ -1447,13 +1447,55 @@ function buildGantt(){
     </div>`;
   }
 
+  if(ganttShowTasks){
+    const allTasks=(D.tasks||[]).filter(t=>!t.isMilestone&&t.status==='open').sort((a,b)=>(a.startDate||a.due||'9').localeCompare(b.startDate||b.due||'9'));
+    const visTasks=allTasks.filter(t=>{
+      const sd=t.startDate||t.due;const ed=t.due||t.startDate;
+      if(!sd&&!ed)return false;
+      const l=pct(sd||ed),r=pct(ed||sd);
+      return r>0&&l<100;
+    });
+    if(visTasks.length){
+      const rowH=24;
+      let taskBars='';
+      visTasks.forEach((t,i)=>{
+        const sd=t.startDate||t.due;const ed=t.due||t.startDate;
+        const hasRange=t.startDate&&t.due&&t.startDate!==t.due;
+        const wc=wsColor(t.workstream)||'var(--muted)';
+        const isDone=t.status==='done';
+        const isOD=t.status==='open'&&t.due&&t.due<today();
+        const barColor=isDone?'var(--green)':isOD?'var(--red)':wc;
+        if(hasRange){
+          const l=Math.max(0,pct(sd)),r=Math.min(100,pct(ed));
+          const w=Math.max(0.3,r-l);
+          taskBars+=`<div class="gantt-bar" style="left:${l}%;width:${w}%;top:${i*rowH+2}px;background:${barColor};color:#fff;font-size:11px;font-weight:500;height:20px;cursor:pointer;opacity:.85" title="${esc(t.title)} (${fmtDate(sd)} — ${fmtDate(ed)})" onclick="openTaskModal('${t.id}')">${esc(t.title)}</div>`;
+        }else{
+          const x=pct(sd);
+          taskBars+=`<div style="position:absolute;left:${x}%;top:${i*rowH+2}px;transform:translateX(-6px);cursor:pointer;display:flex;align-items:center;gap:4px" title="${esc(t.title)} — ${fmtDate(sd)}" onclick="openTaskModal('${t.id}')">
+            <div style="width:12px;height:12px;border-radius:3px;background:${barColor};flex-shrink:0"></div>
+            <span style="font-size:11px;white-space:nowrap;color:var(--text);font-weight:500">${esc(t.title)}</span>
+          </div>`;
+        }
+      });
+      rows+=`<div class="gantt-row" style="margin-top:8px;border-left:4px solid var(--border)">
+        <div class="gantt-row-label phase-label">Action Items</div>
+        <div class="gantt-row-bars" style="height:${Math.max(28,visTasks.length*rowH+8)}px;position:relative">
+          ${gridLines}
+          ${taskBars}
+          ${todayMarker()}
+        </div>
+      </div>`;
+    }
+  }
 
+  const taskToggle=`<label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--muted);margin-left:12px;user-select:none"><input type="checkbox" ${ganttShowTasks?'checked':''} onchange="ganttShowTasks=this.checked;render()" style="cursor:pointer"> Action Items</label>`;
 
   return `<div class="gantt">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:0 4px">
       <div style="font-size:13px;color:var(--muted)">Starting ${new Date(tStart).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
       <div style="display:flex;gap:4px;align-items:center">
-        <span style="font-size:12px;color:var(--light);margin-right:4px">Zoom:</span>${zoomBtns}
+        ${taskToggle}
+        <span style="font-size:12px;color:var(--light);margin-left:8px;margin-right:4px">Zoom:</span>${zoomBtns}
       </div>
     </div>
     <div style="display:flex">
@@ -1728,6 +1770,7 @@ function rTasks(c){
   const pv={high:0,medium:1,low:2};
   if(taskSort==='title')items.sort((a,b)=>taskSortDir*a.title.localeCompare(b.title));
   else if(taskSort==='owner')items.sort((a,b)=>taskSortDir*(a.owner||'').localeCompare(b.owner||''));
+  else if(taskSort==='start')items.sort((a,b)=>taskSortDir*(a.startDate||'9').localeCompare(b.startDate||'9'));
   else if(taskSort==='due')items.sort((a,b)=>taskSortDir*(a.due||'9').localeCompare(b.due||'9'));
   else if(taskSort==='priority')items.sort((a,b)=>taskSortDir*((pv[a.priority]??1)-(pv[b.priority]??1)));
   else if(taskSort==='workstream')items.sort((a,b)=>taskSortDir*wsName(a.workstream).localeCompare(wsName(b.workstream)));
@@ -1753,12 +1796,13 @@ function rTasks(c){
   ${items.length?`<div class="card"><table class="tbl" style="table-layout:fixed;width:100%">
     <thead><tr>
       <th style="width:28px"></th>
-      <th style="cursor:pointer;width:30%" onclick="sortTasks('title')">Action Item${sIco('title')}</th>
-      <th style="cursor:pointer;width:13%" onclick="sortTasks('workstream')">Workstream${sIco('workstream')}</th>
-      <th style="cursor:pointer;width:13%" onclick="sortTasks('engagement')">Engagement${sIco('engagement')}</th>
-      <th style="cursor:pointer;width:11%" onclick="sortTasks('owner')">Owner${sIco('owner')}</th>
-      <th style="cursor:pointer;width:9%" onclick="sortTasks('due')">Due${sIco('due')}</th>
-      <th style="cursor:pointer;width:8%" onclick="sortTasks('priority')">Priority${sIco('priority')}</th>
+      <th style="cursor:pointer;width:26%" onclick="sortTasks('title')">Action Item${sIco('title')}</th>
+      <th style="cursor:pointer;width:11%" onclick="sortTasks('workstream')">Workstream${sIco('workstream')}</th>
+      <th style="cursor:pointer;width:11%" onclick="sortTasks('engagement')">Engagement${sIco('engagement')}</th>
+      <th style="cursor:pointer;width:10%" onclick="sortTasks('owner')">Owner${sIco('owner')}</th>
+      <th style="cursor:pointer;width:8%" onclick="sortTasks('start')">Start${sIco('start')}</th>
+      <th style="cursor:pointer;width:8%" onclick="sortTasks('due')">Target${sIco('due')}</th>
+      <th style="cursor:pointer;width:7%" onclick="sortTasks('priority')">Priority${sIco('priority')}</th>
       <th style="width:28px"></th>
     </tr></thead>
     <tbody>${items.map(t=>{
@@ -1773,7 +1817,8 @@ function rTasks(c){
         <td style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)">${wsName(t.workstream)||'—'}</td>
         <td style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)">${eName?esc(eName):'—'}</td>
         <td style="font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)">${esc(t.owner)||'—'}</td>
-        <td style="font-size:11.5px;white-space:nowrap;${isOD?'color:var(--red);font-weight:600':''}">${t.due?fmtDate(t.due):'—'}</td>
+        <td style="font-size:11px;white-space:nowrap;color:var(--muted)">${t.startDate?fmtDate(t.startDate):'—'}</td>
+        <td style="font-size:11px;white-space:nowrap;${isOD?'color:var(--red);font-weight:600':''}">${t.due?fmtDate(t.due):'—'}</td>
         <td><span class="pill ${pp}" style="font-size:10px">${t.priority}</span></td>
         <td onclick="event.stopPropagation()"><button style="color:var(--red);font-size:11px;background:none;border:none;cursor:pointer" onclick="delTask('${t.id}')">&#10005;</button></td>
       </tr>`}).join('')}</tbody></table></div>`:
@@ -1790,7 +1835,8 @@ function openTaskModal(id){
     <div style="padding:8px 0 10px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px"><input type="checkbox" id="t-milestone" ${t?.isMilestone?'checked':''}> <span style="font-size:16px">&#9733;</span> <strong>Mark as Milestone</strong> <span style="color:var(--muted);font-size:12px">— shows on timeline and reports</span></label></div>
     <div class="fg-row">
       <div class="fg"><label>Owner</label><select id="t-owner">${peopleOpts(t?.owner||'')}</select></div>
-      <div class="fg"><label>Due Date</label><input type="date" id="t-due" value="${t?t.due:''}"></div>
+      <div class="fg"><label>Start Date</label><input type="date" id="t-start" value="${t?.startDate||''}"></div>
+      <div class="fg"><label>Target Date</label><input type="date" id="t-due" value="${t?t.due:''}"></div>
     </div>
     <div class="fg-row">
       <div class="fg"><label>Priority</label><select id="t-pri"><option value="high"${t?.priority==='high'?' selected':''}>High</option><option value="medium"${(!t||t.priority==='medium')?' selected':''}>Medium</option><option value="low"${t?.priority==='low'?' selected':''}>Low</option></select></div>
@@ -1815,6 +1861,7 @@ function saveTask(id){
   const isNew=!t;
   if(!t){t={id:uid(),created:today(),source:'',addedBy:ME};D.tasks.push(t)}
   t.title=title;t.owner=document.getElementById('t-owner').value.trim();
+  t.startDate=document.getElementById('t-start').value;
   t.due=document.getElementById('t-due').value;
   t.priority=document.getElementById('t-pri').value;
   t.status=document.getElementById('t-status').value;
