@@ -1105,6 +1105,7 @@ function badges(){
   const inboxCount=(D.inbox||[]).filter(x=>!x.processed).length;
   const ie=document.getElementById('nb-inbox');ie.textContent=inboxCount||'';ie.className='badge'+(inboxCount?' warn':'');ie.style.display=inboxCount?'':'none';
   const ee=document.getElementById('nb-eng');if(ee)ee.textContent=(D.engagements||[]).length;
+  const we=document.getElementById('nb-ws');if(we)we.textContent=(D.workstreams||[]).length;
   document.getElementById('nb-ppl').textContent=(D.people||[]).length;
 }
 
@@ -1207,11 +1208,16 @@ function submitQC(){
 }
 
 function wsName(id){const w=(D.workstreams||[]).find(x=>x.id===id);return w?esc(w.name):'—'}
-function wsColor(id){const w=WS_DEFS.find(x=>x.id===id);return w?w.color:'var(--muted)'}
+function wsColor(id){const w=(D.workstreams||[]).find(x=>x.id===id)||WS_DEFS.find(x=>x.id===id);return w?w.color:'var(--muted)'}
 function wsOpts(sel){
-  const bu=WS_DEFS.filter(w=>w.category==='BU');
-  const cc=WS_DEFS.filter(w=>w.category==='Cross-cutting');
-  return `<optgroup label="Business Unit">${bu.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''}>${w.name}</option>`).join('')}</optgroup><optgroup label="Cross-cutting">${cc.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''}>${w.name}</option>`).join('')}</optgroup>`;
+  const ws=D.workstreams||[];
+  const bu=ws.filter(w=>w.category==='BU');
+  const cc=ws.filter(w=>w.category==='Cross-cutting');
+  const other=ws.filter(w=>w.category!=='BU'&&w.category!=='Cross-cutting');
+  let html=`<optgroup label="Business Unit">${bu.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}</optgroup>`;
+  html+=`<optgroup label="Cross-cutting">${cc.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}</optgroup>`;
+  if(other.length)html+=`<optgroup label="Other">${other.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}</optgroup>`;
+  return html;
 }
 function engOpts(sel){return(D.engagements||[]).filter(e=>e.type==='Use Case').sort((a,b)=>a.title.localeCompare(b.title)).map(e=>`<option value="${e.id}"${sel===e.id?' selected':''}>${esc(e.title)}</option>`).join('')}
 function engName(id){const e=(D.engagements||[]).find(x=>x.id===id);return e?e.title:''}
@@ -1527,39 +1533,57 @@ async function runAIInsights(){
 // ═══════════════════════════════════════════════════
 // WORKSTREAMS
 // ═══════════════════════════════════════════════════
+let wsLeadFilter='';
 function rWork(c){
-  const renderCat=(cat,label)=>{
-    const catWs=(D.workstreams||[]).filter(w=>(w.category||WS_DEFS.find(d=>d.id===w.id)?.category)===cat);
-    if(!catWs.length)return'';
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  const leads=[...new Set((D.workstreams||[]).map(w=>w.owner).filter(Boolean))].sort();
+
+  const renderCard=(w)=>{
+    const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);
+    const wMsDone=wMs.filter(t=>t.status==='done').length;
+    const wTasks=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;
+    const sc=statusColors[w.status]||'pill-m';
+    return `<div class="card ws-card" onclick="openWsDetail('${w.id}')" style="border-top:3px solid ${wsColor(w.id)}">
+      <div class="ws-hd"><h4>${esc(w.name)}</h4><span class="pill ${sc}">${w.status}</span></div>
+      <div class="ws-desc">${esc(w.desc)}</div>
+      <div class="ws-meta">
+        <span>Lead: <strong>${esc(w.owner)||'Unassigned'}</strong></span>
+        <span>${w.category||''}</span>
+        <span>Milestones: ${wMsDone}/${wMs.length}</span>
+        <span>Tasks: ${wTasks} open</span>
+      </div>
+    </div>`;
+  };
+
+  let allWs=(D.workstreams||[]).slice();
+  if(wsLeadFilter==='__unassigned__')allWs=allWs.filter(w=>!w.owner);
+  else if(wsLeadFilter)allWs=allWs.filter(w=>w.owner===wsLeadFilter);
+  if(q)allWs=allWs.filter(w=>(w.name+' '+w.desc+' '+w.owner+' '+(w.category||'')).toLowerCase().includes(q));
+
+  const buWs=allWs.filter(w=>(w.category||WS_DEFS.find(d=>d.id===w.id)?.category)==='BU');
+  const ccWs=allWs.filter(w=>(w.category||WS_DEFS.find(d=>d.id===w.id)?.category)==='Cross-cutting');
+
+  const filterBar=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+    <div style="font-size:16px;font-weight:800;letter-spacing:-.01em">Workstreams</div>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <select style="padding:5px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12.5px;font-family:inherit;background:var(--bg-subtle);color:var(--text);cursor:pointer;outline:none" onchange="wsLeadFilter=this.value;render()">
+        <option value="">All Leads</option>
+        <option value="__unassigned__"${wsLeadFilter==='__unassigned__'?' selected':''}>Unassigned</option>
+        ${leads.map(l=>`<option value="${esc(l)}"${wsLeadFilter===l?' selected':''}>${esc(l)}</option>`).join('')}
+      </select>
+      <button class="tb-btn" style="background:var(--accent);color:#fff" onclick="openWsEdit()">+ Add Workstream</button>
+    </div>
+  </div>`;
+
+  const renderCat=(items,label)=>{
+    if(!items.length)return'';
     return `<div style="margin-bottom:24px">
     <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:10px">${label}</div>
-    <div class="ws-grid">${catWs.map(w=>{
-      const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);
-      const wMsDone=wMs.filter(t=>t.status==='done').length;
-      const wTasks=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;
-      const wEng=(D.engagements||[]).filter(e=>e.workstream===w.id).length;
-      const sc=statusColors[w.status]||'pill-m';
-      return `<div class="card ws-card" onclick="openWsDetail('${w.id}')" style="border-top:3px solid ${wsColor(w.id)}">
-        <div class="ws-hd"><h4>${esc(w.name)}</h4><span class="pill ${sc}">${w.status}</span></div>
-        <div class="ws-desc">${esc(w.desc)}</div>
-        <div class="ws-meta">
-          <span>Owner: <strong>${esc(w.owner)||'Unassigned'}</strong></span>
-          <span>Milestones: ${wMsDone}/${wMs.length}</span>
-          <span>Tasks: ${wTasks} open</span>
-          <span>Engagements: ${wEng}</span>
-        </div>
-      </div>`}).join('')}</div></div>`;
+    <div class="ws-grid">${items.map(renderCard).join('')}</div></div>`;
   };
-  const q=(document.getElementById('search').value||'').toLowerCase();
-  let engItems=(D.engagements||[]).slice();
-  if(engFilter!=='all'){
-    if(pipeStages.includes(engFilter))engItems=engItems.filter(e=>e.stage===engFilter);
-    else engItems=engItems.filter(e=>e.type===engFilter);
-  }
-  if(q)engItems=engItems.filter(e=>(e.title+' '+e.notes+' '+(e.type||'')+' '+(e.requestor||'')+' '+wsName(e.workstream)).toLowerCase().includes(q));
-  engItems.sort((a,b)=>{const so={active:0,scoping:1,intake:2,'on-hold':3,complete:4};return (so[a.status]??2)-(so[b.status]??2)});
 
-  const ucItems=(D.engagements||[]).filter(e=>e.type==='Use Case');
+  const engItems=(D.engagements||[]).slice();
+  const ucItems=engItems.filter(e=>e.type==='Use Case');
   const pipelineHtml=ucItems.length?`<div class="card" style="margin-bottom:14px;padding:14px 18px">
     <div style="font-size:13px;font-weight:700;margin-bottom:10px">Use Case Pipeline</div>
     <div style="display:flex;gap:4px;align-items:center">${pipeStages.map(s=>{
@@ -1567,7 +1591,15 @@ function rWork(c){
       return `<div style="flex:1;text-align:center;cursor:pointer" onclick="engFilter='${s}';render()"><div style="position:relative;border-radius:var(--r-sm);height:36px;display:flex;align-items:center;justify-content:center"><div style="position:absolute;inset:0;background:${pipeStageColors[s]||'var(--muted)'};opacity:.15;border-radius:var(--r-sm)"></div><span style="position:relative;z-index:1;font-size:16px;font-weight:800;color:#000">${cnt}</span></div><div style="font-size:11.5px;font-weight:600;margin-top:4px;color:${pipeStageColors[s]}">${s}</div></div>`}).join('<div style="font-size:16px;color:var(--muted)">&#8250;</div>')}</div>
   </div>`:'';
 
-  const engListHtml=engItems.length?engItems.map(e=>{
+  let filteredEng=engItems.slice();
+  if(engFilter!=='all'){
+    if(pipeStages.includes(engFilter))filteredEng=filteredEng.filter(e=>e.stage===engFilter);
+    else filteredEng=filteredEng.filter(e=>e.type===engFilter);
+  }
+  if(q)filteredEng=filteredEng.filter(e=>(e.title+' '+e.notes+' '+(e.type||'')+' '+(e.requestor||'')+' '+wsName(e.workstream)).toLowerCase().includes(q));
+  filteredEng.sort((a,b)=>{const so={active:0,scoping:1,intake:2,'on-hold':3,complete:4};return (so[a.status]??2)-(so[b.status]??2)});
+
+  const engListHtml=filteredEng.length?filteredEng.map(e=>{
     const eTasks=(D.tasks||[]).filter(t=>t.engagement===e.id);
     const eRisks=(D.risks||[]).filter(r=>r.engagement===e.id);
     const eDecs=(D.decisions||[]).filter(d=>d.engagement===e.id);
@@ -1586,61 +1618,71 @@ function rWork(c){
       <div class="eng-body">${esc(e.notes?.substring(0,200)||'No description')}</div>
       <div class="eng-meta">
         ${e.workstream?'<span>Workstream: <strong>'+esc(wsName(e.workstream))+'</strong></span>':''}
-        ${e.owner?'<span>Owner: '+esc(e.owner)+'</span>':''}
+        ${e.owner?'<span>Lead: '+esc(e.owner)+'</span>':''}
         ${e.requestor?'<span>Requestor: '+esc(e.requestor)+'</span>':''}
         ${e.updatedBy?'<span>Last edit: '+esc(e.updatedBy)+'</span>':e.addedBy?'<span>Added by: '+esc(e.addedBy)+'</span>':''}
         ${(e.links||[]).length?e.links.map(l=>'<span onclick="event.stopPropagation()"><a href="'+esc(l.url)+'" target="_blank" style="color:var(--indigo);text-decoration:none;font-weight:500" title="'+esc(l.url)+'">&#128279; '+esc(l.label||'Link')+'</a></span>').join(''):''}
       </div>
-    </div>`}).join(''):'<div class="empty"><p style="color:var(--muted)">No engagements yet — add one to get started</p></div>';
+    </div>`}).join(''):'';
 
   const clearFilter=engFilter!=='all'?'<div style="display:flex;align-items:center;gap:6px;margin-bottom:14px"><div class="pill pill-i" style="cursor:pointer" onclick="engFilter=\'all\';render()">&#10005; Clear filter: '+esc(engFilter)+'</div></div>':'';
 
-  c.innerHTML=renderCat('BU','Business Unit')+renderCat('Cross-cutting','Cross-cutting')
-    +`<div style="margin-top:28px;border-top:2px solid var(--border);padding-top:20px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em">Workstreams</div>
-        <button class="tb-btn" style="background:var(--accent);color:#fff" onclick="openEngModal()">+ Add Item</button>
-      </div>
-      ${pipelineHtml}${clearFilter}${engListHtml}
-    </div>`;
+  const engSection=(engItems.length||true)?`<div style="margin-top:28px;border-top:2px solid var(--border);padding-top:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-size:14px;font-weight:700">Use Cases &amp; Engagements</div>
+      <button class="tb-btn" style="background:var(--accent);color:#fff" onclick="openEngModal()">+ Add</button>
+    </div>
+    ${pipelineHtml}${clearFilter}${engListHtml}
+  </div>`:'';
+
+  c.innerHTML=filterBar+renderCat(buWs,'Business Unit')+renderCat(ccWs,'Cross-cutting')+engSection;
 }
 
-function openWsDetail(id){
-  const w=(D.workstreams||[]).find(x=>x.id===id);if(!w)return;
-  const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===id).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
-  const wTasks=(D.tasks||[]).filter(t=>!t.isMilestone&&t.workstream===id);
-  const wEng=(D.engagements||[]).filter(e=>e.workstream===id);
-  openModal(`<div class="m-hd"><h3 style="display:flex;align-items:center;gap:8px"><span style="width:4px;height:20px;border-radius:2px;background:${wsColor(id)};display:inline-block"></span>${esc(w.name)}</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+function openWsEdit(id){
+  const w=id?(D.workstreams||[]).find(x=>x.id===id):null;
+  const colors=['#6366f1','#8b5cf6','#0ea5e9','#0d9488','#475569','#2563eb','#7c3aed','#059669','#d946ef','#f59e0b','#ef4444','#64748b'];
+  openModal(`<div class="m-hd"><h3>${w?'Edit':'New'} Workstream</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
+    <div class="fg"><label>Name</label><input id="ws-name" value="${w?esc(w.name):''}"></div>
     <div class="fg-row">
-      <div class="fg"><label>Status</label><select id="ws-status"><option value="on-track"${w.status==='on-track'?' selected':''}>On Track</option><option value="at-risk"${w.status==='at-risk'?' selected':''}>At Risk</option><option value="blocked"${w.status==='blocked'?' selected':''}>Blocked</option><option value="complete"${w.status==='complete'?' selected':''}>Complete</option></select></div>
-      <div class="fg"><label>Owner</label><select id="ws-owner">${peopleOpts(w.owner||'')}</select></div>
+      <div class="fg"><label>Lead</label><select id="ws-owner">${peopleOpts(w?.owner||'')}</select></div>
+      <div class="fg"><label>Category</label><select id="ws-cat"><option value="BU"${w?.category==='BU'?' selected':''}>Business Unit</option><option value="Cross-cutting"${(!w||w?.category==='Cross-cutting')?' selected':''}>Cross-cutting</option></select></div>
     </div>
-    <div class="fg"><label>Notes / Status Update</label><textarea id="ws-notes" style="min-height:60px">${esc(w.notes)}</textarea></div>
-    <div style="margin-top:10px">
-      <h4 style="font-size:12px;font-weight:700;margin-bottom:6px">&#9733; Milestones (${wMs.length})</h4>
-      ${wMs.length?wMs.map(m=>{const isDone=m.status==='done';const isOD=m.status==='open'&&m.due&&m.due<today();const sc=isDone?'pill-g':isOD?'pill-r':'pill-a';const lbl=isDone?'done':isOD?'overdue':'upcoming';
-        return `<div style="display:flex;align-items:center;gap:6px;padding:5px 4px;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openTaskModal('${m.id}'),150)" onmouseover="this.style.background='var(--border-lt)'" onmouseout="this.style.background=''"><span class="pill ${sc}" style="min-width:60px;text-align:center">${lbl}</span><span style="flex:1">${esc(m.title)}</span><span style="color:var(--light);font-size:11px">${fmtDate(m.due)}</span></div>`}).join(''):'<p style="font-size:11px;color:var(--light)">No milestones linked</p>'}
+    <div class="fg-row">
+      <div class="fg"><label>Status</label><select id="ws-status"><option value="on-track"${(!w||w?.status==='on-track')?' selected':''}>On Track</option><option value="at-risk"${w?.status==='at-risk'?' selected':''}>At Risk</option><option value="blocked"${w?.status==='blocked'?' selected':''}>Blocked</option><option value="complete"${w?.status==='complete'?' selected':''}>Complete</option></select></div>
+      <div class="fg"><label>Color</label><select id="ws-color">${colors.map(cl=>`<option value="${cl}"${(w?.color||'#6366f1')===cl?' selected':''} style="background:${cl};color:#fff">${cl}</option>`).join('')}</select></div>
     </div>
-    <div style="margin-top:10px">
-      <h4 style="font-size:12px;font-weight:700;margin-bottom:6px">Open Tasks (${wTasks.filter(t=>t.status==='open').length})</h4>
-      ${wTasks.filter(t=>t.status==='open').length?wTasks.filter(t=>t.status==='open').slice(0,8).map(t=>`<div style="font-size:12px;padding:5px 4px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openTaskModal('${t.id}'),150)" onmouseover="this.style.background='var(--border-lt)'" onmouseout="this.style.background=''">${esc(t.title)}${t.owner?' — <span style="color:var(--light)">'+esc(t.owner)+'</span>':''}</div>`).join(''):'<p style="font-size:11px;color:var(--light)">No open tasks</p>'}
-    </div>
-    <div style="margin-top:10px">
-      <h4 style="font-size:12px;font-weight:700;margin-bottom:6px">Engagements (${wEng.length})</h4>
-      ${wEng.length?wEng.map(e=>`<div style="font-size:12px;padding:5px 4px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openEngModal('${e.id}'),150)" onmouseover="this.style.background='var(--border-lt)'" onmouseout="this.style.background=''">${esc(e.title)} — <span class="pill ${engStatusColors[e.status]||'pill-m'}">${e.status}</span></div>`).join(''):'<p style="font-size:11px;color:var(--light)">No engagements linked</p>'}
-    </div>
+    <div class="fg"><label>Description</label><textarea id="ws-desc" style="min-height:50px">${w?esc(w.desc):''}</textarea></div>
+    <div class="fg"><label>Notes / Status Update</label><textarea id="ws-notes" style="min-height:50px">${w?esc(w.notes||''):''}</textarea></div>
   </div>
-  <div class="m-ft"><button class="mbtn mb-cancel" onclick="closeModal()">Cancel</button><button class="mbtn mb-save" onclick="saveWs('${id}')">Save</button></div>`);
+  <div class="m-ft">
+    ${w?'<button class="mbtn mb-del" onclick="delWs(\''+w.id+'\');closeModal()">Delete</button>':''}
+    <button class="mbtn mb-cancel" onclick="closeModal()">Cancel</button>
+    <button class="mbtn mb-save" onclick="saveWs('${id||''}')">Save</button>
+  </div>`);
 }
 function saveWs(id){
-  const w=(D.workstreams||[]).find(x=>x.id===id);if(!w)return;
-  w.status=document.getElementById('ws-status').value;
+  const name=(document.getElementById('ws-name').value||'').trim();
+  if(!name){toast('Name is required');return}
+  let w=id?(D.workstreams||[]).find(x=>x.id===id):null;
+  const isNew=!w;
+  if(!w){w={id:uid(),phase:'0-30'};D.workstreams.push(w)}
+  w.name=name;
   w.owner=document.getElementById('ws-owner').value.trim();
+  w.category=document.getElementById('ws-cat').value;
+  w.status=document.getElementById('ws-status').value;
+  w.color=document.getElementById('ws-color').value;
+  w.desc=document.getElementById('ws-desc').value.trim();
   w.notes=document.getElementById('ws-notes').value;
   w.updatedBy=ME;w.updatedAt=new Date().toISOString();
-  save();log('Updated workstream: '+esc(w.name));closeModal();render();toast('Workstream updated');
+  save();log((isNew?'Added':'Updated')+' workstream: '+esc(w.name));closeModal();render();
+  toast(isNew?'Workstream added':'Workstream updated');
 }
+function delWs(id){
+  D.workstreams=(D.workstreams||[]).filter(w=>w.id!==id);
+  save();log('Deleted workstream');render();toast('Workstream deleted');
+}
+function openWsDetail(id){openWsEdit(id)}
 
 // ═══════════════════════════════════════════════════
 // ENGAGEMENTS
