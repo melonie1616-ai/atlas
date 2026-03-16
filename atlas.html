@@ -384,10 +384,7 @@ body.nav-collapsed .topbar-menu{display:flex}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
         Workstreams <span class="badge" id="nb-ws">8</span>
       </div>
-      <div class="ni" data-v="engagements" onclick="go('engagements')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6m3-3h-6"/></svg>
-        Engagements <span class="badge" id="nb-eng">0</span>
-      </div>
+      <span id="nb-eng" style="display:none"></span>
       <div class="ni" data-v="people" onclick="go('people')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         People <span class="badge" id="nb-ppl">0</span>
@@ -1086,19 +1083,18 @@ function go(v){
     risks:'Risk Register',metrics:'Success Metrics'};
   document.getElementById('viewTitle').textContent=titles[v]||v;
   const ab=document.getElementById('addBtn');
+  if(v==='engagements')v=V='workstreams';
   if(v==='tasks'){ab.style.display='';ab.textContent='+ Add Action Item'}
-  else if(v==='engagements'){ab.style.display='';ab.textContent='+ Add Engagement'}
   else if(v==='people'){ab.style.display='';ab.textContent='+ Add Person'}
   else{ab.style.display='none'}
   const sb=document.getElementById('search');
-  const searchViews=['tasks','engagements','people','decisions','risks'];
+  const searchViews=['tasks','workstreams','people','decisions','risks'];
   sb.style.display=searchViews.includes(v)?'':'none';
   if(!searchViews.includes(v))sb.value='';
   render();
 }
 function handleAdd(){
   if(V==='tasks')openTaskModal();
-  else if(V==='engagements')openEngModal();
   else if(V==='people')openPersonModal();
 }
 
@@ -1108,14 +1104,13 @@ function badges(){
   const te=document.getElementById('nb-tasks');te.textContent=open.length;te.className='badge'+(overdue.length?' warn':open.length?' hot':'');
   const inboxCount=(D.inbox||[]).filter(x=>!x.processed).length;
   const ie=document.getElementById('nb-inbox');ie.textContent=inboxCount||'';ie.className='badge'+(inboxCount?' warn':'');ie.style.display=inboxCount?'':'none';
-  document.getElementById('nb-eng').textContent=(D.engagements||[]).length;
-  const ee=document.getElementById('nb-eng');ee.className='badge'+((D.engagements||[]).length?' hot':'');
+  const ee=document.getElementById('nb-eng');if(ee)ee.textContent=(D.engagements||[]).length;
   document.getElementById('nb-ppl').textContent=(D.people||[]).length;
 }
 
 function render(){
   const c=document.getElementById('content');
-  ({dashboard:rDash,workstreams:rWork,engagements:rEng,
+  ({dashboard:rDash,workstreams:rWork,
     tasks:rTasks,extract:rExtract,people:rPeople,report:rReport,strategy:rStrategy,
     decisions:rDecisions,risks:rRisks,metrics:rMetrics})[V]?.(c);
   badges();autoUpdateMilestones();
@@ -1246,7 +1241,7 @@ function rDash(c){
   <div class="kpi-row">
     <div class="card kpi" style="cursor:pointer" onclick="go('tasks')"><div class="acc" style="background:var(--indigo)"></div><div class="lbl">Open Items</div><div class="val" style="color:var(--indigo)">${open.length}</div><div class="note">${overdue.length?'<span style="color:var(--red);font-weight:600">'+overdue.length+' overdue</span>':'<span style="color:var(--green)">All on track</span>'}</div></div>
     <div class="card kpi" style="cursor:pointer" onclick="taskFilter='milestones';go('tasks')"><div class="acc" style="background:var(--teal)"></div><div class="lbl">Milestones</div><div class="val" style="color:var(--teal)">${msDone.length}<span style="font-size:18px;color:var(--light);font-weight:500">/${allMs.length}</span></div><div class="note">${msOD.length?'<span style="color:var(--red);font-weight:600">'+msOD.length+' overdue</span>':msUp.length+' upcoming'}</div></div>
-    <div class="card kpi" style="cursor:pointer" onclick="go('engagements')"><div class="acc" style="background:var(--violet)"></div><div class="lbl">Active Engagements</div><div class="val" style="color:var(--violet)">${activeEng.length}</div><div class="note">${engs.length} total</div></div>
+    <div class="card kpi" style="cursor:pointer" onclick="go('workstreams')"><div class="acc" style="background:var(--violet)"></div><div class="lbl">Active Engagements</div><div class="val" style="color:var(--violet)">${activeEng.length}</div><div class="note">${engs.length} total</div></div>
   </div>
 
   ${['BU','Cross-cutting'].map(cat=>{
@@ -1555,7 +1550,60 @@ function rWork(c){
         </div>
       </div>`}).join('')}</div></div>`;
   };
-  c.innerHTML=renderCat('BU','Business Unit')+renderCat('Cross-cutting','Cross-cutting');
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  let engItems=(D.engagements||[]).slice();
+  if(engFilter!=='all'){
+    if(pipeStages.includes(engFilter))engItems=engItems.filter(e=>e.stage===engFilter);
+    else engItems=engItems.filter(e=>e.type===engFilter);
+  }
+  if(q)engItems=engItems.filter(e=>(e.title+' '+e.bu+' '+e.notes+' '+(e.type||'')+' '+(e.requestor||'')+' '+wsName(e.workstream)).toLowerCase().includes(q));
+  engItems.sort((a,b)=>{const so={active:0,scoping:1,intake:2,'on-hold':3,complete:4};return (so[a.status]??2)-(so[b.status]??2)});
+
+  const ucItems=(D.engagements||[]).filter(e=>e.type==='Use Case');
+  const pipelineHtml=ucItems.length?`<div class="card" style="margin-bottom:14px;padding:14px 18px">
+    <div style="font-size:13px;font-weight:700;margin-bottom:10px">Use Case Pipeline</div>
+    <div style="display:flex;gap:4px;align-items:center">${pipeStages.map(s=>{
+      const cnt=ucItems.filter(u=>u.stage===s).length;
+      return `<div style="flex:1;text-align:center;cursor:pointer" onclick="engFilter='${s}';render()"><div style="position:relative;border-radius:var(--r-sm);height:36px;display:flex;align-items:center;justify-content:center"><div style="position:absolute;inset:0;background:${pipeStageColors[s]||'var(--muted)'};opacity:.15;border-radius:var(--r-sm)"></div><span style="position:relative;z-index:1;font-size:16px;font-weight:800;color:#000">${cnt}</span></div><div style="font-size:11.5px;font-weight:600;margin-top:4px;color:${pipeStageColors[s]}">${s}</div></div>`}).join('<div style="font-size:16px;color:var(--muted)">&#8250;</div>')}</div>
+  </div>`:'';
+
+  const engListHtml=engItems.length?engItems.map(e=>{
+    const eTasks=(D.tasks||[]).filter(t=>t.engagement===e.id);
+    const eRisks=(D.risks||[]).filter(r=>r.engagement===e.id);
+    const eDecs=(D.decisions||[]).filter(d=>d.engagement===e.id);
+    const eMets=(D.metrics||[]).filter(m=>m.engagement===e.id);
+    const eTasksOpen=eTasks.filter(t=>t.status==='open').length;
+    return `<div class="card eng-card" onclick="openEngModal('${e.id}')">
+      <div class="eng-hd">
+        <div><h4>${esc(e.title)}</h4><div style="display:flex;gap:4px;margin-top:4px">${e.stage?'<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;color:#fff;background:'+(pipeStageColors[e.stage]||'var(--muted)')+'">'+esc(e.stage)+'</span>':''}</div></div>
+        <div style="display:flex;gap:8px;font-size:11px;color:var(--muted);flex-shrink:0">
+          ${eTasks.length?'<span title="Action Items" style="display:flex;align-items:center;gap:3px'+(eTasksOpen?';color:var(--indigo);font-weight:600':'')+'">'+(eTasksOpen?'<span style="background:var(--indigo);color:#fff;width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">'+eTasksOpen+'</span>':'<span style="font-size:13px">&#10003;</span>')+' Items</span>':''}
+          ${eRisks.length?'<span title="Risks" style="display:flex;align-items:center;gap:3px;color:var(--red)"><strong>'+eRisks.length+'</strong> Risk'+(eRisks.length>1?'s':'')+'</span>':''}
+          ${eDecs.length?'<span title="Decisions" style="display:flex;align-items:center;gap:3px"><strong>'+eDecs.length+'</strong> Decision'+(eDecs.length>1?'s':'')+'</span>':''}
+          ${eMets.length?'<span title="Metrics" style="display:flex;align-items:center;gap:3px"><strong>'+eMets.length+'</strong> Metric'+(eMets.length>1?'s':'')+'</span>':''}
+        </div>
+      </div>
+      <div class="eng-body">${esc(e.notes?.substring(0,200)||'No description')}</div>
+      <div class="eng-meta">
+        ${e.bu?'<span>BU: <strong>'+esc(e.bu)+'</strong></span>':''}
+        ${e.workstream?'<span>Workstream: <strong>'+esc(wsName(e.workstream))+'</strong></span>':''}
+        ${e.owner?'<span>Owner: '+esc(e.owner)+'</span>':''}
+        ${e.requestor?'<span>Requestor: '+esc(e.requestor)+'</span>':''}
+        ${e.updatedBy?'<span>Last edit: '+esc(e.updatedBy)+'</span>':e.addedBy?'<span>Added by: '+esc(e.addedBy)+'</span>':''}
+        ${(e.links||[]).length?e.links.map(l=>'<span onclick="event.stopPropagation()"><a href="'+esc(l.url)+'" target="_blank" style="color:var(--indigo);text-decoration:none;font-weight:500" title="'+esc(l.url)+'">&#128279; '+esc(l.label||'Link')+'</a></span>').join(''):''}
+      </div>
+    </div>`}).join(''):'<div class="empty"><p style="color:var(--muted)">No engagements yet — add one to get started</p></div>';
+
+  const clearFilter=engFilter!=='all'?'<div style="display:flex;align-items:center;gap:6px;margin-bottom:14px"><div class="pill pill-i" style="cursor:pointer" onclick="engFilter=\'all\';render()">&#10005; Clear filter: '+esc(engFilter)+'</div></div>':'';
+
+  c.innerHTML=renderCat('BU','Business Unit')+renderCat('Cross-cutting','Cross-cutting')
+    +`<div style="margin-top:28px;border-top:2px solid var(--border);padding-top:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em">Engagements &amp; Use Cases</div>
+        <button class="tb-btn" style="background:var(--accent);color:#fff" onclick="openEngModal()">+ Add Engagement</button>
+      </div>
+      ${pipelineHtml}${clearFilter}${engListHtml}
+    </div>`;
 }
 
 function openWsDetail(id){
@@ -1599,55 +1647,6 @@ function saveWs(id){
 // ENGAGEMENTS
 // ═══════════════════════════════════════════════════
 let engFilter='all';
-function rEng(c){
-  const q=(document.getElementById('search').value||'').toLowerCase();
-  let items=(D.engagements||[]).slice();
-  if(engFilter!=='all'){
-    if(pipeStages.includes(engFilter))items=items.filter(e=>e.stage===engFilter);
-    else items=items.filter(e=>e.type===engFilter);
-  }
-  if(q)items=items.filter(e=>(e.title+' '+e.bu+' '+e.notes+' '+e.contacts+' '+(e.type||'')+' '+(e.requestor||'')+' '+getEngPeopleNames(e.peopleIds)).toLowerCase().includes(q));
-  items.sort((a,b)=>{const so={active:0,scoping:1,intake:2,'on-hold':3,complete:4};return (so[a.status]??2)-(so[b.status]??2)});
-
-  const typeCounts={};(D.engagements||[]).forEach(e=>{if(e.type)typeCounts[e.type]=(typeCounts[e.type]||0)+1});
-
-  const ucItems=(D.engagements||[]).filter(e=>e.type==='Use Case');
-  const pipelineHtml=ucItems.length?`<div class="card" style="margin-bottom:14px;padding:14px 18px">
-    <div style="font-size:13px;font-weight:700;margin-bottom:10px">Use Case Pipeline</div>
-    <div style="display:flex;gap:4px;align-items:center">${pipeStages.map(s=>{
-      const cnt=ucItems.filter(u=>u.stage===s).length;
-      return `<div style="flex:1;text-align:center;cursor:pointer" onclick="engFilter='${s}';render()"><div style="position:relative;border-radius:var(--r-sm);height:36px;display:flex;align-items:center;justify-content:center"><div style="position:absolute;inset:0;background:${pipeStageColors[s]||'var(--muted)'};opacity:.15;border-radius:var(--r-sm)"></div><span style="position:relative;z-index:1;font-size:16px;font-weight:800;color:#000">${cnt}</span></div><div style="font-size:11.5px;font-weight:600;margin-top:4px;color:${pipeStageColors[s]}">${s}</div></div>`}).join('<div style="font-size:16px;color:var(--muted)">&#8250;</div>')}</div>
-  </div>`:'';
-
-  c.innerHTML=pipelineHtml+`${engFilter!=='all'?'<div style="display:flex;align-items:center;gap:6px;margin-bottom:14px"><div class="pill pill-i" style="cursor:pointer" onclick="engFilter=\'all\';render()">&#10005; Clear filter: '+esc(engFilter)+'</div></div>':''}
-  `+(items.length?items.map(e=>{
-    const sc=engStatusColors[e.status]||'pill-m';
-    const eTasks=(D.tasks||[]).filter(t=>t.engagement===e.id);
-    const eRisks=(D.risks||[]).filter(r=>r.engagement===e.id);
-    const eDecs=(D.decisions||[]).filter(d=>d.engagement===e.id);
-    const eMets=(D.metrics||[]).filter(m=>m.engagement===e.id);
-    const eTasksOpen=eTasks.filter(t=>t.status==='open').length;
-    return `<div class="card eng-card" onclick="openEngModal('${e.id}')">
-      <div class="eng-hd">
-        <div><h4>${esc(e.title)}</h4><div style="display:flex;gap:4px;margin-top:4px">${e.stage?'<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;color:#fff;background:'+(pipeStageColors[e.stage]||'var(--muted)')+'">'+esc(e.stage)+'</span>':''}</div></div>
-        <div style="display:flex;gap:8px;font-size:11px;color:var(--muted);flex-shrink:0">
-          ${eTasks.length?'<span title="Action Items" style="display:flex;align-items:center;gap:3px'+(eTasksOpen?';color:var(--indigo);font-weight:600':'')+'">'+(eTasksOpen?'<span style="background:var(--indigo);color:#fff;width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">'+eTasksOpen+'</span>':'<span style="font-size:13px">&#10003;</span>')+' Items</span>':''}
-          ${eRisks.length?'<span title="Risks" style="display:flex;align-items:center;gap:3px;color:var(--red)"><strong>'+eRisks.length+'</strong> Risk'+(eRisks.length>1?'s':'')+'</span>':''}
-          ${eDecs.length?'<span title="Decisions" style="display:flex;align-items:center;gap:3px"><strong>'+eDecs.length+'</strong> Decision'+(eDecs.length>1?'s':'')+'</span>':''}
-          ${eMets.length?'<span title="Metrics" style="display:flex;align-items:center;gap:3px"><strong>'+eMets.length+'</strong> Metric'+(eMets.length>1?'s':'')+'</span>':''}
-        </div>
-      </div>
-      <div class="eng-body">${esc(e.notes?.substring(0,200)||'No description')}</div>
-      <div class="eng-meta">
-        ${e.bu?'<span>BU: <strong>'+esc(e.bu)+'</strong></span>':''}
-        ${e.workstream?'<span>Workstream: <strong>'+esc(wsName(e.workstream))+'</strong></span>':''}
-        ${e.owner?'<span>Owner: '+esc(e.owner)+'</span>':''}
-        ${e.requestor?'<span>Requestor: '+esc(e.requestor)+'</span>':''}
-        ${e.updatedBy?'<span>Last edit: '+esc(e.updatedBy)+'</span>':e.addedBy?'<span>Added by: '+esc(e.addedBy)+'</span>':''}
-        ${(e.links||[]).length?e.links.map(l=>'<span onclick="event.stopPropagation()"><a href="'+esc(l.url)+'" target="_blank" style="color:var(--indigo);text-decoration:none;font-weight:500" title="'+esc(l.url)+'">&#128279; '+esc(l.label||'Link')+'</a></span>').join(''):''}
-      </div>
-    </div>`}).join(''):'<div class="empty"><h4>No engagements match</h4><p>Try a different filter or add an engagement</p></div>');
-}
 
 function engPeopleOpts(selected){
   const sel=selected||[];
