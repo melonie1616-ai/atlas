@@ -1894,33 +1894,59 @@ function rTasks(c){
       </select>
     </div>
   </div>
-  ${items.length?`<div class="card"><table class="tbl" style="table-layout:fixed;width:100%">
-    <thead><tr>
-      <th style="width:28px"></th>
-      <th style="cursor:pointer;width:26%" onclick="sortTasks('title')">Action Item${sIco('title')}</th>
-      <th style="cursor:pointer;width:14%" onclick="sortTasks('workstream')">Workstream${sIco('workstream')}</th>
-      <th style="cursor:pointer;width:12%" onclick="sortTasks('owner')">Owner${sIco('owner')}</th>
-      <th style="cursor:pointer;width:8%" onclick="sortTasks('start')">Start${sIco('start')}</th>
-      <th style="cursor:pointer;width:8%" onclick="sortTasks('due')">Target${sIco('due')}</th>
-      <th style="cursor:pointer;width:7%" onclick="sortTasks('priority')">Priority${sIco('priority')}</th>
-      <th style="width:28px"></th>
-    </tr></thead>
-    <tbody>${items.map(t=>{
+  ${(()=>{
+    if(!items.length)return '<div class="empty"><h4>No action items match</h4><p>Try a different filter or add an action item</p></div>';
+    const wsGroups={};const unlinked=[];
+    items.forEach(t=>{
+      if(t.workstream){if(!wsGroups[t.workstream])wsGroups[t.workstream]=[];wsGroups[t.workstream].push(t)}
+      else unlinked.push(t);
+    });
+    const wsOrder=(D.workstreams||[]).filter(w=>wsGroups[w.id]).map(w=>w.id);
+    const renderRow=(t)=>{
       const isOD=t.status==='open'&&t.due&&t.due<today();
       const isDueToday=t.status==='open'&&t.due&&t.due===today();
       const rowBg=isOD&&!isDueToday?'background:var(--red-lt)':isDueToday?'background:var(--amber-lt)':'';
       const pp={high:'pill-r',medium:'pill-a',low:'pill-g'}[t.priority]||'pill-m';
-      return `<tr onclick="openTaskModal('${t.id}')" style="height:36px;${rowBg}">
-        <td onclick="event.stopPropagation()"><div class="task-chk${t.status==='done'?' done':''}" onclick="toggleTask('${t.id}')">&#10003;</div></td>
-        <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${t.status==='done'?'text-decoration:line-through;color:var(--muted)':''}">${t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">&#9733;</span>':''}${esc(t.title)}</td>
-        <td style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)">${wsName(t.workstream)||'—'}</td>
-        <td style="font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)">${esc(t.owner)||'—'}</td>
-        <td style="font-size:11px;white-space:nowrap;color:var(--muted)">${t.startDate?fmtDate(t.startDate):'—'}</td>
-        <td style="font-size:11px;white-space:nowrap;${isOD?'color:var(--red);font-weight:600':''}">${t.due?fmtDate(t.due):'—'}</td>
-        <td><span class="pill ${pp}" style="font-size:10px">${t.priority}</span></td>
-        <td onclick="event.stopPropagation()"><button style="color:var(--red);font-size:11px;background:none;border:none;cursor:pointer" onclick="delTask('${t.id}')">&#10005;</button></td>
-      </tr>`}).join('')}</tbody></table></div>`:
-    '<div class="empty"><h4>No action items match</h4><p>Try a different filter or add an action item</p></div>'}`;
+      return `<tr onclick="openTaskModal('${t.id}')" style="height:36px;cursor:pointer;${rowBg}">
+        <td style="width:28px" onclick="event.stopPropagation()"><div class="task-chk${t.status==='done'?' done':''}" onclick="toggleTask('${t.id}')">&#10003;</div></td>
+        <td style="overflow:hidden;text-overflow:ellipsis;${t.status==='done'?'text-decoration:line-through;color:var(--muted)':''}">${t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">&#9733;</span>':''}${esc(t.title)}</td>
+        <td style="font-size:12px;color:var(--muted);width:14%">${esc(t.owner)||'—'}</td>
+        <td style="font-size:11.5px;width:8%;color:var(--muted)">${t.startDate?fmtDate(t.startDate):'—'}</td>
+        <td style="font-size:11.5px;width:8%;${isOD?'color:var(--red);font-weight:600':''}">${t.due?fmtDate(t.due):'—'}</td>
+        <td style="width:7%"><span class="pill ${pp}" style="font-size:10px">${t.priority}</span></td>
+        <td style="width:28px" onclick="event.stopPropagation()"><button style="color:var(--red);font-size:11px;background:none;border:none;cursor:pointer" onclick="delTask('${t.id}')">&#10005;</button></td>
+      </tr>`;
+    };
+    const renderGroup=(label,color,groupItems)=>{
+      const openCount=groupItems.filter(t=>t.status==='open').length;
+      return `<div style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <div style="width:4px;height:20px;border-radius:2px;background:${color}"></div>
+          <span style="font-size:14px;font-weight:700">${label}</span>
+          <span style="font-size:12px;color:var(--muted)">${openCount} open / ${groupItems.length} total</span>
+        </div>
+        <table class="tbl" style="width:100%">
+          <thead><tr>
+            <th style="width:28px"></th>
+            <th style="cursor:pointer" onclick="sortTasks('title')">Action Item${sIco('title')}</th>
+            <th style="cursor:pointer;width:14%" onclick="sortTasks('owner')">Owner${sIco('owner')}</th>
+            <th style="cursor:pointer;width:8%" onclick="sortTasks('start')">Start${sIco('start')}</th>
+            <th style="cursor:pointer;width:8%" onclick="sortTasks('due')">Target${sIco('due')}</th>
+            <th style="cursor:pointer;width:7%" onclick="sortTasks('priority')">Priority${sIco('priority')}</th>
+            <th style="width:28px"></th>
+          </tr></thead>
+          <tbody>${groupItems.map(renderRow).join('')}</tbody>
+        </table>
+      </div>`;
+    };
+    let html='';
+    wsOrder.forEach(wsId=>{
+      const w=(D.workstreams||[]).find(x=>x.id===wsId);
+      if(w)html+=renderGroup(w.name,wsColor(wsId),wsGroups[wsId]);
+    });
+    if(unlinked.length)html+=renderGroup('Unassigned to Workstream','var(--muted)',unlinked);
+    return html;
+  })()}`;
 }
 
 function sortTasks(col){if(taskSort===col)taskSortDir*=-1;else{taskSort=col;taskSortDir=1}render()}
