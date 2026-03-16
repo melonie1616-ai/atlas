@@ -1770,7 +1770,6 @@ function rTasks(c){
   else if(taskSort==='due')items.sort((a,b)=>taskSortDir*(a.due||'9').localeCompare(b.due||'9'));
   else if(taskSort==='priority')items.sort((a,b)=>taskSortDir*((pv[a.priority]??1)-(pv[b.priority]??1)));
   else if(taskSort==='workstream')items.sort((a,b)=>taskSortDir*wsName(a.workstream).localeCompare(wsName(b.workstream)));
-  else if(taskSort==='engagement')items.sort((a,b)=>taskSortDir*engName(a.engagement).localeCompare(engName(b.engagement)));
   else{items.sort((a,b)=>{if(a.status!==b.status)return a.status==='open'?-1:1;if((pv[a.priority]??1)!==(pv[b.priority]??1))return(pv[a.priority]??1)-(pv[b.priority]??1);return(a.due||'9').localeCompare(b.due||'9')})}
   const open=D.tasks.filter(t=>t.status==='open').length,done=D.tasks.filter(t=>t.status==='done').length,msCount=D.tasks.filter(t=>t.isMilestone).length;
   const owners=[...new Set((D.tasks||[]).map(t=>t.owner).filter(Boolean))].sort();
@@ -1793,9 +1792,8 @@ function rTasks(c){
     <thead><tr>
       <th style="width:28px"></th>
       <th style="cursor:pointer;width:26%" onclick="sortTasks('title')">Action Item${sIco('title')}</th>
-      <th style="cursor:pointer;width:11%" onclick="sortTasks('workstream')">Workstream${sIco('workstream')}</th>
-      <th style="cursor:pointer;width:11%" onclick="sortTasks('engagement')">Engagement${sIco('engagement')}</th>
-      <th style="cursor:pointer;width:10%" onclick="sortTasks('owner')">Owner${sIco('owner')}</th>
+      <th style="cursor:pointer;width:14%" onclick="sortTasks('workstream')">Workstream${sIco('workstream')}</th>
+      <th style="cursor:pointer;width:12%" onclick="sortTasks('owner')">Owner${sIco('owner')}</th>
       <th style="cursor:pointer;width:8%" onclick="sortTasks('start')">Start${sIco('start')}</th>
       <th style="cursor:pointer;width:8%" onclick="sortTasks('due')">Target${sIco('due')}</th>
       <th style="cursor:pointer;width:7%" onclick="sortTasks('priority')">Priority${sIco('priority')}</th>
@@ -1806,12 +1804,10 @@ function rTasks(c){
       const isDueToday=t.status==='open'&&t.due&&t.due===today();
       const rowBg=isOD&&!isDueToday?'background:var(--red-lt)':isDueToday?'background:var(--amber-lt)':'';
       const pp={high:'pill-r',medium:'pill-a',low:'pill-g'}[t.priority]||'pill-m';
-      const eName=engName(t.engagement);
       return `<tr onclick="openTaskModal('${t.id}')" style="height:36px;${rowBg}">
         <td onclick="event.stopPropagation()"><div class="task-chk${t.status==='done'?' done':''}" onclick="toggleTask('${t.id}')">&#10003;</div></td>
         <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${t.status==='done'?'text-decoration:line-through;color:var(--muted)':''}">${t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">&#9733;</span>':''}${esc(t.title)}</td>
         <td style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)">${wsName(t.workstream)||'—'}</td>
-        <td style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)">${eName?esc(eName):'—'}</td>
         <td style="font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)">${esc(t.owner)||'—'}</td>
         <td style="font-size:11px;white-space:nowrap;color:var(--muted)">${t.startDate?fmtDate(t.startDate):'—'}</td>
         <td style="font-size:11px;white-space:nowrap;${isOD?'color:var(--red);font-weight:600':''}">${t.due?fmtDate(t.due):'—'}</td>
@@ -1840,7 +1836,6 @@ function openTaskModal(id){
     </div>
     <div class="fg-row">
       <div class="fg"><label>Workstream</label><select id="t-ws"><option value="">— None —</option>${wsOpts(t?.workstream)}</select></div>
-      <div class="fg"><label>Engagement</label><select id="t-eng"><option value="">— None —</option>${engOpts(t?.engagement)}</select></div>
     </div>
     <div class="fg"><label>Notes</label><textarea id="t-notes">${t?esc(t.notes):''}</textarea></div>
   </div>
@@ -1863,7 +1858,6 @@ function saveTask(id){
   t.status=document.getElementById('t-status').value;
   t.isMilestone=document.getElementById('t-milestone').checked;
   t.workstream=document.getElementById('t-ws').value;
-  t.engagement=document.getElementById('t-eng').value;
   t.notes=document.getElementById('t-notes').value;
   t.updatedBy=ME;t.updatedAt=new Date().toISOString();
   const label=t.isMilestone?'milestone':'action item';
