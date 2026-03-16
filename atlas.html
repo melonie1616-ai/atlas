@@ -1556,7 +1556,7 @@ function rWork(c){
     if(pipeStages.includes(engFilter))engItems=engItems.filter(e=>e.stage===engFilter);
     else engItems=engItems.filter(e=>e.type===engFilter);
   }
-  if(q)engItems=engItems.filter(e=>(e.title+' '+e.bu+' '+e.notes+' '+(e.type||'')+' '+(e.requestor||'')+' '+wsName(e.workstream)).toLowerCase().includes(q));
+  if(q)engItems=engItems.filter(e=>(e.title+' '+e.notes+' '+(e.type||'')+' '+(e.requestor||'')+' '+wsName(e.workstream)).toLowerCase().includes(q));
   engItems.sort((a,b)=>{const so={active:0,scoping:1,intake:2,'on-hold':3,complete:4};return (so[a.status]??2)-(so[b.status]??2)});
 
   const ucItems=(D.engagements||[]).filter(e=>e.type==='Use Case');
@@ -1585,7 +1585,6 @@ function rWork(c){
       </div>
       <div class="eng-body">${esc(e.notes?.substring(0,200)||'No description')}</div>
       <div class="eng-meta">
-        ${e.bu?'<span>BU: <strong>'+esc(e.bu)+'</strong></span>':''}
         ${e.workstream?'<span>Workstream: <strong>'+esc(wsName(e.workstream))+'</strong></span>':''}
         ${e.owner?'<span>Owner: '+esc(e.owner)+'</span>':''}
         ${e.requestor?'<span>Requestor: '+esc(e.requestor)+'</span>':''}
@@ -1599,8 +1598,8 @@ function rWork(c){
   c.innerHTML=renderCat('BU','Business Unit')+renderCat('Cross-cutting','Cross-cutting')
     +`<div style="margin-top:28px;border-top:2px solid var(--border);padding-top:20px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em">Engagements &amp; Use Cases</div>
-        <button class="tb-btn" style="background:var(--accent);color:#fff" onclick="openEngModal()">+ Add Engagement</button>
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.01em">Workstreams</div>
+        <button class="tb-btn" style="background:var(--accent);color:#fff" onclick="openEngModal()">+ Add Item</button>
       </div>
       ${pipelineHtml}${clearFilter}${engListHtml}
     </div>`;
@@ -1659,12 +1658,11 @@ function getEngPeopleNames(ids){
 }
 function openEngModal(id){
   const e=id?D.engagements.find(x=>x.id===id):null;
-  openModal(`<div class="m-hd"><h3>${e?'Edit':'New'} Engagement</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  openModal(`<div class="m-hd"><h3>${e?'Edit':'New'} Workstream Item</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
     <div class="fg"><label>Title</label><input id="e-title" value="${e?esc(e.title):''}"></div>
     <div class="fg-row">
       <div class="fg"><label>Type</label><select id="e-type" onchange="document.getElementById('e-stage-row').style.display=this.value==='Use Case'?'':'none'">${engTypes.map(t=>'<option value="'+t+'"'+(e?.type===t?' selected':'')+'>'+t+'</option>').join('')}</select></div>
-      <div class="fg"><label>Business Unit</label><input id="e-bu" value="${e?esc(e.bu):''}" placeholder="e.g. Legal, GTM, IT/Security"></div>
     </div>
     <div class="fg-row" id="e-stage-row" style="display:${(e?.type||engTypes[0])==='Use Case'?'':'none'}">
       <div class="fg"><label>Pipeline Stage</label><select id="e-stage">${pipeStages.map(s=>'<option value="'+s+'"'+((e?.stage||'Ideation')===s?' selected':'')+'>'+s+'</option>').join('')}</select></div>
@@ -1728,7 +1726,6 @@ function saveEng(id){
   const isNew=!e;
   if(!e){e={id:uid(),created:today(),addedBy:ME};D.engagements.push(e)}
   e.title=title;e.type=document.getElementById('e-type').value;
-  e.bu=document.getElementById('e-bu').value.trim();
   e.workstream=document.getElementById('e-ws').value;
   e.status=document.getElementById('e-status').value;
   e.owner=document.getElementById('e-owner').value.trim();
