@@ -1240,14 +1240,14 @@ function rDash(c){
   const msDone=allMs.filter(t=>t.status==='done');
   const msOD=allMs.filter(t=>t.status==='open'&&t.due&&t.due<today());
   const msUp=allMs.filter(t=>t.status==='open'&&(!t.due||t.due>=today()));
-  const engs=(D.engagements||[]);
-  const activeEng=engs.filter(e=>e.status!=='on-hold'&&e.status!=='complete');
+  const allWs=(D.workstreams||[]);
+  const activeWs=allWs.filter(w=>w.status!=='complete');
 
   c.innerHTML=`
   <div class="kpi-row">
     <div class="card kpi" style="cursor:pointer" onclick="go('tasks')"><div class="acc" style="background:var(--indigo)"></div><div class="lbl">Open Items</div><div class="val" style="color:var(--indigo)">${open.length}</div><div class="note">${overdue.length?'<span style="color:var(--red);font-weight:600">'+overdue.length+' overdue</span>':'<span style="color:var(--green)">All on track</span>'}</div></div>
     <div class="card kpi" style="cursor:pointer" onclick="taskFilter='milestones';go('tasks')"><div class="acc" style="background:var(--teal)"></div><div class="lbl">Milestones</div><div class="val" style="color:var(--teal)">${msDone.length}<span style="font-size:18px;color:var(--light);font-weight:500">/${allMs.length}</span></div><div class="note">${msOD.length?'<span style="color:var(--red);font-weight:600">'+msOD.length+' overdue</span>':msUp.length+' upcoming'}</div></div>
-    <div class="card kpi" style="cursor:pointer" onclick="go('workstreams')"><div class="acc" style="background:var(--violet)"></div><div class="lbl">Active Engagements</div><div class="val" style="color:var(--violet)">${activeEng.length}</div><div class="note">${engs.length} total</div></div>
+    <div class="card kpi" style="cursor:pointer" onclick="go('workstreams')"><div class="acc" style="background:var(--violet)"></div><div class="lbl">Active Workstreams</div><div class="val" style="color:var(--violet)">${activeWs.length}</div><div class="note">${allWs.length} total</div></div>
   </div>
 
   ${['BU','Cross-cutting'].map(cat=>{
