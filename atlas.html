@@ -597,7 +597,7 @@ function defaults(){
 }
 
 function saveLs(){try{localStorage.setItem('ai-tracker',JSON.stringify(D))}catch(e){}}
-function save(){saveLs();if(dbRef&&firebaseReady){dbRef.set(D).catch(()=>{})}}
+function save(){saveLs();if(dbRef&&firebaseReady){dbRef.update(D).catch(()=>{})}}
 function loadLs(){
   try{D=JSON.parse(localStorage.getItem('ai-tracker'))}catch(e){}
   if(!D||!D.workstreams)D=defaults();
@@ -976,7 +976,7 @@ async function initFirebase(){
 let presenceRef=null;
 function connectFirebase(){
   dbRef=firebase.database().ref('teams/'+TEAM_KEY);
-  presenceRef=firebase.database().ref('presence/'+TEAM_KEY);
+  presenceRef=firebase.database().ref('teams/'+TEAM_KEY+'/_presence');
   firebase.auth().signInAnonymously().then(()=>{
     dbRef.once('value').then(snap=>{
       const val=snap.val();
@@ -985,7 +985,7 @@ function connectFirebase(){
       firebaseReady=true;
       document.getElementById('connecting').classList.add('hide');
       loadMe();renderLinks();authGate();go('dashboard');
-      dbRef.on('value',snap=>{const val=snap.val();if(val&&val.workstreams){D=val;saveLs();renderLinks();render()}});
+      dbRef.on('value',snap=>{const val=snap.val();if(val&&val.workstreams){delete val._presence;D=val;saveLs();renderLinks();render()}});
       startPresence();
     });
   }).catch(()=>{
