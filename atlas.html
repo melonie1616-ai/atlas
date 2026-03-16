@@ -646,14 +646,22 @@ function loadLs(){
   if(!D.usecases)D.usecases=[];
   if(!D.cadences)D.cadences=[];
   if(!D.lessons)D.lessons=[];
-  if(!D._wsV2){
+  if(!D._wsV3){
     const newWs=defaults().workstreams;
-    const wsIds=new Set(newWs.map(w=>w.id));
-    if(!D.workstreams.find(w=>wsIds.has(w.id))){
+    const oldIds=new Set(['standards','data-infra','ai-program','adr-council','superworker']);
+    const hasOnlyOld=D.workstreams.every(w=>oldIds.has(w.id));
+    const missingNew=!D.workstreams.find(w=>w.category);
+    if(hasOnlyOld||missingNew){
       D.workstreams=newWs;
     }
-    D._wsV2=true;
+    D._wsV3=true;
   }
+  (D.workstreams||[]).forEach(w=>{
+    if(!w.category){
+      const def=WS_DEFS.find(d=>d.id===w.id);
+      if(def){w.category=def.category;if(!w.owner)w.owner=def.owner||''}
+    }
+  });
 }
 
 function log(t){
