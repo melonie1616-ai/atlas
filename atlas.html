@@ -1251,6 +1251,28 @@ function rDash(c){
   const allWs=(D.workstreams||[]);
   const activeWs=allWs.filter(w=>w.status!=='complete');
 
+  const renderWsTile=(w)=>{
+    const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;
+    const wOD=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open'&&t.due&&t.due<today()).length;
+    const isWarn=w.status==='at-risk'||w.status==='blocked'||wOD>0;
+    const wc=wsColor(w.id);
+    const lead=w.owner||(WS_DEFS.find(d=>d.id===w.id)?.owner)||'';
+    return `<div style="flex:1;min-width:180px;border-radius:var(--r-lg);cursor:pointer;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s;position:relative" onclick="openWsDetail('${w.id}')" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow='var(--shadow)'">
+      ${wOD?'<div style="position:absolute;top:8px;right:10px;background:rgba(255,255,255,.9);color:var(--red);width:20px;height:20px;border-radius:50%;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;z-index:1" title="'+wOD+' overdue">!</div>':''}
+      <div style="background:${wc};padding:14px 16px;color:#fff">
+        <div style="font-size:14px;font-weight:700;line-height:1.3;margin-bottom:4px">${esc(w.name)}</div>
+        ${lead?'<div style="font-size:11px;opacity:.85;margin-bottom:6px">'+esc(lead)+'</div>':''}
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="background:${isWarn?'rgba(255,0,0,.35)':'rgba(255,255,255,.2)'};color:#fff;padding:2px 10px;border-radius:10px;font-size:10px;font-weight:600">${w.status}</span>
+          ${wOpen?'<span style="font-size:11px;opacity:.85">'+wOpen+' open item'+(wOpen!==1?'s':'')+'</span>':''}
+        </div>
+      </div>
+    </div>`;
+  };
+
+  const buWs=(D.workstreams||[]).filter(w=>(w.category||WS_DEFS.find(d=>d.id===w.id)?.category)==='BU');
+  const ccWs=(D.workstreams||[]).filter(w=>(w.category||WS_DEFS.find(d=>d.id===w.id)?.category)==='Cross-cutting');
+
   c.innerHTML=`
   <div class="kpi-row">
     <div class="card kpi" style="cursor:pointer" onclick="go('tasks')"><div class="acc" style="background:var(--indigo)"></div><div class="lbl">Open Items</div><div class="val" style="color:var(--indigo)">${open.length}</div><div class="note">${overdue.length?'<span style="color:var(--red);font-weight:600">'+overdue.length+' overdue</span>':'<span style="color:var(--green)">All on track</span>'}</div></div>
@@ -1258,29 +1280,15 @@ function rDash(c){
     <div class="card kpi" style="cursor:pointer" onclick="go('workstreams')"><div class="acc" style="background:var(--violet)"></div><div class="lbl">Active Workstreams</div><div class="val" style="color:var(--violet)">${activeWs.length}</div><div class="note">${allWs.length} total</div></div>
   </div>
 
-  ${['BU','Cross-cutting'].map(cat=>{
-    const catWs=(D.workstreams||[]).filter(w=>(w.category||WS_DEFS.find(d=>d.id===w.id)?.category)===cat);
-    if(!catWs.length)return'';
-    return `<div style="margin-bottom:18px">
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:8px">${cat==='BU'?'Business Unit':'Cross-cutting'}</div>
-    <div style="display:flex;flex-wrap:wrap;gap:12px">
-    ${catWs.map(w=>{
-      const wMsOD=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id&&t.status==='open'&&t.due&&t.due<today()).length;
-      const wTasksOD=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open'&&t.due&&t.due<today()).length;
-      const isWarn=w.status==='at-risk'||w.status==='blocked';
-      const wc=wsColor(w.id);
-      const alertCount=wMsOD+wTasksOD;
-      const ownerName=w.owner||(WS_DEFS.find(d=>d.id===w.id)?.owner)||'';
-      return `<div style="flex:1;min-width:160px;max-width:220px;border-radius:var(--r-lg);cursor:pointer;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s;position:relative" onclick="go('workstreams');setTimeout(()=>openWsDetail('${w.id}'),100)" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow='var(--shadow)'">
-        ${isWarn?'<div style="position:absolute;top:8px;right:10px;background:rgba(255,255,255,.9);color:var(--red);width:20px;height:20px;border-radius:50%;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;z-index:1" title="'+alertCount+' overdue item'+(alertCount!==1?'s':'')+'">!</div>':''}
-        <div style="background:${wc};padding:12px 14px;color:#fff">
-          <div style="font-size:13px;font-weight:700;line-height:1.3;margin-bottom:4px">${esc(w.name)}</div>
-          ${ownerName?'<div style="font-size:10px;opacity:.8;margin-bottom:5px">'+esc(ownerName)+'</div>':''}
-          <span style="background:${isWarn?'rgba(255,0,0,.35)':'rgba(255,255,255,.2)'};color:#fff;padding:2px 10px;border-radius:10px;font-size:10px;font-weight:600">${w.status}</span>
-          ${isWarn?'<div style="font-size:10px;margin-top:5px;opacity:.9">'+(wMsOD?wMsOD+' overdue milestone'+(wMsOD>1?'s':''):'')+(wMsOD&&wTasksOD?' · ':'')+(wTasksOD?wTasksOD+' overdue task'+(wTasksOD>1?'s':''):'')+'</div>':''}
-        </div>
-      </div>`}).join('')}
-    </div></div>`}).join('')}
+  <div style="margin-bottom:24px">
+    <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;margin-bottom:12px">Business Unit</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">${buWs.map(renderWsTile).join('')}</div>
+  </div>
+
+  <div style="margin-bottom:24px">
+    <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;margin-bottom:12px">Cross-cutting</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">${ccWs.map(renderWsTile).join('')}</div>
+  </div>
 
   <div class="card" style="margin-bottom:20px">
     <div class="dash-hd" style="font-size:16px;font-weight:800;letter-spacing:-.01em">Program Timeline</div>
@@ -1662,12 +1670,55 @@ function openWsEdit(id){
     </div>
     <div class="fg"><label>Description</label><textarea id="ws-desc" style="min-height:50px">${w?esc(w.desc):''}</textarea></div>
     <div class="fg"><label>Notes / Status Update</label><textarea id="ws-notes" style="min-height:50px">${w?esc(w.notes||''):''}</textarea></div>
+    <div class="fg"><label>Documents</label>
+      <div id="ws-links-list">${(w?.links||[]).map((l,i)=>`<div style="display:flex;gap:4px;margin-bottom:4px;align-items:center"><input class="ws-link-label" value="${esc(l.label)}" placeholder="Label" style="flex:1;max-width:140px"><input class="ws-link-url" value="${esc(l.url)}" placeholder="https://..." style="flex:2"><button type="button" style="color:var(--red);font-size:13px;background:none;border:none;cursor:pointer;padding:0 4px" onclick="this.parentElement.remove()">&#10005;</button></div>`).join('')}</div>
+      <button type="button" style="font-size:12px;color:var(--indigo);background:none;border:none;cursor:pointer;padding:2px 0" onclick="addWsLink()">+ Add link</button>
+    </div>
+    ${w?wsLinkedItems(w.id):''}
   </div>
   <div class="m-ft">
     ${w?'<button class="mbtn mb-del" onclick="delWs(\''+w.id+'\');closeModal()">Delete</button>':''}
     <button class="mbtn mb-cancel" onclick="closeModal()">Cancel</button>
     <button class="mbtn mb-save" onclick="saveWs('${id||''}')">Save</button>
   </div>`);
+}
+function addWsLink(){
+  const c=document.getElementById('ws-links-list');if(!c)return;
+  const d=document.createElement('div');d.style.cssText='display:flex;gap:4px;margin-bottom:4px;align-items:center';
+  d.innerHTML='<input class="ws-link-label" placeholder="Label" style="flex:1;max-width:140px"><input class="ws-link-url" placeholder="https://..." style="flex:2"><button type="button" style="color:var(--red);font-size:13px;background:none;border:none;cursor:pointer;padding:0 4px" onclick="this.parentElement.remove()">&#10005;</button>';
+  c.appendChild(d);
+}
+function wsLinkedItems(wsId){
+  const tasks=(D.tasks||[]).filter(t=>t.workstream===wsId);
+  const risks=(D.risks||[]).filter(r=>r.workstream===wsId);
+  const decs=(D.decisions||[]).filter(d=>d.workstream===wsId);
+  const metrics=(D.metrics||[]).filter(m=>m.workstream===wsId);
+  const total=tasks.length+risks.length+decs.length+metrics.length;
+  if(!total)return '<div style="margin-top:14px;padding:10px 12px;border:1px dashed var(--border);border-radius:var(--r-sm);color:var(--muted);font-size:12px">No linked items yet — link action items, risks, decisions, or metrics to this workstream.</div>';
+  let html='<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px"><h4 style="font-size:13px;font-weight:700;margin-bottom:8px">Linked Items ('+total+')</h4>';
+  if(tasks.length){
+    const openT=tasks.filter(t=>t.status==='open');const doneT=tasks.filter(t=>t.status==='done');
+    html+='<div style="margin-bottom:10px"><span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Action Items ('+tasks.length+' — '+openT.length+' open)</span>';
+    html+=tasks.slice(0,12).map(t=>{
+      const isDone=t.status==='done';const isOD=t.status==='open'&&t.due&&t.due<today();
+      return '<div style="display:flex;align-items:center;gap:6px;padding:4px;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openTaskModal(\''+t.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'">'+(t.isMilestone?'<span style="color:#f59e0b">&#9733;</span>':'')+'<span class="pill '+(isDone?'pill-g':isOD?'pill-r':'pill-a')+'" style="min-width:45px;text-align:center;font-size:10px">'+(isDone?'done':isOD?'overdue':'open')+'</span><span style="flex:1">'+esc(t.title)+'</span>'+(t.due?'<span style="color:var(--light);font-size:11px">'+fmtDate(t.due)+'</span>':'')+'</div>'}).join('');
+    if(tasks.length>12)html+='<div style="font-size:11px;color:var(--muted);padding:4px">... and '+(tasks.length-12)+' more</div>';
+    html+='</div>';
+  }
+  if(risks.length){
+    html+='<div style="margin-bottom:10px"><span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Risks ('+risks.length+')</span>';
+    html+=risks.map(r=>{const ic=r.impact==='critical'||r.impact==='high'?'pill-r':r.impact==='medium'?'pill-a':'pill-g';
+      return '<div style="display:flex;align-items:center;gap:6px;padding:4px;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openRiskModal(\''+r.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'"><span class="pill '+ic+'" style="min-width:45px;text-align:center;font-size:10px">'+esc(r.impact||'—')+'</span><span style="flex:1">'+esc(r.title)+'</span><span class="pill '+(r.status==='closed'?'pill-g':'pill-m')+'" style="font-size:10px">'+esc(r.status)+'</span></div>'}).join('')+'</div>';
+  }
+  if(decs.length){
+    html+='<div style="margin-bottom:10px"><span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Decisions ('+decs.length+')</span>';
+    html+=decs.map(d=>'<div style="display:flex;align-items:center;gap:6px;padding:4px;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openDecModal(\''+d.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'"><span class="pill pill-i" style="min-width:45px;text-align:center;font-size:10px">'+esc(d.status||'proposed')+'</span><span style="flex:1">'+esc(d.title)+'</span>'+(d.date?'<span style="color:var(--light);font-size:11px">'+fmtDate(d.date)+'</span>':'')+'</div>').join('')+'</div>';
+  }
+  if(metrics.length){
+    html+='<div style="margin-bottom:10px"><span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Metrics ('+metrics.length+')</span>';
+    html+=metrics.map(m=>'<div style="display:flex;align-items:center;gap:6px;padding:4px;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openMetricModal(\''+m.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'"><span style="flex:1">'+esc(m.name)+'</span><span style="font-weight:700">'+esc(m.value||'—')+'</span><span style="color:var(--muted);font-size:11px">target: '+esc(m.target||'—')+'</span></div>').join('')+'</div>';
+  }
+  return html+'</div>';
 }
 function saveWs(id){
   const name=(document.getElementById('ws-name').value||'').trim();
@@ -1682,6 +1733,9 @@ function saveWs(id){
   w.color=document.getElementById('ws-color').value;
   w.desc=document.getElementById('ws-desc').value.trim();
   w.notes=document.getElementById('ws-notes').value;
+  const labels=[...document.querySelectorAll('.ws-link-label')];
+  const urls=[...document.querySelectorAll('.ws-link-url')];
+  w.links=labels.map((el,i)=>({label:el.value.trim(),url:urls[i]?.value.trim()||''})).filter(l=>l.url);
   w.updatedBy=ME;w.updatedAt=new Date().toISOString();
   save();log((isNew?'Added':'Updated')+' workstream: '+esc(w.name));closeModal();render();
   toast(isNew?'Workstream added':'Workstream updated');
@@ -2454,7 +2508,6 @@ function openDecModal(id){
     <div class="fg"><label>Decided By</label><select id="dec-by">${peopleOpts(d?.decidedBy||'')}</select></div>
     <div class="fg-row">
       <div class="fg"><label>Workstream</label><select id="dec-ws"><option value="">— None —</option>${wsOpts(d?.workstream)}</select></div>
-      <div class="fg"><label>Engagement</label><select id="dec-eng"><option value="">— None —</option>${engOpts(d?.engagement)}</select></div>
     </div>
     <div class="fg"><label>Notes</label><textarea id="dec-notes">${d?esc(d.notes||''):''}</textarea></div>
   </div>
@@ -2470,8 +2523,7 @@ function saveDec(id){
   if(!d){d={id:uid(),addedBy:ME};D.decisions.push(d)}
   d.title=title;d.rationale=document.getElementById('dec-rationale').value.trim();
   d.date=document.getElementById('dec-date').value;d.status=document.getElementById('dec-status').value;
-  d.decidedBy=document.getElementById('dec-by').value;d.workstream=document.getElementById('dec-ws').value;d.engagement=document.getElementById('dec-eng').value;
-  d.engagement=document.getElementById('dec-eng').value;
+  d.decidedBy=document.getElementById('dec-by').value;d.workstream=document.getElementById('dec-ws').value;
   d.notes=document.getElementById('dec-notes').value.trim();d.updatedBy=ME;d.updatedAt=new Date().toISOString();
   save();closeModal();render();toast('Decision saved');log('Decision: '+esc(title));
 }
@@ -2506,7 +2558,6 @@ function openRiskModal(id){
     </div>
     <div class="fg-row">
       <div class="fg"><label>Workstream</label><select id="rk-ws"><option value="">— None —</option>${wsOpts(r?.workstream)}</select></div>
-      <div class="fg"><label>Engagement</label><select id="rk-eng"><option value="">— None —</option>${engOpts(r?.engagement)}</select></div>
     </div>
     <div class="fg"><label>Mitigation Plan</label><textarea id="rk-mit">${r?esc(r.mitigation||''):''}</textarea></div>
   </div>
@@ -2522,7 +2573,7 @@ function saveRisk(id){
   if(!r){r={id:uid(),addedBy:ME};D.risks.push(r)}
   r.title=title;r.likelihood=document.getElementById('rk-like').value;r.impact=document.getElementById('rk-imp').value;
   r.status=document.getElementById('rk-status').value;r.owner=document.getElementById('rk-owner').value;
-  r.workstream=document.getElementById('rk-ws').value;r.engagement=document.getElementById('rk-eng').value;
+  r.workstream=document.getElementById('rk-ws').value;
   r.mitigation=document.getElementById('rk-mit').value.trim();
   r.updatedBy=ME;r.updatedAt=new Date().toISOString();
   save();closeModal();render();toast('Risk saved');log('Risk: '+esc(title));
@@ -2555,7 +2606,7 @@ function openMetricModal(id){
     </div>
     <div class="fg-row">
       <div class="fg"><label>As Of Date</label><input type="date" id="mt-date" value="${m?m.date:today()}"></div>
-      <div class="fg"><label>Engagement</label><select id="mt-eng"><option value="">— None —</option>${engOpts(m?.engagement)}</select></div>
+      <div class="fg"><label>Workstream</label><select id="mt-ws"><option value="">— None —</option>${wsOpts(m?.workstream)}</select></div>
     </div>
     <div class="fg"><label>Notes</label><textarea id="mt-notes">${m?esc(m.notes||''):''}</textarea></div>
   </div>
@@ -2571,7 +2622,7 @@ function saveMetric(id){
   if(!m){m={id:uid(),addedBy:ME};D.metrics.push(m)}
   m.name=name;m.value=document.getElementById('mt-val').value.trim();m.target=document.getElementById('mt-target').value.trim();
   m.category=document.getElementById('mt-cat').value;m.trend=document.getElementById('mt-trend').value;
-  m.date=document.getElementById('mt-date').value;m.engagement=document.getElementById('mt-eng').value;
+  m.date=document.getElementById('mt-date').value;m.workstream=document.getElementById('mt-ws').value;
   m.notes=document.getElementById('mt-notes').value.trim();
   m.updatedBy=ME;save();closeModal();render();toast('Metric saved');
 }
