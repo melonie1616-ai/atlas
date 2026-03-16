@@ -457,6 +457,7 @@ body.nav-collapsed .topbar-menu{display:flex}
   <div class="topbar">
     <button class="topbar-menu" onclick="toggleSidebar()" title="Expand sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
     <h2 id="viewTitle">Dashboard</h2>
+    <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:12px"></div>
     <div class="tb-right">
       <input type="text" id="search" placeholder="Search..." oninput="render()">
       <button class="tb-btn" id="addBtn" style="display:none" onclick="handleAdd()">+ Add</button>
@@ -728,7 +729,7 @@ async function submitLogin(){
     msg.textContent='Incorrect PIN. Try again.';return;
   }
   SESSION_VERIFIED=true;saveSession();
-  saveMe(person.name);closeModal();log(esc(person.name)+' signed in');render();toast('Welcome, '+person.name.split(' ')[0]+'!');
+  saveMe(person.name);closeModal();log(esc(person.name)+' signed in');startPresence();render();toast('Welcome, '+person.name.split(' ')[0]+'!');
 }
 
 function showRegister(){
@@ -769,7 +770,7 @@ async function submitRegister(){
   preAssigned.pinHash=pinH;preAssigned.updatedBy=name;
   save();log(esc(preAssigned.name)+' created account ('+esc(uname)+')');
   SESSION_VERIFIED=true;saveSession();
-  saveMe(preAssigned.name);closeModal();render();toast('Account created! Welcome, '+preAssigned.name.split(' ')[0]+'!');
+  saveMe(preAssigned.name);closeModal();startPresence();render();toast('Account created! Welcome, '+preAssigned.name.split(' ')[0]+'!');
 }
 
 function changeName(){
@@ -825,7 +826,7 @@ function switchUser(){closeModal();ME='';localStorage.removeItem('ai-tracker-nam
 function authGate(){
   if(SESSION_VERIFIED)return;
   if(!ME){promptName();return}
-  if(isSessionValid()){SESSION_VERIFIED=true;saveSession();return}
+  if(isSessionValid()){SESSION_VERIFIED=true;saveSession();startPresence();return}
   const person=(D.people||[]).find(p=>p.name===ME);
   if(person&&person.pinHash){promptReAuth()}
   else{SESSION_VERIFIED=true;saveSession()}
@@ -972,8 +973,10 @@ async function initFirebase(){
   saveTeamKey(TEAM_KEY);
   connectFirebase();
 }
+let presenceRef=null;
 function connectFirebase(){
   dbRef=firebase.database().ref('teams/'+TEAM_KEY);
+  presenceRef=firebase.database().ref('presence/'+TEAM_KEY);
   firebase.auth().signInAnonymously().then(()=>{
     dbRef.once('value').then(snap=>{
       const val=snap.val();
@@ -983,11 +986,37 @@ function connectFirebase(){
       document.getElementById('connecting').classList.add('hide');
       loadMe();renderLinks();authGate();go('dashboard');
       dbRef.on('value',snap=>{const val=snap.val();if(val&&val.workstreams){D=val;saveLs();renderLinks();render()}});
+      startPresence();
     });
   }).catch(()=>{
     document.getElementById('connecting').classList.add('hide');
     loadLs();loadMe();renderLinks();authGate();go('dashboard');
   });
+}
+function startPresence(){
+  if(!presenceRef||!ME)return;
+  const uid=firebase.auth().currentUser?.uid;if(!uid)return;
+  const myRef=presenceRef.child(uid);
+  const sendHeartbeat=()=>{if(ME)myRef.set({name:ME,ts:firebase.database.ServerValue.TIMESTAMP})};
+  sendHeartbeat();
+  setInterval(sendHeartbeat,30000);
+  myRef.onDisconnect().remove();
+  presenceRef.on('value',snap=>{
+    const val=snap.val()||{};
+    const now=Date.now();
+    const active=Object.values(val).filter(u=>u.ts&&(now-u.ts)<90000);
+    renderPresence(active);
+  });
+}
+function renderPresence(users){
+  const bar=document.getElementById('presence-bar');if(!bar)return;
+  if(!users.length){bar.innerHTML='';return}
+  const colors=['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#0ea5e9','#14b8a6'];
+  bar.innerHTML=users.map((u,i)=>{
+    const init=u.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const bg=colors[i%colors.length];
+    return `<div title="${u.name} — online" style="width:28px;height:28px;border-radius:50%;background:${bg};color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg-card);cursor:default">${init}</div>`
+  }).join('');
 }
 
 // ═══════════════════════════════════════════════════
@@ -1666,7 +1695,8 @@ function rTasks(c){
   if(taskFilter==='open')items=items.filter(t=>t.status==='open');
   else if(taskFilter==='done')items=items.filter(t=>t.status==='done');
   else if(taskFilter==='milestones')items=items.filter(t=>t.isMilestone);
-  if(taskOwnerFilter)items=items.filter(t=>t.owner===taskOwnerFilter);
+  if(taskOwnerFilter==='__unassigned__')items=items.filter(t=>!t.owner);
+  else if(taskOwnerFilter)items=items.filter(t=>t.owner===taskOwnerFilter);
   if(q)items=items.filter(t=>(t.title+' '+t.owner+' '+t.notes+' '+wsName(t.workstream)).toLowerCase().includes(q));
   const pv={high:0,medium:1,low:2};
   if(taskSort==='title')items.sort((a,b)=>taskSortDir*a.title.localeCompare(b.title));
@@ -1688,6 +1718,7 @@ function rTasks(c){
     <div style="margin-left:auto">
       <select style="padding:5px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12.5px;font-family:inherit;background:var(--bg-subtle);color:var(--text);cursor:pointer;outline:none" onchange="taskOwnerFilter=this.value;render()">
         <option value="">All Owners</option>
+        <option value="__unassigned__"${taskOwnerFilter==='__unassigned__'?' selected':''}>Unassigned</option>
         ${owners.map(o=>`<option value="${esc(o)}"${taskOwnerFilter===o?' selected':''}>${esc(o)}</option>`).join('')}
       </select>
     </div>
