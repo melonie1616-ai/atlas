@@ -764,7 +764,6 @@ async function submitRegister(){
   if(/\s/.test(uname)){toast('Username cannot contain spaces');return}
   if(!pin||pin.length<4){toast('PIN must be at least 4 digits');return}
   if(pin!==pin2){msg.style.display='';msg.style.background='var(--red-lt)';msg.style.color='var(--red)';msg.textContent='PINs do not match.';return}
-  if(findByUsername(uname)){msg.style.display='';msg.style.background='var(--red-lt)';msg.style.color='var(--red)';msg.textContent='Username "'+uname+'" is already taken.';return}
   const preAssigned=(D.people||[]).find(p=>p.username&&p.username.toLowerCase()===uname.toLowerCase());
   if(!preAssigned){msg.style.display='';msg.style.background='var(--red-lt)';msg.style.color='var(--red)';msg.textContent='Username "'+uname+'" has not been authorized. Contact your admin to get access.';return}
   if(preAssigned.pinHash){msg.style.display='';msg.style.background='var(--red-lt)';msg.style.color='var(--red)';msg.textContent='This account is already registered. Use Sign In instead.';return}
