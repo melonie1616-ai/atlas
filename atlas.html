@@ -60,24 +60,25 @@ button{cursor:pointer;border:none;background:none;font-family:inherit;font-size:
 .side-hd{padding:20px 16px 14px;border-bottom:1px solid rgba(255,255,255,.04)}
 .side-collapse-btn{position:absolute;top:18px;right:10px;width:24px;height:24px;border-radius:6px;background:transparent;color:#6a6a8a;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;border:none;z-index:2}
 .side-collapse-btn:hover{background:rgba(255,255,255,.08);color:#b0b0c8}
-body.nav-collapsed .side{width:58px;overflow:hidden}
+body.nav-collapsed .side{width:54px;overflow:hidden}
 body.nav-collapsed .side-hd h1,body.nav-collapsed .side-hd .sub,body.nav-collapsed .side-hd .sub2{display:none}
-body.nav-collapsed .side-hd{padding:14px 0;display:flex;justify-content:center}
+body.nav-collapsed .side-hd{padding:12px 0;display:flex;flex-direction:column;align-items:center}
 body.nav-collapsed .side-hd .top-row{justify-content:center}
 body.nav-collapsed .side-collapse-btn{position:static;margin:6px auto 0;right:auto}
+body.nav-collapsed .nav{padding:6px 6px}
 body.nav-collapsed .nav-label{display:none}
-body.nav-collapsed .ni{justify-content:center;padding:10px;border-left:none}
-body.nav-collapsed .ni span:not(.badge){display:none}
+body.nav-collapsed .ni{justify-content:center;padding:10px 0;border-left:none;font-size:0;color:transparent;gap:0;overflow:hidden}
+body.nav-collapsed .ni svg{margin:0;font-size:initial;width:18px;height:18px}
 body.nav-collapsed .ni .badge{display:none}
-body.nav-collapsed .ni svg{margin:0}
 body.nav-collapsed .sidebar-link{display:none}
 body.nav-collapsed .side-ft{padding:6px}
-body.nav-collapsed .side-ft button{padding:8px;text-align:center;font-size:0}
-body.nav-collapsed .side-ft button svg{font-size:initial;display:inline}
-body.nav-collapsed .user-badge span{display:none}
-body.nav-collapsed .user-badge{justify-content:center;padding:8px}
+body.nav-collapsed .side-ft button{padding:8px;text-align:center;font-size:0;width:100%;display:flex;justify-content:center}
+body.nav-collapsed .side-ft button svg{font-size:initial;display:inline;width:16px;height:16px}
+body.nav-collapsed .side-ft>div{flex-direction:column}
+body.nav-collapsed .user-badge{justify-content:center;padding:8px;font-size:0}
+body.nav-collapsed .user-badge .ub-avatar{margin:0}
 body.nav-collapsed #sidebar-links{display:none}
-body.nav-collapsed .main{margin-left:58px}
+body.nav-collapsed .main{margin-left:54px}
 .topbar-menu{display:none;background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;margin-right:8px;transition:color .15s}
 .topbar-menu:hover{color:var(--text)}
 body.nav-collapsed .topbar-menu{display:flex}
