@@ -962,7 +962,7 @@ async function applyNewTeamPassword(){
   toast('Switched team — loading data...');
 }
 
-function initFirebase(){
+async function initFirebase(){
   loadTheme();loadAIKey();
   if(firebaseConfig.apiKey==='REPLACE_ME'){
     console.warn('Firebase not configured — running in local-only mode');
@@ -970,11 +970,8 @@ function initFirebase(){
     loadLs();loadMe();renderLinks();authGate();go('dashboard');return;
   }
   firebase.initializeApp(firebaseConfig);
-  TEAM_KEY=loadTeamKey();
-  if(!TEAM_KEY){
-    promptTeamPassword();
-    return;
-  }
+  TEAM_KEY=await hashPassword('Powering Digital with AI');
+  saveTeamKey(TEAM_KEY);
   connectFirebase();
 }
 function connectFirebase(){
