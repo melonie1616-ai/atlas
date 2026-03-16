@@ -382,7 +382,7 @@ body.nav-collapsed .topbar-menu{display:flex}
       </div>
       <div class="ni" data-v="workstreams" onclick="go('workstreams')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-        Workstreams <span class="badge" id="nb-ws">5</span>
+        Workstreams <span class="badge" id="nb-ws">8</span>
       </div>
       <div class="ni" data-v="engagements" onclick="go('engagements')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6m3-3h-6"/></svg>
@@ -505,22 +505,28 @@ const firebaseConfig = {
 };
 
 const WS_DEFS=[
-  {id:'standards',name:'Standards, Landscape & Intake',color:'var(--indigo)',
-   desc:'Baselining shadow AI usage across 1,500+ users. Defining enterprise architecture, approved tool set, intake process, and waiver path.'},
-  {id:'data-infra',name:'Data Infrastructure & Investment',color:'var(--sky)',
-   desc:'Positioning AI enablement as a governed data initiative. Microsoft Graph connector, Copilot-ready data sources, and investment path.'},
-  {id:'ai-program',name:'AI Transformation Program (CDO)',color:'var(--violet)',
-   desc:'Managing the work, tracking owners and decisions, publishing executive dashboard. Initial focus: GTM and Legal.'},
-  {id:'adr-council',name:'Executive ADR Council',color:'var(--teal)',
-   desc:'Voice of the customer, BU accountability, and alignment on AI priorities. Launches in step with the broader framework.'},
-  {id:'superworker',name:'Superworker Community & Enablement',color:'var(--amber)',
-   desc:'HR owns training, culture, AI literacy, and adoption. CDO coordinates overall alignment.'}
+  {id:'gtm',name:'GTM',color:'#6366f1',category:'BU',owner:'Alejandro Figueroa',
+   desc:'Go-to-Market AI initiatives across sales, marketing, and customer engagement.'},
+  {id:'legal',name:'Legal',color:'#8b5cf6',category:'BU',owner:'Alejandro Figueroa',
+   desc:'AI applications for Legal operations, contract analysis, and compliance.'},
+  {id:'hr',name:'HR',color:'#0ea5e9',category:'BU',owner:'Chris Hunsaker',
+   desc:'AI initiatives for Human Resources — talent, workforce planning, and employee experience.'},
+  {id:'operations',name:'Operations',color:'#0d9488',category:'BU',owner:'Chris Hunsaker',
+   desc:'AI applications across data center operations and facilities management.'},
+  {id:'governance',name:'Governance / Policy',color:'#475569',category:'Cross-cutting',owner:'Forrest Hook',
+   desc:'Enterprise AI governance, policy framework, standards, and compliance oversight.'},
+  {id:'copilot',name:'Copilot (Enterprise)',color:'#2563eb',category:'Cross-cutting',owner:'Stephen Farkouh',
+   desc:'Microsoft 365 Copilot rollout, licensing, adoption, and enterprise enablement.'},
+  {id:'data-enterprise',name:'Data (Enterprise)',color:'#7c3aed',category:'Cross-cutting',owner:'TBD',
+   desc:'Enterprise data strategy, data infrastructure, and AI-ready data foundations.'},
+  {id:'nexus',name:'Nexus / Platform Architecture',color:'#059669',category:'Cross-cutting',owner:'Alejandro Figueroa',
+   desc:'Platform architecture, Nexus integration, and AI tooling infrastructure.'}
 ];
 
 function defaults(){
   return{
     workstreams:WS_DEFS.map(w=>({id:w.id,name:w.name,color:w.color,desc:w.desc,
-      owner:'',status:'on-track',notes:'',phase:'0-30'})),
+      category:w.category||'',owner:w.owner||'',status:'on-track',notes:'',phase:'0-30'})),
     engagements:[],
     milestones:[
       {id:uid(),title:'Deliver data infrastructure / MSFT Graph connector draft',workstream:'data-infra',date:'2026-03-11',status:'done',owner:'Brian Letort',notes:'Socialize with Don, Stephen, key BU leaders'},
@@ -643,6 +649,14 @@ function loadLs(){
   if(!D.usecases)D.usecases=[];
   if(!D.cadences)D.cadences=[];
   if(!D.lessons)D.lessons=[];
+  if(!D._wsV2){
+    const newWs=defaults().workstreams;
+    const wsIds=new Set(newWs.map(w=>w.id));
+    if(!D.workstreams.find(w=>wsIds.has(w.id))){
+      D.workstreams=newWs;
+    }
+    D._wsV2=true;
+  }
 }
 
 function log(t){
@@ -1199,7 +1213,11 @@ function submitQC(){
 
 function wsName(id){const w=(D.workstreams||[]).find(x=>x.id===id);return w?esc(w.name):'—'}
 function wsColor(id){const w=WS_DEFS.find(x=>x.id===id);return w?w.color:'var(--muted)'}
-function wsOpts(sel){return WS_DEFS.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''}>${w.name}</option>`).join('')}
+function wsOpts(sel){
+  const bu=WS_DEFS.filter(w=>w.category==='BU');
+  const cc=WS_DEFS.filter(w=>w.category==='Cross-cutting');
+  return `<optgroup label="Business Unit">${bu.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''}>${w.name}</option>`).join('')}</optgroup><optgroup label="Cross-cutting">${cc.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''}>${w.name}</option>`).join('')}</optgroup>`;
+}
 function engOpts(sel){return(D.engagements||[]).filter(e=>e.type==='Use Case').sort((a,b)=>a.title.localeCompare(b.title)).map(e=>`<option value="${e.id}"${sel===e.id?' selected':''}>${esc(e.title)}</option>`).join('')}
 function engName(id){const e=(D.engagements||[]).find(x=>x.id===id);return e?e.title:''}
 function peopleOpts(sel){
@@ -1231,27 +1249,29 @@ function rDash(c){
     <div class="card kpi" style="cursor:pointer" onclick="go('engagements')"><div class="acc" style="background:var(--violet)"></div><div class="lbl">Active Engagements</div><div class="val" style="color:var(--violet)">${activeEng.length}</div><div class="note">${engs.length} total</div></div>
   </div>
 
-  <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:20px">
-    ${(D.workstreams||[]).map(w=>{
-      const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);
-      const wMsDone=wMs.filter(t=>t.status==='done').length;
-      const wMsOD=wMs.filter(t=>t.status==='open'&&t.due&&t.due<today()).length;
-      const wTasks=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;
+  ${['BU','Cross-cutting'].map(cat=>{
+    const catWs=(D.workstreams||[]).filter(w=>(w.category||WS_DEFS.find(d=>d.id===w.id)?.category)===cat);
+    if(!catWs.length)return'';
+    return `<div style="margin-bottom:18px">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:8px">${cat==='BU'?'Business Unit':'Cross-cutting'}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px">
+    ${catWs.map(w=>{
+      const wMsOD=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id&&t.status==='open'&&t.due&&t.due<today()).length;
       const wTasksOD=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open'&&t.due&&t.due<today()).length;
-      const wDone=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='done').length;
-      const msPct=wMs.length?Math.round(wMsDone/wMs.length*100):0;
       const isWarn=w.status==='at-risk'||w.status==='blocked';
       const wc=wsColor(w.id);
       const alertCount=wMsOD+wTasksOD;
-      return `<div style="flex:1;min-width:170px;border-radius:var(--r-lg);cursor:pointer;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s;position:relative" onclick="go('workstreams');setTimeout(()=>openWsDetail('${w.id}'),100)" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow='var(--shadow)'">
+      const ownerName=w.owner||(WS_DEFS.find(d=>d.id===w.id)?.owner)||'';
+      return `<div style="flex:1;min-width:160px;max-width:220px;border-radius:var(--r-lg);cursor:pointer;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s;position:relative" onclick="go('workstreams');setTimeout(()=>openWsDetail('${w.id}'),100)" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow='var(--shadow)'">
         ${isWarn?'<div style="position:absolute;top:8px;right:10px;background:rgba(255,255,255,.9);color:var(--red);width:20px;height:20px;border-radius:50%;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;z-index:1" title="'+alertCount+' overdue item'+(alertCount!==1?'s':'')+'">!</div>':''}
-        <div style="background:${wc};padding:14px 16px;color:#fff">
-          <div style="font-size:13px;font-weight:700;line-height:1.3;margin-bottom:6px">${esc(w.name)}</div>
+        <div style="background:${wc};padding:12px 14px;color:#fff">
+          <div style="font-size:13px;font-weight:700;line-height:1.3;margin-bottom:4px">${esc(w.name)}</div>
+          ${ownerName?'<div style="font-size:10px;opacity:.8;margin-bottom:5px">'+esc(ownerName)+'</div>':''}
           <span style="background:${isWarn?'rgba(255,0,0,.35)':'rgba(255,255,255,.2)'};color:#fff;padding:2px 10px;border-radius:10px;font-size:10px;font-weight:600">${w.status}</span>
-          ${isWarn?'<div style="font-size:10px;margin-top:6px;opacity:.9">'+(wMsOD?wMsOD+' milestone'+(wMsOD>1?'s':'')+' overdue':'')+(wMsOD&&wTasksOD?' · ':'')+(wTasksOD?wTasksOD+' task'+(wTasksOD>1?'s':'')+' overdue':'')+'</div>':''}
+          ${isWarn?'<div style="font-size:10px;margin-top:5px;opacity:.9">'+(wMsOD?wMsOD+' overdue milestone'+(wMsOD>1?'s':''):'')+(wMsOD&&wTasksOD?' · ':'')+(wTasksOD?wTasksOD+' overdue task'+(wTasksOD>1?'s':''):'')+'</div>':''}
         </div>
       </div>`}).join('')}
-  </div>
+    </div></div>`}).join('')}
 
   <div class="card" style="margin-bottom:20px">
     <div class="dash-hd" style="font-size:16px;font-weight:800;letter-spacing:-.01em">Program Timeline</div>
@@ -1333,25 +1353,25 @@ function buildGantt(){
 
   const quarters=[
     {label:'Q1 2026',start:'2026-01-01',end:'2026-03-31',color:'#0369a1',subBg:'#1e6fa8',txt:'#fff',subTxt:'#fff',items:[
-      {label:'Establish baseline of enterprise AI usage',ws:'standards'},
-      {label:'Identify priority business outcome opportunities',ws:'ai-program'},
-      {label:'Stand up AI Governance Council',ws:'adr-council'}
+      {label:'Establish baseline of enterprise AI usage',ws:'governance'},
+      {label:'Identify priority business outcome opportunities',ws:'gtm'},
+      {label:'Stand up AI Governance Council',ws:'governance'}
     ]},
     {label:'Q2 2026',start:'2026-04-01',end:'2026-06-30',color:'#0284c7',subBg:'#2b8fcf',txt:'#fff',subTxt:'#fff',items:[
-      {label:'Launch priority AI use cases',ws:'ai-program'},
-      {label:'Establish ROI measurement framework',ws:'ai-program'},
-      {label:'Expand NexusOS as enterprise data & AI control plane',ws:'data-infra'},
-      {label:'Set clear expectations on data readiness',ws:'data-infra'}
+      {label:'Launch priority AI use cases',ws:'gtm'},
+      {label:'Establish ROI measurement framework',ws:'data-enterprise'},
+      {label:'Enterprise Copilot rollout',ws:'copilot'},
+      {label:'Set clear expectations on data readiness',ws:'data-enterprise'}
     ]},
     {label:'Q3-Q4 2026',start:'2026-07-01',end:'2026-12-31',color:'#38bdf8',subBg:'#7dd3fc',txt:'#0c4a6e',subTxt:'#0c4a6e',items:[
-      {label:'Expand proven pilots',ws:'ai-program'},
-      {label:'Refine enterprise AI standards',ws:'standards'},
-      {label:'Operationalize AI adoption and value reporting',ws:'ai-program'}
+      {label:'Expand proven pilots across BUs',ws:'operations'},
+      {label:'Refine enterprise AI governance & standards',ws:'governance'},
+      {label:'Operationalize AI adoption and value reporting',ws:'data-enterprise'}
     ]},
     {label:'Q1 2027',start:'2027-01-01',end:'2027-03-31',color:'#7dd3fc',subBg:'#bae6fd',txt:'#0c4a6e',subTxt:'#0c4a6e',items:[
-      {label:'Enterprise AI platform maturity',ws:'data-infra'},
-      {label:'Scaled horizontal (employee) AI automation',ws:'superworker'},
-      {label:'Scaled vertical (business-unit) AI automation',ws:'adr-council'}
+      {label:'Enterprise AI platform maturity (Nexus)',ws:'nexus'},
+      {label:'Scaled horizontal AI automation (HR, Legal)',ws:'hr'},
+      {label:'Scaled vertical AI automation (GTM, Ops)',ws:'operations'}
     ]}
   ];
 
@@ -1471,22 +1491,29 @@ async function runAIInsights(){
 // WORKSTREAMS
 // ═══════════════════════════════════════════════════
 function rWork(c){
-  c.innerHTML=`<div class="ws-grid">${(D.workstreams||[]).map((w,i)=>{
-    const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);
-    const wMsDone=wMs.filter(t=>t.status==='done').length;
-    const wTasks=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;
-    const wEng=(D.engagements||[]).filter(e=>e.workstream===w.id).length;
-    const sc=statusColors[w.status]||'pill-m';
-    return `<div class="card ws-card${i>=4?' ws-full':''}" onclick="openWsDetail('${w.id}')" style="border-top:3px solid ${wsColor(w.id)}">
-      <div class="ws-hd"><h4>${esc(w.name)}</h4><span class="pill ${sc}">${w.status}</span></div>
-      <div class="ws-desc">${esc(w.desc)}</div>
-      <div class="ws-meta">
-        <span>Owner: <strong>${esc(w.owner)||'Unassigned'}</strong></span>
-        <span>Milestones: ${wMsDone}/${wMs.length}</span>
-        <span>Tasks: ${wTasks} open</span>
-        <span>Engagements: ${wEng}</span>
-      </div>
-    </div>`}).join('')}</div>`;
+  const renderCat=(cat,label)=>{
+    const catWs=(D.workstreams||[]).filter(w=>(w.category||WS_DEFS.find(d=>d.id===w.id)?.category)===cat);
+    if(!catWs.length)return'';
+    return `<div style="margin-bottom:24px">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:10px">${label}</div>
+    <div class="ws-grid">${catWs.map(w=>{
+      const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);
+      const wMsDone=wMs.filter(t=>t.status==='done').length;
+      const wTasks=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;
+      const wEng=(D.engagements||[]).filter(e=>e.workstream===w.id).length;
+      const sc=statusColors[w.status]||'pill-m';
+      return `<div class="card ws-card" onclick="openWsDetail('${w.id}')" style="border-top:3px solid ${wsColor(w.id)}">
+        <div class="ws-hd"><h4>${esc(w.name)}</h4><span class="pill ${sc}">${w.status}</span></div>
+        <div class="ws-desc">${esc(w.desc)}</div>
+        <div class="ws-meta">
+          <span>Owner: <strong>${esc(w.owner)||'Unassigned'}</strong></span>
+          <span>Milestones: ${wMsDone}/${wMs.length}</span>
+          <span>Tasks: ${wTasks} open</span>
+          <span>Engagements: ${wEng}</span>
+        </div>
+      </div>`}).join('')}</div></div>`;
+  };
+  c.innerHTML=renderCat('BU','Business Unit')+renderCat('Cross-cutting','Cross-cutting');
 }
 
 function openWsDetail(id){
