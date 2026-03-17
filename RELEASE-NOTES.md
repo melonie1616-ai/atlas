@@ -1,6 +1,6 @@
 # ATLAS — Release Notes
 
-**Release date:** March 2026
+**Release date:** March 17, 2026
 
 ---
 

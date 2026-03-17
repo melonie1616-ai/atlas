@@ -516,6 +516,23 @@ body.nav-collapsed .topbar-menu{display:flex}
 
 <script>
 let D,V='dashboard',ME='',dbRef=null,firebaseReady=false,ganttZoom='6m',ganttShowTasks=false,ganttCustomStart='';
+const RELEASE_VERSION='2026-03-17';
+const RELEASE_NOTES=[
+  {date:'March 17, 2026',whatsNew:[
+    'Manage groups: Shows all existing groups; list stays in sync on load and after add/rename/delete.',
+    'Quick Capture: Paste or speak notes; voice dictation in Chrome/Edge. Notes go to Inbox.',
+    'Report Out: Executive-style table; grouped by BU / Crosscutting; Copy, Print, AI Summarize.',
+    'Workstreams: Status Not Started; stakeholders per workstream (multi-select); shown on tiles and list.',
+    'AI Program Insights: Real counts; Next Steps use actual task owners.',
+    'Program Timeline: Configurable starting date.',
+    'Dashboard: Open Items shows count due this week.'
+  ],data:[
+    'Workstreams (8): GTM, Legal, HR, Operations (BU); Governance, Copilot, Data, Nexus (Cross-cutting). Status: Not Started, On Track, At Risk, Blocked, Complete. Stakeholders editable in Edit Workstream.',
+    'Groups (8): CDO Leadership, CDO Team, Executive, Legal, HR, IT/Security, Business Stakeholder, Other.',
+    'People: Name, role, group, email, phone, notes. Seed list for new installs.',
+    'Engagements, tasks, inbox, meetings, decisions, risks, metrics: workstream/engagement linkage supported.'
+  ]}
+];
 const uid=()=>Math.random().toString(36).slice(2,10);
 const today=()=>new Date().toISOString().slice(0,10);
 const esc=s=>s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):'';
@@ -788,6 +805,7 @@ async function submitLogin(){
   }
   SESSION_VERIFIED=true;saveSession();
   saveMe(person.name);closeModal();log(esc(person.name)+' signed in');startPresence();render();toast('Welcome, '+person.name.split(' ')[0]+'!');
+  setTimeout(checkReleaseNotes,500);
 }
 
 function showRegister(){
@@ -829,6 +847,7 @@ async function submitRegister(){
   save();log(esc(preAssigned.name)+' created account ('+esc(uname)+')');
   SESSION_VERIFIED=true;saveSession();
   saveMe(preAssigned.name);closeModal();startPresence();render();toast('Account created! Welcome, '+preAssigned.name.split(' ')[0]+'!');
+  setTimeout(checkReleaseNotes,500);
 }
 
 function changeName(){
@@ -878,6 +897,7 @@ async function submitReAuth(){
   if(!person||!person.pinHash){SESSION_VERIFIED=true;saveSession();closeModal();render();return}
   if(person.pinHash!==pinH){msg.style.display='';msg.style.background='var(--red-lt)';msg.style.color='var(--red)';msg.textContent='Incorrect PIN.';return}
   SESSION_VERIFIED=true;saveSession();closeModal();log(esc(ME)+' signed in');render();toast('Welcome back, '+ME.split(' ')[0]+'!');
+  setTimeout(checkReleaseNotes,500);
 }
 function switchUser(){closeModal();ME='';localStorage.removeItem('ai-tracker-name');clearSession();SESSION_VERIFIED=false;promptName()}
 
@@ -1030,7 +1050,9 @@ async function initFirebase(){
   if(firebaseConfig.apiKey==='REPLACE_ME'){
     console.warn('Firebase not configured — running in local-only mode');
     document.getElementById('connecting').classList.add('hide');
-    loadLs();loadMe();renderLinks();authGate();go('dashboard');return;
+    loadLs();loadMe();renderLinks();authGate();go('dashboard');
+    if(ME&&SESSION_VERIFIED)setTimeout(checkReleaseNotes,600);
+    return;
   }
   firebase.initializeApp(firebaseConfig);
   TEAM_KEY=await hashPassword('Powering Digital with AI');
@@ -1049,12 +1071,14 @@ function connectFirebase(){
       firebaseReady=true;
       document.getElementById('connecting').classList.add('hide');
       loadMe();renderLinks();authGate();go('dashboard');
+      if(ME&&SESSION_VERIFIED)setTimeout(checkReleaseNotes,600);
       dbRef.on('value',snap=>{const val=snap.val();if(val&&val.workstreams){delete val._presence;D=val;ensureGroups();saveLs();renderLinks();render()}});
       startPresence();
     });
   }).catch(()=>{
     document.getElementById('connecting').classList.add('hide');
     loadLs();loadMe();renderLinks();authGate();go('dashboard');
+    if(ME&&SESSION_VERIFIED)setTimeout(checkReleaseNotes,600);
   });
 }
 function startPresence(){
@@ -1241,29 +1265,30 @@ function delLink(id){
 }
 function openModal(html){document.getElementById('modal').innerHTML=html;document.getElementById('overlay').classList.add('open')}
 function openReleaseNotesModal(){
+  const blocks=(RELEASE_NOTES||[]).map(r=>{
+    const w=(r.whatsNew||[]).map(i=>'<li>'+esc(i)+'</li>').join('');
+    const d=(r.data||[]).map(i=>'<li>'+esc(i)+'</li>').join('');
+    return `<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)" class="release-block" data-date="${esc(r.date)}">
+      <p style="font-size:14px;font-weight:700;color:var(--text);margin:0 0 10px">${esc(r.date)}</p>
+      <h4 style="margin:8px 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)">What's new</h4>
+      <ul style="margin:0 0 10px;padding-left:18px;line-height:1.5;font-size:13px">${w||'<li>—</li>'}</ul>
+      <h4 style="margin:8px 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)">Data</h4>
+      <ul style="margin:0;padding-left:18px;line-height:1.5;font-size:13px">${d||'<li>—</li>'}</ul>
+    </div>`;
+  }).join('');
   const html=`<div class="m-hd"><h3>Release notes</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
-  <div class="m-bd" style="max-height:70vh;overflow-y:auto;font-size:13px">
-    <p style="color:var(--muted);margin-bottom:12px">March 2026</p>
-    <h4 style="margin:12px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)">What's new</h4>
-    <ul style="margin:0 0 14px;padding-left:18px;line-height:1.5">
-      <li><strong>Manage groups:</strong> Shows all existing groups; list stays in sync on load and after add/rename/delete.</li>
-      <li><strong>Quick Capture:</strong> Paste or speak notes; voice dictation in Chrome/Edge. Notes go to Inbox.</li>
-      <li><strong>Report Out:</strong> Executive-style table; grouped by BU / Crosscutting; Copy, Print, AI Summarize.</li>
-      <li><strong>Workstreams:</strong> Status Not Started; stakeholders per workstream (multi-select); shown on tiles and list.</li>
-      <li><strong>AI Program Insights:</strong> Real counts; Next Steps use actual task owners.</li>
-      <li><strong>Program Timeline:</strong> Configurable starting date.</li>
-      <li><strong>Dashboard:</strong> Open Items shows count due this week.</li>
-    </ul>
-    <h4 style="margin:12px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)">Data</h4>
-    <ul style="margin:0;padding-left:18px;line-height:1.5">
-      <li><strong>Workstreams (8):</strong> GTM, Legal, HR, Operations (BU); Governance, Copilot, Data, Nexus (Cross-cutting). Status: Not Started, On Track, At Risk, Blocked, Complete. Stakeholders editable in Edit Workstream.</li>
-      <li><strong>Groups (8):</strong> CDO Leadership, CDO Team, Executive, Legal, HR, IT/Security, Business Stakeholder, Other.</li>
-      <li><strong>People:</strong> Name, role, group, email, phone, notes. Seed list for new installs.</li>
-      <li>Engagements, tasks, inbox, meetings, decisions, risks, metrics: workstream/engagement linkage supported.</li>
-    </ul>
-  </div>
+  <div class="m-bd" style="max-height:70vh;overflow-y:auto;font-size:13px"><style>.release-block:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}</style>${blocks||'<p style="color:var(--muted)">No release notes yet.</p>'}</div>
   <div class="m-ft"><button class="mbtn mb-cancel" onclick="closeModal()">Done</button></div>`;
   openModal(html);
+}
+function checkReleaseNotes(){
+  try{
+    if(!ME||!SESSION_VERIFIED)return;
+    const seen=localStorage.getItem('atlas_release_seen');
+    if(seen===RELEASE_VERSION)return;
+    openReleaseNotesModal();
+    localStorage.setItem('atlas_release_seen',RELEASE_VERSION);
+  }catch(e){}
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
 let qcVoiceActive=false,qcRecognition=null;
