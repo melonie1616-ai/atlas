@@ -2931,13 +2931,11 @@ function rReport(c){
     const nextRaw=(w.whatsNext||'').trim()||whatsNextFromApp(w.id);
     const recent=bulletsHtml(recentRaw,3);
     const lookAhead=bulletsHtml(nextRaw,3);
-    const keyDateLines=keyDatesLinesForWs(w.id);
-    const keyDatesHtml=keyDateLines.length?'<span style="font-size:10px;color:var(--muted)">Key dates: </span>'+keyDateLines.map(l=>esc(l)).join('; '):'';
     return `<tr>
       <td class="rpt-ws-name"><strong>${esc(w.name)}</strong></td>
       <td><span class="rpt-status ${statusClass}">${st.replace('-',' ')}</span></td>
       <td class="rpt-ws-recent" style="font-size:11px;color:var(--text);vertical-align:top">${recent}</td>
-      <td class="rpt-ws-keydates" style="font-size:11px;color:var(--text);vertical-align:top">${lookAhead}${keyDatesHtml?'<div style="margin-top:6px">'+keyDatesHtml+'</div>':''}</td>
+      <td class="rpt-ws-keydates" style="font-size:11px;color:var(--text);vertical-align:top">${lookAhead}</td>
     </tr>`;
   }
   function renderWsRowFull(w){
@@ -3097,14 +3095,14 @@ function copyReport(){
       const nextTxt=(w.whatsNext||'').trim()||whatsNextFromApp(w.id);
       const recentBullets=recentTxt?(recentTxt.split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,3).map(s=>'  • '+s).join('\n')):'  —';
       const nextBullets=nextTxt?(nextTxt.split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,2).map(s=>'  • '+s).join('\n')):'  —';
-      text+=`${w.name}\n  Status: ${(w.status||'on-track').replace('-',' ')}\n  Key dates: ${keyDatesForWsCopy(w.id)}\n  Recent accomplishments:\n${recentBullets}\n  What's next:\n${nextBullets}\n\n`;
+      text+=`${w.name}\n  Status: ${(w.status||'on-track').replace('-',' ')}\n  Recent accomplishments:\n${recentBullets}\n  What's next:\n${nextBullets}\n\n`;
     })}
     if(ccWsCopy.length){text+='CROSSCUTTING WORKSTREAMS\n\n';ccWsCopy.forEach(w=>{
       const recentTxt=(w.recentAccomplishments||'').trim()||recentAccomplishmentsFromApp(w.id);
       const nextTxt=(w.whatsNext||'').trim()||whatsNextFromApp(w.id);
       const recentBullets=recentTxt?(recentTxt.split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,3).map(s=>'  • '+s).join('\n')):'  —';
       const nextBullets=nextTxt?(nextTxt.split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,2).map(s=>'  • '+s).join('\n')):'  —';
-      text+=`${w.name}\n  Status: ${(w.status||'on-track').replace('-',' ')}\n  Key dates: ${keyDatesForWsCopy(w.id)}\n  Recent accomplishments:\n${recentBullets}\n  What's next:\n${nextBullets}\n\n`;
+      text+=`${w.name}\n  Status: ${(w.status||'on-track').replace('-',' ')}\n  Recent accomplishments:\n${recentBullets}\n  What's next:\n${nextBullets}\n\n`;
     })}
   }else{
     const buWs=allWs.filter(w=>w.category==='BU');
