@@ -601,27 +601,35 @@ const firebaseConfig = {
 
 const WS_DEFS=[
   {id:'gtm',name:'GTM',color:'#6366f1',category:'BU',owner:'Alejandro Figueroa',
-   desc:'Go-to-Market AI initiatives across sales, marketing, and customer engagement.'},
+   desc:'Go-to-Market AI initiatives across sales, marketing, and customer engagement.',
+   businessOutcome:'Enabled self-serve reporting and reduced manual data entry for sales and marketing teams.'},
   {id:'legal',name:'Legal',color:'#8b5cf6',category:'BU',owner:'Alejandro Figueroa',
-   desc:'AI applications for Legal operations, contract analysis, and compliance.'},
+   desc:'AI applications for Legal operations, contract analysis, and compliance.',
+   businessOutcome:'Faster contract review and reduced compliance risk through AI-assisted analysis.'},
   {id:'hr',name:'HR',color:'#0ea5e9',category:'BU',owner:'Chris Hunsaker',
-   desc:'AI initiatives for Human Resources — talent, workforce planning, and employee experience.'},
+   desc:'AI initiatives for Human Resources — talent, workforce planning, and employee experience.',
+   businessOutcome:'Improved workforce planning and employee experience via AI tools and training.'},
   {id:'operations',name:'Operations',color:'#0d9488',category:'BU',owner:'Chris Hunsaker',
-   desc:'AI applications across data center operations and facilities management.'},
+   desc:'AI applications across data center operations and facilities management.',
+   businessOutcome:'Enabled self-serve reporting and reduced manual data entry for operations.'},
   {id:'governance',name:'Governance / Policy',color:'#475569',category:'Cross-cutting',owner:'Forrest Hook',
-   desc:'Enterprise AI governance, policy framework, standards, and compliance oversight.'},
+   desc:'Enterprise AI governance, policy framework, standards, and compliance oversight.',
+   businessOutcome:'Faster contract review and reduced compliance risk through policy and standards.'},
   {id:'copilot',name:'Copilot (Enterprise)',color:'#2563eb',category:'Cross-cutting',owner:'Stephen Farkouh',
-   desc:'Microsoft 365 Copilot rollout, licensing, adoption, and enterprise enablement.'},
+   desc:'Microsoft 365 Copilot rollout, licensing, adoption, and enterprise enablement.',
+   businessOutcome:'Increased productivity and adoption of AI-assisted work across the enterprise.'},
   {id:'data-enterprise',name:'Data (Enterprise)',color:'#7c3aed',category:'Cross-cutting',owner:'TBD',
-   desc:'Enterprise data strategy, data infrastructure, and AI-ready data foundations.'},
+   desc:'Enterprise data strategy, data infrastructure, and AI-ready data foundations.',
+   businessOutcome:'AI-ready data foundations enabling analytics and automation across BUs.'},
   {id:'nexus',name:'Nexus / Platform Architecture',color:'#059669',category:'Cross-cutting',owner:'Alejandro Figueroa',
-   desc:'Platform architecture, Nexus integration, and AI tooling infrastructure.'}
+   desc:'Platform architecture, Nexus integration, and AI tooling infrastructure.',
+   businessOutcome:'Unified platform and tooling for AI delivery and integration.'}
 ];
 
 function defaults(){
   return{
     workstreams:WS_DEFS.map(w=>({id:w.id,name:w.name,color:w.color,desc:w.desc,
-      category:w.category||'',owner:w.owner||'',status:'on-track',notes:'',phase:'0-30'})),
+      category:w.category||'',owner:w.owner||'',status:'on-track',notes:'',phase:'0-30',businessOutcome:w.businessOutcome||''})),
     engagements:[],
     milestones:[
       {id:uid(),title:'Deliver data infrastructure / MSFT Graph connector draft',workstream:'data-infra',date:'2026-03-11',status:'done',owner:'Brian Letort',notes:'Socialize with Don, Stephen, key BU leaders'},
@@ -693,7 +701,7 @@ function defaults(){
       {id:uid(),name:'Darya Mazandarani',role:'Commercial Sales (France)',group:'Business Stakeholder',email:'',phone:'',notes:'EMEA region. Active Superworker community member.'}
     ],
     groups:['CDO Leadership','CDO Team','Executive','Legal','HR','IT/Security','Business Stakeholder','Other'],
-    reportNotes:{accomplishments:'',blockers:'',nextPeriod:'',asOf:'',executiveSummary:''},
+    reportNotes:{accomplishments:'',blockers:'',nextPeriod:'',asOf:'',executiveSummary:'',businessOutcomes:'• Time savings from automation across BUs\n• Reduced manual effort in key processes\n• Stronger governance and risk control'},
     log:[{id:uid(),ts:new Date().toISOString(),text:'ATLAS initialized'}]
   };
 }
@@ -706,6 +714,40 @@ function ensureGroups(){
   usedGroups.forEach(g=>{if(g&&!D.groups.includes(g))D.groups.push(g)});
   D.groups.sort((a,b)=>a.localeCompare(b));
 }
+
+function ensureWorkstreamsV3AndBusinessOutcomes(){
+  if(!D.workstreams)D.workstreams=[];
+  if(!D._wsV3){
+    const newWs=defaults().workstreams;
+    const oldIds=new Set(['standards','data-infra','ai-program','adr-council','superworker']);
+    const hasOnlyOld=D.workstreams.every(w=>oldIds.has(w.id));
+    const missingNew=!D.workstreams.find(w=>w.category);
+    if(hasOnlyOld||missingNew){
+      D.workstreams=newWs;
+    }
+    D._wsV3=true;
+  }
+  (D.workstreams||[]).forEach(w=>{
+    const def=WS_DEFS.find(d=>d.id===w.id);
+    if(!w.category&&def){
+      w.category=def.category;
+      if(!w.owner)w.owner=def.owner||'';
+    }
+    if(def&&def.businessOutcome&&!(w.businessOutcome||'').trim()){
+      w.businessOutcome=def.businessOutcome;
+    }
+  });
+}
+
+function ensureReportNotesBusinessOutcomesDefaults(){
+  if(!D.reportNotes){
+    D.reportNotes={accomplishments:'',blockers:'',nextPeriod:'',asOf:'',executiveSummary:'',businessOutcomes:''};
+  }
+  if(D.reportNotes.businessOutcomes===undefined){
+    D.reportNotes.businessOutcomes='• Time savings from automation across BUs\n• Reduced manual effort in key processes\n• Stronger governance and risk control';
+  }
+}
+
 function loadLs(){
   try{D=JSON.parse(localStorage.getItem('ai-tracker'))}catch(e){}
   if(!D||!D.workstreams)D=defaults();
@@ -744,7 +786,8 @@ function loadLs(){
     if(existing&&!existing.username)existing.username=sp.username;
   });
   if(!D.log)D.log=[];
-  if(!D.reportNotes)D.reportNotes={accomplishments:'',blockers:'',nextPeriod:'',asOf:'',executiveSummary:''};
+  if(!D.reportNotes)D.reportNotes={accomplishments:'',blockers:'',nextPeriod:'',asOf:'',executiveSummary:'',businessOutcomes:''};
+  if(D.reportNotes.businessOutcomes===undefined)D.reportNotes.businessOutcomes='• Time savings from automation across BUs\n• Reduced manual effort in key processes\n• Stronger governance and risk control';
   if(!D.links)D.links=[];
   if(!D.decisions)D.decisions=[];
   if(!D.risks)D.risks=[];
@@ -763,10 +806,9 @@ function loadLs(){
     D._wsV3=true;
   }
   (D.workstreams||[]).forEach(w=>{
-    if(!w.category){
-      const def=WS_DEFS.find(d=>d.id===w.id);
-      if(def){w.category=def.category;if(!w.owner)w.owner=def.owner||''}
-    }
+    const def=WS_DEFS.find(d=>d.id===w.id);
+    if(!w.category&&def){w.category=def.category;if(!w.owner)w.owner=def.owner||''}
+    if(def&&def.businessOutcome&&!(w.businessOutcome||'').trim())w.businessOutcome=def.businessOutcome;
   });
 }
 
@@ -1146,13 +1188,31 @@ function connectFirebase(){
   firebase.auth().signInAnonymously().then(()=>{
     dbRef.once('value').then(snap=>{
       const val=snap.val();
-      if(val&&val.workstreams){D=val;ensureGroups();saveLs()}
+      if(val&&val.workstreams){
+        D=val;
+        ensureGroups();
+        ensureWorkstreamsV3AndBusinessOutcomes();
+        ensureReportNotesBusinessOutcomesDefaults();
+        saveLs()
+      }
       else{loadLs();save()}
       firebaseReady=true;
       document.getElementById('connecting').classList.add('hide');
       loadMe();renderLinks();authGate();go('dashboard');
       if(ME&&SESSION_VERIFIED)setTimeout(checkReleaseNotes,600);
-      dbRef.on('value',snap=>{const val=snap.val();if(val&&val.workstreams){delete val._presence;D=val;ensureGroups();saveLs();renderLinks();render()}});
+      dbRef.on('value',snap=>{
+        const val=snap.val();
+        if(val&&val.workstreams){
+          delete val._presence;
+          D=val;
+          ensureGroups();
+          ensureWorkstreamsV3AndBusinessOutcomes();
+          ensureReportNotesBusinessOutcomesDefaults();
+          saveLs();
+          renderLinks();
+          render()
+        }
+      });
       startPresence();
     });
   }).catch(()=>{
@@ -1925,6 +1985,7 @@ function openWsEdit(id){
       <textarea id="ws-recent" style="min-height:44px;font-size:12px" placeholder="Brief bullets for report-out (e.g. Delivered X; Completed Y). Or use Suggest from app to fill from completed tasks.">${w?esc(w.recentAccomplishments||''):''}</textarea>
     </div>
     <div class="fg"><label>What's next</label><textarea id="ws-whatsnext" style="min-height:44px;font-size:12px" placeholder="Brief bullets for report-out (e.g. Launch pilot by Mar 20; Align with Legal). Or use Suggest from app to fill from open tasks.">${w?esc(w.whatsNext||''):''}</textarea></div>
+    <div class="fg"><label>Business outcome / impact</label><textarea id="ws-businessOutcome" style="min-height:44px;font-size:12px" placeholder="One line or short paragraph for executive outcomes report (e.g. Reduced manual effort by X%; Enabled Y capability for Z team).">${w?esc(w.businessOutcome||''):''}</textarea></div>
     <div class="fg"><label>Notes / Status Update</label><textarea id="ws-notes" style="min-height:50px">${w?esc(w.notes||''):''}</textarea></div>
     <div class="fg"><label>Documents</label>
       <div id="ws-links-list">${(w?.links||[]).map((l,i)=>`<div style="display:flex;gap:4px;margin-bottom:4px;align-items:center"><input class="ws-link-label" value="${esc(l.label)}" placeholder="Label" style="flex:1;max-width:140px"><input class="ws-link-url" value="${esc(l.url)}" placeholder="https://..." style="flex:2"><button type="button" style="color:var(--red);font-size:13px;background:none;border:none;cursor:pointer;padding:0 4px" onclick="this.parentElement.remove()">&#10005;</button></div>`).join('')}</div>
@@ -2005,6 +2066,7 @@ function saveWs(id){
   w.desc=document.getElementById('ws-desc').value.trim();
   w.recentAccomplishments=(document.getElementById('ws-recent')?.value||'').trim();
   w.whatsNext=(document.getElementById('ws-whatsnext')?.value||'').trim();
+  w.businessOutcome=(document.getElementById('ws-businessOutcome')?.value||'').trim();
   w.notes=document.getElementById('ws-notes').value;
   w.stakeholders=[...document.querySelectorAll('.ws-sth-cb')].filter(cb=>cb.checked).map(cb=>cb.value);
   const labels=[...document.querySelectorAll('.ws-link-label')];
@@ -2914,7 +2976,27 @@ function rReport(c){
       ${ccWsSorted.map(renderWsRowExec).join('')}
     </tbody>
   </table>`;
-  const workstreamSection=reportViewMode==='exec'
+  const outcomeToWorkstreams={};
+  (allWs||[]).forEach(w=>{
+    const o=(w.businessOutcome||'').trim()||'— No outcome specified';
+    if(!outcomeToWorkstreams[o])outcomeToWorkstreams[o]=[];
+    outcomeToWorkstreams[o].push(w.name);
+  });
+  const outcomesGroupedHtml=Object.keys(outcomeToWorkstreams).length
+    ?Object.entries(outcomeToWorkstreams).map(([outcomeText,names])=>`<div class="rpt-section" style="margin-bottom:14px"><div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)">${esc(outcomeText)}</div><div style="font-size:12px;color:var(--muted)">${names.map(n=>esc(n)).join(' · ')}</div></div>`).join('')
+    :'<p style="color:var(--muted);font-size:13px">No workstreams. Add Business outcome / impact in Workstreams &rarr; edit workstream.</p>';
+  const outcomesTable=`<table class="rpt-exec-table rpt-ws-focus">
+    <thead><tr><th>Workstream</th><th>Business outcome / impact</th></tr></thead>
+    <tbody>
+      ${buWsSorted.length?'<tr class="rpt-group-header rpt-group-bu"><td colspan="2"><span>Business Unit</span></td></tr>':''}
+      ${buWsSorted.map(w=>`<tr><td class="rpt-ws-name"><strong>${esc(w.name)}</strong></td><td style="font-size:12px;color:var(--text);vertical-align:top">${esc((w.businessOutcome||'').trim()||'—')}</td></tr>`).join('')}
+      ${ccWsSorted.length?'<tr class="rpt-group-header rpt-group-cc"><td colspan="2"><span>Crosscutting</span></td></tr>':''}
+      ${ccWsSorted.map(w=>`<tr><td class="rpt-ws-name"><strong>${esc(w.name)}</strong></td><td style="font-size:12px;color:var(--text);vertical-align:top">${esc((w.businessOutcome||'').trim()||'—')}</td></tr>`).join('')}
+    </tbody>
+  </table>`;
+  const workstreamSection=reportViewMode==='outcomes'
+    ?`<div class="rpt-section"><h3>Outcomes by impact</h3><p style="font-size:12px;color:var(--muted);margin:0 0 10px">Workstreams that share the same business outcome are grouped together.</p>${outcomesGroupedHtml}</div><div class="rpt-section"><h3>Outcomes by workstream</h3>${allWs.length?outcomesTable:'<p style="color:var(--muted);font-size:13px">No workstreams.</p>'}</div><div class="rpt-section"><h3>Program-level outcomes</h3><div class="card rpt-field-card" style="padding:10px 14px"><textarea id="rpt-businessOutcomes" style="width:100%;border:none;font-size:14px;line-height:1.6;min-height:70px;outline:none;resize:vertical;font-family:inherit" placeholder="Bullet points: business value delivered, impact metrics, strategic outcomes (e.g. Time saved; Risk reduced; Capability enabled).">${esc(rn.businessOutcomes||'')}</textarea></div></div>`
+    :reportViewMode==='exec'
     ?`<div class="rpt-section">${allWs.length?execTableWorkstreamFocus:'<p style="color:var(--muted);font-size:13px">No workstreams defined.</p>'}</div>`
     :`<div class="rpt-section"><h3>Workstream Status</h3>${allWs.length?execTableFull:'<p style="color:var(--muted);font-size:13px">No workstreams defined.</p>'}</div>`;
   const milestoneSectionFull=reportViewMode==='full'?`<div class="rpt-section">
@@ -2931,10 +3013,10 @@ function rReport(c){
     <div id="report-export-area">
     <div class="rpt-header">
       <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px">
-        <h2 style="margin:0;font-size:1em">AI Program Status — ${reportViewMode==='exec'?'Executive View':'Full View'}</h2>
+        <h2 style="margin:0;font-size:1em">AI Program Status — ${reportViewMode==='outcomes'?'Business Outcomes & Impact':reportViewMode==='exec'?'Executive View':'Full View'}</h2>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <label style="font-size:14px;color:var(--muted);display:flex;align-items:center;gap:4px">Report as of <input type="date" id="rpt-asof" value="${reportAsOf}" style="padding:4px 8px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:14px;font-family:inherit" onchange="saveReportAsOf();render()"></label>
-          <div style="display:flex;gap:2px"><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='exec'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='exec'?'#fff':'var(--text)'}" onclick="localStorage.setItem(\'atlas_report_view\',\'exec\');render()">Executive</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='full'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='full'?'#fff':'var(--text)'}" onclick="localStorage.setItem(\'atlas_report_view\',\'full\');render()">Full</button></div>
+          <div style="display:flex;gap:2px"><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='exec'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='exec'?'#fff':'var(--text)'}" onclick="localStorage.setItem('atlas_report_view','exec');render()">Executive</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='full'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='full'?'#fff':'var(--text)'}" onclick="localStorage.setItem('atlas_report_view','full');render()">Full</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='outcomes'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='outcomes'?'#fff':'var(--text)'}" onclick="localStorage.setItem('atlas_report_view','outcomes');render()">Outcomes</button></div>
         </div>
       </div>
     </div>
@@ -2967,7 +3049,7 @@ function rReport(c){
 }
 function saveReportAsOf(){
   const el=document.getElementById('rpt-asof');if(!el)return;
-  if(!D.reportNotes)D.reportNotes={accomplishments:'',blockers:'',nextPeriod:'',asOf:today(),executiveSummary:''};
+  if(!D.reportNotes)D.reportNotes={accomplishments:'',blockers:'',nextPeriod:'',asOf:today(),executiveSummary:'',businessOutcomes:''};
   D.reportNotes.asOf=el.value;save();toast('Report date updated');
 }
 function saveReport(){
@@ -2976,12 +3058,14 @@ function saveReport(){
   const blockEl=document.getElementById('rpt-block');
   const nextEl=document.getElementById('rpt-next');
   const sumEl=document.getElementById('rpt-exec-summary');
+  const outcomesEl=document.getElementById('rpt-businessOutcomes');
   D.reportNotes=D.reportNotes||{};
   D.reportNotes.asOf=asOfEl?asOfEl.value:today();
   D.reportNotes.accomplishments=accEl?accEl.value:(D.reportNotes.accomplishments||'');
   D.reportNotes.blockers=blockEl?blockEl.value:(D.reportNotes.blockers||'');
   D.reportNotes.nextPeriod=nextEl?nextEl.value:(D.reportNotes.nextPeriod||'');
   D.reportNotes.executiveSummary=sumEl?sumEl.value.trim():(D.reportNotes.executiveSummary||'');
+  D.reportNotes.businessOutcomes=outcomesEl?outcomesEl.value:(D.reportNotes.businessOutcomes||'');
   save();log('Updated report notes');toast('Report notes saved');
 }
 function copyReport(){
@@ -2996,8 +3080,16 @@ function copyReport(){
     const openWithDue=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open'&&t.due).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
     return openWithDue.slice(0,2).map(t=>fmtDate(t.due)+(t.title?' — '+t.title:'')).join('; ')||'—';
   }
-  let text=`AI PROGRAM STATUS — ${reportViewMode==='exec'?'EXECUTIVE VIEW':'FULL VIEW'}\nAs of ${asOf}\n\n`;
-  if(reportViewMode==='exec'){
+  let text=`AI PROGRAM STATUS — ${reportViewMode==='outcomes'?'BUSINESS OUTCOMES & IMPACT':reportViewMode==='exec'?'EXECUTIVE VIEW':'FULL VIEW'}\nAs of ${asOf}\n\n`;
+  if(reportViewMode==='outcomes'){
+    const allWsCopy=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+    const outcomeToWs={};
+    allWsCopy.forEach(w=>{const o=(w.businessOutcome||'').trim()||'— No outcome specified';if(!outcomeToWs[o])outcomeToWs[o]=[];outcomeToWs[o].push(w.name)});
+    text+='OUTCOMES BY IMPACT\n\n';
+    Object.entries(outcomeToWs).forEach(([outcome,names])=>{text+=outcome+'\n  '+names.join(' · ')+'\n\n'});
+    const progOutcomes=(document.getElementById('rpt-businessOutcomes')?.value||(D.reportNotes||{}).businessOutcomes||'').trim();
+    if(progOutcomes)text+=`PROGRAM-LEVEL OUTCOMES\n${progOutcomes}\n`;
+  }else if(reportViewMode==='exec'){
     const execSum=(D.reportNotes||{}).executiveSummary||'';
     if(execSum.trim())text+=execSum.trim()+'\n\n';
     if(buWsCopy.length){text+='BUSINESS UNIT WORKSTREAMS\n\n';buWsCopy.forEach(w=>{
@@ -3029,7 +3121,7 @@ function copyReport(){
   const acc=(document.getElementById('rpt-acc')?.value||(D.reportNotes||{}).accomplishments||'').trim();
   const blk=(document.getElementById('rpt-block')?.value||(D.reportNotes||{}).blockers||'').trim();
   const nxt=(document.getElementById('rpt-next')?.value||(D.reportNotes||{}).nextPeriod||'').trim();
-  if(reportViewMode!=='exec'){
+  if(reportViewMode==='full'){
     if(acc)text+=`ACCOMPLISHMENTS\n${acc}\n\n`;
     if(blk)text+=`BLOCKERS & RISKS\n${blk}\n\n`;
     if(nxt)text+=`NEXT PERIOD FOCUS\n${nxt}\n`;
