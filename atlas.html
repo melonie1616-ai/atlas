@@ -256,6 +256,18 @@ body.nav-collapsed .topbar-menu{display:flex}
 .rpt-ws-card .rpt-ws-desc{font-size:11.5px;color:var(--muted);margin-bottom:8px}
 .rpt-ws-card ul{font-size:11.5px;padding-left:16px;color:var(--text)}
 .rpt-ws-card ul li{margin-bottom:3px}
+.rpt-exec-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px}
+.rpt-exec-table th{text-align:left;padding:10px 12px;background:var(--bg-subtle);border:1px solid var(--border);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.rpt-exec-table td{padding:10px 12px;border:1px solid var(--border);vertical-align:top}
+.rpt-exec-table tr:nth-child(even){background:rgba(0,0,0,.02)}
+.rpt-exec-table .rpt-status{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap}
+.rpt-exec-table .rpt-status.on-track{background:#059669;color:#fff}
+.rpt-exec-table .rpt-status.at-risk{background:#d97706;color:#fff}
+.rpt-exec-table .rpt-status.blocked{background:#dc2626;color:#fff}
+.rpt-exec-table .rpt-status.complete{background:#2563eb;color:#fff}
+.rpt-exec-table .rpt-status.not-started{background:#64748b;color:#fff}
+.rpt-exec-table .rpt-scope{max-width:280px;font-size:11.5px;color:var(--text);line-height:1.4}
+.rpt-exec-table .rpt-timing{font-size:11px;color:var(--muted);white-space:nowrap}
 
 /* STRATEGY REF */
 .strat-section{margin-bottom:24px}
@@ -454,20 +466,38 @@ body.nav-collapsed .topbar-menu{display:flex}
   <div class="topbar">
     <button class="topbar-menu" onclick="toggleSidebar()" title="Expand sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
     <h2 id="viewTitle">Dashboard</h2>
-    <div id="presence-bar" style="display:flex;align-items:center;gap:4px;margin-left:12px"></div>
     <div class="tb-right">
       <input type="text" id="search" placeholder="Search..." oninput="render()">
       <button class="tb-btn" id="addBtn" style="display:none" onclick="handleAdd()">+ Add</button>
       <div id="topbar-links" style="display:flex;align-items:center;gap:6px"></div>
       <div style="position:relative">
-        <button class="tb-btn" onclick="toggleQC()" style="background:var(--accent);color:#fff;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Capture</button>
+        <button class="tb-btn" onclick="toggleAIPanel()" title="AI Program Insights" style="display:flex;align-items:center;gap:5px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 2a4 4 0 014 4v1a3 3 0 013 3v1a2 2 0 012 2v0a2 2 0 01-2 2h-1a3 3 0 01-3 3v1a4 4 0 01-8 0v-1a3 3 0 01-3-3H3a2 2 0 01-2-2v0a2 2 0 012-2h1a3 3 0 013-3V7a4 4 0 014-4z"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/></svg>AI Insights</button>
+        <div id="aiPanel" style="display:none;position:absolute;right:0;top:100%;margin-top:8px;width:420px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-md);z-index:200;max-height:70vh;overflow-y:auto">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+            <span style="background:var(--ai-glow);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800;font-size:15px">AI</span>
+            <span style="font-weight:700;font-size:14px">Program Insights</span>
+            <div style="margin-left:auto;display:flex;gap:6px">
+              <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px" onclick="copyInsights()">&#128203; Copy</button>
+              <button class="pill pill-i" style="cursor:pointer;border:none;font-size:11px" onclick="runAIInsights()">&#10024; Analyze</button>
+            </div>
+          </div>
+          <div id="ai-insights" style="padding:14px 16px;min-height:60px">
+            <p style="font-size:12.5px;color:var(--light)">Click "Analyze" to get AI-generated insights about your program's status, risks, and recommended actions.</p>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative">
+        <button class="tb-btn" onclick="toggleQC()" style="background:#ec4899;color:#fff;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Capture</button>
         <div class="qc-panel" id="qcPanel">
           <h4>Quick Capture</h4>
-          <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Paste notes, emails, or ideas. They'll go to your Inbox for triage.</p>
-          <textarea class="qc-ta" id="qcText" placeholder="Paste meeting notes, action items, ideas..."></textarea>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Paste or speak notes, emails, or ideas. They'll go to the Inbox for triage.</p>
+          <textarea class="qc-ta" id="qcText" placeholder="Paste or speak meeting notes, action items, ideas..."></textarea>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+            <button type="button" id="qcVoiceBtn" style="display:flex;align-items:center;gap:6px;padding:6px 12px;font-size:12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);color:var(--text);cursor:pointer;font-family:inherit" onclick="toggleQCVoice()" title="Use microphone to speak"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M12 1a3 3 0 0 1 3 3v8a3 3 0 0 1-6 0V4a3 3 0 0 1 3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg><span id="qcVoiceLabel">Start voice</span></button>
+          </div>
           <div class="qc-ft">
             <button style="color:var(--muted)" onclick="toggleQC()">Cancel</button>
-            <button style="background:var(--indigo);color:#fff;border-radius:var(--r-sm)" onclick="submitQC()">Send to Inbox</button>
+            <button style="background:#ec4899;color:#fff;border-radius:var(--r-sm)" onclick="submitQC()">Send to Inbox</button>
           </div>
         </div>
       </div>
@@ -484,7 +514,7 @@ body.nav-collapsed .topbar-menu{display:flex}
 
 
 <script>
-let D,V='dashboard',ME='',dbRef=null,firebaseReady=false,ganttZoom='6m',ganttShowTasks=false;
+let D,V='dashboard',ME='',dbRef=null,firebaseReady=false,ganttZoom='6m',ganttShowTasks=false,ganttCustomStart='';
 const uid=()=>Math.random().toString(36).slice(2,10);
 const today=()=>new Date().toISOString().slice(0,10);
 const esc=s=>s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):'';
@@ -912,11 +942,17 @@ async function callAI(systemPrompt,userPrompt,opts={}){
 function getProgramContext(){
   const ws=(D.workstreams||[]).map(w=>w.name+' ('+w.status+', owner: '+(w.owner||'TBD')+')').join('; ');
   const allMs=(D.tasks||[]).filter(t=>t.isMilestone);
-  const ms=allMs.map(m=>m.title+' — '+(m.status==='done'?'done':m.due&&m.due<today()?'overdue':'upcoming')+(m.due?' due '+m.due:'')).join('; ');
-  const openT=(D.tasks||[]).filter(t=>t.status==='open').map(t=>t.title+(t.due?' due '+t.due:'')).join('; ');
-  const doneT=(D.tasks||[]).filter(t=>t.status==='done').map(t=>t.title).join('; ');
+  const ms=allMs.map(m=>m.title+' — owner: '+(m.owner||'Unassigned')+' — '+(m.status==='done'?'done':m.due&&m.due<today()?'overdue':'upcoming')+(m.due?' due '+m.due:'')).join('; ');
+  const openTasks=(D.tasks||[]).filter(t=>t.status==='open');
+  const overdueCount=openTasks.filter(t=>t.due&&t.due<today()).length;
+  const openT=openTasks.map(t=>t.title+' (owner: '+(t.owner||'Unassigned')+(t.due?'; due '+t.due:'')+')').join('; ');
+  const doneT=(D.tasks||[]).filter(t=>t.status==='done').map(t=>t.title+' (owner: '+(t.owner||'Unassigned')+')').join('; ');
   const eng=(D.engagements||[]).map(e=>e.title+' ('+e.status+', type: '+(e.type||'N/A')+')').join('; ');
+  const wsCount=(D.workstreams||[]).length;
+  const wsOnTrack=(D.workstreams||[]).filter(w=>w.status==='on-track').length;
+  const msDone=allMs.filter(t=>t.status==='done').length;
   return `PROGRAM: AI Transformation Program — Digital Realty CDO
+COUNTS (use these exact numbers in insights): ${openTasks.length} open action items, ${overdueCount} overdue (past due date). ${wsCount} workstreams total, ${wsOnTrack} on-track. ${msDone}/${allMs.length} milestones complete.
 WORKSTREAMS: ${ws||'None'}
 MILESTONES: ${ms||'None'}
 OPEN TASKS: ${openT||'None'}
@@ -1027,16 +1063,7 @@ function startPresence(){
     renderPresence(active);
   });
 }
-function renderPresence(users){
-  const bar=document.getElementById('presence-bar');if(!bar)return;
-  if(!users.length){bar.innerHTML='';return}
-  const colors=['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#0ea5e9','#14b8a6'];
-  bar.innerHTML=users.map((u,i)=>{
-    const init=u.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-    const bg=colors[i%colors.length];
-    return `<div title="${u.name} — online" style="width:28px;height:28px;border-radius:50%;background:${bg};color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg-card);cursor:default">${init}</div>`
-  }).join('');
-}
+function renderPresence(){}
 
 // ═══════════════════════════════════════════════════
 // NAV
@@ -1205,13 +1232,36 @@ function delLink(id){
 }
 function openModal(html){document.getElementById('modal').innerHTML=html;document.getElementById('overlay').classList.add('open')}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
-function toggleQC(){document.getElementById('qcPanel').classList.toggle('open')}
+let qcVoiceActive=false,qcRecognition=null;
+function toggleQC(){document.getElementById('qcPanel').classList.toggle('open');document.getElementById('aiPanel').style.display='none';if(qcVoiceActive)toggleQCVoice()}
+function toggleAIPanel(){const p=document.getElementById('aiPanel');p.style.display=p.style.display==='none'?'block':'none';document.getElementById('qcPanel').classList.remove('open')}
+function toggleQCVoice(){
+  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SpeechRecognition){toast('Voice input not supported in this browser. Try Chrome or Edge.');return}
+  const ta=document.getElementById('qcText');const lbl=document.getElementById('qcVoiceLabel');const btn=document.getElementById('qcVoiceBtn');
+  if(qcVoiceActive){
+    if(qcRecognition)qcRecognition.stop();
+    qcVoiceActive=false;if(lbl)lbl.textContent='Start voice';if(btn){btn.style.background='';btn.style.borderColor='var(--border)'}
+    return;
+  }
+  qcRecognition=new SpeechRecognition();
+  qcRecognition.continuous=true;qcRecognition.interimResults=true;qcRecognition.lang='en-US';
+  qcRecognition.onresult=function(e){
+    let final='';
+    for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];if(r.isFinal)final+=r[0].transcript}
+    if(final)ta.value=(ta.value+(ta.value?' ':'')+final).trim();
+  };
+  qcRecognition.onerror=function(e){if(e.error!=='aborted')toast('Voice error: '+e.error)};
+  qcRecognition.onend=function(){if(qcVoiceActive){qcVoiceActive=false;if(lbl)lbl.textContent='Start voice';if(btn){btn.style.background='';btn.style.borderColor='var(--border)'}}}
+  qcRecognition.start();qcVoiceActive=true;if(lbl)lbl.textContent='Stop voice';if(btn){btn.style.background='rgba(236,72,153,.15)';btn.style.borderColor='#ec4899'}
+}
 function submitQC(){
   const text=(document.getElementById('qcText').value||'').trim();
   if(!text){toast('Enter something first');return}
   const title='Quick Capture — '+new Date().toLocaleDateString();
   if(!D.inbox)D.inbox=[];
   D.inbox.push({id:uid(),title,source:'quick-capture',content:text,created:new Date().toISOString(),extractedTasks:[],people:[],dateFound:'',addedBy:ME});
+  if(qcVoiceActive){qcVoiceActive=false;if(qcRecognition)qcRecognition.stop();qcRecognition=null}
   save();document.getElementById('qcText').value='';toggleQC();render();log('Quick capture to inbox');toast('Saved to Inbox');
 }
 
@@ -1222,7 +1272,7 @@ function wsOpts(sel){
   const bu=ws.filter(w=>w.category==='BU');
   const cc=ws.filter(w=>w.category==='Cross-cutting');
   let html=`<optgroup label="Business Unit">${bu.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}</optgroup>`;
-  html+=`<optgroup label="Cross-cutting">${cc.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}</optgroup>`;
+  html+=`<optgroup label="Crosscutting">${cc.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}</optgroup>`;
   return html;
 }
 function engOpts(sel){return(D.engagements||[]).filter(e=>e.type==='Use Case').sort((a,b)=>a.title.localeCompare(b.title)).map(e=>`<option value="${e.id}"${sel===e.id?' selected':''}>${esc(e.title)}</option>`).join('')}
@@ -1231,7 +1281,7 @@ function peopleOpts(sel){
   const ppl=(D.people||[]).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   return `<option value="">— Unassigned —</option>`+ppl.map(p=>`<option value="${esc(p.name)}"${sel===p.name?' selected':''}>${esc(p.name)}</option>`).join('');
 }
-const statusColors={'on-track':'pill-g','at-risk':'pill-a','blocked':'pill-r','complete':'pill-b'};
+const statusColors={'on-track':'pill-g','at-risk':'pill-a','blocked':'pill-r','complete':'pill-b','not-started':'pill-m'};
 const engStatusColors={intake:'pill-m',scoping:'pill-a',active:'pill-i','on-hold':'pill-v',complete:'pill-g'};
 const engTypes=['Use Case','Question','Tool Evaluation','Licensing','Escalation','General Request'];
 const engTypeColors={'Use Case':'pill-i','Question':'pill-b','Tool Evaluation':'pill-v','Licensing':'pill-a','Escalation':'pill-r','General Request':'pill-m'};
@@ -1242,6 +1292,12 @@ const engTypeColors={'Use Case':'pill-i','Question':'pill-b','Tool Evaluation':'
 function rDash(c){
   const open=(D.tasks||[]).filter(t=>t.status==='open');
   const overdue=open.filter(t=>t.due&&t.due<today());
+  const todayD=new Date(today()+'T00:00:00');
+  const dayOfWeek=todayD.getDay();
+  const weekStart=new Date(todayD);weekStart.setDate(todayD.getDate()-(dayOfWeek===0?6:dayOfWeek-1));
+  const weekEnd=new Date(weekStart);weekEnd.setDate(weekStart.getDate()+6);
+  const wkS=weekStart.toISOString().slice(0,10),wkE=weekEnd.toISOString().slice(0,10);
+  const dueThisWeek=open.filter(t=>t.due&&t.due>=wkS&&t.due<=wkE);
   const allMs=(D.tasks||[]).filter(t=>t.isMilestone);
   const msDone=allMs.filter(t=>t.status==='done');
   const msOD=allMs.filter(t=>t.status==='open'&&t.due&&t.due<today());
@@ -1257,14 +1313,14 @@ function rDash(c){
     const lead=w.owner||(WS_DEFS.find(d=>d.id===w.id)?.owner)||'';
     return `<div style="border-radius:var(--r-lg);cursor:pointer;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s;position:relative;background:${wc}" onclick="openWsDetail('${w.id}')" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow='var(--shadow)'">
       ${wOD?'<div style="position:absolute;top:8px;right:10px;background:rgba(255,255,255,.9);color:var(--red);width:20px;height:20px;border-radius:50%;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;z-index:1" title="'+wOD+' overdue">!</div>':''}
-      <div style="padding:16px 18px;color:#fff;min-height:90px;display:flex;flex-direction:column;justify-content:space-between">
+      <div style="padding:10px 14px;color:#fff;min-height:62px;display:flex;flex-direction:column;justify-content:space-between">
         <div>
-          <div style="font-size:14px;font-weight:700;line-height:1.3;margin-bottom:4px">${esc(w.name)}</div>
-          <div style="font-size:11px;opacity:.8">${lead||'Unassigned'}</div>
+          <div style="font-size:12.5px;font-weight:700;line-height:1.25;margin-bottom:2px">${esc(w.name)}</div>
+          <div style="font-size:10px;opacity:.8">${lead||'Unassigned'}${(()=>{const pn=new Set((D.people||[]).map(p=>p.name));const valid=(w.stakeholders||[]).filter(s=>pn.has(s));return valid.length?' &middot; '+valid.join(', '):''})()}</div>
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
-          <span style="background:${isWarn?'rgba(255,0,0,.35)':'rgba(255,255,255,.2)'};color:#fff;padding:2px 10px;border-radius:10px;font-size:10px;font-weight:600">${w.status}</span>
-          <span style="font-size:11px;opacity:.85">${wOpen?wOpen+' open':'0 items'}</span>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+          <span style="background:${w.status==='not-started'?'rgba(100,100,100,.4)':isWarn?'rgba(255,0,0,.35)':'rgba(255,255,255,.2)'};color:#fff;padding:1px 8px;border-radius:10px;font-size:9.5px;font-weight:600">${(w.status||'on-track').replace('-',' ')}</span>
+          <span style="font-size:10px;opacity:.85">${wOpen?wOpen+' open':'0 items'}</span>
         </div>
       </div>
     </div>`;
@@ -1275,19 +1331,19 @@ function rDash(c){
 
   c.innerHTML=`
   <div class="kpi-row">
-    <div class="card kpi" style="cursor:pointer" onclick="go('tasks')"><div class="acc" style="background:var(--indigo)"></div><div class="lbl">Open Items</div><div class="val" style="color:var(--indigo)">${open.length}</div><div class="note">${overdue.length?'<span style="color:var(--red);font-weight:600">'+overdue.length+' overdue</span>':'<span style="color:var(--green)">All on track</span>'}</div></div>
+    <div class="card kpi" style="cursor:pointer" onclick="go('tasks')"><div class="acc" style="background:var(--indigo)"></div><div class="lbl">Open Items</div><div class="val" style="color:var(--indigo)">${open.length}</div><div class="note">${overdue.length?'<span style="color:var(--red);font-weight:600">'+overdue.length+' overdue</span>':'<span style="color:var(--green)">All on track</span>'}${dueThisWeek.length?' &middot; <span style="color:var(--indigo);font-weight:600">'+dueThisWeek.length+' due this week</span>':''}</div></div>
     <div class="card kpi" style="cursor:pointer" onclick="taskFilter='milestones';go('tasks')"><div class="acc" style="background:var(--teal)"></div><div class="lbl">Milestones</div><div class="val" style="color:var(--teal)">${msDone.length}<span style="font-size:18px;color:var(--light);font-weight:500">/${allMs.length}</span></div><div class="note">${msOD.length?'<span style="color:var(--red);font-weight:600">'+msOD.length+' overdue</span>':msUp.length+' upcoming'}</div></div>
     <div class="card kpi" style="cursor:pointer" onclick="go('workstreams')"><div class="acc" style="background:var(--violet)"></div><div class="lbl">Active Workstreams</div><div class="val" style="color:var(--violet)">${activeWs.length}</div><div class="note">${allWs.length} total</div></div>
   </div>
 
-  <div style="margin-bottom:24px">
-    <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;margin-bottom:12px">Business Unit</div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">${buWs.map(renderWsTile).join('')}</div>
+  <div style="margin-bottom:16px;padding:14px 16px;border-radius:var(--r);background:rgba(99,102,241,.04);border:1px solid rgba(99,102,241,.1)">
+    <div style="font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px;color:var(--text)">Business Unit</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">${buWs.map(renderWsTile).join('')}</div>
   </div>
 
-  <div style="margin-bottom:24px">
-    <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;margin-bottom:12px">Cross-cutting</div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">${ccWs.map(renderWsTile).join('')}</div>
+  <div style="margin-bottom:16px;padding:14px 16px;border-radius:var(--r);background:rgba(16,185,129,.04);border:1px solid rgba(16,185,129,.1)">
+    <div style="font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px;color:var(--text)">Crosscutting</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">${ccWs.map(renderWsTile).join('')}</div>
   </div>
 
   <div class="card" style="margin-bottom:20px">
@@ -1295,18 +1351,6 @@ function rDash(c){
     ${buildGantt()}
   </div>
 
-  ${OPENAI_KEY?`<div class="card" style="margin-bottom:20px">
-    <div class="dash-hd" style="display:flex;align-items:center;gap:10px;font-size:16px;font-weight:800">
-      <span style="background:var(--ai-glow);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800">AI</span> Program Insights
-      <div style="margin-left:auto;display:flex;gap:8px">
-        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px" onclick="copyInsights()">&#128203; Copy</button>
-        <button class="pill pill-i" style="cursor:pointer;border:none;font-size:11px" onclick="runAIInsights()">&#10024; Analyze</button>
-      </div>
-    </div>
-    <div id="ai-insights" class="dash-bd" style="min-height:40px">
-      <p style="font-size:12.5px;color:var(--light)">Click "Analyze" to get AI-generated insights about your program's status, risks, and recommended actions.</p>
-    </div>
-  </div>`:''}
 
   <div class="card" style="margin-top:16px">
     <div class="dash-hd">Activity Log</div>
@@ -1323,13 +1367,19 @@ function buildGantt(){
   ];
 
   const nowDate=new Date(today()+'T00:00:00');
-  const tStart=new Date(nowDate.getFullYear(),nowDate.getMonth(),nowDate.getDate());
+  let tStart;
+  if(ganttCustomStart){
+    tStart=new Date(ganttCustomStart+'T00:00:00');
+  }else{
+    tStart=new Date(nowDate.getFullYear(),nowDate.getMonth(),nowDate.getDate());
+    tStart.setDate(tStart.getDate()-30);
+  }
   let tEnd;
   const zoomMonths={'1m':1,'3m':3,'6m':6,'12m':12,'all':0}[ganttZoom]||6;
   if(ganttZoom==='all'){
     tEnd=new Date('2027-07-01');
   }else{
-    tEnd=new Date(tStart);tEnd.setMonth(tEnd.getMonth()+zoomMonths);
+    tEnd=new Date(nowDate);tEnd.setMonth(tEnd.getMonth()+zoomMonths);
   }
   const totalDays=Math.max(1,(tEnd-tStart)/(864e5));
 
@@ -1509,7 +1559,7 @@ function buildGantt(){
 
   return `<div class="gantt">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:0 4px">
-      <div style="font-size:13px;color:var(--muted)">Starting ${new Date(tStart).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">Starting <input type="date" value="${tStart.toISOString().slice(0,10)}" onchange="ganttCustomStart=this.value;render()" style="padding:2px 6px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--text);cursor:pointer"></div>
       <div style="display:flex;gap:4px;align-items:center">
         ${taskToggle}
         <span style="font-size:12px;color:var(--light);margin-left:8px;margin-right:4px">Zoom:</span>${zoomBtns}
@@ -1535,12 +1585,13 @@ async function runAIInsights(){
   if(el)el.innerHTML='<p style="font-size:12.5px;color:var(--muted)">Analyzing program data...</p>';
   const ctx=getProgramContext();
   const result=await callAI(
-    `You are a senior program management advisor for Digital Realty's enterprise AI Transformation Program. Provide concise, actionable insights. Use short bullet points. Be direct and specific — reference workstreams, milestones, and tasks by name. Format your response as HTML with <strong> for emphasis and <br> for line breaks. Use 3 sections: Status Summary (2-3 bullets), Risks & Attention Needed (2-3 bullets), and Recommended Next Actions (2-3 bullets).`,
-    `Analyze this program's current state and provide executive-level insights:\n\n${ctx}`
+    `You are a senior program advisor for Digital Realty's AI Transformation Program. STRICT RULES: (1) Output raw HTML only — NO code fences, NO backticks, NO markdown. (2) Each section header uses <strong style="font-size:13.5px">. (3) Bullets use <ul style="margin:4px 0 12px 8px;padding-left:16px"> and <li style="margin-bottom:3px">. (4) Be concise — each bullet is ONE sentence max. (5) ALWAYS include specific dates, counts (X of Y complete, X overdue), and percentages where the data supports it. (6) Name specific workstreams, owners, and deadlines. (7) Three sections: "Key Updates" (progress, wins, status with numbers), "Watch List" (overdue items, at-risk workstreams, blockers with dates), "Next Steps" (owner + action + date). 2-4 bullets per section.`,
+    'Executive briefing. Use ONLY the numbers from the COUNTS line. For people: each OPEN TASK and MILESTONE in the data includes "owner: Name" — in Next Steps and elsewhere, assign actions ONLY to that owner (the person actually assigned to that task). Do not substitute workstream leads or guess; use the owner field from the data.\n\n'+ctx
   );
   if(!el)return;
   if(result){
-    el.innerHTML=`<div style="font-size:13px;line-height:1.7">${result}</div>`;
+    let clean=result.replace(/```html\s*/gi,'').replace(/```\s*/g,'').trim();
+    el.innerHTML=`<div style="font-size:13px;line-height:1.7">${clean}</div>`;
   }else{
     el.innerHTML='<p style="font-size:12.5px;color:var(--red)">Could not generate insights. Check your API key and try again.</p>';
   }
@@ -1576,6 +1627,7 @@ function rWork(c){
       <td style="width:6px;padding:0"><div style="width:5px;height:28px;border-radius:3px;background:${wsColor(w.id)}"></div></td>
       <td style="font-weight:600;font-size:13.5px">${esc(w.name)}</td>
       <td style="font-size:12.5px;color:var(--muted)">${esc(w.owner)||'<span style="color:var(--light)">Unassigned</span>'}</td>
+      <td style="font-size:12px;color:var(--muted)">${(w.stakeholders||[]).length?w.stakeholders.map(s=>esc(s)).join(', '):'—'}</td>
       <td style="width:10%"><span class="pill ${sc}" style="font-size:10px">${w.status}</span></td>
       <td style="width:10%;font-size:12px;color:var(--muted)">${wOpen} open / ${wAll.length} total</td>
       <td style="width:10%;font-size:12px;${risks?'color:var(--red);font-weight:600':'color:var(--muted)'}">${risks?risks+' risk'+(risks>1?'s':''):'—'}</td>
@@ -1603,8 +1655,9 @@ function rWork(c){
         <thead><tr>
           <th style="width:6px;padding:0"></th>
           <th>Workstream</th>
-          <th style="width:16%">Lead</th>
-          <th style="width:10%">Status</th>
+          <th style="width:14%">Lead</th>
+          <th style="width:14%">Stakeholders</th>
+          <th style="width:9%">Status</th>
           <th style="width:10%">Items</th>
           <th style="width:10%">Risks</th>
           <th style="width:120px">Progress</th>
@@ -1622,7 +1675,7 @@ function rWork(c){
       <select style="padding:5px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12.5px;font-family:inherit;background:var(--bg-subtle);color:var(--text);cursor:pointer;outline:none" onchange="wsCatFilter=this.value;render()">
         <option value="">All Categories</option>
         <option value="BU"${wsCatFilter==='BU'?' selected':''}>Business Unit (${totalBU})</option>
-        <option value="Cross-cutting"${wsCatFilter==='Cross-cutting'?' selected':''}>Cross-cutting (${totalCC})</option>
+        <option value="Cross-cutting"${wsCatFilter==='Cross-cutting'?' selected':''}>Crosscutting (${totalCC})</option>
       </select>
       <select style="padding:5px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12.5px;font-family:inherit;background:var(--bg-subtle);color:var(--text);cursor:pointer;outline:none" onchange="wsLeadFilter=this.value;render()">
         <option value="">All Leads</option>
@@ -1633,7 +1686,7 @@ function rWork(c){
     </div>
   </div>
   ${renderGroup(buWs,'Business Unit','_bu',totalBU)}
-  ${renderGroup(ccWs,'Cross-cutting','_cc',totalCC)}`;
+  ${renderGroup(ccWs,'Crosscutting','_cc',totalCC)}`;
 }
 
 function openWsEdit(id){
@@ -1644,10 +1697,19 @@ function openWsEdit(id){
     <div class="fg"><label>Name</label><input id="ws-name" value="${w?esc(w.name):''}"></div>
     <div class="fg-row">
       <div class="fg"><label>Lead</label><select id="ws-owner">${peopleOpts(w?.owner||'')}</select></div>
-      <div class="fg"><label>Category</label><select id="ws-cat"><option value="BU"${w?.category==='BU'?' selected':''}>Business Unit</option><option value="Cross-cutting"${(!w||w?.category==='Cross-cutting')?' selected':''}>Cross-cutting</option></select></div>
+      <div class="fg"><label>Category</label><select id="ws-cat"><option value="BU"${w?.category==='BU'?' selected':''}>Business Unit</option><option value="Cross-cutting"${(!w||w?.category==='Cross-cutting')?' selected':''}>Crosscutting</option></select></div>
+    </div>
+    <div class="fg"><label>Stakeholders</label>
+      <div id="ws-stakeholders" style="display:flex;flex-wrap:wrap;gap:4px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);min-height:36px;max-height:180px;overflow-y:auto">
+        ${(()=>{const sel=w?.stakeholders||[];const ppl=(D.people||[]).slice().sort((a,b)=>{const ac=sel.includes(a.name)?0:1,bc=sel.includes(b.name)?0:1;return ac!==bc?ac-bc:(a.name||'').localeCompare(b.name||'')});return ppl.map(p=>{const checked=sel.includes(p.name);return '<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;padding:2px 8px;border-radius:12px;border:1px solid '+(checked?'var(--accent)':'var(--border)')+';background:'+(checked?'rgba(99,102,241,.12)':'var(--bg)')+';white-space:nowrap;transition:all .1s" onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="if(!this.querySelector(\'input\').checked)this.style.borderColor=\'var(--border)\'" onclick="const cb=this.querySelector(\'input\');cb.checked=!cb.checked;this.style.background=cb.checked?\'rgba(99,102,241,.12)\':\'var(--bg)\';this.style.borderColor=cb.checked?\'var(--accent)\':\'var(--border)\'"><input type="checkbox" class="ws-sth-cb" value="'+esc(p.name)+'" '+(checked?'checked':'')+' style="accent-color:var(--accent);width:14px;height:14px;pointer-events:none"> '+esc(p.name)+'</label>'}).join('')})()}
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+        <input id="ws-new-person" placeholder="Add new person..." style="flex:1;padding:4px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);color:var(--text);font-family:inherit">
+        <button type="button" style="font-size:12px;color:#fff;background:var(--accent);border:none;cursor:pointer;padding:4px 10px;border-radius:var(--r-sm);font-family:inherit;white-space:nowrap" onclick="addPersonFromWs()">+ Add</button>
+      </div>
     </div>
     <div class="fg-row">
-      <div class="fg"><label>Status</label><select id="ws-status"><option value="on-track"${(!w||w?.status==='on-track')?' selected':''}>On Track</option><option value="at-risk"${w?.status==='at-risk'?' selected':''}>At Risk</option><option value="blocked"${w?.status==='blocked'?' selected':''}>Blocked</option><option value="complete"${w?.status==='complete'?' selected':''}>Complete</option></select></div>
+      <div class="fg"><label>Status</label><select id="ws-status"><option value="on-track"${(!w||w?.status==='on-track')?' selected':''}>On Track</option><option value="at-risk"${w?.status==='at-risk'?' selected':''}>At Risk</option><option value="blocked"${w?.status==='blocked'?' selected':''}>Blocked</option><option value="complete"${w?.status==='complete'?' selected':''}>Complete</option><option value="not-started"${w?.status==='not-started'?' selected':''}>Not Started</option></select></div>
       <div class="fg"><label>Color</label><select id="ws-color">${colors.map(cl=>`<option value="${cl}"${(w?.color||'#6366f1')===cl?' selected':''} style="background:${cl};color:#fff">${cl}</option>`).join('')}</select></div>
     </div>
     <div class="fg"><label>Description</label><textarea id="ws-desc" style="min-height:50px">${w?esc(w.desc):''}</textarea></div>
@@ -1669,6 +1731,21 @@ function addWsLink(){
   const d=document.createElement('div');d.style.cssText='display:flex;gap:4px;margin-bottom:4px;align-items:center';
   d.innerHTML='<input class="ws-link-label" placeholder="Label" style="flex:1;max-width:140px"><input class="ws-link-url" placeholder="https://..." style="flex:2"><button type="button" style="color:var(--red);font-size:13px;background:none;border:none;cursor:pointer;padding:0 4px" onclick="this.parentElement.remove()">&#10005;</button>';
   c.appendChild(d);
+}
+function addPersonFromWs(){
+  const inp=document.getElementById('ws-new-person');if(!inp)return;
+  const name=inp.value.trim();if(!name){toast('Enter a name');return}
+  if(!D.people)D.people=[];
+  if(D.people.find(p=>p.name.toLowerCase()===name.toLowerCase())){toast(name+' already exists');inp.value='';return}
+  D.people.push({id:uid(),name,role:'',group:'',email:'',phone:''});
+  save();inp.value='';
+  const container=document.getElementById('ws-stakeholders');if(!container)return;
+  const lbl=document.createElement('label');
+  lbl.style.cssText='display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;padding:2px 8px;border-radius:12px;border:1px solid var(--accent);background:rgba(99,102,241,.12);white-space:nowrap;transition:all .1s';
+  lbl.innerHTML='<input type="checkbox" class="ws-sth-cb" value="'+esc(name)+'" checked style="accent-color:var(--accent);width:14px;height:14px;pointer-events:none"> '+esc(name);
+  lbl.onclick=function(){const cb=this.querySelector('input');cb.checked=!cb.checked;this.style.background=cb.checked?'rgba(99,102,241,.12)':'var(--bg)';this.style.borderColor=cb.checked?'var(--accent)':'var(--border)'};
+  container.insertBefore(lbl,container.firstChild);
+  toast(name+' added to People & selected');
 }
 function wsLinkedItems(wsId){
   const tasks=(D.tasks||[]).filter(t=>t.workstream===wsId);
@@ -1715,6 +1792,7 @@ function saveWs(id){
   w.color=document.getElementById('ws-color').value;
   w.desc=document.getElementById('ws-desc').value.trim();
   w.notes=document.getElementById('ws-notes').value;
+  w.stakeholders=[...document.querySelectorAll('.ws-sth-cb')].filter(cb=>cb.checked).map(cb=>cb.value);
   const labels=[...document.querySelectorAll('.ws-link-label')];
   const urls=[...document.querySelectorAll('.ws-link-url')];
   w.links=labels.map((el,i)=>({label:el.value.trim(),url:urls[i]?.value.trim()||''})).filter(l=>l.url);
@@ -1938,9 +2016,19 @@ function openTaskModal(id){
   openModal(`<div class="m-hd"><h3>${t?'Edit':'New'} Action Item</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
     <div class="fg"><label>Title</label><input id="t-title" value="${t?esc(t.title):''}"></div>
-    <div style="padding:8px 0 10px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px"><input type="checkbox" id="t-milestone" ${t?.isMilestone?'checked':''}> <span style="font-size:16px">&#9733;</span> <strong>Mark as Milestone</strong> <span style="color:var(--muted);font-size:12px">— shows on timeline and reports</span></label></div>
+    <div style="padding:10px 14px;margin:8px 0 12px;border-radius:var(--r-sm);background:${t?.isMilestone?'rgba(245,158,11,.12)':'var(--bg-subtle)'};border:1px solid ${t?.isMilestone?'#f59e0b':'var(--border)'}">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px" onclick="const cb=document.getElementById('t-milestone');cb.checked=!cb.checked;const box=this.parentElement;if(cb.checked){box.style.background='rgba(245,158,11,.12)';box.style.borderColor='#f59e0b'}else{box.style.background='var(--bg-subtle)';box.style.borderColor='var(--border)'}">
+        <input type="checkbox" id="t-milestone" ${t?.isMilestone?'checked':''} style="accent-color:#f59e0b;width:18px;height:18px" onclick="event.stopPropagation();const box=this.closest('div');if(this.checked){box.style.background='rgba(245,158,11,.12)';box.style.borderColor='#f59e0b'}else{box.style.background='var(--bg-subtle)';box.style.borderColor='var(--border)'}">
+        <span style="font-size:20px;color:#f59e0b">&#9733;</span>
+        <strong style="font-size:14px">Mark as Milestone</strong>
+        <span style="color:var(--muted);font-size:12.5px">— shows on timeline and reports</span>
+      </label>
+    </div>
     <div class="fg-row">
       <div class="fg"><label>Owner</label><select id="t-owner">${peopleOpts(t?.owner||'')}</select></div>
+      <div class="fg"><label>Workstream</label><select id="t-ws"><option value="">— None —</option>${wsOpts(t?.workstream)}</select></div>
+    </div>
+    <div class="fg-row">
       <div class="fg"><label>Start Date</label><input type="date" id="t-start" value="${t?.startDate||''}"></div>
       <div class="fg"><label>Target Date</label><input type="date" id="t-due" value="${t?t.due:''}"></div>
     </div>
@@ -1948,10 +2036,7 @@ function openTaskModal(id){
       <div class="fg"><label>Priority</label><select id="t-pri"><option value="high"${t?.priority==='high'?' selected':''}>High</option><option value="medium"${(!t||t.priority==='medium')?' selected':''}>Medium</option><option value="low"${t?.priority==='low'?' selected':''}>Low</option></select></div>
       <div class="fg"><label>Status</label><select id="t-status"><option value="open"${(!t||t.status==='open')?' selected':''}>Open</option><option value="done"${t?.status==='done'?' selected':''}>Done</option></select></div>
     </div>
-    <div class="fg-row">
-      <div class="fg"><label>Workstream</label><select id="t-ws"><option value="">— None —</option>${wsOpts(t?.workstream)}</select></div>
-    </div>
-    <div class="fg"><label>Notes</label><textarea id="t-notes">${t?esc(t.notes):''}</textarea></div>
+    <div class="fg"><label>Notes</label><textarea id="t-notes" style="min-height:100px">${t?esc(t.notes):''}</textarea></div>
   </div>
   <div class="m-ft">
     ${t?'<button class="mbtn mb-del" onclick="delTask(\''+t.id+'\');closeModal()">Delete</button>':''}
@@ -2376,37 +2461,63 @@ function rReport(c){
   const msDone=allMs.filter(t=>t.status==='done');
   const msUp=allMs.filter(t=>t.status==='open'&&(!t.due||t.due>=today())).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
   const msOD=allMs.filter(t=>t.status==='open'&&t.due&&t.due<today());
+  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  const buWs=allWs.filter(w=>w.category==='BU');
+  const ccWs=allWs.filter(w=>w.category==='Cross-cutting');
+  function nextDue(wsId){
+    const next=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open'&&t.due&&t.due>=today()).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'))[0];
+    return next?fmtDate(next.due):'—';
+  }
+  function renderWsRow(w){
+    const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);
+    const wMsDone=wMs.filter(t=>t.status==='done').length;
+    const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;
+    const st=w.status||'on-track';
+    const statusClass=st==='complete'?'complete':st==='at-risk'?'at-risk':st==='blocked'?'blocked':st==='not-started'?'not-started':'on-track';
+    return `<tr>
+      <td><strong>${esc(w.name)}</strong><br><span style="font-size:10px;color:var(--muted)">${esc(w.category||'')}</span></td>
+      <td class="rpt-scope">${esc((w.desc||'').slice(0,200))}${(w.desc||'').length>200?'…':''}</td>
+      <td><span class="rpt-status ${statusClass}">${st.replace('-',' ')}</span></td>
+      <td style="font-size:11.5px">${esc(w.owner)||'TBD'}</td>
+      <td style="font-size:11.5px">${wMsDone}/${wMs.length}</td>
+      <td style="font-size:11.5px">${wOpen}</td>
+      <td class="rpt-timing">${nextDue(w.id)}</td>
+    </tr>`;
+  }
+  const execTable=`<table class="rpt-exec-table">
+    <thead><tr>
+      <th>Workstream</th>
+      <th>Scope</th>
+      <th>Progress</th>
+      <th>Owner</th>
+      <th>Milestones</th>
+      <th>Open</th>
+      <th>Key timing</th>
+    </tr></thead>
+    <tbody>
+      ${buWs.length?'<tr><td colspan="7" style="background:var(--bg-subtle);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px">Business Unit Workstreams</td></tr>':''}
+      ${buWs.map(renderWsRow).join('')}
+      ${ccWs.length?'<tr><td colspan="7" style="background:var(--bg-subtle);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px">Crosscutting Workstreams</td></tr>':''}
+      ${ccWs.map(renderWsRow).join('')}
+    </tbody>
+  </table>`;
 
   c.innerHTML=`<div class="rpt">
     <div class="rpt-header">
-      <h2>ATLAS — Program Status Report</h2>
-      <p>Digital Realty CDO &middot; As of ${rn.asOf||today()}</p>
+      <h2>ATLAS — AI Program Status Report</h2>
+      <p>Digital Realty CDO &middot; Executive view &middot; As of ${rn.asOf||today()}</p>
     </div>
 
     <div class="rpt-section">
       <h3>Workstream Status</h3>
-      <div class="rpt-ws">${(D.workstreams||[]).map(w=>{
-        const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);
-        const wMsDone=wMs.filter(t=>t.status==='done').length;
-        const wTasks=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;
-        const wEng=(D.engagements||[]).filter(e=>e.workstream===w.id);
-        const sc=statusColors[w.status]||'pill-m';
-        return `<div class="rpt-ws-card" style="border-top:3px solid ${wsColor(w.id)}">
-          <h4><span class="pill ${sc}">${w.status}</span> ${esc(w.name)}</h4>
-          <div class="rpt-ws-desc">${esc(w.desc)}</div>
-          <ul>
-            <li>Owner: ${esc(w.owner)||'TBD'}</li>
-            <li>Milestones: ${wMsDone}/${wMs.length} complete</li>
-            <li>Open tasks: ${wTasks}</li>
-            ${w.notes?'<li>Update: '+esc(w.notes)+'</li>':''}
-          </ul>
-        </div>`}).join('')}</div>
+      ${allWs.length?execTable:'<p style="color:var(--muted);font-size:13px">No workstreams defined.</p>'}
     </div>
 
     <div class="rpt-section">
       <h3>Milestone Progress (${msDone.length}/${allMs.length} complete)</h3>
-      ${msOD.length?'<div style="margin-bottom:8px">'+msOD.map(m=>`<div style="display:flex;gap:8px;padding:4px 0;font-size:12px"><span class="pill pill-r">OVERDUE</span><span>${esc(m.title)}</span><span style="color:var(--light)">${fmtDate(m.due)}</span></div>`).join('')+'</div>':''}
-      ${msUp.length?'<div>'+msUp.slice(0,6).map(m=>`<div style="display:flex;gap:8px;padding:4px 0;font-size:12px"><span class="pill pill-a">UPCOMING</span><span>${esc(m.title)}</span><span style="color:var(--light)">${fmtDate(m.due)}</span></div>`).join('')+'</div>':''}
+      ${msOD.length?'<div style="margin-bottom:10px"><span style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase">Overdue</span>'+msOD.map(m=>`<div style="display:flex;gap:8px;padding:4px 0;font-size:12px"><span style="color:var(--red);font-weight:600">${esc(m.title)}</span><span style="color:var(--light)">${fmtDate(m.due)}</span></div>`).join('')+'</div>':''}
+      ${msUp.length?'<div><span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Upcoming</span>'+msUp.slice(0,8).map(m=>`<div style="display:flex;gap:8px;padding:4px 0;font-size:12px"><span>${esc(m.title)}</span><span style="color:var(--light)">${fmtDate(m.due)}</span></div>`).join('')+'</div>':''}
+      ${!msOD.length&&!msUp.length?'<p style="color:var(--muted);font-size:13px">No open milestones.</p>':''}
     </div>
 
     <div class="rpt-section">
@@ -2444,20 +2555,24 @@ function saveReport(){
 function copyReport(){
   const rptEl=document.querySelector('.rpt');
   if(!rptEl){toast('Nothing to copy');return}
-  const ws=(D.workstreams||[]).map(w=>{
-    const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);
-    const wMsDone=wMs.filter(t=>t.status==='done').length;
-    const wTasks=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;
-    return `${w.name} [${w.status}] — ${w.owner||'TBD'}\n  Milestones: ${wMsDone}/${wMs.length} | Open tasks: ${wTasks}${w.notes?'\n  Update: '+w.notes:''}`;
-  }).join('\n');
+  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  const buWs=allWs.filter(w=>w.category==='BU');
+  const ccWs=allWs.filter(w=>w.category==='Cross-cutting');
+  function nextDue(wsId){
+    const next=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open'&&t.due&&t.due>=today()).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'))[0];
+    return next?fmtDate(next.due):'—';
+  }
+  let wsBlock='WORKSTREAM STATUS\n';
+  if(buWs.length){wsBlock+='\nBusiness Unit Workstreams\n';buWs.forEach(w=>{const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);const wMsDone=wMs.filter(t=>t.status==='done').length;const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;wsBlock+=`  ${w.name} | ${w.status} | Owner: ${w.owner||'TBD'} | Milestones: ${wMsDone}/${wMs.length} | Open: ${wOpen} | Next: ${nextDue(w.id)}\n`})}
+  if(ccWs.length){wsBlock+='\nCrosscutting Workstreams\n';ccWs.forEach(w=>{const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);const wMsDone=wMs.filter(t=>t.status==='done').length;const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;wsBlock+=`  ${w.name} | ${w.status} | Owner: ${w.owner||'TBD'} | Milestones: ${wMsDone}/${wMs.length} | Open: ${wOpen} | Next: ${nextDue(w.id)}\n`})}
   const rptMs=(D.tasks||[]).filter(t=>t.isMilestone);
   const msOD=rptMs.filter(t=>t.status==='open'&&t.due&&t.due<today()).map(m=>`  OVERDUE: ${m.title} (${fmtDate(m.due)})`).join('\n');
-  const msUp=rptMs.filter(t=>t.status==='open'&&(!t.due||t.due>=today())).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9')).slice(0,6).map(m=>`  UPCOMING: ${m.title} (${fmtDate(m.due)})`).join('\n');
+  const msUp=rptMs.filter(t=>t.status==='open'&&(!t.due||t.due>=today())).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9')).slice(0,8).map(m=>`  UPCOMING: ${m.title} (${fmtDate(m.due)})`).join('\n');
   const acc=(document.getElementById('rpt-acc')?.value||'').trim();
   const blk=(document.getElementById('rpt-block')?.value||'').trim();
   const nxt=(document.getElementById('rpt-next')?.value||'').trim();
-  let text=`ATLAS — PROGRAM STATUS REPORT\nDigital Realty CDO · As of ${today()}\n\n`;
-  text+=`WORKSTREAM STATUS\n${ws}\n\n`;
+  let text=`ATLAS — AI PROGRAM STATUS REPORT\nDigital Realty CDO · Executive view · As of ${today()}\n\n`;
+  text+=wsBlock+'\n';
   text+=`MILESTONE PROGRESS (${rptMs.filter(t=>t.status==='done').length}/${rptMs.length} complete)\n${msOD||'  (none overdue)'}\n${msUp||'  (none upcoming)'}\n\n`;
   if(acc)text+=`ACCOMPLISHMENTS\n${acc}\n\n`;
   if(blk)text+=`BLOCKERS & RISKS\n${blk}\n\n`;
