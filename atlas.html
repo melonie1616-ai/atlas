@@ -1041,7 +1041,7 @@ function renderPresence(users){
 // ═══════════════════════════════════════════════════
 // NAV
 // ═══════════════════════════════════════════════════
-let taskFilter='all',taskOwnerFilter='',qcType='task',taskSort='default',taskSortDir=1;
+let taskFilter='all',taskOwnerFilter='',qcType='task',taskSort='default',taskSortDir=1,taskGroupCollapsed={};
 
 function toggleSidebar(){
   document.body.classList.toggle('nav-collapsed');
@@ -1218,13 +1218,11 @@ function submitQC(){
 function wsName(id){const w=(D.workstreams||[]).find(x=>x.id===id);return w?esc(w.name):'—'}
 function wsColor(id){const w=(D.workstreams||[]).find(x=>x.id===id)||WS_DEFS.find(x=>x.id===id);return w?w.color:'var(--muted)'}
 function wsOpts(sel){
-  const ws=D.workstreams||[];
+  const ws=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
   const bu=ws.filter(w=>w.category==='BU');
   const cc=ws.filter(w=>w.category==='Cross-cutting');
-  const other=ws.filter(w=>w.category!=='BU'&&w.category!=='Cross-cutting');
   let html=`<optgroup label="Business Unit">${bu.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}</optgroup>`;
   html+=`<optgroup label="Cross-cutting">${cc.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}</optgroup>`;
-  if(other.length)html+=`<optgroup label="Other">${other.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}</optgroup>`;
   return html;
 }
 function engOpts(sel){return(D.engagements||[]).filter(e=>e.type==='Use Case').sort((a,b)=>a.title.localeCompare(b.title)).map(e=>`<option value="${e.id}"${sel===e.id?' selected':''}>${esc(e.title)}</option>`).join('')}
@@ -1551,39 +1549,81 @@ async function runAIInsights(){
 // ═══════════════════════════════════════════════════
 // WORKSTREAMS
 // ═══════════════════════════════════════════════════
-let wsLeadFilter='';
+let wsLeadFilter='',wsCatFilter='',wsGroupCollapsed={};
 function rWork(c){
   const q=(document.getElementById('search').value||'').toLowerCase();
   const leads=[...new Set((D.workstreams||[]).map(w=>w.owner).filter(Boolean))].sort();
 
-  const renderCard=(w)=>{
-    const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);
-    const wMsDone=wMs.filter(t=>t.status==='done').length;
-    const wTasks=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;
+  let allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  if(wsLeadFilter==='__unassigned__')allWs=allWs.filter(w=>!w.owner);
+  else if(wsLeadFilter)allWs=allWs.filter(w=>w.owner===wsLeadFilter);
+  if(wsCatFilter)allWs=allWs.filter(w=>w.category===wsCatFilter);
+  if(q)allWs=allWs.filter(w=>(w.name+' '+w.desc+' '+w.owner+' '+(w.category||'')).toLowerCase().includes(q));
+
+  const buWs=allWs.filter(w=>w.category==='BU');
+  const ccWs=allWs.filter(w=>w.category==='Cross-cutting');
+  const totalBU=(D.workstreams||[]).filter(w=>w.category==='BU').length;
+  const totalCC=(D.workstreams||[]).filter(w=>w.category==='Cross-cutting').length;
+
+  const renderRow=(w)=>{
+    const wAll=(D.tasks||[]).filter(t=>t.workstream===w.id);
+    const wDone=wAll.filter(t=>t.status==='done').length;
+    const wOpen=wAll.filter(t=>t.status==='open').length;
+    const pct=wAll.length?Math.round(wDone/wAll.length*100):0;
     const sc=statusColors[w.status]||'pill-m';
-    return `<div class="card ws-card" onclick="openWsDetail('${w.id}')" style="border-top:3px solid ${wsColor(w.id)}">
-      <div class="ws-hd"><h4>${esc(w.name)}</h4><span class="pill ${sc}">${w.status}</span></div>
-      <div class="ws-desc">${esc(w.desc)}</div>
-      <div class="ws-meta">
-        <span>Lead: <strong>${esc(w.owner)||'Unassigned'}</strong></span>
-        <span>${w.category||''}</span>
-        <span>Milestones: ${wMsDone}/${wMs.length}</span>
-        <span>Tasks: ${wTasks} open</span>
+    const risks=(D.risks||[]).filter(r=>r.workstream===w.id).length;
+    return `<tr onclick="openWsDetail('${w.id}')" style="cursor:pointer;height:44px" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background=''">
+      <td style="width:6px;padding:0"><div style="width:5px;height:28px;border-radius:3px;background:${wsColor(w.id)}"></div></td>
+      <td style="font-weight:600;font-size:13.5px">${esc(w.name)}</td>
+      <td style="font-size:12.5px;color:var(--muted)">${esc(w.owner)||'<span style="color:var(--light)">Unassigned</span>'}</td>
+      <td style="width:10%"><span class="pill ${sc}" style="font-size:10px">${w.status}</span></td>
+      <td style="width:10%;font-size:12px;color:var(--muted)">${wOpen} open / ${wAll.length} total</td>
+      <td style="width:10%;font-size:12px;${risks?'color:var(--red);font-weight:600':'color:var(--muted)'}">${risks?risks+' risk'+(risks>1?'s':''):'—'}</td>
+      <td style="width:120px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;height:6px;border-radius:3px;background:var(--border-lt);overflow:hidden">
+            <div style="height:100%;border-radius:3px;background:${wsColor(w.id)};width:${pct}%"></div>
+          </div>
+          <span style="font-size:11px;font-weight:600;color:var(--muted);width:30px;text-align:right">${pct}%</span>
+        </div>
+      </td>
+    </tr>`;
+  };
+
+  const renderGroup=(items,label,gid,count)=>{
+    if(!items.length&&!wsLeadFilter&&!q)return'';
+    const collapsed=wsGroupCollapsed[gid];
+    return `<div style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer;user-select:none" onclick="wsGroupCollapsed['${gid}']=!wsGroupCollapsed['${gid}'];render()">
+        <span style="font-size:12px;color:var(--muted);width:16px;text-align:center;display:inline-block;transform:rotate(${collapsed?'0':'90'}deg);transition:transform .15s">&#9654;</span>
+        <span style="font-size:16px;font-weight:800;letter-spacing:-.02em">${label}</span>
+        <span style="font-size:12.5px;color:var(--muted)">${items.length} workstream${items.length!==1?'s':''}</span>
       </div>
+      ${collapsed?'':`${items.length?`<table class="tbl" style="width:100%">
+        <thead><tr>
+          <th style="width:6px;padding:0"></th>
+          <th>Workstream</th>
+          <th style="width:16%">Lead</th>
+          <th style="width:10%">Status</th>
+          <th style="width:10%">Items</th>
+          <th style="width:10%">Risks</th>
+          <th style="width:120px">Progress</th>
+        </tr></thead>
+        <tbody>${items.map(renderRow).join('')}</tbody>
+      </table>`:'<div style="padding:12px 28px;font-size:13px;color:var(--muted)">No workstreams match the current filters</div>'}`}
     </div>`;
   };
 
-  let allWs=(D.workstreams||[]).slice();
-  if(wsLeadFilter==='__unassigned__')allWs=allWs.filter(w=>!w.owner);
-  else if(wsLeadFilter)allWs=allWs.filter(w=>w.owner===wsLeadFilter);
-  if(q)allWs=allWs.filter(w=>(w.name+' '+w.desc+' '+w.owner+' '+(w.category||'')).toLowerCase().includes(q));
-
-  const buWs=allWs.filter(w=>(w.category||WS_DEFS.find(d=>d.id===w.id)?.category)==='BU');
-  const ccWs=allWs.filter(w=>(w.category||WS_DEFS.find(d=>d.id===w.id)?.category)==='Cross-cutting');
-
-  const filterBar=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+  c.innerHTML=`
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
     <div style="font-size:16px;font-weight:800;letter-spacing:-.01em">Workstreams</div>
+    <span style="font-size:12.5px;color:var(--muted)">${allWs.length} total</span>
     <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <select style="padding:5px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12.5px;font-family:inherit;background:var(--bg-subtle);color:var(--text);cursor:pointer;outline:none" onchange="wsCatFilter=this.value;render()">
+        <option value="">All Categories</option>
+        <option value="BU"${wsCatFilter==='BU'?' selected':''}>Business Unit (${totalBU})</option>
+        <option value="Cross-cutting"${wsCatFilter==='Cross-cutting'?' selected':''}>Cross-cutting (${totalCC})</option>
+      </select>
       <select style="padding:5px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12.5px;font-family:inherit;background:var(--bg-subtle);color:var(--text);cursor:pointer;outline:none" onchange="wsLeadFilter=this.value;render()">
         <option value="">All Leads</option>
         <option value="__unassigned__"${wsLeadFilter==='__unassigned__'?' selected':''}>Unassigned</option>
@@ -1591,69 +1631,9 @@ function rWork(c){
       </select>
       <button class="tb-btn" style="background:var(--accent);color:#fff" onclick="openWsEdit()">+ Add Workstream</button>
     </div>
-  </div>`;
-
-  const renderCat=(items,label)=>{
-    if(!items.length)return'';
-    return `<div style="margin-bottom:24px">
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:10px">${label}</div>
-    <div class="ws-grid">${items.map(renderCard).join('')}</div></div>`;
-  };
-
-  const engItems=(D.engagements||[]).slice();
-  const ucItems=engItems.filter(e=>e.type==='Use Case');
-  const pipelineHtml=ucItems.length?`<div class="card" style="margin-bottom:14px;padding:14px 18px">
-    <div style="font-size:13px;font-weight:700;margin-bottom:10px">Use Case Pipeline</div>
-    <div style="display:flex;gap:4px;align-items:center">${pipeStages.map(s=>{
-      const cnt=ucItems.filter(u=>u.stage===s).length;
-      return `<div style="flex:1;text-align:center;cursor:pointer" onclick="engFilter='${s}';render()"><div style="position:relative;border-radius:var(--r-sm);height:36px;display:flex;align-items:center;justify-content:center"><div style="position:absolute;inset:0;background:${pipeStageColors[s]||'var(--muted)'};opacity:.15;border-radius:var(--r-sm)"></div><span style="position:relative;z-index:1;font-size:16px;font-weight:800;color:#000">${cnt}</span></div><div style="font-size:11.5px;font-weight:600;margin-top:4px;color:${pipeStageColors[s]}">${s}</div></div>`}).join('<div style="font-size:16px;color:var(--muted)">&#8250;</div>')}</div>
-  </div>`:'';
-
-  let filteredEng=engItems.slice();
-  if(engFilter!=='all'){
-    if(pipeStages.includes(engFilter))filteredEng=filteredEng.filter(e=>e.stage===engFilter);
-    else filteredEng=filteredEng.filter(e=>e.type===engFilter);
-  }
-  if(q)filteredEng=filteredEng.filter(e=>(e.title+' '+e.notes+' '+(e.type||'')+' '+(e.requestor||'')+' '+wsName(e.workstream)).toLowerCase().includes(q));
-  filteredEng.sort((a,b)=>{const so={active:0,scoping:1,intake:2,'on-hold':3,complete:4};return (so[a.status]??2)-(so[b.status]??2)});
-
-  const engListHtml=filteredEng.length?filteredEng.map(e=>{
-    const eTasks=(D.tasks||[]).filter(t=>t.engagement===e.id);
-    const eRisks=(D.risks||[]).filter(r=>r.engagement===e.id);
-    const eDecs=(D.decisions||[]).filter(d=>d.engagement===e.id);
-    const eMets=(D.metrics||[]).filter(m=>m.engagement===e.id);
-    const eTasksOpen=eTasks.filter(t=>t.status==='open').length;
-    return `<div class="card eng-card" onclick="openEngModal('${e.id}')">
-      <div class="eng-hd">
-        <div><h4>${esc(e.title)}</h4><div style="display:flex;gap:4px;margin-top:4px">${e.stage?'<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;color:#fff;background:'+(pipeStageColors[e.stage]||'var(--muted)')+'">'+esc(e.stage)+'</span>':''}</div></div>
-        <div style="display:flex;gap:8px;font-size:11px;color:var(--muted);flex-shrink:0">
-          ${eTasks.length?'<span title="Action Items" style="display:flex;align-items:center;gap:3px'+(eTasksOpen?';color:var(--indigo);font-weight:600':'')+'">'+(eTasksOpen?'<span style="background:var(--indigo);color:#fff;width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">'+eTasksOpen+'</span>':'<span style="font-size:13px">&#10003;</span>')+' Items</span>':''}
-          ${eRisks.length?'<span title="Risks" style="display:flex;align-items:center;gap:3px;color:var(--red)"><strong>'+eRisks.length+'</strong> Risk'+(eRisks.length>1?'s':'')+'</span>':''}
-          ${eDecs.length?'<span title="Decisions" style="display:flex;align-items:center;gap:3px"><strong>'+eDecs.length+'</strong> Decision'+(eDecs.length>1?'s':'')+'</span>':''}
-          ${eMets.length?'<span title="Metrics" style="display:flex;align-items:center;gap:3px"><strong>'+eMets.length+'</strong> Metric'+(eMets.length>1?'s':'')+'</span>':''}
-        </div>
-      </div>
-      <div class="eng-body">${esc(e.notes?.substring(0,200)||'No description')}</div>
-      <div class="eng-meta">
-        ${e.workstream?'<span>Workstream: <strong>'+esc(wsName(e.workstream))+'</strong></span>':''}
-        ${e.owner?'<span>Lead: '+esc(e.owner)+'</span>':''}
-        ${e.requestor?'<span>Requestor: '+esc(e.requestor)+'</span>':''}
-        ${e.updatedBy?'<span>Last edit: '+esc(e.updatedBy)+'</span>':e.addedBy?'<span>Added by: '+esc(e.addedBy)+'</span>':''}
-        ${(e.links||[]).length?e.links.map(l=>'<span onclick="event.stopPropagation()"><a href="'+esc(l.url)+'" target="_blank" style="color:var(--indigo);text-decoration:none;font-weight:500" title="'+esc(l.url)+'">&#128279; '+esc(l.label||'Link')+'</a></span>').join(''):''}
-      </div>
-    </div>`}).join(''):'';
-
-  const clearFilter=engFilter!=='all'?'<div style="display:flex;align-items:center;gap:6px;margin-bottom:14px"><div class="pill pill-i" style="cursor:pointer" onclick="engFilter=\'all\';render()">&#10005; Clear filter: '+esc(engFilter)+'</div></div>':'';
-
-  const engSection=(engItems.length||true)?`<div style="margin-top:28px;border-top:2px solid var(--border);padding-top:20px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div style="font-size:14px;font-weight:700">Use Cases &amp; Engagements</div>
-      <button class="tb-btn" style="background:var(--accent);color:#fff" onclick="openEngModal()">+ Add</button>
-    </div>
-    ${pipelineHtml}${clearFilter}${engListHtml}
-  </div>`:'';
-
-  c.innerHTML=filterBar+renderCat(buWs,'Business Unit')+renderCat(ccWs,'Cross-cutting')+engSection;
+  </div>
+  ${renderGroup(buWs,'Business Unit','_bu',totalBU)}
+  ${renderGroup(ccWs,'Cross-cutting','_cc',totalCC)}`;
 }
 
 function openWsEdit(id){
@@ -1830,7 +1810,7 @@ function saveEng(id){
   if(!title){toast('Title is required');return}
   let e=id?D.engagements.find(x=>x.id===id):null;
   const isNew=!e;
-  if(!e){e={id:uid(),created:today(),addedBy:ME};D.engagements.push(e)}
+  if(!e){e={id:uid(),created:today(),addedBy:ME};if(!D.engagements)D.engagements=[];D.engagements.push(e)}
   e.title=title;e.type=document.getElementById('e-type').value;
   e.workstream=document.getElementById('e-ws').value;
   e.status=document.getElementById('e-status').value;
@@ -1917,15 +1897,17 @@ function rTasks(c){
         <td style="width:28px" onclick="event.stopPropagation()"><button style="color:var(--red);font-size:11px;background:none;border:none;cursor:pointer" onclick="delTask('${t.id}')">&#10005;</button></td>
       </tr>`;
     };
-    const renderGroup=(label,color,groupItems)=>{
+    const renderGroup=(label,color,groupItems,gid)=>{
       const openCount=groupItems.filter(t=>t.status==='open').length;
+      const collapsed=taskGroupCollapsed[gid];
       return `<div style="margin-bottom:20px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;cursor:pointer;user-select:none" onclick="taskGroupCollapsed['${gid}']=!taskGroupCollapsed['${gid}'];render()">
+          <span style="font-size:12px;color:var(--muted);width:16px;text-align:center;transition:transform .15s;display:inline-block;transform:rotate(${collapsed?'0':'90'}deg)">&#9654;</span>
           <div style="width:4px;height:20px;border-radius:2px;background:${color}"></div>
           <span style="font-size:14px;font-weight:700">${label}</span>
           <span style="font-size:12px;color:var(--muted)">${openCount} open / ${groupItems.length} total</span>
         </div>
-        <table class="tbl" style="width:100%">
+        ${collapsed?'':`<table class="tbl" style="width:100%">
           <thead><tr>
             <th style="width:28px"></th>
             <th style="cursor:pointer" onclick="sortTasks('title')">Action Item${sIco('title')}</th>
@@ -1936,15 +1918,15 @@ function rTasks(c){
             <th style="width:28px"></th>
           </tr></thead>
           <tbody>${groupItems.map(renderRow).join('')}</tbody>
-        </table>
+        </table>`}
       </div>`;
     };
     let html='';
     wsOrder.forEach(wsId=>{
       const w=(D.workstreams||[]).find(x=>x.id===wsId);
-      if(w)html+=renderGroup(w.name,wsColor(wsId),wsGroups[wsId]);
+      if(w)html+=renderGroup(w.name,wsColor(wsId),wsGroups[wsId],wsId);
     });
-    if(unlinked.length)html+=renderGroup('Unassigned to Workstream','var(--muted)',unlinked);
+    if(unlinked.length)html+=renderGroup('Unassigned to Workstream','var(--muted)',unlinked,'_unlinked');
     return html;
   })()}`;
 }
@@ -1982,7 +1964,7 @@ function saveTask(id){
   if(!title){toast('Title is required');return}
   let t=id?D.tasks.find(x=>x.id===id):null;
   const isNew=!t;
-  if(!t){t={id:uid(),created:today(),source:'',addedBy:ME};D.tasks.push(t)}
+  if(!t){t={id:uid(),created:today(),source:'',addedBy:ME};if(!D.tasks)D.tasks=[];D.tasks.push(t)}
   t.title=title;t.owner=document.getElementById('t-owner').value.trim();
   t.startDate=document.getElementById('t-start').value;
   t.due=document.getElementById('t-due').value;
@@ -2548,7 +2530,7 @@ function openDecModal(id){
 function saveDec(id){
   const title=document.getElementById('dec-title').value.trim();if(!title){toast('Decision is required');return}
   let d=id?(D.decisions||[]).find(x=>x.id===id):null;
-  if(!d){d={id:uid(),addedBy:ME};D.decisions.push(d)}
+  if(!d){d={id:uid(),addedBy:ME};if(!D.decisions)D.decisions=[];D.decisions.push(d)}
   d.title=title;d.rationale=document.getElementById('dec-rationale').value.trim();
   d.date=document.getElementById('dec-date').value;d.status=document.getElementById('dec-status').value;
   d.decidedBy=document.getElementById('dec-by').value;d.workstream=document.getElementById('dec-ws').value;
@@ -2598,7 +2580,7 @@ function openRiskModal(id){
 function saveRisk(id){
   const title=document.getElementById('rk-title').value.trim();if(!title){toast('Description is required');return}
   let r=id?(D.risks||[]).find(x=>x.id===id):null;
-  if(!r){r={id:uid(),addedBy:ME};D.risks.push(r)}
+  if(!r){r={id:uid(),addedBy:ME};if(!D.risks)D.risks=[];D.risks.push(r)}
   r.title=title;r.likelihood=document.getElementById('rk-like').value;r.impact=document.getElementById('rk-imp').value;
   r.status=document.getElementById('rk-status').value;r.owner=document.getElementById('rk-owner').value;
   r.workstream=document.getElementById('rk-ws').value;
@@ -2647,7 +2629,7 @@ function openMetricModal(id){
 function saveMetric(id){
   const name=document.getElementById('mt-name').value.trim();if(!name){toast('Name is required');return}
   let m=id?(D.metrics||[]).find(x=>x.id===id):null;
-  if(!m){m={id:uid(),addedBy:ME};D.metrics.push(m)}
+  if(!m){m={id:uid(),addedBy:ME};if(!D.metrics)D.metrics=[];D.metrics.push(m)}
   m.name=name;m.value=document.getElementById('mt-val').value.trim();m.target=document.getElementById('mt-target').value.trim();
   m.category=document.getElementById('mt-cat').value;m.trend=document.getElementById('mt-trend').value;
   m.date=document.getElementById('mt-date').value;m.workstream=document.getElementById('mt-ws').value;
