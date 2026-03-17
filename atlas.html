@@ -624,6 +624,7 @@ function defaults(){
       {id:uid(),name:'Yury Lui',role:'Capital Programs and Energy & Engineering',group:'Business Stakeholder',email:'',phone:'',notes:'Active Superworker community member.'},
       {id:uid(),name:'Darya Mazandarani',role:'Commercial Sales (France)',group:'Business Stakeholder',email:'',phone:'',notes:'EMEA region. Active Superworker community member.'}
     ],
+    groups:['CDO Leadership','CDO Team','Executive','Legal','HR','IT/Security','Business Stakeholder','Other'],
     reportNotes:{accomplishments:'',blockers:'',nextPeriod:'',asOf:''},
     log:[{id:uid(),ts:new Date().toISOString(),text:'ATLAS initialized'}]
   };
@@ -631,12 +632,19 @@ function defaults(){
 
 function saveLs(){try{localStorage.setItem('ai-tracker',JSON.stringify(D))}catch(e){}}
 function save(){saveLs();if(dbRef&&firebaseReady){dbRef.update(D).catch(()=>{})}}
+function ensureGroups(){
+  if(!D.groups)D.groups=(defaults().groups||[]).slice();
+  const usedGroups=[...new Set((D.people||[]).map(p=>p.group).filter(Boolean))];
+  usedGroups.forEach(g=>{if(g&&!D.groups.includes(g))D.groups.push(g)});
+  D.groups.sort((a,b)=>a.localeCompare(b));
+}
 function loadLs(){
   try{D=JSON.parse(localStorage.getItem('ai-tracker'))}catch(e){}
   if(!D||!D.workstreams)D=defaults();
   if(!D.engagements)D.engagements=[];
   if(!D.milestones)D.milestones=[];
   if(!D.tasks)D.tasks=[];
+  ensureGroups();
   if(D.milestones&&D.milestones.length&&!D._msMigrated){
     D.milestones.forEach(m=>{
       if(!D.tasks.find(t=>t.id===m.id)){
@@ -1035,12 +1043,12 @@ function connectFirebase(){
   firebase.auth().signInAnonymously().then(()=>{
     dbRef.once('value').then(snap=>{
       const val=snap.val();
-      if(val&&val.workstreams){D=val;saveLs()}
+      if(val&&val.workstreams){D=val;ensureGroups();saveLs()}
       else{loadLs();save()}
       firebaseReady=true;
       document.getElementById('connecting').classList.add('hide');
       loadMe();renderLinks();authGate();go('dashboard');
-      dbRef.on('value',snap=>{const val=snap.val();if(val&&val.workstreams){delete val._presence;D=val;saveLs();renderLinks();render()}});
+      dbRef.on('value',snap=>{const val=snap.val();if(val&&val.workstreams){delete val._presence;D=val;ensureGroups();saveLs();renderLinks();render()}});
       startPresence();
     });
   }).catch(()=>{
@@ -1326,8 +1334,9 @@ function rDash(c){
     </div>`;
   };
 
-  const buWs=(D.workstreams||[]).filter(w=>(w.category||WS_DEFS.find(d=>d.id===w.id)?.category)==='BU');
-  const ccWs=(D.workstreams||[]).filter(w=>(w.category||WS_DEFS.find(d=>d.id===w.id)?.category)==='Cross-cutting');
+  function wsSortKey(w){const n=(w.name||'');const beforeColon=n.split(':')[0].trim()||n;const firstWord=(beforeColon.split(' ')[0]||beforeColon).toLowerCase();return firstWord;}
+  const buWs=(D.workstreams||[]).filter(w=>(w.category||WS_DEFS.find(d=>d.id===w.id)?.category)==='BU').slice().sort((a,b)=>wsSortKey(a).localeCompare(wsSortKey(b))||(a.name||'').localeCompare(b.name||''));
+  const ccWs=(D.workstreams||[]).filter(w=>(w.category||WS_DEFS.find(d=>d.id===w.id)?.category)==='Cross-cutting').slice().sort((a,b)=>wsSortKey(a).localeCompare(wsSortKey(b))||(a.name||'').localeCompare(b.name||''));
 
   c.innerHTML=`
   <div class="kpi-row">
@@ -1337,12 +1346,12 @@ function rDash(c){
   </div>
 
   <div style="margin-bottom:16px;padding:14px 16px;border-radius:var(--r);background:rgba(99,102,241,.04);border:1px solid rgba(99,102,241,.1)">
-    <div style="font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px;color:var(--text)">Business Unit</div>
+    <div style="font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px;color:var(--text)">Business Unit Workstreams</div>
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">${buWs.map(renderWsTile).join('')}</div>
   </div>
 
   <div style="margin-bottom:16px;padding:14px 16px;border-radius:var(--r);background:rgba(16,185,129,.04);border:1px solid rgba(16,185,129,.1)">
-    <div style="font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px;color:var(--text)">Crosscutting</div>
+    <div style="font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px;color:var(--text)">Crosscutting Workstreams</div>
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">${ccWs.map(renderWsTile).join('')}</div>
   </div>
 
@@ -1611,8 +1620,9 @@ function rWork(c){
   if(wsCatFilter)allWs=allWs.filter(w=>w.category===wsCatFilter);
   if(q)allWs=allWs.filter(w=>(w.name+' '+w.desc+' '+w.owner+' '+(w.category||'')).toLowerCase().includes(q));
 
-  const buWs=allWs.filter(w=>w.category==='BU');
-  const ccWs=allWs.filter(w=>w.category==='Cross-cutting');
+  function wsSortKey(w){const n=(w.name||'');const beforeColon=n.split(':')[0].trim()||n;const firstWord=(beforeColon.split(' ')[0]||beforeColon).toLowerCase();return firstWord;}
+  const buWs=allWs.filter(w=>w.category==='BU').slice().sort((a,b)=>wsSortKey(a).localeCompare(wsSortKey(b))||(a.name||'').localeCompare(b.name||''));
+  const ccWs=allWs.filter(w=>w.category==='Cross-cutting').slice().sort((a,b)=>wsSortKey(a).localeCompare(wsSortKey(b))||(a.name||'').localeCompare(b.name||''));
   const totalBU=(D.workstreams||[]).filter(w=>w.category==='BU').length;
   const totalCC=(D.workstreams||[]).filter(w=>w.category==='Cross-cutting').length;
 
@@ -1685,8 +1695,8 @@ function rWork(c){
       <button class="tb-btn" style="background:var(--accent);color:#fff" onclick="openWsEdit()">+ Add Workstream</button>
     </div>
   </div>
-  ${renderGroup(buWs,'Business Unit','_bu',totalBU)}
-  ${renderGroup(ccWs,'Crosscutting','_cc',totalCC)}`;
+  ${renderGroup(buWs,'Business Unit Workstreams','_bu',totalBU)}
+  ${renderGroup(ccWs,'Crosscutting Workstreams','_cc',totalCC)}`;
 }
 
 function openWsEdit(id){
@@ -1944,6 +1954,9 @@ function rTasks(c){
     <div class="pill${taskFilter==='open'?' pill-i':' pill-m'}" style="cursor:pointer" onclick="taskFilter='open';render()">Open (${open})</div>
     <div class="pill${taskFilter==='done'?' pill-i':' pill-m'}" style="cursor:pointer" onclick="taskFilter='done';render()">Done (${done})</div>
     <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" style="cursor:pointer" onclick="taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
+    <span style="font-size:11px;color:var(--muted);margin-left:8px">Groups:</span>
+    <button type="button" style="font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text);cursor:pointer" onclick="taskExpandAll();render()">Expand all</button>
+    <button type="button" style="font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text);cursor:pointer" onclick="taskCollapseAll();render()">Collapse all</button>
     <div style="margin-left:auto">
       <select style="padding:5px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12.5px;font-family:inherit;background:var(--bg-subtle);color:var(--text);cursor:pointer;outline:none" onchange="taskOwnerFilter=this.value;render()">
         <option value="">All Owners</option>
@@ -2009,6 +2022,8 @@ function rTasks(c){
   })()}`;
 }
 
+function taskExpandAll(){taskGroupCollapsed={};}
+function taskCollapseAll(){taskGroupCollapsed={};(D.workstreams||[]).forEach(w=>{taskGroupCollapsed[w.id]=true});taskGroupCollapsed['_unlinked']=true;}
 function sortTasks(col){if(taskSort===col)taskSortDir*=-1;else{taskSort=col;taskSortDir=1}render()}
 
 function openTaskModal(id){
@@ -2359,7 +2374,7 @@ function inboxToRisk(id){
 // ═══════════════════════════════════════════════════
 // PEOPLE
 // ═══════════════════════════════════════════════════
-const pplGroups=['CDO Leadership','CDO Team','Executive','Legal','HR','IT/Security','Business Stakeholder','Other'];
+function getPplGroups(){const fromData=(D.groups||[]).slice();const fromPeople=[...new Set((D.people||[]).map(p=>p.group).filter(Boolean))];fromPeople.forEach(g=>{if(g&&!fromData.includes(g))fromData.push(g)});return fromData.sort((a,b)=>a.localeCompare(b));}
 let pplFilter='all';
 
 function rPeople(c){
@@ -2369,11 +2384,13 @@ function rPeople(c){
   if(q)items=items.filter(p=>(p.name+' '+p.role+' '+(p.notes||'')+' '+(p.group||'')).toLowerCase().includes(q));
   items.sort((a,b)=>a.name.localeCompare(b.name));
 
+  const pplGroups=getPplGroups();
   const groupCounts={};(D.people||[]).forEach(p=>{if(p.group)groupCounts[p.group]=(groupCounts[p.group]||0)+1});
 
   c.innerHTML=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:16px;flex-wrap:wrap">
     <div class="pill${pplFilter==='all'?' pill-i':' pill-m'}" style="cursor:pointer" onclick="pplFilter='all';render()">All (${(D.people||[]).length})</div>
-    ${pplGroups.map(g=>groupCounts[g]?'<div class="pill'+(pplFilter===g?' pill-i':' pill-m')+'" style="cursor:pointer" onclick="pplFilter=\''+g+'\';render()">'+g+' ('+groupCounts[g]+')</div>':'').join('')}
+    ${pplGroups.map(g=>'<div class="pill'+(pplFilter===g?' pill-i':' pill-m')+'" style="cursor:pointer" onclick="pplFilter=\''+esc(g)+'\';render()">'+esc(g)+(groupCounts[g]?' ('+groupCounts[g]+')':'')+'</div>').join('')}
+    <button class="tb-btn" style="margin-left:auto;font-size:12px;padding:4px 10px" onclick="openManageGroupsModal()">Manage groups</button>
   </div>
   ${items.length?`<div class="card"><table class="tbl">
     <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Group</th><th>Contact</th><th style="width:40px"></th></tr></thead>
@@ -2399,7 +2416,7 @@ function openPersonModal(id){
       <div class="fg"><label>Username</label><input id="p-username" value="${p?.username?esc(p.username):''}" placeholder="e.g. mpoole" autocapitalize="off" style="font-size:14px"><div style="font-size:10.5px;color:var(--light);margin-top:2px">Used to sign in. No spaces.</div></div>
     </div>
     <div class="fg-row">
-      <div class="fg"><label>Group</label><select id="p-group">${pplGroups.map(g=>'<option value="'+g+'"'+(p?.group===g?' selected':'')+'>'+g+'</option>').join('')}</select></div>
+      <div class="fg"><label>Group</label><select id="p-group"><option value=""${!p?.group?' selected':''}>— None —</option>${getPplGroups().map(g=>'<option value="'+esc(g)+'"'+(p?.group===g?' selected':'')+'>'+esc(g)+'</option>').join('')}</select></div>
       <div class="fg">&nbsp;</div>
     </div>
     <div class="fg"><label>Role / Title</label><input id="p-role" value="${p?esc(p.role):''}" placeholder="e.g. CDO Director of AI Solutions"></div>
@@ -2450,6 +2467,79 @@ function delPerson(id){
   const p=(D.people||[]).find(x=>x.id===id);
   D.people=(D.people||[]).filter(x=>x.id!==id);
   log('Removed person: '+esc(p?.name||''));save();render();toast('Removed');
+}
+
+function openManageGroupsModal(){
+  ensureGroups();
+  const groups=getPplGroups();
+  openModal(`<div class="m-hd"><h3>Manage Groups</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd">
+    <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px">Group names appear in the People list and in the Group dropdown when editing a person. Add, rename, or remove groups below. Deleting a group clears that group for all people assigned to it.</p>
+    <div style="margin-bottom:14px">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+        <input type="text" id="new-group-name" placeholder="New group name" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:inherit" onkeydown="if(event.key==='Enter')addGroup()">
+        <button type="button" class="mbtn mb-save" style="padding:8px 14px" onclick="addGroup()">Add group</button>
+      </div>
+    </div>
+    <div style="border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden">
+      <table class="tbl" style="margin:0">
+        <thead><tr><th>Group name</th><th style="width:80px">People</th><th style="width:140px"></th></tr></thead>
+        <tbody>
+          ${groups.length?groups.map(g=>{const count=(D.people||[]).filter(p=>p.group===g).length;const safe=esc(g).replace(/'/g,'&#39;');return `<tr class="grp-row" data-gname="${safe}">
+            <td><span class="grp-label">${esc(g)}</span><input class="grp-edit" value="${esc(g)}" style="display:none;width:100%;padding:4px 8px;font-size:13px;border:1px solid var(--accent);border-radius:var(--r-xs)" data-original="${safe}"></td>
+            <td style="font-size:12px;color:var(--muted)">${count}</td>
+            <td>
+              <button type="button" style="font-size:11px;color:var(--accent);background:none;border:none;cursor:pointer;padding:2px 6px" onclick="editGroupStart(this)">Rename</button>
+              <button type="button" style="font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;padding:2px 6px" onclick="deleteGroup(this)">Delete</button>
+            </td>
+          </tr>`}).join(''):'<tr><td colspan="3" style="padding:14px;color:var(--muted);font-size:13px">No groups yet. Add one above.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center" id="grp-edit-ft" style="display:none">
+      <button type="button" class="mbtn mb-save" onclick="editGroupSave()">Save</button>
+      <button type="button" class="mbtn mb-cancel" onclick="editGroupCancel()">Cancel</button>
+    </div>
+  </div>
+  <div class="m-ft"><button class="mbtn mb-cancel" onclick="closeModal()">Done</button></div>`);
+}
+function addGroup(){
+  const inp=document.getElementById('new-group-name');if(!inp)return;
+  const name=inp.value.trim();if(!name){toast('Enter a group name');return}
+  if(!D.groups)D.groups=[];
+  if(D.groups.includes(name)){toast('That group already exists');return}
+  D.groups.push(name);D.groups.sort((a,b)=>a.localeCompare(b));
+  save();inp.value='';openManageGroupsModal();toast('Group added');
+}
+function editGroupStart(btn){
+  const row=btn.closest('tr.grp-row');if(!row)return;
+  document.querySelectorAll('.grp-row').forEach(r=>{r.querySelector('.grp-label').style.display='';r.querySelector('.grp-edit').style.display='none'});
+  const lbl=row.querySelector('.grp-label');const ed=row.querySelector('.grp-edit');
+  if(lbl)lbl.style.display='none';if(ed){ed.style.display='block';ed.value=ed.getAttribute('data-original')||'';ed.focus();}
+  document.getElementById('grp-edit-ft').style.display='flex';
+}
+function editGroupSave(){
+  const ed=document.querySelector('.grp-edit[style*="block"]');
+  if(!ed||!ed.value.trim()){editGroupCancel();return}
+  const oldName=(ed.getAttribute('data-original')||'').replace(/&#39;/g,"'");
+  const newName=ed.value.trim().replace(/&#39;/g,"'");
+  if(!oldName||oldName===newName){editGroupCancel();return}
+  if((D.groups||[]).includes(newName)){toast('A group with that name already exists');return}
+  const idx=(D.groups||[]).indexOf(oldName);
+  if(idx>=0)D.groups[idx]=newName;
+  else{D.groups=D.groups||[];D.groups.push(newName);D.groups.sort((a,b)=>a.localeCompare(b))}
+  (D.people||[]).forEach(p=>{if(p.group===oldName)p.group=newName});
+  D.groups.sort((a,b)=>a.localeCompare(b));save();openManageGroupsModal();toast('Group renamed');
+}
+function editGroupCancel(){openManageGroupsModal();}
+function deleteGroup(btn){
+  const row=btn.closest('tr.grp-row');if(!row)return;
+  const g=(row.getAttribute('data-gname')||'').replace(/&#39;/g,"'");
+  if(!g)return;
+  if(!confirm('Remove the group "'+g+'"? All people in this group will have their group cleared.'))return;
+  D.groups=(D.groups||[]).filter(x=>x!==g);
+  (D.people||[]).forEach(p=>{if(p.group===g)p.group=''});
+  save();openManageGroupsModal();render();toast('Group removed');
 }
 
 // ═══════════════════════════════════════════════════
