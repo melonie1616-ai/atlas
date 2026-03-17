@@ -536,6 +536,7 @@ body.nav-collapsed .topbar-menu{display:flex}
           </div>
         </div>
       </div>
+      <button class="tb-btn" onclick="go('mywork')" style="background:#fff;color:#1e293b;border:2px solid #94a3b8;display:flex;align-items:center;gap:6px;font-size:13px" title="Workstreams and action items assigned to you"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M9 11h6M9 15h6"/></svg>My Work Items</button>
       <div style="position:relative">
         <button class="tb-btn" onclick="toggleQC()" style="background:#ec4899;color:#fff;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Capture</button>
         <div class="qc-panel" id="qcPanel">
@@ -1225,7 +1226,7 @@ function go(v){
     if(arrow)arrow.classList.toggle('collapsed',sec.classList.contains('collapsed'));
   });
   const titles={dashboard:'Dashboard',workstreams:'Workstreams',engagements:'Engagements',
-    tasks:'Action Items',extract:'Inbox',people:'People',
+    tasks:'Action Items',extract:'Inbox',mywork:'My Work Items',people:'People',
     report:'Report Out',ask:'Ask AI',strategy:'Strategy & Framework',decisions:'Decision Log',
     risks:'Risk Register',metrics:'Success Metrics'};
   document.getElementById('viewTitle').textContent=titles[v]||v;
@@ -1259,7 +1260,7 @@ function badges(){
 function render(){
   const c=document.getElementById('content');
   ({dashboard:rDash,workstreams:rWork,
-    tasks:rTasks,extract:rExtract,people:rPeople,report:rReport,ask:rAsk,strategy:rStrategy,
+    tasks:rTasks,extract:rExtract,mywork:rMyWork,people:rPeople,report:rReport,ask:rAsk,strategy:rStrategy,
     decisions:rDecisions,risks:rRisks,metrics:rMetrics})[V]?.(c);
   badges();autoUpdateMilestones();
 }
@@ -1494,6 +1495,72 @@ function rDash(c){
   <div class="card" style="margin-top:16px">
     <div class="dash-hd">Activity Log</div>
     <div class="dash-bd" style="max-height:180px;overflow-y:auto">${(D.log||[]).slice(0,20).map(l=>`<div style="padding:4px 0;font-size:11.5px;border-bottom:1px solid var(--border-lt);display:flex;gap:8px"><span style="color:var(--light);flex-shrink:0;font-size:10px;min-width:60px">${new Date(l.ts).toLocaleDateString()}</span><span>${l.text}</span></div>`).join('')}</div>
+  </div>`;
+}
+
+function rMyWork(c){
+  const myWs=(D.workstreams||[]).filter(w=>{
+    const owner=w.owner||WS_DEFS.find(d=>d.id===w.id)?.owner||'';
+    return owner===ME;
+  });
+  const myTasks=(D.tasks||[]).filter(t=>t.owner===ME).sort((a,b)=>{
+    if(a.status!==b.status)return (a.status==='open'?0:1)-(b.status==='open'?0:1);
+    if(a.status==='open'&&a.due&&b.due)return (a.due||'9').localeCompare(b.due||'9');
+    return (a.title||'').localeCompare(b.title||'');
+  });
+  const openTasks=myTasks.filter(t=>t.status==='open');
+  const doneTasks=myTasks.filter(t=>t.status==='done');
+
+  if(!ME){
+    c.innerHTML=`<div class="card" style="padding:32px;text-align:center">
+      <h3 style="margin-bottom:12px;font-size:18px">My Work Items</h3>
+      <p style="color:var(--muted);margin-bottom:20px">Sign in to see workstreams and action items assigned to you.</p>
+      <button class="mbtn mb-save" onclick="changeName()">Sign in</button>
+    </div>`;
+    return;
+  }
+
+  const wsTile=(w)=>{
+    const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;
+    const wc=wsColor(w.id);
+    return `<div style="border-radius:var(--r-lg);cursor:pointer;overflow:hidden;box-shadow:var(--shadow);background:${wc}" onclick="openWsDetail('${w.id}')">
+      <div style="padding:12px 14px;color:#fff">
+        <div style="font-size:13px;font-weight:700">${esc(w.name)}</div>
+        <div style="font-size:11px;opacity:.9;margin-top:4px">${(w.status||'on-track').replace('-',' ')} &middot; ${wOpen} open</div>
+      </div>
+    </div>`;
+  };
+  const taskRow=(t)=>{
+    const isOD=t.status==='open'&&t.due&&t.due<today();
+    const rowBg=isOD?'background:var(--red-lt)':'';
+    return `<tr onclick="openTaskModal('${t.id}')" style="cursor:pointer;${rowBg}">
+      <td style="vertical-align:middle;width:28px" onclick="event.stopPropagation()"><div class="task-chk${t.status==='done'?' done':''}" onclick="toggleTask('${t.id}')">&#10003;</div></td>
+      <td style="${t.status==='done'?'text-decoration:line-through;color:var(--muted)':''}">${t.isMilestone?'<span style="color:#f59e0b">&#9733;</span> ':''}${esc(t.title)}</td>
+      <td style="font-size:12px;color:var(--muted)">${wsName(t.workstream)}</td>
+      <td style="font-size:12px;color:var(--muted)">${t.due?fmtDate(t.due):'—'}</td>
+      <td><span class="pill ${t.status==='done'?'pill-g':'pill-a'}" style="font-size:10px">${t.status==='done'?'Done':'Open'}</span></td>
+    </tr>`;
+  };
+
+  c.innerHTML=`
+  <div class="card" style="margin-bottom:20px;padding:20px">
+    <h2 style="margin:0 0 4px;font-size:20px;font-weight:800">My Work Items</h2>
+    <p style="color:var(--muted);font-size:14px;margin:0">Signed in as <strong>${esc(ME)}</strong></p>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;padding:18px 20px">
+    <h3 style="font-size:15px;font-weight:700;margin:0 0 12px">Workstreams you own</h3>
+    ${myWs.length
+      ?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">${myWs.map(wsTile).join('')}</div>`
+      :'<p style="color:var(--muted);font-size:13px;margin:0">No workstreams assigned to you. Workstream owners are set in Workstreams &rarr; edit a workstream.</p>'}
+  </div>
+
+  <div class="card" style="margin-bottom:20px;padding:18px 20px">
+    <h3 style="font-size:15px;font-weight:700;margin:0 0 12px">Action items assigned to you</h3>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 12px">${openTasks.length} open, ${doneTasks.length} done</p>
+    ${myTasks.length
+      ?`<table class="tbl" style="width:100%"><thead><tr><th style="width:28px"></th><th>Action Item</th><th style="width:18%">Workstream</th><th style="width:12%">Target</th><th style="width:80px">Status</th></tr></thead><tbody>${myTasks.map(taskRow).join('')}</tbody></table>`
+      :'<p style="color:var(--muted);font-size:13px;margin:0">No action items assigned to you. Set yourself as Owner on an action item in Action Items.</p>'}
   </div>`;
 }
 
@@ -2188,7 +2255,7 @@ function openTaskModal(id){
       <div class="fg"><label>Priority</label><select id="t-pri"><option value="high"${t?.priority==='high'?' selected':''}>High</option><option value="medium"${(!t||t.priority==='medium')?' selected':''}>Medium</option><option value="low"${t?.priority==='low'?' selected':''}>Low</option></select></div>
       <div class="fg"><label>Status</label><select id="t-status"><option value="open"${(!t||t.status==='open')?' selected':''}>Open</option><option value="done"${t?.status==='done'?' selected':''}>Done</option></select></div>
     </div>
-    <div class="fg"><label>Notes</label><textarea id="t-notes" style="min-height:100px">${t?esc(t.notes):''}</textarea></div>
+    <div class="fg"><label>Notes</label><textarea id="t-notes" style="min-height:180px;resize:vertical">${t?esc(t.notes):''}</textarea></div>
   </div>
   <div class="m-ft">
     ${t?'<button class="mbtn mb-del" onclick="delTask(\''+t.id+'\');closeModal()">Delete</button>':''}
@@ -2789,8 +2856,9 @@ function rReport(c){
     const next=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open'&&t.due&&t.due>=today()).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'))[0];
     return next?fmtDate(next.due):'—';
   }
-  function bulletsHtml(raw){
-    const lines=(raw||'').trim().split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,3);
+  function bulletsHtml(raw,maxItems){
+    const max=(maxItems||3)|0;
+    const lines=(raw||'').trim().split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,max);
     if(!lines.length)return '—';
     return '<ul class="rpt-ws-bullets">'+lines.map(l=>'<li>'+esc(l)+'</li>').join('')+'</ul>';
   }
@@ -2798,14 +2866,16 @@ function rReport(c){
     const st=w.status||'on-track';
     const statusClass=st==='complete'?'complete':st==='at-risk'?'at-risk':st==='blocked'?'blocked':st==='not-started'?'not-started':'on-track';
     const recentRaw=(w.recentAccomplishments||'').trim()||recentAccomplishmentsFromApp(w.id);
-    const recent=bulletsHtml(recentRaw);
+    const nextRaw=(w.whatsNext||'').trim()||whatsNextFromApp(w.id);
+    const recent=bulletsHtml(recentRaw,3);
+    const lookAhead=bulletsHtml(nextRaw,3);
     const keyDateLines=keyDatesLinesForWs(w.id);
-    const keyDatesHtml=keyDateLines.length?'<ul class="rpt-ws-bullets">'+keyDateLines.map(l=>'<li>'+esc(l)+'</li>').join('')+'</ul>':'—';
+    const keyDatesHtml=keyDateLines.length?'<span style="font-size:10px;color:var(--muted)">Key dates: </span>'+keyDateLines.map(l=>esc(l)).join('; '):'';
     return `<tr>
       <td class="rpt-ws-name"><strong>${esc(w.name)}</strong></td>
       <td><span class="rpt-status ${statusClass}">${st.replace('-',' ')}</span></td>
       <td class="rpt-ws-recent" style="font-size:11px;color:var(--text);vertical-align:top">${recent}</td>
-      <td class="rpt-ws-keydates" style="font-size:11px;color:var(--text);vertical-align:top">${keyDatesHtml}</td>
+      <td class="rpt-ws-keydates" style="font-size:11px;color:var(--text);vertical-align:top">${lookAhead}${keyDatesHtml?'<div style="margin-top:6px">'+keyDatesHtml+'</div>':''}</td>
     </tr>`;
   }
   function renderWsRowFull(w){
