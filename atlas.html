@@ -242,32 +242,76 @@ body.nav-collapsed .topbar-menu{display:flex}
 .mtg-btns button:hover{background:var(--indigo-lt)}
 
 
-/* REPORT VIEW */
-.rpt{max-width:920px;margin:0 auto}
-.rpt-header{text-align:center;margin-bottom:28px;padding-bottom:18px;border-bottom:2px solid var(--accent)}
-.rpt-header h2{font-size:24px;font-weight:800;margin-bottom:6px;letter-spacing:-.01em}
-.rpt-header p{font-size:13px;color:var(--muted)}
-.rpt-section{margin-bottom:24px}
-.rpt-section h3{font-size:17px;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
-.rpt-ws{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
-.rpt-ws-card{padding:16px;border-radius:var(--r-md);border:1px solid var(--border);background:var(--bg-card);transition:box-shadow .2s}
+/* REPORT VIEW — uniform 14px, tight spacing, row/field shading, slide-friendly export */
+.rpt{width:100%;max-width:100%;margin:0}
+#report-export-area{width:100%;max-width:100%;padding:0}
+.rpt-header{text-align:center;margin-bottom:4px;padding-bottom:4px;border-bottom:2px solid var(--accent)}
+.rpt-header h2{font-size:18px;font-weight:800;margin-bottom:2px;letter-spacing:-.01em}
+.rpt-header p{font-size:14px;color:var(--muted)}
+.rpt-section{margin-bottom:6px}
+.rpt-section h3{font-size:14px;font-weight:700;margin-bottom:3px;padding-bottom:3px;border-bottom:2px solid var(--border);color:var(--text)}
+.rpt-exec-summary-wrap{background:rgba(99,102,241,.08);border-left:4px solid var(--accent);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:6px 10px;box-shadow:0 1px 2px rgba(0,0,0,.04);font-size:14px}
+.rpt-field-card{background:rgba(0,0,0,.03);border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:6px}
+[data-theme="dark"] .rpt-field-card{background:rgba(255,255,255,.06)}
+.rpt-ws{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.rpt-ws-card{padding:12px;border-radius:var(--r-md);border:1px solid var(--border);background:var(--bg-card);transition:box-shadow .2s}
 .rpt-ws-card:hover{box-shadow:var(--shadow)}
-.rpt-ws-card h4{font-size:14px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px}
-.rpt-ws-card .rpt-ws-desc{font-size:11.5px;color:var(--muted);margin-bottom:8px}
-.rpt-ws-card ul{font-size:11.5px;padding-left:16px;color:var(--text)}
-.rpt-ws-card ul li{margin-bottom:3px}
-.rpt-exec-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px}
-.rpt-exec-table th{text-align:left;padding:10px 12px;background:var(--bg-subtle);border:1px solid var(--border);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
-.rpt-exec-table td{padding:10px 12px;border:1px solid var(--border);vertical-align:top}
-.rpt-exec-table tr:nth-child(even){background:rgba(0,0,0,.02)}
-.rpt-exec-table .rpt-status{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap}
+.rpt-ws-card h4{font-size:14px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.rpt-ws-card .rpt-ws-desc{font-size:14px;color:var(--muted);margin-bottom:6px}
+.rpt-ws-card ul{font-size:14px;padding-left:18px;color:var(--text)}
+.rpt-ws-card ul li{margin-bottom:2px}
+.rpt-exec-table{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:6px;border:1px solid #cbd5e1;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.rpt-exec-table th,.rpt-exec-table td,.rpt-exec-table .rpt-status,.rpt-exec-table .rpt-scope,.rpt-exec-table .rpt-timing,.rpt-exec-table .rpt-ws-name{font-size:14px}
+.rpt-exec-table th{text-align:left;padding:8px 10px;background:#000;color:#fff;border:1px solid #000;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:12px}
+.rpt-exec-table td{padding:8px 10px;border:1px solid #cbd5e1;vertical-align:top}
+.rpt-exec-table tr:not(.rpt-group-header) td{background:#fff}
+.rpt-exec-table.rpt-ws-focus tr:not(.rpt-group-header) td:first-child{border-left:2px solid var(--accent);font-weight:600}
+.rpt-exec-table .rpt-status{display:inline-block;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap;text-align:center;min-width:60px}
 .rpt-exec-table .rpt-status.on-track{background:#059669;color:#fff}
 .rpt-exec-table .rpt-status.at-risk{background:#d97706;color:#fff}
 .rpt-exec-table .rpt-status.blocked{background:#dc2626;color:#fff}
 .rpt-exec-table .rpt-status.complete{background:#2563eb;color:#fff}
-.rpt-exec-table .rpt-status.not-started{background:#64748b;color:#fff}
-.rpt-exec-table .rpt-scope{max-width:280px;font-size:11.5px;color:var(--text);line-height:1.4}
-.rpt-exec-table .rpt-timing{font-size:11px;color:var(--muted);white-space:nowrap}
+.rpt-exec-table .rpt-status.not-started{background:#f1f5f9;color:#334155;border:1px solid #e2e8f0}
+.rpt-exec-table .rpt-scope{max-width:280px;color:var(--text);line-height:1.4}
+.rpt-exec-table .rpt-timing{color:var(--muted);white-space:nowrap}
+.rpt-metrics-strip{display:flex;flex-wrap:wrap;gap:6px 12px;padding:6px 10px;background:rgba(0,0,0,.04);border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:6px;font-size:14px}
+.rpt-metrics-strip .rpt-metric{display:flex;align-items:center;gap:6px}
+.rpt-metrics-strip .rpt-metric strong{color:var(--accent);font-size:14px}
+.rpt-timeline{display:flex;flex-wrap:wrap;gap:4px 14px;margin-bottom:6px;font-size:14px}
+.rpt-timeline .rpt-tl-group{min-width:140px}
+.rpt-timeline .rpt-tl-label,.rpt-timeline .rpt-tl-date{font-size:14px}
+.rpt-timeline .rpt-tl-label{font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:2px}
+.rpt-timeline .rpt-tl-item{display:flex;gap:8px;padding:2px 0;align-items:baseline}
+.rpt-timeline .rpt-tl-date{color:var(--muted);white-space:nowrap}
+.rpt-timeline .rpt-tl-overdue .rpt-tl-date{color:var(--red);font-weight:600}
+.rpt-compact-table .rpt-scope{display:none}
+.rpt-ws-focus{table-layout:fixed}
+.rpt-exec-table th:nth-child(1),.rpt-exec-table th:nth-child(2),.rpt-exec-table td:nth-child(1),.rpt-exec-table td:nth-child(2){font-size:12px}
+.rpt-ws-focus th:nth-child(1),.rpt-ws-focus td:nth-child(1){width:14%}
+.rpt-ws-focus td:nth-child(1){border-left:2px solid var(--accent)}
+.rpt-ws-focus th:nth-child(2),.rpt-ws-focus td:nth-child(2){width:5%;min-width:0;white-space:nowrap;text-align:center}
+.rpt-ws-focus th:nth-child(3),.rpt-ws-focus td:nth-child(3){width:26%}
+.rpt-ws-focus th:nth-child(4),.rpt-ws-focus td:nth-child(4){width:34%}
+.rpt-ws-focus .rpt-ws-recent,.rpt-ws-focus .rpt-ws-next,.rpt-ws-focus .rpt-ws-keydates{min-width:0;word-break:break-word}
+.rpt-ws-focus .rpt-ws-keydates{color:var(--muted)}
+.rpt-ws-bullets{margin:0;padding-left:14px;list-style:disc;font-size:11px;line-height:1.35}
+.rpt-ws-bullets li{margin-bottom:1px;white-space:normal}
+.rpt-ws-bullets li:last-child{margin-bottom:0}
+.rpt-exec-table .rpt-group-header td{color:#fff;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:8px 10px;border:1px solid #cbd5e1;vertical-align:middle}
+.rpt-exec-table .rpt-group-header.rpt-group-bu td{background:#2563eb;border-color:#93c5fd}
+.rpt-exec-table .rpt-group-header.rpt-group-cc td{background:#475569;border-color:#94a3b8}
+.rpt-exec-table .rpt-group-header span{display:block}
+[data-theme="dark"] .rpt-exec-table{border-color:#e2e8f0}
+[data-theme="dark"] .rpt-exec-table th{border-color:#000}
+[data-theme="dark"] .rpt-exec-table td{border-color:#e2e8f0}
+[data-theme="dark"] .rpt-exec-table .rpt-group-header td{border-color:#e2e8f0}
+[data-theme="dark"] .rpt-exec-table .rpt-group-header.rpt-group-bu td{background:#2563eb;color:#fff;border-color:#93c5fd}
+[data-theme="dark"] .rpt-exec-table .rpt-group-header.rpt-group-cc td{background:#334155;color:#fff;border-color:#64748b}
+[data-theme="dark"] .rpt-exec-table tr:not(.rpt-group-header) td{background:#1e293b;border-color:#e2e8f0}
+[data-theme="dark"] .rpt-exec-table.rpt-ws-focus tr:not(.rpt-group-header) td:first-child{background:#1e293b;border-left-color:#93c5fd}
+[data-theme="dark"] .rpt-exec-table .rpt-status.not-started{background:rgba(255,255,255,.12);color:#e2e8f0;border-color:rgba(255,255,255,.2)}
+.rpt-exec-table .rpt-ws-name{font-weight:600;color:var(--text)}
+@media print{.rpt-header{margin-bottom:3px;padding-bottom:3px}.rpt-section{margin-bottom:4px;break-inside:avoid}.rpt-section h3{margin-bottom:2px;padding-bottom:2px}.rpt-exec-table{margin-bottom:4px;font-size:14px;box-shadow:none}.rpt-exec-table th,.rpt-exec-table td{padding:3px 6px}.rpt-exec-table .rpt-group-header td{font-size:14px;padding:4px 8px}.rpt-exec-table .rpt-status{font-size:10px;padding:2px 5px}.rpt-ws-bullets{font-size:11px;line-height:1.3}.rpt-ws-bullets li{margin-bottom:0}}
 
 /* STRATEGY REF */
 .strat-section{margin-bottom:24px}
@@ -358,6 +402,7 @@ body.nav-collapsed .topbar-menu{display:flex}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -440,6 +485,10 @@ body.nav-collapsed .topbar-menu{display:flex}
       <div class="ni" data-v="report" onclick="go('report')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Report Out
+      </div>
+      <div class="ni" data-v="ask" onclick="go('ask')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Ask AI
       </div>
     </div>
 
@@ -643,7 +692,7 @@ function defaults(){
       {id:uid(),name:'Darya Mazandarani',role:'Commercial Sales (France)',group:'Business Stakeholder',email:'',phone:'',notes:'EMEA region. Active Superworker community member.'}
     ],
     groups:['CDO Leadership','CDO Team','Executive','Legal','HR','IT/Security','Business Stakeholder','Other'],
-    reportNotes:{accomplishments:'',blockers:'',nextPeriod:'',asOf:''},
+    reportNotes:{accomplishments:'',blockers:'',nextPeriod:'',asOf:'',executiveSummary:''},
     log:[{id:uid(),ts:new Date().toISOString(),text:'ATLAS initialized'}]
   };
 }
@@ -694,7 +743,7 @@ function loadLs(){
     if(existing&&!existing.username)existing.username=sp.username;
   });
   if(!D.log)D.log=[];
-  if(!D.reportNotes)D.reportNotes={accomplishments:'',blockers:'',nextPeriod:'',asOf:''};
+  if(!D.reportNotes)D.reportNotes={accomplishments:'',blockers:'',nextPeriod:'',asOf:'',executiveSummary:''};
   if(!D.links)D.links=[];
   if(!D.decisions)D.decisions=[];
   if(!D.risks)D.risks=[];
@@ -989,6 +1038,36 @@ COMPLETED TASKS: ${doneT||'None'}
 ENGAGEMENTS: ${eng||'None'}
 TODAY: ${today()}`;
 }
+function getAskContext(){
+  const lines=[];
+  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  allWs.forEach(w=>{
+    const rec=(w.recentAccomplishments||'').trim()||recentAccomplishmentsFromApp(w.id);
+    const nxt=(w.whatsNext||'').trim()||whatsNextFromApp(w.id);
+    const openTasks=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').map(t=>t.title+(t.due?' (due '+t.due+')':'')+(t.owner?' — '+t.owner:''));
+    const doneTasks=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='done').slice(-5).map(t=>t.title+(t.due?' completed '+t.due:''));
+    lines.push(`WORKSTREAM: ${w.name} (ID: ${w.id}) | Status: ${w.status||'on-track'} | Owner: ${w.owner||'TBD'}`);
+    if(rec)lines.push('  Recent accomplishments: '+rec.replace(/\n/g,' '));
+    if(nxt)lines.push('  What\'s next: '+nxt.replace(/\n/g,' '));
+    if(openTasks.length)lines.push('  Open action items: '+openTasks.join('; '));
+    if(doneTasks.length)lines.push('  Recently completed: '+doneTasks.join('; '));
+    lines.push('');
+  });
+  const rn=D.reportNotes||{};
+  if(rn.accomplishments||rn.blockers||rn.nextPeriod){
+    lines.push('REPORT NOTES (program-level):');
+    if(rn.accomplishments)lines.push('  Accomplishments: '+rn.accomplishments.replace(/\n/g,' '));
+    if(rn.blockers)lines.push('  Blockers: '+rn.blockers.replace(/\n/g,' '));
+    if(rn.nextPeriod)lines.push('  Next period: '+rn.nextPeriod.replace(/\n/g,' '));
+    lines.push('');
+  }
+  const dec=(D.decisions||[]).slice(-15).map(d=>d.title+' ('+d.status+', '+fmtDate(d.date)+')').join('; ');
+  if(dec)lines.push('RECENT DECISIONS: '+dec+'\n');
+  const risks=(D.risks||[]).filter(r=>r.status!=='closed').map(r=>r.title+' — '+r.status).join('; ');
+  if(risks)lines.push('OPEN RISKS: '+risks+'\n');
+  lines.push('TODAY: '+today());
+  return lines.join('\n');
+}
 
 // ═══════════════════════════════════════════════════
 // TEAM PASSWORD & FIREBASE
@@ -1147,7 +1226,7 @@ function go(v){
   });
   const titles={dashboard:'Dashboard',workstreams:'Workstreams',engagements:'Engagements',
     tasks:'Action Items',extract:'Inbox',people:'People',
-    report:'Report Out',strategy:'Strategy & Framework',decisions:'Decision Log',
+    report:'Report Out',ask:'Ask AI',strategy:'Strategy & Framework',decisions:'Decision Log',
     risks:'Risk Register',metrics:'Success Metrics'};
   document.getElementById('viewTitle').textContent=titles[v]||v;
   const ab=document.getElementById('addBtn');
@@ -1180,7 +1259,7 @@ function badges(){
 function render(){
   const c=document.getElementById('content');
   ({dashboard:rDash,workstreams:rWork,
-    tasks:rTasks,extract:rExtract,people:rPeople,report:rReport,strategy:rStrategy,
+    tasks:rTasks,extract:rExtract,people:rPeople,report:rReport,ask:rAsk,strategy:rStrategy,
     decisions:rDecisions,risks:rRisks,metrics:rMetrics})[V]?.(c);
   badges();autoUpdateMilestones();
 }
@@ -1774,6 +1853,11 @@ function openWsEdit(id){
       <div class="fg"><label>Color</label><select id="ws-color">${colors.map(cl=>`<option value="${cl}"${(w?.color||'#6366f1')===cl?' selected':''} style="background:${cl};color:#fff">${cl}</option>`).join('')}</select></div>
     </div>
     <div class="fg"><label>Description</label><textarea id="ws-desc" style="min-height:50px">${w?esc(w.desc):''}</textarea></div>
+    <div class="fg">
+      <label style="display:flex;align-items:center;gap:8px">Recent accomplishments ${w?`<button type="button" class="mbtn" style="font-size:11px;padding:4px 8px;border:1px solid var(--border);background:var(--bg-subtle);color:var(--text)" onclick="fillWsFromApp('${esc(w.id)}')">Suggest from app</button>`:''}</label>
+      <textarea id="ws-recent" style="min-height:44px;font-size:12px" placeholder="Brief bullets for report-out (e.g. Delivered X; Completed Y). Or use Suggest from app to fill from completed tasks.">${w?esc(w.recentAccomplishments||''):''}</textarea>
+    </div>
+    <div class="fg"><label>What's next</label><textarea id="ws-whatsnext" style="min-height:44px;font-size:12px" placeholder="Brief bullets for report-out (e.g. Launch pilot by Mar 20; Align with Legal). Or use Suggest from app to fill from open tasks.">${w?esc(w.whatsNext||''):''}</textarea></div>
     <div class="fg"><label>Notes / Status Update</label><textarea id="ws-notes" style="min-height:50px">${w?esc(w.notes||''):''}</textarea></div>
     <div class="fg"><label>Documents</label>
       <div id="ws-links-list">${(w?.links||[]).map((l,i)=>`<div style="display:flex;gap:4px;margin-bottom:4px;align-items:center"><input class="ws-link-label" value="${esc(l.label)}" placeholder="Label" style="flex:1;max-width:140px"><input class="ws-link-url" value="${esc(l.url)}" placeholder="https://..." style="flex:2"><button type="button" style="color:var(--red);font-size:13px;background:none;border:none;cursor:pointer;padding:0 4px" onclick="this.parentElement.remove()">&#10005;</button></div>`).join('')}</div>
@@ -1852,6 +1936,8 @@ function saveWs(id){
   w.status=document.getElementById('ws-status').value;
   w.color=document.getElementById('ws-color').value;
   w.desc=document.getElementById('ws-desc').value.trim();
+  w.recentAccomplishments=(document.getElementById('ws-recent')?.value||'').trim();
+  w.whatsNext=(document.getElementById('ws-whatsnext')?.value||'').trim();
   w.notes=document.getElementById('ws-notes').value;
   w.stakeholders=[...document.querySelectorAll('.ws-sth-cb')].filter(cb=>cb.checked).map(cb=>cb.value);
   const labels=[...document.querySelectorAll('.ws-link-label')];
@@ -2264,6 +2350,7 @@ function rExtract(c){
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
         ${taskCt?'<button class="pill pill-i" style="cursor:pointer;border:none;font-size:12px;padding:5px 12px" onclick="event.stopPropagation();routeDoc(\''+d.id+'\')">Create '+taskCt+' task'+(taskCt>1?'s':'')+'</button>':''}
+        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="event.stopPropagation();inboxToTask('${d.id}')">+ Action Item</button>
         <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="event.stopPropagation();inboxToDecision('${d.id}')">+ Decision</button>
         <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="event.stopPropagation();inboxToRisk('${d.id}')">+ Risk</button>
         <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="event.stopPropagation();markInboxDone('${d.id}')">Archive</button>
@@ -2404,6 +2491,16 @@ function markInboxDone(id){
   const d=(D.inbox||[]).find(x=>x.id===id);if(!d)return;
   d.processed=true;d.updatedBy=ME;
   save();render();toast('Archived');
+}
+function inboxToTask(id){
+  const d=(D.inbox||[]).find(x=>x.id===id);if(!d)return;
+  const taskId=uid();
+  const notes='From inbox: '+d.title+((d.content||'').trim()?'\n\n'+(d.content||'').substring(0,800):'');
+  if(!D.tasks)D.tasks=[];
+  D.tasks.push({id:taskId,title:d.title||'Untitled',workstream:'',isMilestone:false,owner:'',due:'',startDate:'',status:'open',priority:'medium',notes,source:d.title,created:today(),addedBy:ME});
+  d.processed=true;d.updatedBy=ME;
+  save();log('Created action item from inbox: '+esc(d.title));
+  render();openTaskModal(taskId);toast('Action item created — set workstream & dates');
 }
 function inboxToDecision(id){
   const d=(D.inbox||[]).find(x=>x.id===id);if(!d)return;
@@ -2596,8 +2693,79 @@ function deleteGroup(btn){
 // ═══════════════════════════════════════════════════
 // REPORT OUT
 // ═══════════════════════════════════════════════════
+function recentAccomplishmentsFromApp(wsId){
+  const done=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='done').sort((a,b)=>{
+    const mile=(t)=>(t.isMilestone?1:0); if(mile(b)!==mile(a))return mile(b)-mile(a);
+    return (b.due||'0').localeCompare(a.due||'0');
+  });
+  return done.slice(0,3).map(t=>'• '+(t.title||'')+(t.due?' ('+fmtDate(t.due)+')':'')).filter(s=>s.length>2).join('\n')||'';
+}
+function whatsNextFromApp(wsId){
+  const open=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open').sort((a,b)=>{
+    const mile=(t)=>(t.isMilestone?1:0); if(mile(b)!==mile(a))return mile(b)-mile(a);
+    return (a.due||'9').localeCompare(b.due||'9');
+  });
+  return open.slice(0,2).map(t=>'• '+(t.title||'')+(t.due?' ('+fmtDate(t.due)+')':'')).filter(s=>s.length>2).join('\n')||'';
+}
+function fillWsFromApp(wsId){
+  const rec=document.getElementById('ws-recent');const nxt=document.getElementById('ws-whatsnext');
+  if(rec)rec.value=recentAccomplishmentsFromApp(wsId);
+  if(nxt)nxt.value=whatsNextFromApp(wsId);
+  toast('Filled from tasks in the app — edit and Save');
+}
+function updateAllWorkstreamsFromActionItems(){
+  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  let updated=0;
+  allWs.forEach(w=>{
+    const rec=recentAccomplishmentsFromApp(w.id);
+    const nxt=whatsNextFromApp(w.id);
+    w.recentAccomplishments=rec;
+    w.whatsNext=nxt;
+    updated++;
+  });
+  save();render();
+  toast(updated?'Recent accomplishments & What\'s next updated for '+updated+' workstreams from action items':'No report workstreams to update');
+}
+function rAsk(c){
+  const hasKey=!!OPENAI_KEY;
+  c.innerHTML=`<div class="card" style="margin-bottom:20px;padding:24px">
+    <h4 style="font-size:17px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px">Ask AI ${hasKey?'<span class="pill pill-g" style="font-size:10px;font-weight:500">Active</span>':''}</h4>
+    <p style="font-size:13.5px;color:var(--muted);line-height:1.65;margin-bottom:16px">Ask anything about the program — workstreams, action items, status, or updates. Example: &ldquo;Give me all of the latest updates on the GTM AI workstream&rdquo; or &ldquo;What milestones are overdue?&rdquo;</p>
+    ${!hasKey?'<p style="font-size:12px;color:var(--red);margin-bottom:12px">Set your OpenAI API key in the sidebar to use Ask AI.</p>':''}
+    <div class="fg" style="margin-bottom:12px">
+      <label>Your question</label>
+      <textarea id="ask-input" style="min-height:80px;font-size:14px" placeholder="e.g. Give me all of the latest updates on the GTM AI workstream">${(window._askAILastQuestion||'').replace(/</g,'&lt;')}</textarea>
+    </div>
+    <button class="mbtn mb-save" onclick="runAskAI()" ${!hasKey?'disabled':''}>Ask</button>
+  </div>
+  <div id="ask-response-wrap" class="card" style="padding:20px;display:none">
+    <h4 style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--muted)">Answer</h4>
+    <div id="ask-response" style="white-space:pre-wrap;font-size:14px;line-height:1.6"></div>
+  </div>`;
+  if(window._askAILastResponse){const wrap=document.getElementById('ask-response-wrap');const resp=document.getElementById('ask-response');if(wrap&&resp){wrap.style.display='';resp.textContent=window._askAILastResponse}}
+}
+async function runAskAI(){
+  const inp=document.getElementById('ask-input');
+  const q=(inp&&inp.value||'').trim();
+  if(!q){toast('Enter a question');return}
+  if(!OPENAI_KEY){toast('Set your OpenAI API key first (sidebar)');return}
+  const wrap=document.getElementById('ask-response-wrap');
+  const respEl=document.getElementById('ask-response');
+  if(wrap)wrap.style.display='';
+  if(respEl)respEl.textContent='Thinking...';
+  window._askAILastQuestion=q;
+  const ctx=getAskContext();
+  const result=await callAI(
+    'You are an assistant for Digital Realty\'s AI Transformation Program (ATLAS). Answer the user\'s question using ONLY the program data provided below. Format your answer in a categorized, bulleted style: use clear section headings (e.g. "Workstream status", "Recent accomplishments", "Open items") and bullet points (• or -) under each. Be concise and accurate. If the data does not contain enough information to answer, say so. Reference workstream names, owners, and specific accomplishments or action items when relevant.',
+    `Program data (use this to answer):\n\n${ctx}\n\n---\n\nUser question: ${q}`
+  );
+  if(respEl){respEl.textContent=result||'No response.'}
+  window._askAILastResponse=result||'No response.';
+  toast(result?'Done':'AI returned nothing');
+}
 function rReport(c){
   const rn=D.reportNotes||{};
+  const reportAsOf=rn.asOf||today();
   const allMs=(D.tasks||[]).filter(t=>t.isMilestone);
   const msDone=allMs.filter(t=>t.status==='done');
   const msUp=allMs.filter(t=>t.status==='open'&&(!t.due||t.due>=today())).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
@@ -2605,18 +2773,49 @@ function rReport(c){
   const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
   const buWs=allWs.filter(w=>w.category==='BU');
   const ccWs=allWs.filter(w=>w.category==='Cross-cutting');
+  const buWsSorted=[...buWs].sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
+  const ccWsSorted=[...ccWs].sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
+  try{var reportViewMode=localStorage.getItem('atlas_report_view')||'exec'}catch(e){var reportViewMode='exec'}
+  function keyDatesForWs(wsId){
+    const openWithDue=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open'&&t.due).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
+    const nextTwo=openWithDue.slice(0,2).map(t=>fmtDate(t.due)+(t.title?' — '+t.title:'')).filter(Boolean);
+    return nextTwo.length?nextTwo.join('; '):'—';
+  }
+  function keyDatesLinesForWs(wsId){
+    const openWithDue=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open'&&t.due).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
+    return openWithDue.slice(0,3).map(t=>fmtDate(t.due)+(t.title?' — '+t.title:'')).filter(Boolean);
+  }
   function nextDue(wsId){
     const next=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open'&&t.due&&t.due>=today()).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'))[0];
     return next?fmtDate(next.due):'—';
   }
-  function renderWsRow(w){
+  function bulletsHtml(raw){
+    const lines=(raw||'').trim().split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,3);
+    if(!lines.length)return '—';
+    return '<ul class="rpt-ws-bullets">'+lines.map(l=>'<li>'+esc(l)+'</li>').join('')+'</ul>';
+  }
+  function renderWsRowExec(w){
+    const st=w.status||'on-track';
+    const statusClass=st==='complete'?'complete':st==='at-risk'?'at-risk':st==='blocked'?'blocked':st==='not-started'?'not-started':'on-track';
+    const recentRaw=(w.recentAccomplishments||'').trim()||recentAccomplishmentsFromApp(w.id);
+    const recent=bulletsHtml(recentRaw);
+    const keyDateLines=keyDatesLinesForWs(w.id);
+    const keyDatesHtml=keyDateLines.length?'<ul class="rpt-ws-bullets">'+keyDateLines.map(l=>'<li>'+esc(l)+'</li>').join('')+'</ul>':'—';
+    return `<tr>
+      <td class="rpt-ws-name"><strong>${esc(w.name)}</strong></td>
+      <td><span class="rpt-status ${statusClass}">${st.replace('-',' ')}</span></td>
+      <td class="rpt-ws-recent" style="font-size:11px;color:var(--text);vertical-align:top">${recent}</td>
+      <td class="rpt-ws-keydates" style="font-size:11px;color:var(--text);vertical-align:top">${keyDatesHtml}</td>
+    </tr>`;
+  }
+  function renderWsRowFull(w){
     const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);
     const wMsDone=wMs.filter(t=>t.status==='done').length;
     const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;
     const st=w.status||'on-track';
     const statusClass=st==='complete'?'complete':st==='at-risk'?'at-risk':st==='blocked'?'blocked':st==='not-started'?'not-started':'on-track';
     return `<tr>
-      <td><strong>${esc(w.name)}</strong><br><span style="font-size:10px;color:var(--muted)">${esc(w.category||'')}</span></td>
+      <td><strong>${esc(w.name)}</strong></td>
       <td class="rpt-scope">${esc((w.desc||'').slice(0,200))}${(w.desc||'').length>200?'…':''}</td>
       <td><span class="rpt-status ${statusClass}">${st.replace('-',' ')}</span></td>
       <td style="font-size:11.5px">${esc(w.owner)||'TBD'}</td>
@@ -2625,100 +2824,212 @@ function rReport(c){
       <td class="rpt-timing">${nextDue(w.id)}</td>
     </tr>`;
   }
-  const execTable=`<table class="rpt-exec-table">
+  const execTableFull=`<table class="rpt-exec-table">
     <thead><tr>
-      <th>Workstream</th>
-      <th>Scope</th>
-      <th>Progress</th>
-      <th>Owner</th>
-      <th>Milestones</th>
-      <th>Open</th>
-      <th>Key timing</th>
+      <th>Workstream</th><th>Scope</th><th>Progress</th><th>Owner</th><th>Milestones</th><th>Open</th><th>Key timing</th>
     </tr></thead>
     <tbody>
-      ${buWs.length?'<tr><td colspan="7" style="background:var(--bg-subtle);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px">Business Unit Workstreams</td></tr>':''}
-      ${buWs.map(renderWsRow).join('')}
-      ${ccWs.length?'<tr><td colspan="7" style="background:var(--bg-subtle);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px">Crosscutting Workstreams</td></tr>':''}
-      ${ccWs.map(renderWsRow).join('')}
+      ${buWs.length?'<tr><td colspan="7" style="background:var(--bg-subtle);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px">Business Unit</td></tr>':''}
+      ${buWs.map(renderWsRowFull).join('')}
+      ${ccWs.length?'<tr><td colspan="7" style="background:var(--bg-subtle);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px">Crosscutting</td></tr>':''}
+      ${ccWs.map(renderWsRowFull).join('')}
     </tbody>
   </table>`;
+  const execTableWorkstreamFocus=`<table class="rpt-exec-table rpt-ws-focus">
+    <thead><tr><th>Workstream</th><th>Status</th><th>Recent accomplishments</th><th>Look Ahead</th></tr></thead>
+    <tbody>
+      ${buWsSorted.length?'<tr class="rpt-group-header rpt-group-bu"><td colspan="4"><span>Business Unit Workstreams</span></td></tr>':''}
+      ${buWsSorted.map(renderWsRowExec).join('')}
+      ${ccWsSorted.length?'<tr class="rpt-group-header rpt-group-cc"><td colspan="4"><span>Crosscutting Workstreams</span></td></tr>':''}
+      ${ccWsSorted.map(renderWsRowExec).join('')}
+    </tbody>
+  </table>`;
+  const workstreamSection=reportViewMode==='exec'
+    ?`<div class="rpt-section">${allWs.length?execTableWorkstreamFocus:'<p style="color:var(--muted);font-size:13px">No workstreams defined.</p>'}</div>`
+    :`<div class="rpt-section"><h3>Workstream Status</h3>${allWs.length?execTableFull:'<p style="color:var(--muted);font-size:13px">No workstreams defined.</p>'}</div>`;
+  const milestoneSectionFull=reportViewMode==='full'?`<div class="rpt-section">
+    <h3>Milestone Progress (${msDone.length}/${allMs.length} complete)</h3>
+    ${msOD.length?'<div style="margin-bottom:10px"><span style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase">Overdue</span>'+msOD.map(m=>`<div style="display:flex;gap:8px;padding:4px 0;font-size:12px"><span style="color:var(--red);font-weight:600">${esc(m.title)}</span><span style="color:var(--light)">${fmtDate(m.due)}</span></div>`).join('')+'</div>':''}
+    ${msUp.length?'<div><span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Upcoming</span>'+msUp.slice(0,8).map(m=>`<div style="display:flex;gap:8px;padding:4px 0;font-size:12px"><span>${esc(m.title)}</span><span style="color:var(--light)">${fmtDate(m.due)}</span></div>`).join('')+'</div>':''}
+    ${!msOD.length&&!msUp.length?'<p style="color:var(--muted);font-size:13px">No open milestones.</p>':''}
+  </div>`:'';
+  const accPlaceholder=reportViewMode==='exec'?'Bullet points: key wins, deliverables, value delivered this period':'Key accomplishments this period...';
+  const blockPlaceholder=reportViewMode==='exec'?'Bullet points: blockers, risks, escalations (or "None")':'Current blockers, risks, and escalations...';
+  const nextPlaceholder=reportViewMode==='exec'?'Bullet points: focus areas and key dates for next period':'What the team will focus on next...';
 
   c.innerHTML=`<div class="rpt">
+    <div id="report-export-area">
     <div class="rpt-header">
-      <h2>ATLAS — AI Program Status Report</h2>
-      <p>Digital Realty CDO &middot; Executive view &middot; As of ${rn.asOf||today()}</p>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px">
+        <h2 style="margin:0;font-size:1em">AI Program Status — ${reportViewMode==='exec'?'Executive View':'Full View'}</h2>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <label style="font-size:14px;color:var(--muted);display:flex;align-items:center;gap:4px">Report as of <input type="date" id="rpt-asof" value="${reportAsOf}" style="padding:4px 8px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:14px;font-family:inherit" onchange="saveReportAsOf();render()"></label>
+          <div style="display:flex;gap:2px"><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='exec'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='exec'?'#fff':'var(--text)'}" onclick="localStorage.setItem(\'atlas_report_view\',\'exec\');render()">Executive</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='full'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='full'?'#fff':'var(--text)'}" onclick="localStorage.setItem(\'atlas_report_view\',\'full\');render()">Full</button></div>
+        </div>
+      </div>
     </div>
 
-    <div class="rpt-section">
-      <h3>Workstream Status</h3>
-      ${allWs.length?execTable:'<p style="color:var(--muted);font-size:13px">No workstreams defined.</p>'}
-    </div>
+    ${workstreamSection}
+    ${milestoneSectionFull}
 
-    <div class="rpt-section">
-      <h3>Milestone Progress (${msDone.length}/${allMs.length} complete)</h3>
-      ${msOD.length?'<div style="margin-bottom:10px"><span style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase">Overdue</span>'+msOD.map(m=>`<div style="display:flex;gap:8px;padding:4px 0;font-size:12px"><span style="color:var(--red);font-weight:600">${esc(m.title)}</span><span style="color:var(--light)">${fmtDate(m.due)}</span></div>`).join('')+'</div>':''}
-      ${msUp.length?'<div><span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Upcoming</span>'+msUp.slice(0,8).map(m=>`<div style="display:flex;gap:8px;padding:4px 0;font-size:12px"><span>${esc(m.title)}</span><span style="color:var(--light)">${fmtDate(m.due)}</span></div>`).join('')+'</div>':''}
-      ${!msOD.length&&!msUp.length?'<p style="color:var(--muted);font-size:13px">No open milestones.</p>':''}
-    </div>
-
-    <div class="rpt-section">
+    ${reportViewMode==='full'?`<div class="rpt-section">
       <h3>Accomplishments</h3>
-      <div class="card" style="padding:14px 18px"><textarea id="rpt-acc" style="width:100%;border:none;font-size:12px;line-height:1.6;min-height:60px;outline:none;resize:vertical;font-family:inherit" placeholder="Key accomplishments this period...">${esc(rn.accomplishments)}</textarea></div>
+      <div class="card rpt-field-card" style="padding:10px 14px"><textarea id="rpt-acc" style="width:100%;border:none;font-size:14px;line-height:1.6;min-height:60px;outline:none;resize:vertical;font-family:inherit" placeholder="${esc(accPlaceholder)}">${esc(rn.accomplishments)}</textarea></div>
     </div>
-
     <div class="rpt-section">
       <h3>Blockers &amp; Risks</h3>
-      <div class="card" style="padding:14px 18px"><textarea id="rpt-block" style="width:100%;border:none;font-size:12px;line-height:1.6;min-height:60px;outline:none;resize:vertical;font-family:inherit" placeholder="Current blockers, risks, and escalations...">${esc(rn.blockers)}</textarea></div>
+      <div class="card rpt-field-card" style="padding:10px 14px"><textarea id="rpt-block" style="width:100%;border:none;font-size:14px;line-height:1.6;min-height:60px;outline:none;resize:vertical;font-family:inherit" placeholder="${esc(blockPlaceholder)}">${esc(rn.blockers)}</textarea></div>
     </div>
-
     <div class="rpt-section">
       <h3>Next Period Focus</h3>
-      <div class="card" style="padding:14px 18px"><textarea id="rpt-next" style="width:100%;border:none;font-size:12px;line-height:1.6;min-height:60px;outline:none;resize:vertical;font-family:inherit" placeholder="What the team will focus on next...">${esc(rn.nextPeriod)}</textarea></div>
+      <div class="card rpt-field-card" style="padding:10px 14px"><textarea id="rpt-next" style="width:100%;border:none;font-size:14px;line-height:1.6;min-height:60px;outline:none;resize:vertical;font-family:inherit" placeholder="${esc(nextPlaceholder)}">${esc(rn.nextPeriod)}</textarea></div>
+    </div>`:''}
     </div>
 
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap">
-      <button class="mbtn" style="border:1px solid var(--border);color:var(--text)" onclick="copyReport()">&#128203; Copy Report</button>
+    <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap">
+      <button class="mbtn" style="border:1px solid var(--border);color:var(--text)" onclick="updateAllWorkstreamsFromActionItems()">&#128260; Update from action items</button>
+      <button class="mbtn" style="border:1px solid var(--border);color:var(--text)" onclick="copyReport()">&#128203; Copy text</button>
+      <button class="mbtn" style="border:1px solid var(--border);color:var(--text)" onclick="copyReportImage()">&#128248; Copy image</button>
       ${OPENAI_KEY?'<button class="mbtn" style="background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;border:none" onclick="aiSummarizeReport()">&#10024; AI Summarize</button>':''}
-      <button class="mbtn mb-cancel" onclick="window.print()">&#128424; Print / PDF</button>
-      <button class="mbtn mb-save" onclick="saveReport()">Save Report Notes</button>
+      <button class="mbtn mb-save" onclick="saveReport()">Save</button>
     </div>
   </div>`;
 }
+function saveReportAsOf(){
+  const el=document.getElementById('rpt-asof');if(!el)return;
+  if(!D.reportNotes)D.reportNotes={accomplishments:'',blockers:'',nextPeriod:'',asOf:today(),executiveSummary:''};
+  D.reportNotes.asOf=el.value;save();toast('Report date updated');
+}
 function saveReport(){
-  D.reportNotes={
-    accomplishments:document.getElementById('rpt-acc').value,
-    blockers:document.getElementById('rpt-block').value,
-    nextPeriod:document.getElementById('rpt-next').value,
-    asOf:today()
-  };
+  const asOfEl=document.getElementById('rpt-asof');
+  const accEl=document.getElementById('rpt-acc');
+  const blockEl=document.getElementById('rpt-block');
+  const nextEl=document.getElementById('rpt-next');
+  const sumEl=document.getElementById('rpt-exec-summary');
+  D.reportNotes=D.reportNotes||{};
+  D.reportNotes.asOf=asOfEl?asOfEl.value:today();
+  D.reportNotes.accomplishments=accEl?accEl.value:(D.reportNotes.accomplishments||'');
+  D.reportNotes.blockers=blockEl?blockEl.value:(D.reportNotes.blockers||'');
+  D.reportNotes.nextPeriod=nextEl?nextEl.value:(D.reportNotes.nextPeriod||'');
+  D.reportNotes.executiveSummary=sumEl?sumEl.value.trim():(D.reportNotes.executiveSummary||'');
   save();log('Updated report notes');toast('Report notes saved');
 }
 function copyReport(){
   const rptEl=document.querySelector('.rpt');
   if(!rptEl){toast('Nothing to copy');return}
+  const asOf=(document.getElementById('rpt-asof')?.value||D.reportNotes?.asOf||today());
   const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
-  const buWs=allWs.filter(w=>w.category==='BU');
-  const ccWs=allWs.filter(w=>w.category==='Cross-cutting');
-  function nextDue(wsId){
-    const next=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open'&&t.due&&t.due>=today()).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'))[0];
-    return next?fmtDate(next.due):'—';
+  const buWsCopy=allWs.filter(w=>w.category==='BU').sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
+  const ccWsCopy=allWs.filter(w=>w.category==='Cross-cutting').sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
+  try{var reportViewMode=localStorage.getItem('atlas_report_view')||'exec'}catch(e){var reportViewMode='full'}
+  function keyDatesForWsCopy(wsId){
+    const openWithDue=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open'&&t.due).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
+    return openWithDue.slice(0,2).map(t=>fmtDate(t.due)+(t.title?' — '+t.title:'')).join('; ')||'—';
   }
-  let wsBlock='WORKSTREAM STATUS\n';
-  if(buWs.length){wsBlock+='\nBusiness Unit Workstreams\n';buWs.forEach(w=>{const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);const wMsDone=wMs.filter(t=>t.status==='done').length;const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;wsBlock+=`  ${w.name} | ${w.status} | Owner: ${w.owner||'TBD'} | Milestones: ${wMsDone}/${wMs.length} | Open: ${wOpen} | Next: ${nextDue(w.id)}\n`})}
-  if(ccWs.length){wsBlock+='\nCrosscutting Workstreams\n';ccWs.forEach(w=>{const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);const wMsDone=wMs.filter(t=>t.status==='done').length;const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;wsBlock+=`  ${w.name} | ${w.status} | Owner: ${w.owner||'TBD'} | Milestones: ${wMsDone}/${wMs.length} | Open: ${wOpen} | Next: ${nextDue(w.id)}\n`})}
-  const rptMs=(D.tasks||[]).filter(t=>t.isMilestone);
-  const msOD=rptMs.filter(t=>t.status==='open'&&t.due&&t.due<today()).map(m=>`  OVERDUE: ${m.title} (${fmtDate(m.due)})`).join('\n');
-  const msUp=rptMs.filter(t=>t.status==='open'&&(!t.due||t.due>=today())).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9')).slice(0,8).map(m=>`  UPCOMING: ${m.title} (${fmtDate(m.due)})`).join('\n');
-  const acc=(document.getElementById('rpt-acc')?.value||'').trim();
-  const blk=(document.getElementById('rpt-block')?.value||'').trim();
-  const nxt=(document.getElementById('rpt-next')?.value||'').trim();
-  let text=`ATLAS — AI PROGRAM STATUS REPORT\nDigital Realty CDO · Executive view · As of ${today()}\n\n`;
-  text+=wsBlock+'\n';
-  text+=`MILESTONE PROGRESS (${rptMs.filter(t=>t.status==='done').length}/${rptMs.length} complete)\n${msOD||'  (none overdue)'}\n${msUp||'  (none upcoming)'}\n\n`;
-  if(acc)text+=`ACCOMPLISHMENTS\n${acc}\n\n`;
-  if(blk)text+=`BLOCKERS & RISKS\n${blk}\n\n`;
-  if(nxt)text+=`NEXT PERIOD FOCUS\n${nxt}\n`;
+  let text=`AI PROGRAM STATUS — ${reportViewMode==='exec'?'EXECUTIVE VIEW':'FULL VIEW'}\nAs of ${asOf}\n\n`;
+  if(reportViewMode==='exec'){
+    const execSum=(D.reportNotes||{}).executiveSummary||'';
+    if(execSum.trim())text+=execSum.trim()+'\n\n';
+    if(buWsCopy.length){text+='BUSINESS UNIT WORKSTREAMS\n\n';buWsCopy.forEach(w=>{
+      const recentTxt=(w.recentAccomplishments||'').trim()||recentAccomplishmentsFromApp(w.id);
+      const nextTxt=(w.whatsNext||'').trim()||whatsNextFromApp(w.id);
+      const recentBullets=recentTxt?(recentTxt.split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,3).map(s=>'  • '+s).join('\n')):'  —';
+      const nextBullets=nextTxt?(nextTxt.split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,2).map(s=>'  • '+s).join('\n')):'  —';
+      text+=`${w.name}\n  Status: ${(w.status||'on-track').replace('-',' ')}\n  Key dates: ${keyDatesForWsCopy(w.id)}\n  Recent accomplishments:\n${recentBullets}\n  What's next:\n${nextBullets}\n\n`;
+    })}
+    if(ccWsCopy.length){text+='CROSSCUTTING WORKSTREAMS\n\n';ccWsCopy.forEach(w=>{
+      const recentTxt=(w.recentAccomplishments||'').trim()||recentAccomplishmentsFromApp(w.id);
+      const nextTxt=(w.whatsNext||'').trim()||whatsNextFromApp(w.id);
+      const recentBullets=recentTxt?(recentTxt.split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,3).map(s=>'  • '+s).join('\n')):'  —';
+      const nextBullets=nextTxt?(nextTxt.split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,2).map(s=>'  • '+s).join('\n')):'  —';
+      text+=`${w.name}\n  Status: ${(w.status||'on-track').replace('-',' ')}\n  Key dates: ${keyDatesForWsCopy(w.id)}\n  Recent accomplishments:\n${recentBullets}\n  What's next:\n${nextBullets}\n\n`;
+    })}
+  }else{
+    const buWs=allWs.filter(w=>w.category==='BU');
+    const ccWs=allWs.filter(w=>w.category==='Cross-cutting');
+    function nextDue(wsId){
+      const next=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open'&&t.due&&t.due>=today()).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'))[0];
+      return next?fmtDate(next.due):'—';
+    }
+    text+='WORKSTREAMS\n';
+    if(buWs.length){text+='Business Unit\n';buWs.forEach(w=>{const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);const wMsDone=wMs.filter(t=>t.status==='done').length;const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;text+=`  ${w.name} | ${w.status} | ${wMsDone}/${wMs.length} MS | Next: ${nextDue(w.id)} | Open: ${wOpen}\n`})}
+    if(ccWs.length){text+='Crosscutting\n';ccWs.forEach(w=>{const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);const wMsDone=wMs.filter(t=>t.status==='done').length;const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;text+=`  ${w.name} | ${w.status} | ${wMsDone}/${wMs.length} MS | Next: ${nextDue(w.id)} | Open: ${wOpen}\n`})}
+    text+='\n';
+  }
+  const acc=(document.getElementById('rpt-acc')?.value||(D.reportNotes||{}).accomplishments||'').trim();
+  const blk=(document.getElementById('rpt-block')?.value||(D.reportNotes||{}).blockers||'').trim();
+  const nxt=(document.getElementById('rpt-next')?.value||(D.reportNotes||{}).nextPeriod||'').trim();
+  if(reportViewMode!=='exec'){
+    if(acc)text+=`ACCOMPLISHMENTS\n${acc}\n\n`;
+    if(blk)text+=`BLOCKERS & RISKS\n${blk}\n\n`;
+    if(nxt)text+=`NEXT PERIOD FOCUS\n${nxt}\n`;
+  }
   navigator.clipboard.writeText(text).then(()=>toast('Report copied to clipboard')).catch(()=>toast('Copy failed'));
+}
+function reportExportAreaSwapForCapture(restore){
+  const el=document.getElementById('report-export-area');
+  if(!el)return restore?[]:[];
+  if(restore){
+    (window._rptExportSwapped||[]).forEach(({input,repl})=>{if(input.parentNode===repl.parentNode)repl.parentNode.replaceChild(input,repl)});
+    window._rptExportSwapped=[];return;
+  }
+  const swaps=[];
+  const dateInput=el.querySelector('input[type="date"]#rpt-asof');
+  if(dateInput){
+    const span=document.createElement('span');
+    span.textContent=dateInput.value||'';
+    span.style.cssText='padding:2px 6px;font-size:11px;display:inline-block';
+    dateInput.parentNode.replaceChild(span,dateInput);
+    swaps.push({input:dateInput,repl:span});
+  }
+  el.querySelectorAll('textarea').forEach(ta=>{
+    const div=document.createElement('div');
+    div.textContent=ta.value||ta.placeholder||'';
+    const s=window.getComputedStyle(ta);
+    div.style.width=ta.offsetWidth+'px';div.style.minHeight=Math.max(ta.offsetHeight,24)+'px';
+    div.style.padding=s.padding;div.style.font=s.font;div.style.lineHeight=s.lineHeight;
+    div.style.color=s.color;div.style.backgroundColor=s.backgroundColor||'transparent';
+    div.style.border='none';div.style.boxSizing='border-box';div.style.whiteSpace='pre-wrap';div.style.wordBreak='break-word';
+    div.style.outline='none';div.style.resize='none';
+    ta.parentNode.replaceChild(div,ta);
+    swaps.push({input:ta,repl:div});
+  });
+  window._rptExportSwapped=swaps;
+}
+function captureReportCanvas(){
+  return new Promise((resolve,reject)=>{
+    const el=document.getElementById('report-export-area');
+    if(!el){reject(new Error('Report area not found'));return}
+    if(typeof html2canvas!=='function'){reject(new Error('html2canvas not loaded'));return}
+    reportExportAreaSwapForCapture(false);
+    html2canvas(el,{scale:2,useCORS:true,logging:false,backgroundColor:getComputedStyle(document.body).backgroundColor||'#ffffff'}).then(canvas=>{
+      reportExportAreaSwapForCapture(true);
+      resolve(canvas);
+    }).catch(err=>{
+      reportExportAreaSwapForCapture(true);
+      reject(err);
+    });
+  });
+}
+function exportReportPng(){
+  captureReportCanvas().then(canvas=>{
+    canvas.toBlob(blob=>{
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;
+      a.download='atlas-report-'+ (document.getElementById('rpt-asof')?.value||D.reportNotes?.asOf||today()).replace(/-/g,'') +'.png';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('PNG downloaded');
+    },'image/png');
+  }).catch(()=>toast('Export failed'));
+}
+function copyReportImage(){
+  captureReportCanvas().then(canvas=>{
+    canvas.toBlob(blob=>{
+      navigator.clipboard.write([new ClipboardItem({'image/png':blob})]).then(()=>toast('Image copied — paste into email or PowerPoint')).catch(()=>toast('Copy image failed'));
+    },'image/png');
+  }).catch(()=>toast('Copy failed'));
 }
 async function aiSummarizeReport(){
   if(!OPENAI_KEY){toast('Set your OpenAI API key first');return}
