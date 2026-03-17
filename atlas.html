@@ -455,6 +455,7 @@ body.nav-collapsed .topbar-menu{display:flex}
       <span style="width:7px;height:7px;border-radius:50%;flex-shrink:0" id="aiDot"></span>
       <span id="aiKeyLabel">Set AI Key</span>
     </button>
+    <button onclick="openReleaseNotesModal()" style="display:flex;align-items:center;gap:7px" title="Release notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;opacity:.45"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>What's new</button>
     <div style="display:flex;gap:2px;padding:2px 0">
       <button onclick="exportJSON()" style="flex:1" title="Export backup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;opacity:.4;display:inline;vertical-align:-2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export</button>
       <label style="flex:1;text-align:left;padding:7px 12px;border-radius:var(--r-sm);font-size:12px;color:#555570;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(255,255,255,.05)';this.style.color='#b0b0c8'" onmouseout="this.style.background='';this.style.color='#555570'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;opacity:.4;display:inline;vertical-align:-2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import<input type="file" accept=".json" onchange="importJSON(event)" hidden></label>
@@ -1239,6 +1240,31 @@ function delLink(id){
   save();closeModal();renderLinks();toast('Link removed');
 }
 function openModal(html){document.getElementById('modal').innerHTML=html;document.getElementById('overlay').classList.add('open')}
+function openReleaseNotesModal(){
+  const html=`<div class="m-hd"><h3>Release notes</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd" style="max-height:70vh;overflow-y:auto;font-size:13px">
+    <p style="color:var(--muted);margin-bottom:12px">March 2026</p>
+    <h4 style="margin:12px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)">What's new</h4>
+    <ul style="margin:0 0 14px;padding-left:18px;line-height:1.5">
+      <li><strong>Manage groups:</strong> Shows all existing groups; list stays in sync on load and after add/rename/delete.</li>
+      <li><strong>Quick Capture:</strong> Paste or speak notes; voice dictation in Chrome/Edge. Notes go to Inbox.</li>
+      <li><strong>Report Out:</strong> Executive-style table; grouped by BU / Crosscutting; Copy, Print, AI Summarize.</li>
+      <li><strong>Workstreams:</strong> Status Not Started; stakeholders per workstream (multi-select); shown on tiles and list.</li>
+      <li><strong>AI Program Insights:</strong> Real counts; Next Steps use actual task owners.</li>
+      <li><strong>Program Timeline:</strong> Configurable starting date.</li>
+      <li><strong>Dashboard:</strong> Open Items shows count due this week.</li>
+    </ul>
+    <h4 style="margin:12px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)">Data</h4>
+    <ul style="margin:0;padding-left:18px;line-height:1.5">
+      <li><strong>Workstreams (8):</strong> GTM, Legal, HR, Operations (BU); Governance, Copilot, Data, Nexus (Cross-cutting). Status: Not Started, On Track, At Risk, Blocked, Complete. Stakeholders editable in Edit Workstream.</li>
+      <li><strong>Groups (8):</strong> CDO Leadership, CDO Team, Executive, Legal, HR, IT/Security, Business Stakeholder, Other.</li>
+      <li><strong>People:</strong> Name, role, group, email, phone, notes. Seed list for new installs.</li>
+      <li>Engagements, tasks, inbox, meetings, decisions, risks, metrics: workstream/engagement linkage supported.</li>
+    </ul>
+  </div>
+  <div class="m-ft"><button class="mbtn mb-cancel" onclick="closeModal()">Done</button></div>`;
+  openModal(html);
+}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
 let qcVoiceActive=false,qcRecognition=null;
 function toggleQC(){document.getElementById('qcPanel').classList.toggle('open');document.getElementById('aiPanel').style.display='none';if(qcVoiceActive)toggleQCVoice()}
