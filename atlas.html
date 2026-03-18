@@ -240,32 +240,32 @@ body.nav-collapsed .topbar-menu{display:flex}
 .ws-page-toolbar .toolbar-right .tb-btn:first-of-type{background:var(--bg-subtle);color:var(--text);border:1px solid var(--border)}
 .ws-page-toolbar .toolbar-right .tb-btn:first-of-type:hover{background:var(--border-lt)}
 .ws-pipeline{display:flex;align-items:stretch;flex-wrap:nowrap;gap:0;padding:10px 8px;margin-bottom:14px;background:var(--bg-card);border:1px solid var(--border-lt);border-radius:var(--r-md);box-shadow:0 1px 3px rgba(0,0,0,.04);width:100%;box-sizing:border-box}
-.ws-pipeline-stage{display:flex;flex:1 1 0;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 6px;min-width:0;border:1px solid var(--border-lt);border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;margin:0 2px}
+.ws-pipeline-stage{display:flex;flex:1 1 0;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 6px;min-width:0;min-height:52px;border:1px solid var(--border-lt);border-radius:var(--r-sm);font-size:10px;font-weight:600;cursor:pointer;transition:all .15s;margin:0 2px}
 .ws-pipeline-stage:first-child{margin-left:0}
 .ws-pipeline-stage:hover{filter:brightness(0.96);border-color:var(--border)}
 .ws-pipeline-stage.on{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff!important}
-.ws-pipeline-stage .ws-pipeline-label{white-space:nowrap;text-align:center;line-height:1.2;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.ws-pipeline-stage .ws-pipeline-label{white-space:normal;text-align:center;line-height:1.25;max-width:100%;word-break:break-word}
 .ws-pipeline-stage .ws-pipeline-count{font-size:14px;font-weight:800;letter-spacing:-.02em}
 .ws-pipeline-arrow{color:var(--muted);font-size:10px;padding:0 2px;flex-shrink:0;align-self:center}
 .ws-pipeline-stage-all{background:#e2e8f0;color:#334155;border-color:#cbd5e1}
 .ws-pipeline-stage-not-started{background:#f8fafc;color:#475569;border-color:#e2e8f0}
 .ws-pipeline-stage-reachout-kickoff{background:#f1f5f9;color:#475569;border-color:#e2e8f0}
 .ws-pipeline-stage-discovery-workshops{background:#e2e8f0;color:#334155;border-color:#cbd5e1}
-.ws-pipeline-stage-prioritization-planning{background:#cbd5e1;color:#334155;border-color:#94a3b8}
-.ws-pipeline-stage-resourcing{background:#94a3b8;color:#fff;border-color:#64748b}
-.ws-pipeline-stage-delivery{background:#64748b;color:#fff;border-color:#475569}
-.ws-pipeline-stage-pilot-validate{background:#475569;color:#fff;border-color:#334155}
-.ws-pipeline-stage-deploy-scale{background:#334155;color:#fff;border-color:#1e293b}
+.ws-pipeline-stage-capability-mapping{background:#cbd5e1;color:#334155;border-color:#94a3b8}
+.ws-pipeline-stage-prioritization-planning{background:#94a3b8;color:#fff;border-color:#64748b}
+.ws-pipeline-stage-roadmap-integration{background:#64748b;color:#fff;border-color:#475569}
+.ws-pipeline-stage-resourcing{background:#475569;color:#fff;border-color:#334155}
+.ws-pipeline-stage-delivery{background:#334155;color:#fff;border-color:#1e293b}
 .ws-pipeline-stage-complete{background:#1e293b;color:#fff;border-color:#0f172a}
 [data-theme="dark"] .ws-pipeline-stage-all{background:#475569;color:#e2e8f0;border-color:#64748b}
 [data-theme="dark"] .ws-pipeline-stage-not-started{background:#334155;color:#cbd5e1;border-color:#475569}
 [data-theme="dark"] .ws-pipeline-stage-reachout-kickoff{background:#475569;color:#e2e8f0;border-color:#64748b}
 [data-theme="dark"] .ws-pipeline-stage-discovery-workshops{background:#64748b;color:#f1f5f9;border-color:#94a3b8}
-[data-theme="dark"] .ws-pipeline-stage-prioritization-planning{background:#94a3b8;color:#0f172a;border-color:#cbd5e1}
-[data-theme="dark"] .ws-pipeline-stage-resourcing{background:#cbd5e1;color:#0f172a;border-color:#e2e8f0}
-[data-theme="dark"] .ws-pipeline-stage-delivery{background:#e2e8f0;color:#1e293b;border-color:#f1f5f9}
-[data-theme="dark"] .ws-pipeline-stage-pilot-validate{background:#f1f5f9;color:#1e293b;border-color:#e2e8f0}
-[data-theme="dark"] .ws-pipeline-stage-deploy-scale{background:#e2e8f0;color:#0f172a;border-color:#cbd5e1}
+[data-theme="dark"] .ws-pipeline-stage-capability-mapping{background:#94a3b8;color:#0f172a;border-color:#cbd5e1}
+[data-theme="dark"] .ws-pipeline-stage-prioritization-planning{background:#cbd5e1;color:#0f172a;border-color:#e2e8f0}
+[data-theme="dark"] .ws-pipeline-stage-roadmap-integration{background:#e2e8f0;color:#1e293b;border-color:#f1f5f9}
+[data-theme="dark"] .ws-pipeline-stage-resourcing{background:#f1f5f9;color:#1e293b;border-color:#e2e8f0}
+[data-theme="dark"] .ws-pipeline-stage-delivery{background:#e2e8f0;color:#0f172a;border-color:#cbd5e1}
 [data-theme="dark"] .ws-pipeline-stage-complete{background:#cbd5e1;color:#0f172a;border-color:#94a3b8}
 
 /* MODAL */
@@ -389,11 +389,11 @@ body.nav-collapsed .topbar-menu{display:flex}
 .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-not-started{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}
 .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-reachout-kickoff{background:#e0f2fe;color:#0369a1}
 .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-discovery-workshops{background:#dbeafe;color:#1d4ed8}
+.rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-capability-mapping{background:#ccfbf1;color:#0f766e}
 .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-prioritization-planning{background:#e0e7ff;color:#4338ca}
+.rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-roadmap-integration{background:#e9d5ff;color:#6b21a8}
 .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-resourcing{background:#fce7f3;color:#be185d}
 .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-delivery{background:#6366f1;color:#fff}
-.rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-pilot-validate{background:#fef3c7;color:#b45309}
-.rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-deploy-scale{background:#a7f3d0;color:#065f46}
 .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-complete{background:#2563eb;color:#fff}
 .rpt-ws-focus.rpt-outcomes-5col th:nth-child(4),.rpt-ws-focus.rpt-outcomes-5col td:nth-child(4){width:24%}
 .rpt-ws-focus.rpt-outcomes-5col th:nth-child(5),.rpt-ws-focus.rpt-outcomes-5col td:nth-child(5){width:28%}
@@ -417,11 +417,11 @@ body.nav-collapsed .topbar-menu{display:flex}
 [data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-not-started{background:rgba(255,255,255,.1);color:#cbd5e1;border-color:rgba(255,255,255,.2)}
 [data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-reachout-kickoff{background:rgba(56,189,248,.25);color:#7dd3fc}
 [data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-discovery-workshops{background:rgba(96,165,250,.25);color:#93c5fd}
+[data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-capability-mapping{background:rgba(20,184,166,.25);color:#5eead4}
 [data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-prioritization-planning{background:rgba(129,140,248,.25);color:#a5b4fc}
+[data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-roadmap-integration{background:rgba(167,139,250,.25);color:#c4b5fd}
 [data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-resourcing{background:rgba(236,72,153,.25);color:#f9a8d4}
 [data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-delivery{background:#6366f1;color:#fff}
-[data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-pilot-validate{background:rgba(251,191,36,.25);color:#fcd34d}
-[data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-deploy-scale{background:rgba(52,211,153,.25);color:#6ee7b7}
 [data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-complete{background:#2563eb;color:#fff}
 .rpt-exec-table .rpt-ws-name{font-weight:600;color:var(--text)}
 @media print{.rpt-header{margin-bottom:3px;padding-bottom:3px}.rpt-section{margin-bottom:4px;break-inside:avoid}.rpt-section h3{margin-bottom:2px;padding-bottom:2px}.rpt-exec-table{margin-bottom:4px;font-size:14px;box-shadow:none}.rpt-exec-table th,.rpt-exec-table td{padding:3px 6px}.rpt-exec-table .rpt-group-header td{font-size:14px;padding:4px 8px}.rpt-exec-table .rpt-status{font-size:10px;padding:2px 5px}.rpt-ws-bullets{font-size:11px;line-height:1.3}.rpt-ws-bullets li{margin-bottom:0}}
@@ -752,7 +752,7 @@ const WS_DEFS=[
 function defaults(){
   return{
     workstreams:WS_DEFS.map(w=>({id:w.id,name:w.name,color:w.color,desc:w.desc,
-      category:w.category||'',owner:w.owner||'',status:'not-started',notes:'',phase:'0-30',businessOutcome:w.businessOutcome||''})),
+      category:w.category||'',owner:w.owner||'',status:'not-started',notes:'',phase:'0-30',businessOutcome:w.businessOutcome||'',targetStart:'',targetEnd:''})),
     engagements:[],
     milestones:[
       {id:uid(),title:'Deliver data infrastructure / MSFT Graph connector draft',workstream:'data-infra',date:'2026-03-11',status:'done',owner:'Brian Letort',notes:'Socialize with Don, Stephen, key BU leaders'},
@@ -1184,7 +1184,7 @@ async function callAI(systemPrompt,userPrompt,opts={}){
   }catch(e){toast('AI request failed: '+e.message);return null}
 }
 function getProgramContext(){
-  const ws=(D.workstreams||[]).map(w=>w.name+' ('+w.status+', owner: '+(w.owner||'TBD')+')').join('; ');
+  const ws=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting').map(w=>w.name+' ('+w.status+', owner: '+(w.owner||'TBD')+')').join('; ');
   const allMs=(D.tasks||[]).filter(t=>t.isMilestone);
   const ms=allMs.map(m=>m.title+' — owner: '+(m.owner||'Unassigned')+' — '+(m.status==='done'?'done':m.due&&m.due<today()?'overdue':'upcoming')+(m.due?' due '+m.due:'')).join('; ');
   const openTasks=(D.tasks||[]).filter(t=>t.status==='open');
@@ -1192,8 +1192,9 @@ function getProgramContext(){
   const openT=openTasks.map(t=>t.title+' (owner: '+(t.owner||'Unassigned')+(t.due?'; due '+t.due:'')+')').join('; ');
   const doneT=(D.tasks||[]).filter(t=>t.status==='done').map(t=>t.title+' (owner: '+(t.owner||'Unassigned')+')').join('; ');
   const eng=(D.engagements||[]).map(e=>e.title+' ('+e.status+', type: '+(e.type||'N/A')+')').join('; ');
-  const wsCount=(D.workstreams||[]).length;
-  const wsInProgress=(D.workstreams||[]).filter(w=>w.status&&w.status!=='not-started'&&w.status!=='complete').length;
+  const activeWsList=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  const wsCount=activeWsList.length;
+  const wsInProgress=activeWsList.filter(w=>w.status&&w.status!=='not-started'&&w.status!=='complete').length;
   const msDone=allMs.filter(t=>t.status==='done').length;
   return `PROGRAM: AI Transformation Program — Digital Realty CDO
 COUNTS (use these exact numbers in insights): ${openTasks.length} open action items, ${overdueCount} overdue (past due date). ${wsCount} workstreams total, ${wsInProgress} in progress. ${msDone}/${allMs.length} milestones complete.
@@ -1675,11 +1676,11 @@ function peopleOpts(sel){
   const ppl=(D.people||[]).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   return `<option value="">— Unassigned —</option>`+ppl.map(p=>`<option value="${esc(p.name)}"${sel===p.name?' selected':''}>${esc(p.name)}</option>`).join('');
 }
-const WS_STATUSES=[{value:'not-started',label:'Not Started'},{value:'reachout-kickoff',label:'Reachout / Kickoff'},{value:'discovery-workshops',label:'Discovery & Workshops'},{value:'prioritization-planning',label:'Prioritization & Planning'},{value:'resourcing',label:'Resourcing'},{value:'delivery',label:'Delivery'},{value:'pilot-validate',label:'Pilot & Validate'},{value:'deploy-scale',label:'Deploy & Scale'},{value:'complete',label:'Complete'}];
-function wsStatusLabel(v){if(!v)return'Not Started';const s=WS_STATUSES.find(x=>x.value===v);if(s)return s.label;if(['on-track','at-risk','blocked'].includes(v))return'Delivery';return String(v).replace(/-/g,' ');}
+const WS_STATUSES=[{value:'not-started',label:'Not Started'},{value:'reachout-kickoff',label:'Reachout / Kickoff'},{value:'discovery-workshops',label:'Discovery & Stakeholder Alignment'},{value:'capability-mapping',label:'Capability Mapping'},{value:'prioritization-planning',label:'Prioritization & Business Case'},{value:'roadmap-integration',label:'Roadmap Integration'},{value:'resourcing',label:'Resource/Funding Gate'},{value:'delivery',label:'Delivery'},{value:'complete',label:'Complete'}];
+function wsStatusLabel(v){if(!v)return'Not Started';const s=WS_STATUSES.find(x=>x.value===v);if(s)return s.label;if(['on-track','at-risk','blocked','pilot-validate','deploy-scale'].includes(v))return'Delivery';return String(v).replace(/-/g,' ');}
 function reportStatusClass(st){if(!st)return'not-started';if(st==='complete')return'complete';if(st==='not-started')return'not-started';return'in-progress';}
-function reportStatusClassOutcomes(st){const v=!st?'not-started':['on-track','at-risk','blocked'].includes(st)?'delivery':st;return v;}
-function wsStatusShortLabel(v){const short={ 'not-started':'Not started','reachout-kickoff':'Kickoff','discovery-workshops':'Discovery','prioritization-planning':'Planning','resourcing':'Resourcing','delivery':'Delivery','pilot-validate':'Pilot','deploy-scale':'Deploy','complete':'Complete'};const key=!v?'not-started':['on-track','at-risk','blocked'].includes(v)?'delivery':v;return short[key]||wsStatusLabel(v);}
+function reportStatusClassOutcomes(st){const v=!st?'not-started':['on-track','at-risk','blocked','pilot-validate','deploy-scale'].includes(st)?'delivery':st;return v;}
+function wsStatusShortLabel(v){const short={ 'not-started':'Not started','reachout-kickoff':'Kickoff','discovery-workshops':'Discovery','capability-mapping':'Capability','prioritization-planning':'Prioritization','roadmap-integration':'Roadmap','resourcing':'Resource gate','delivery':'Delivery','complete':'Complete'};const key=!v?'not-started':['on-track','at-risk','blocked','pilot-validate','deploy-scale'].includes(v)?'delivery':v;return short[key]||wsStatusLabel(v);}
 const statusColors={'not-started':'pill-m','reachout-kickoff':'pill-m','discovery-workshops':'pill-a','prioritization-planning':'pill-b','resourcing':'pill-v','delivery':'pill-g','pilot-validate':'pill-g','deploy-scale':'pill-t','complete':'pill-b','on-track':'pill-g','at-risk':'pill-a','blocked':'pill-r'};
 const engStatusColors={intake:'pill-m',scoping:'pill-a',active:'pill-i','on-hold':'pill-v',complete:'pill-g'};
 const engTypes=['Use Case','Question','Tool Evaluation','Licensing','Escalation','General Request'];
@@ -1955,6 +1956,31 @@ function buildGantt(){
     </div>`;
   }
 
+  const wsWithRanges=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting').map(w=>{
+    const r=wsTimelineRange(w.id);
+    return r&&r.effectiveStart&&r.effectiveEnd?{...w,effStart:r.effectiveStart,effEnd:r.effectiveEnd,isManual:r.isManual}:null;
+  }).filter(Boolean).sort((a,b)=>(a.effStart||'').localeCompare(b.effStart||''));
+  const visDatedWs=wsWithRanges.filter(w=>{const l=pct(w.effStart),r=pct(w.effEnd);return r>0&&l<100});
+  if(visDatedWs.length){
+    const rowH=28;
+    let wsBars='';
+    visDatedWs.forEach((w,i)=>{
+      const l=Math.max(0,pct(w.effStart)),r=Math.min(100,pct(w.effEnd));
+      const bw=Math.max(0.5,r-l);
+      const wc=w.color||'var(--muted)';
+      const src=w.isManual?'':'  (from action items)';
+      wsBars+=`<div class="gantt-bar" style="left:${l}%;width:${bw}%;top:${i*rowH+2}px;background:${wc};color:#fff;font-size:11.5px;font-weight:600;height:22px;cursor:pointer;opacity:.9;border-radius:4px" title="${esc(w.name)}: ${fmtDate(w.effStart)} — ${fmtDate(w.effEnd)} (${wsStatusLabel(w.status)})${src}" onclick="openWsDetail('${w.id}')">${esc(w.name)}</div>`;
+    });
+    rows+=`<div class="gantt-row" style="margin-top:8px;border-left:4px solid var(--accent)">
+      <div class="gantt-row-label phase-label">Workstreams</div>
+      <div class="gantt-row-bars" style="height:${Math.max(32,visDatedWs.length*rowH+8)}px;position:relative">
+        ${gridLines}
+        ${wsBars}
+        ${todayMarker()}
+      </div>
+    </div>`;
+  }
+
   const milestones=(D.tasks||[]).filter(t=>t.isMilestone).slice().sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
   const visMs=milestones.filter(m=>{const x=pct(m.due||today());return x>=0&&x<=100});
   if(visMs.length){
@@ -2067,7 +2093,7 @@ async function runAIInsights(){
 // WORKSTREAMS
 // ═══════════════════════════════════════════════════
 let wsLeadFilter='',wsCatFilter='',wsGroupCollapsed={},wsStatusFilter='';
-function wsStatusValue(w){const s=w.status;if(!s)return'not-started';if(['on-track','at-risk','blocked'].includes(s))return'delivery';return s;}
+function wsStatusValue(w){const s=w.status;if(!s)return'not-started';if(['on-track','at-risk','blocked','pilot-validate','deploy-scale'].includes(s))return'delivery';return s;}
 function rWork(c){
   const q=(document.getElementById('search').value||'').toLowerCase();
   const leads=[...new Set((D.workstreams||[]).map(w=>w.owner).filter(Boolean))].sort();
@@ -2200,6 +2226,10 @@ function openWsEdit(id){
       <div class="fg"><label>Status</label><select id="ws-status">${(()=>{const st=w?.status;const formVal=!st?'not-started':['on-track','at-risk','blocked'].includes(st)?'delivery':st;return WS_STATUSES.map(s=>`<option value="${s.value}"${formVal===s.value?' selected':''}>${s.label}</option>`).join('');})()}</select></div>
       <div class="fg"><label>Color</label><select id="ws-color">${colors.map(cl=>`<option value="${cl}"${(w?.color||'#6366f1')===cl?' selected':''} style="background:${cl};color:#fff">${cl}</option>`).join('')}</select></div>
     </div>
+    <div class="fg-row">
+      <div class="fg"><label>Target start</label><input type="date" id="ws-targetStart" value="${w?.targetStart||''}"></div>
+      <div class="fg"><label>Target end</label><input type="date" id="ws-targetEnd" value="${w?.targetEnd||''}"></div>
+    </div>
     <div class="fg"><label>Description</label><textarea id="ws-desc" style="min-height:50px">${w?esc(w.desc):''}</textarea></div>
     <div class="fg">
       <label style="display:flex;align-items:center;gap:8px">Recent accomplishments ${w?`<button type="button" class="mbtn" style="font-size:11px;padding:4px 8px;border:1px solid var(--border);background:var(--bg-subtle);color:var(--text)" onclick="fillWsFromApp('${esc(w.id)}')">Suggest from app</button>`:''}</label>
@@ -2218,6 +2248,7 @@ function openWsEdit(id){
       <div id="ws-links-list">${(w?.links||[]).map((l,i)=>`<div style="display:flex;gap:4px;margin-bottom:4px;align-items:center"><input class="ws-link-label" value="${esc(l.label)}" placeholder="Label" style="flex:1;max-width:140px"><input class="ws-link-url" value="${esc(l.url)}" placeholder="https://..." style="flex:2"><button type="button" style="color:var(--red);font-size:13px;background:none;border:none;cursor:pointer;padding:0 4px" onclick="this.parentElement.remove()">&#10005;</button></div>`).join('')}</div>
       <button type="button" style="font-size:12px;color:var(--indigo);background:none;border:none;cursor:pointer;padding:2px 0" onclick="addWsLink()">+ Add link</button>
     </div>
+    ${w?wsTimeline(w.id):''}
     ${w?wsLinkedItems(w.id):''}
   </div>
   <div class="m-ft">
@@ -2279,6 +2310,84 @@ function wsLinkedItems(wsId){
   }
   return html+'</div>';
 }
+function wsTimelineRange(wsId){
+  const w=(D.workstreams||[]).find(x=>x.id===wsId);
+  if(!w)return null;
+  const tasks=(D.tasks||[]).filter(t=>t.workstream===wsId);
+  const allDates=[];
+  tasks.forEach(t=>{if(t.startDate)allDates.push(t.startDate);if(t.due)allDates.push(t.due)});
+  const derivedStart=allDates.length?allDates.sort()[0]:null;
+  const derivedEnd=allDates.length?allDates.sort()[allDates.length-1]:null;
+  const effectiveStart=w.targetStart||derivedStart||null;
+  const effectiveEnd=w.targetEnd||derivedEnd||null;
+  return{effectiveStart,effectiveEnd,derivedStart,derivedEnd,isManual:!!(w.targetStart||w.targetEnd)};
+}
+function wsTimeline(wsId){
+  const w=(D.workstreams||[]).find(x=>x.id===wsId);
+  if(!w)return '';
+  const tasks=(D.tasks||[]).filter(t=>t.workstream===wsId);
+  const dated=tasks.filter(t=>t.due||t.startDate).sort((a,b)=>(a.due||a.startDate||'9').localeCompare(b.due||b.startDate||'9'));
+  const hasManualRange=w.targetStart||w.targetEnd;
+  const range=wsTimelineRange(wsId);
+  const hasEffectiveRange=range&&(range.effectiveStart||range.effectiveEnd);
+  let html='<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">';
+  html+='<h4 style="font-size:13px;font-weight:700;margin-bottom:10px">Timeline</h4>';
+  if(!hasEffectiveRange&&!dated.length){
+    html+='<div style="padding:12px 14px;border:1px dashed var(--border);border-radius:var(--r-sm);color:var(--muted);font-size:12px">No timeline yet. Set <strong>Target start / end</strong> above, or add action items with due dates to auto-build a timeline.</div>';
+  }
+  if(hasEffectiveRange){
+    const rangeLabel=(range.effectiveStart?fmtDate(range.effectiveStart):'?')+' — '+(range.effectiveEnd?fmtDate(range.effectiveEnd):'?');
+    const now=today();
+    let rangeStatus='';
+    if(range.effectiveEnd&&range.effectiveEnd<now&&w.status!=='complete')rangeStatus='<span style="color:var(--red);font-weight:600;font-size:11px;margin-left:8px">Past target end</span>';
+    else if(range.effectiveStart&&range.effectiveStart>now)rangeStatus='<span style="color:var(--muted);font-size:11px;margin-left:8px">Not started yet</span>';
+    const sourceLabel=hasManualRange?'':'<span style="font-size:10px;color:var(--light);margin-left:8px">(from action items)</span>';
+    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 12px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-radius:var(--r-sm)">';
+    html+='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;color:var(--muted)"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+    html+='<span style="font-size:13px;font-weight:600">'+rangeLabel+'</span>'+rangeStatus+sourceLabel;
+    html+='</div>';
+  }
+  if(hasEffectiveRange&&(range.effectiveStart||range.effectiveEnd)){
+    const tS=range.effectiveStart?new Date(range.effectiveStart+'T00:00:00'):null;
+    const tE=range.effectiveEnd?new Date(range.effectiveEnd+'T00:00:00'):null;
+    const rangeStart=tS||(tE?new Date(tE.getTime()-30*864e5):new Date());
+    const rangeEnd=tE||(tS?new Date(tS.getTime()+90*864e5):new Date(Date.now()+90*864e5));
+    const pad=Math.max(7*864e5,(rangeEnd-rangeStart)*0.05);
+    const visStart=new Date(rangeStart.getTime()-pad);
+    const visEnd=new Date(rangeEnd.getTime()+pad);
+    const totalMs=Math.max(1,visEnd-visStart);
+    const pct=d=>{const dt=new Date(d+'T00:00:00');return Math.max(0,Math.min(100,(dt-visStart)/totalMs*100))};
+    const nowPct=pct(today());
+    const wc=w.color||'var(--accent)';
+    const barL=pct(range.effectiveStart||(tE?tE.toISOString().slice(0,10):today()));
+    const barR=pct(range.effectiveEnd||(tS?tS.toISOString().slice(0,10):today()));
+    let barHtml='<div style="position:relative;height:28px;background:var(--border-lt);border-radius:6px;overflow:hidden;margin-bottom:8px">';
+    barHtml+='<div style="position:absolute;left:'+barL+'%;top:0;height:100%;width:'+(barR-barL)+'%;background:'+wc+';opacity:.18;border-radius:6px"></div>';
+    if(nowPct>=0&&nowPct<=100)barHtml+='<div style="position:absolute;left:'+nowPct+'%;top:0;bottom:0;width:2px;background:var(--red);z-index:2" title="Today"></div>';
+    const milestones=dated.filter(t=>t.isMilestone&&t.due);
+    milestones.forEach(m=>{
+      const x=pct(m.due);
+      const isDone=m.status==='done';const isOD=m.status==='open'&&m.due&&m.due<today();
+      const mc=isDone?'var(--green)':isOD?'var(--red)':wc;
+      barHtml+='<div style="position:absolute;left:'+x+'%;top:50%;transform:translate(-8px,-50%);z-index:3;cursor:pointer" title="'+esc(m.title)+' — '+fmtDate(m.due)+'" onclick="closeModal();setTimeout(()=>openTaskModal(\''+m.id+'\'),150)"><div style="width:14px;height:14px;border-radius:50%;background:'+mc+';border:2px solid var(--bg-card);display:flex;align-items:center;justify-content:center"><span style="font-size:7px;color:#fff;font-weight:700">'+(isDone?'&#10003;':isOD?'!':'&#9670;')+'</span></div></div>';
+    });
+    barHtml+='</div>';
+    html+=barHtml;
+  }
+  if(dated.length){
+    html+='<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Key dates ('+dated.length+')</div>';
+    html+=dated.slice(0,15).map(t=>{
+      const isDone=t.status==='done';const isOD=t.status==='open'&&t.due&&t.due<today();
+      const icon=t.isMilestone?'<span style="color:#f59e0b;margin-right:2px">&#9733;</span>':'';
+      const pillCls=isDone?'pill-g':isOD?'pill-r':'pill-a';
+      const dateStr=t.due?fmtDate(t.due):(t.startDate?fmtDate(t.startDate):'');
+      return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer" onclick="closeModal();setTimeout(()=>openTaskModal(\''+t.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'">'+icon+'<span style="min-width:60px;flex-shrink:0;color:var(--light);font-size:11px">'+dateStr+'</span><span class="pill '+pillCls+'" style="min-width:40px;text-align:center;font-size:10px">'+(isDone?'done':isOD?'overdue':'open')+'</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.title)+'</span></div>';
+    }).join('');
+    if(dated.length>15)html+='<div style="font-size:11px;color:var(--muted);padding:4px 0">... and '+(dated.length-15)+' more</div>';
+  }
+  html+='</div>';
+  return html;
+}
 function saveWs(id){
   const name=(document.getElementById('ws-name').value||'').trim();
   if(!name){toast('Name is required');return}
@@ -2295,6 +2404,8 @@ function saveWs(id){
   w.whatsNext=(document.getElementById('ws-whatsnext')?.value||'').trim();
   w.businessOutcome=(document.getElementById('ws-businessOutcome')?.value||'').trim();
   w.notes=document.getElementById('ws-notes').value;
+  w.targetStart=(document.getElementById('ws-targetStart')?.value||'').trim();
+  w.targetEnd=(document.getElementById('ws-targetEnd')?.value||'').trim();
   w.stakeholders=[...document.querySelectorAll('.ws-sth-cb')].filter(cb=>cb.checked).map(cb=>cb.value);
   const labels=[...document.querySelectorAll('.ws-link-label')];
   const urls=[...document.querySelectorAll('.ws-link-url')];
