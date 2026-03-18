@@ -123,7 +123,19 @@ body.nav-collapsed .topbar-menu{display:flex}
 .topbar input[type=text]:focus{border-color:var(--accent)}
 .tb-btn{padding:9px 22px;border-radius:var(--r-sm);font-size:14px;font-weight:600;background:var(--accent);color:#fff;transition:background .15s}
 .tb-btn:hover{background:var(--accent-hov)}
-#content{padding:32px 36px;flex:1}
+.focus-popover{display:none;position:absolute;right:0;top:100%;margin-top:8px;width:380px;max-height:70vh;overflow-y:auto;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-md);z-index:200}
+.focus-popover.open{display:block}
+.focus-popover .focus-hd{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:800;font-size:14px;color:var(--text);display:flex;align-items:center;gap:8px}
+.focus-popover .focus-section{margin:0;padding:10px 16px;border-bottom:1px solid var(--border-lt)}
+.focus-popover .focus-section:last-child{border-bottom:none}
+.focus-popover .focus-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;color:var(--muted)}
+.focus-popover .focus-section.overdue .focus-section-title{color:var(--red)}
+.focus-popover .focus-item{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12.5px;cursor:pointer;border-radius:var(--r-xs);transition:background .12s}
+.focus-popover .focus-item:hover{background:var(--bg-subtle)}
+.focus-popover .focus-item .focus-item-date{color:var(--light);font-size:11px;flex-shrink:0}
+.focus-popover .focus-item .focus-item-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.focus-popover .focus-empty{font-size:12px;color:var(--muted);padding:6px 0}
+#content{padding:28px 40px 40px;flex:1;min-width:0}
 
 /* CARDS */
 .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
@@ -180,9 +192,81 @@ body.nav-collapsed .topbar-menu{display:flex}
 .di-due{font-size:13px;color:var(--light);flex-shrink:0;white-space:nowrap}
 
 /* EMPTY STATE */
-.empty{text-align:center;padding:60px 24px;color:var(--muted)}
-.empty h4{font-size:17px;font-weight:700;margin-bottom:8px;color:var(--text)}
-.empty p{font-size:14px;line-height:1.6}
+.empty{text-align:center;padding:48px 32px;color:var(--muted);background:var(--bg-card);border:1px solid var(--border-lt);border-radius:var(--r-md);max-width:420px;margin:0 auto}
+.empty h4{font-size:16px;font-weight:700;margin-bottom:6px;color:var(--text)}
+.empty p{font-size:13.5px;line-height:1.55}
+
+/* PAGE LAYOUT — Action Items & Workstreams */
+.page-wrap{width:100%;max-width:1600px;margin:0 auto}
+.page-toolbar{display:flex;align-items:center;gap:0;flex-wrap:wrap;padding:14px 20px 14px 18px;background:var(--bg-card);border:1px solid var(--border-lt);border-radius:var(--r-md);box-shadow:0 1px 4px rgba(0,0,0,.05);margin-bottom:18px}
+.page-toolbar .page-title{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--text);margin-right:20px;padding-right:16px;border-right:1px solid var(--border-lt)}
+.page-toolbar .pill-filters{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.page-toolbar .pill-filters .pill{cursor:pointer;transition:all .15s;padding:5px 12px;font-size:12px;border-radius:var(--r-sm)}
+.page-toolbar .pill-filters .pill:hover{opacity:.92}
+.page-toolbar .pill-filters .pill.pill-i{box-shadow:0 1px 2px rgba(99,102,241,.2)}
+.page-toolbar .pill-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto;padding-left:16px;border-left:1px solid var(--border-lt)}
+.page-toolbar .pill-actions select{padding:6px 10px 6px 12px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:12.5px;font-family:inherit;background:var(--bg-card);color:var(--text);cursor:pointer;outline:none;min-width:0}
+.page-toolbar .pill-actions .mbtn{padding:6px 12px;font-size:12.5px}
+.page-section{margin-bottom:20px}
+.page-section .section-header{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;padding:10px 16px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-bottom-color:var(--border);transition:background .12s,border-color .12s;margin-bottom:0;border-radius:var(--r-md) var(--r-md) 0 0}
+.page-section .section-header:hover{background:var(--border-lt);border-color:var(--border)}
+.page-section .section-header .section-chevron{font-size:10px;color:var(--muted);width:16px;text-align:center;transition:transform .2s;display:inline-block;flex-shrink:0}
+.page-section .section-header .section-bar{width:3px;height:18px;border-radius:2px;flex-shrink:0}
+.page-section .section-header .section-label{font-size:14px;font-weight:700;letter-spacing:-.01em;color:var(--text)}
+.page-section .section-header .section-meta{font-size:12px;color:var(--muted);margin-left:2px}
+.page-section .section-body{margin-top:0;border:1px solid var(--border-lt);border-top:none;border-radius:0 0 var(--r-md) var(--r-md);overflow:hidden;background:var(--bg-card)}
+.page-section .section-body .card-inner{background:transparent;border:none;border-radius:0;overflow:hidden;box-shadow:none}
+.page-section .section-body .tbl{width:100%;table-layout:auto}
+.page-section .section-body .tbl th{padding:10px 16px;font-size:11px;font-weight:700;letter-spacing:.4px;color:var(--muted)}
+.page-section .section-body .tbl td{padding:10px 16px;font-size:13px}
+.page-section .section-body .tbl tbody tr{transition:background .1s}
+.page-section .section-body .tbl tbody tr:hover td{background:var(--tbl-hover)}
+.page-section.collapsed .section-body{display:none}
+.page-section.collapsed .section-header{border-radius:var(--r-md);border-bottom-color:var(--border-lt)}
+.page-section.collapsed .section-header .section-chevron{transform:rotate(-90deg)}
+.tasks-page .page-section .section-header,.ws-page .page-section .section-header{background:#1e293b;border-color:#334155;border-bottom-color:#475569}
+.tasks-page .page-section .section-header:hover,.ws-page .page-section .section-header:hover{background:#334155;border-color:#475569}
+.tasks-page .page-section .section-header .section-chevron,.tasks-page .page-section .section-header .section-label,.tasks-page .page-section .section-header .section-meta,.ws-page .page-section .section-header .section-chevron,.ws-page .page-section .section-header .section-label,.ws-page .page-section .section-header .section-meta{color:#cbd5e1}
+.tasks-page .page-section .section-header .section-meta,.ws-page .page-section .section-header .section-meta{opacity:.9}
+.tasks-page .page-section.collapsed .section-header,.ws-page .page-section.collapsed .section-header{border-bottom-color:#334155}
+[data-theme="dark"] .tasks-page .page-section .section-header,[data-theme="dark"] .ws-page .page-section .section-header{background:#e2e8f0;border-color:#cbd5e1;border-bottom-color:#94a3b8}
+[data-theme="dark"] .tasks-page .page-section .section-header:hover,[data-theme="dark"] .ws-page .page-section .section-header:hover{background:#cbd5e1;border-color:#94a3b8}
+[data-theme="dark"] .tasks-page .page-section .section-header .section-chevron,[data-theme="dark"] .tasks-page .page-section .section-header .section-label,[data-theme="dark"] .tasks-page .page-section .section-header .section-meta,[data-theme="dark"] .ws-page .page-section .section-header .section-chevron,[data-theme="dark"] .ws-page .page-section .section-header .section-label,[data-theme="dark"] .ws-page .page-section .section-header .section-meta{color:#1e293b}
+[data-theme="dark"] .tasks-page .page-section.collapsed .section-header,[data-theme="dark"] .ws-page .page-section.collapsed .section-header{border-bottom-color:#cbd5e1}
+.ws-page-toolbar .page-title{font-size:17px;font-weight:800;letter-spacing:-.02em;padding-right:16px;margin-right:16px;border-right:1px solid var(--border-lt)}
+.ws-page-toolbar .toolbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto;padding-left:16px;border-left:1px solid var(--border-lt)}
+.ws-page-toolbar .toolbar-right select{padding:6px 10px 6px 12px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:12.5px;font-family:inherit;background:var(--bg-card);color:var(--text);cursor:pointer;outline:none}
+.ws-page-toolbar .toolbar-right .tb-btn{padding:6px 14px;font-size:12.5px;border-radius:var(--r-sm)}
+.ws-page-toolbar .toolbar-right .tb-btn:first-of-type{background:var(--bg-subtle);color:var(--text);border:1px solid var(--border)}
+.ws-page-toolbar .toolbar-right .tb-btn:first-of-type:hover{background:var(--border-lt)}
+.ws-pipeline{display:flex;align-items:stretch;flex-wrap:nowrap;gap:0;padding:10px 8px;margin-bottom:14px;background:var(--bg-card);border:1px solid var(--border-lt);border-radius:var(--r-md);box-shadow:0 1px 3px rgba(0,0,0,.04);width:100%;box-sizing:border-box}
+.ws-pipeline-stage{display:flex;flex:1 1 0;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 6px;min-width:0;border:1px solid var(--border-lt);border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;margin:0 2px}
+.ws-pipeline-stage:first-child{margin-left:0}
+.ws-pipeline-stage:hover{filter:brightness(0.96);border-color:var(--border)}
+.ws-pipeline-stage.on{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff!important}
+.ws-pipeline-stage .ws-pipeline-label{white-space:nowrap;text-align:center;line-height:1.2;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.ws-pipeline-stage .ws-pipeline-count{font-size:14px;font-weight:800;letter-spacing:-.02em}
+.ws-pipeline-arrow{color:var(--muted);font-size:10px;padding:0 2px;flex-shrink:0;align-self:center}
+.ws-pipeline-stage-all{background:#e2e8f0;color:#334155;border-color:#cbd5e1}
+.ws-pipeline-stage-not-started{background:#f8fafc;color:#475569;border-color:#e2e8f0}
+.ws-pipeline-stage-reachout-kickoff{background:#f1f5f9;color:#475569;border-color:#e2e8f0}
+.ws-pipeline-stage-discovery-workshops{background:#e2e8f0;color:#334155;border-color:#cbd5e1}
+.ws-pipeline-stage-prioritization-planning{background:#cbd5e1;color:#334155;border-color:#94a3b8}
+.ws-pipeline-stage-resourcing{background:#94a3b8;color:#fff;border-color:#64748b}
+.ws-pipeline-stage-delivery{background:#64748b;color:#fff;border-color:#475569}
+.ws-pipeline-stage-pilot-validate{background:#475569;color:#fff;border-color:#334155}
+.ws-pipeline-stage-deploy-scale{background:#334155;color:#fff;border-color:#1e293b}
+.ws-pipeline-stage-complete{background:#1e293b;color:#fff;border-color:#0f172a}
+[data-theme="dark"] .ws-pipeline-stage-all{background:#475569;color:#e2e8f0;border-color:#64748b}
+[data-theme="dark"] .ws-pipeline-stage-not-started{background:#334155;color:#cbd5e1;border-color:#475569}
+[data-theme="dark"] .ws-pipeline-stage-reachout-kickoff{background:#475569;color:#e2e8f0;border-color:#64748b}
+[data-theme="dark"] .ws-pipeline-stage-discovery-workshops{background:#64748b;color:#f1f5f9;border-color:#94a3b8}
+[data-theme="dark"] .ws-pipeline-stage-prioritization-planning{background:#94a3b8;color:#0f172a;border-color:#cbd5e1}
+[data-theme="dark"] .ws-pipeline-stage-resourcing{background:#cbd5e1;color:#0f172a;border-color:#e2e8f0}
+[data-theme="dark"] .ws-pipeline-stage-delivery{background:#e2e8f0;color:#1e293b;border-color:#f1f5f9}
+[data-theme="dark"] .ws-pipeline-stage-pilot-validate{background:#f1f5f9;color:#1e293b;border-color:#e2e8f0}
+[data-theme="dark"] .ws-pipeline-stage-deploy-scale{background:#e2e8f0;color:#0f172a;border-color:#cbd5e1}
+[data-theme="dark"] .ws-pipeline-stage-complete{background:#cbd5e1;color:#0f172a;border-color:#94a3b8}
 
 /* MODAL */
 .overlay{position:fixed;inset:0;background:var(--overlay-bg);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
@@ -272,6 +356,7 @@ body.nav-collapsed .topbar-menu{display:flex}
 .rpt-exec-table .rpt-status.blocked{background:#dc2626;color:#fff}
 .rpt-exec-table .rpt-status.complete{background:#2563eb;color:#fff}
 .rpt-exec-table .rpt-status.not-started{background:#f1f5f9;color:#334155;border:1px solid #e2e8f0}
+.rpt-exec-table .rpt-status.in-progress{background:#6366f1;color:#fff}
 .rpt-exec-table .rpt-scope{max-width:280px;color:var(--text);line-height:1.4}
 .rpt-exec-table .rpt-timing{color:var(--muted);white-space:nowrap}
 .rpt-metrics-strip{display:flex;flex-wrap:wrap;gap:6px 12px;padding:6px 10px;background:rgba(0,0,0,.04);border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:6px;font-size:14px}
@@ -294,6 +379,24 @@ body.nav-collapsed .topbar-menu{display:flex}
 .rpt-ws-focus th:nth-child(4),.rpt-ws-focus td:nth-child(4){width:34%}
 .rpt-ws-focus .rpt-ws-recent,.rpt-ws-focus .rpt-ws-next,.rpt-ws-focus .rpt-ws-keydates{min-width:0;word-break:break-word}
 .rpt-ws-focus .rpt-ws-keydates{color:var(--muted)}
+.rpt-ws-focus .rpt-ws-outcome{min-width:0;word-wrap:break-word;overflow-wrap:break-word;white-space:normal;word-break:break-word}
+.rpt-ws-focus .rpt-ws-outcome-wrap{max-width:100%;word-wrap:break-word;overflow-wrap:break-word;word-break:break-word;line-height:1.4}
+.rpt-ws-focus.rpt-outcomes-5col{width:100%}
+.rpt-ws-focus.rpt-outcomes-5col th:nth-child(1),.rpt-ws-focus.rpt-outcomes-5col td:nth-child(1){width:14%}
+.rpt-ws-focus.rpt-outcomes-5col th:nth-child(2),.rpt-ws-focus.rpt-outcomes-5col td:nth-child(2){width:24%;min-width:0;white-space:normal;text-align:left}
+.rpt-ws-focus.rpt-outcomes-5col th:nth-child(3),.rpt-ws-focus.rpt-outcomes-5col td:nth-child(3){width:10%;min-width:0;white-space:normal;text-align:center;vertical-align:top}
+.rpt-ws-focus.rpt-outcomes-5col .rpt-ws-status-cell .rpt-status{display:inline-block;max-width:100%;font-size:10px;padding:2px 6px;line-height:1.2;white-space:normal;border-radius:999px;font-weight:600;text-align:center;box-sizing:border-box}
+.rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-not-started{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}
+.rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-reachout-kickoff{background:#e0f2fe;color:#0369a1}
+.rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-discovery-workshops{background:#dbeafe;color:#1d4ed8}
+.rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-prioritization-planning{background:#e0e7ff;color:#4338ca}
+.rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-resourcing{background:#fce7f3;color:#be185d}
+.rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-delivery{background:#6366f1;color:#fff}
+.rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-pilot-validate{background:#fef3c7;color:#b45309}
+.rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-deploy-scale{background:#a7f3d0;color:#065f46}
+.rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-complete{background:#2563eb;color:#fff}
+.rpt-ws-focus.rpt-outcomes-5col th:nth-child(4),.rpt-ws-focus.rpt-outcomes-5col td:nth-child(4){width:24%}
+.rpt-ws-focus.rpt-outcomes-5col th:nth-child(5),.rpt-ws-focus.rpt-outcomes-5col td:nth-child(5){width:28%}
 .rpt-ws-bullets{margin:0;padding-left:14px;list-style:disc;font-size:11px;line-height:1.35}
 .rpt-ws-bullets li{margin-bottom:1px;white-space:normal}
 .rpt-ws-bullets li:last-child{margin-bottom:0}
@@ -310,6 +413,16 @@ body.nav-collapsed .topbar-menu{display:flex}
 [data-theme="dark"] .rpt-exec-table tr:not(.rpt-group-header) td{background:#1e293b;border-color:#e2e8f0}
 [data-theme="dark"] .rpt-exec-table.rpt-ws-focus tr:not(.rpt-group-header) td:first-child{background:#1e293b;border-left-color:#93c5fd}
 [data-theme="dark"] .rpt-exec-table .rpt-status.not-started{background:rgba(255,255,255,.12);color:#e2e8f0;border-color:rgba(255,255,255,.2)}
+[data-theme="dark"] .rpt-exec-table .rpt-status.in-progress{background:#6366f1;color:#fff}
+[data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-not-started{background:rgba(255,255,255,.1);color:#cbd5e1;border-color:rgba(255,255,255,.2)}
+[data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-reachout-kickoff{background:rgba(56,189,248,.25);color:#7dd3fc}
+[data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-discovery-workshops{background:rgba(96,165,250,.25);color:#93c5fd}
+[data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-prioritization-planning{background:rgba(129,140,248,.25);color:#a5b4fc}
+[data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-resourcing{background:rgba(236,72,153,.25);color:#f9a8d4}
+[data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-delivery{background:#6366f1;color:#fff}
+[data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-pilot-validate{background:rgba(251,191,36,.25);color:#fcd34d}
+[data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-deploy-scale{background:rgba(52,211,153,.25);color:#6ee7b7}
+[data-theme="dark"] .rpt-ws-focus.rpt-outcomes-5col .rpt-status.rpt-status-complete{background:#2563eb;color:#fff}
 .rpt-exec-table .rpt-ws-name{font-weight:600;color:var(--text)}
 @media print{.rpt-header{margin-bottom:3px;padding-bottom:3px}.rpt-section{margin-bottom:4px;break-inside:avoid}.rpt-section h3{margin-bottom:2px;padding-bottom:2px}.rpt-exec-table{margin-bottom:4px;font-size:14px;box-shadow:none}.rpt-exec-table th,.rpt-exec-table td{padding:3px 6px}.rpt-exec-table .rpt-group-header td{font-size:14px;padding:4px 8px}.rpt-exec-table .rpt-status{font-size:10px;padding:2px 5px}.rpt-ws-bullets{font-size:11px;line-height:1.3}.rpt-ws-bullets li{margin-bottom:0}}
 
@@ -536,6 +649,16 @@ body.nav-collapsed .topbar-menu{display:flex}
           </div>
         </div>
       </div>
+      <div style="position:relative">
+        <button class="tb-btn" id="focusBtn" onclick="toggleFocusPopover()" title="What needs immediate attention (dates and risks)" style="background:#0f172a;color:#fff;display:flex;align-items:center;gap:6px;font-size:13px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <span>Focus</span><span id="focusBadge" style="display:none;margin-left:4px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;font-weight:800;align-items:center;justify-content:center">0</span>
+        </button>
+        <div class="focus-popover" id="focusPopover">
+          <div class="focus-hd">Immediate focus</div>
+          <div id="focusPopoverBody"></div>
+        </div>
+      </div>
       <button class="tb-btn" onclick="go('mywork')" style="background:#fff;color:#1e293b;border:2px solid #94a3b8;display:flex;align-items:center;gap:6px;font-size:13px" title="Workstreams and action items assigned to you"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M9 11h6M9 15h6"/></svg>My Work Items</button>
       <div style="position:relative">
         <button class="tb-btn" onclick="toggleQC()" style="background:#ec4899;color:#fff;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Capture</button>
@@ -629,7 +752,7 @@ const WS_DEFS=[
 function defaults(){
   return{
     workstreams:WS_DEFS.map(w=>({id:w.id,name:w.name,color:w.color,desc:w.desc,
-      category:w.category||'',owner:w.owner||'',status:'on-track',notes:'',phase:'0-30',businessOutcome:w.businessOutcome||''})),
+      category:w.category||'',owner:w.owner||'',status:'not-started',notes:'',phase:'0-30',businessOutcome:w.businessOutcome||''})),
     engagements:[],
     milestones:[
       {id:uid(),title:'Deliver data infrastructure / MSFT Graph connector draft',workstream:'data-infra',date:'2026-03-11',status:'done',owner:'Brian Letort',notes:'Socialize with Don, Stephen, key BU leaders'},
@@ -1070,10 +1193,10 @@ function getProgramContext(){
   const doneT=(D.tasks||[]).filter(t=>t.status==='done').map(t=>t.title+' (owner: '+(t.owner||'Unassigned')+')').join('; ');
   const eng=(D.engagements||[]).map(e=>e.title+' ('+e.status+', type: '+(e.type||'N/A')+')').join('; ');
   const wsCount=(D.workstreams||[]).length;
-  const wsOnTrack=(D.workstreams||[]).filter(w=>w.status==='on-track').length;
+  const wsInProgress=(D.workstreams||[]).filter(w=>w.status&&w.status!=='not-started'&&w.status!=='complete').length;
   const msDone=allMs.filter(t=>t.status==='done').length;
   return `PROGRAM: AI Transformation Program — Digital Realty CDO
-COUNTS (use these exact numbers in insights): ${openTasks.length} open action items, ${overdueCount} overdue (past due date). ${wsCount} workstreams total, ${wsOnTrack} on-track. ${msDone}/${allMs.length} milestones complete.
+COUNTS (use these exact numbers in insights): ${openTasks.length} open action items, ${overdueCount} overdue (past due date). ${wsCount} workstreams total, ${wsInProgress} in progress. ${msDone}/${allMs.length} milestones complete.
 WORKSTREAMS: ${ws||'None'}
 MILESTONES: ${ms||'None'}
 OPEN TASKS: ${openT||'None'}
@@ -1089,7 +1212,7 @@ function getAskContext(){
     const nxt=(w.whatsNext||'').trim()||whatsNextFromApp(w.id);
     const openTasks=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').map(t=>t.title+(t.due?' (due '+t.due+')':'')+(t.owner?' — '+t.owner:''));
     const doneTasks=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='done').slice(-5).map(t=>t.title+(t.due?' completed '+t.due:''));
-    lines.push(`WORKSTREAM: ${w.name} (ID: ${w.id}) | Status: ${w.status||'on-track'} | Owner: ${w.owner||'TBD'}`);
+    lines.push(`WORKSTREAM: ${w.name} (ID: ${w.id}) | Status: ${wsStatusLabel(w.status)} | Owner: ${w.owner||'TBD'}`);
     if(rec)lines.push('  Recent accomplishments: '+rec.replace(/\n/g,' '));
     if(nxt)lines.push('  What\'s next: '+nxt.replace(/\n/g,' '));
     if(openTasks.length)lines.push('  Open action items: '+openTasks.join('; '));
@@ -1167,22 +1290,64 @@ async function applyNewTeamPassword(){
   toast('Switched team — loading data...');
 }
 
+function hideConnectingAndBoot(){
+  const el=document.getElementById('connecting');
+  if(el)el.classList.add('hide');
+  loadLs();loadMe();renderLinks();authGate();go('dashboard');
+  if(ME&&SESSION_VERIFIED)setTimeout(checkReleaseNotes,600);
+}
+function isLocalOrOffline(){
+  try{
+    const loc=window.location;
+    if(loc.protocol==='file:')return true;
+    const h=(loc.hostname||'').toLowerCase();
+    if(h==='localhost'||h==='127.0.0.1'||h==='')return true;
+  }catch(e){}
+  return false;
+}
+let _connectingBooted=false;
+function bootIfStillConnecting(){
+  if(_connectingBooted)return;
+  const el=document.getElementById('connecting');
+  if(el&&el.classList.contains('hide')){ _connectingBooted=true; return; }
+  _connectingBooted=true;
+  console.warn('ATLAS: forcing boot (local/offline or timeout)');
+  hideConnectingAndBoot();
+}
 async function initFirebase(){
-  loadTheme();loadAIKey();
-  if(firebaseConfig.apiKey==='REPLACE_ME'){
+  setTimeout(bootIfStillConnecting,2000);
+  setTimeout(bootIfStillConnecting,5000);
+  try{ loadTheme();loadAIKey(); }catch(e){ bootIfStillConnecting(); return; }
+  if(typeof firebaseConfig==='undefined'||(firebaseConfig&&firebaseConfig.apiKey==='REPLACE_ME')){
     console.warn('Firebase not configured — running in local-only mode');
-    document.getElementById('connecting').classList.add('hide');
-    loadLs();loadMe();renderLinks();authGate();go('dashboard');
-    if(ME&&SESSION_VERIFIED)setTimeout(checkReleaseNotes,600);
+    bootIfStillConnecting();
     return;
   }
-  firebase.initializeApp(firebaseConfig);
-  TEAM_KEY=await hashPassword('Powering Digital with AI');
-  saveTeamKey(TEAM_KEY);
-  connectFirebase();
+  if(isLocalOrOffline()){
+    console.warn('Local/offline — running in local-only mode (no Firebase)');
+    bootIfStillConnecting();
+    return;
+  }
+  let connectingHidden=false;
+  const fallback=()=>{
+    if(connectingHidden)return;
+    connectingHidden=true;
+    console.warn('Firebase timeout or error — falling back to local data');
+    bootIfStillConnecting();
+  };
+  const timeoutId=setTimeout(fallback,6000);
+  try{
+    if(typeof firebase==='undefined'){fallback();return}
+    firebase.initializeApp(firebaseConfig);
+    TEAM_KEY=await hashPassword('Powering Digital with AI');
+    saveTeamKey(TEAM_KEY);
+    connectFirebase(()=>{clearTimeout(timeoutId);connectingHidden=true});
+  }catch(e){
+    fallback();
+  }
 }
 let presenceRef=null;
-function connectFirebase(){
+function connectFirebase(onReady){
   dbRef=firebase.database().ref('teams/'+TEAM_KEY);
   presenceRef=firebase.database().ref('teams/'+TEAM_KEY+'/_presence');
   firebase.auth().signInAnonymously().then(()=>{
@@ -1200,6 +1365,7 @@ function connectFirebase(){
       document.getElementById('connecting').classList.add('hide');
       loadMe();renderLinks();authGate();go('dashboard');
       if(ME&&SESSION_VERIFIED)setTimeout(checkReleaseNotes,600);
+      if(typeof onReady==='function')onReady();
       dbRef.on('value',snap=>{
         const val=snap.val();
         if(val&&val.workstreams){
@@ -1219,6 +1385,7 @@ function connectFirebase(){
     document.getElementById('connecting').classList.add('hide');
     loadLs();loadMe();renderLinks();authGate();go('dashboard');
     if(ME&&SESSION_VERIFIED)setTimeout(checkReleaseNotes,600);
+    if(typeof onReady==='function')onReady();
   });
 }
 function startPresence(){
@@ -1313,8 +1480,11 @@ function badges(){
   const inboxCount=(D.inbox||[]).filter(x=>!x.processed).length;
   const ie=document.getElementById('nb-inbox');ie.textContent=inboxCount||'';ie.className='badge'+(inboxCount?' warn':'');ie.style.display=inboxCount?'':'none';
   const ee=document.getElementById('nb-eng');if(ee)ee.textContent=(D.engagements||[]).length;
-  const we=document.getElementById('nb-ws');if(we)we.textContent=(D.workstreams||[]).length;
+  const we=document.getElementById('nb-ws');if(we)we.textContent=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting').length;
   document.getElementById('nb-ppl').textContent=(D.people||[]).length;
+  const f=getImmediateFocus();
+  const focusCount=f.overdueTasks.length+f.overdueMilestones.length+(f.openRisks.filter(r=>r.impact==='critical'||r.impact==='high').length);
+  const fb=document.getElementById('focusBadge');if(fb){fb.textContent=focusCount;fb.style.display=focusCount>0?'inline-flex':'none';fb.style.alignItems='center';fb.style.justifyContent='center'}
 }
 
 function render(){
@@ -1326,21 +1496,6 @@ function render(){
 }
 
 function autoUpdateMilestones(){
-  let changed=false;
-  (D.workstreams||[]).forEach(w=>{
-    if(w.status==='complete')return;
-    const wMsOD=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id&&t.status==='open'&&t.due&&t.due<today()).length;
-    const wTasksOD=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open'&&t.due&&t.due<today()).length;
-    const wBlocked=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open'&&t.priority==='high'&&t.due&&t.due<today()).length;
-    let newStatus=w.status;
-    if(wBlocked)newStatus='blocked';
-    else if(wMsOD||wTasksOD)newStatus='at-risk';
-    else if(w.status==='at-risk'||w.status==='blocked'){
-      if(!wMsOD&&!wTasksOD&&!wBlocked)newStatus='on-track';
-    }
-    if(newStatus!==w.status){w.status=newStatus;changed=true}
-  });
-  if(changed)save();
 }
 
 function closeModal(){document.getElementById('overlay').classList.remove('open')}
@@ -1432,8 +1587,48 @@ function checkReleaseNotes(){
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
 let qcVoiceActive=false,qcRecognition=null;
-function toggleQC(){document.getElementById('qcPanel').classList.toggle('open');document.getElementById('aiPanel').style.display='none';if(qcVoiceActive)toggleQCVoice()}
-function toggleAIPanel(){const p=document.getElementById('aiPanel');p.style.display=p.style.display==='none'?'block':'none';document.getElementById('qcPanel').classList.remove('open')}
+function toggleQC(){document.getElementById('qcPanel').classList.toggle('open');document.getElementById('aiPanel').style.display='none';document.getElementById('focusPopover').classList.remove('open');if(qcVoiceActive)toggleQCVoice()}
+function toggleAIPanel(){const p=document.getElementById('aiPanel');p.style.display=p.style.display==='none'?'block':'none';document.getElementById('qcPanel').classList.remove('open');document.getElementById('focusPopover').classList.remove('open')}
+function getImmediateFocus(){
+  const t=()=>new Date().toISOString().slice(0,10);
+  const now=t();
+  const tasks=(D.tasks||[]).filter(x=>x.status==='open');
+  const overdueTasks=tasks.filter(x=>x.due&&x.due<now).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
+  const allMs=tasks.filter(x=>x.isMilestone);
+  const overdueMilestones=allMs.filter(x=>x.due&&x.due<now).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
+  const wkEnd=new Date(now+'T00:00:00');wkEnd.setDate(wkEnd.getDate()+7);
+  const wkEndStr=wkEnd.toISOString().slice(0,10);
+  const twoWkEnd=new Date(now+'T00:00:00');twoWkEnd.setDate(twoWkEnd.getDate()+14);
+  const twoWkEndStr=twoWkEnd.toISOString().slice(0,10);
+  const dueThisWeek=tasks.filter(x=>x.due&&x.due>=now&&x.due<=wkEndStr).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
+  const dueNextTwoWeeks=tasks.filter(x=>x.due&&x.due>wkEndStr&&x.due<=twoWkEndStr).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
+  const openRisks=(D.risks||[]).filter(r=>r.status!=='closed').sort((a,b)=>{const o={critical:0,high:1,medium:2,low:3};return (o[a.impact]||2)-(o[b.impact]||2);});
+  return{overdueTasks,overdueMilestones,dueThisWeek,dueNextTwoWeeks,openRisks};
+}
+function renderFocusPopover(){
+  const body=document.getElementById('focusPopoverBody');if(!body)return;
+  const f=getImmediateFocus();
+  const {overdueTasks,overdueMilestones,dueThisWeek,openRisks}=f;
+  const overdueAll=[...overdueMilestones,...overdueTasks.filter(t=>!t.isMilestone)];
+  const section=(title,items,isOverdue,onclickKey)=>{
+    if(!items.length)return `<div class="focus-section${isOverdue?' overdue':''}"><div class="focus-section-title">${title}</div><div class="focus-empty">Nothing right now</div></div>`;
+    return `<div class="focus-section${isOverdue?' overdue':''}"><div class="focus-section-title">${title}</div>${items.map(it=>{
+      const label=onclickKey==='task'?(it.isMilestone?'&#9733; ':'')+esc(it.title):esc(it.title);
+      const dateStr=it.due?fmtDate(it.due):(it.due||'');
+      const oc=onclickKey==='task'?`closeFocusPopover();openTaskModal('${it.id}')`:onclickKey==='risk'?`closeFocusPopover();openRiskModal('${it.id}')`:'';
+      const impactPill=onclickKey==='risk'&&it.impact?`<span class="pill ${it.impact==='critical'||it.impact==='high'?'pill-r':'pill-a'}" style="font-size:10px">${esc(it.impact)}</span>`:'';
+      return `<div class="focus-item" onclick="${oc}"><span class="focus-item-date">${dateStr||'—'}</span><span class="focus-item-title">${label}</span>${impactPill}</div>`;
+    }).join('')}</div>`;
+  };
+  body.innerHTML=section('Overdue',overdueAll,true,'task')+section('Risks to watch',openRisks,false,'risk')+section('Due in next 7 days',dueThisWeek,false,'task');
+}
+function closeFocusPopover(){document.getElementById('focusPopover').classList.remove('open')}
+function toggleFocusPopover(){
+  const p=document.getElementById('focusPopover');const open=p.classList.toggle('open');
+  document.getElementById('aiPanel').style.display='none';document.getElementById('qcPanel').classList.remove('open');
+  if(open){renderFocusPopover();setTimeout(()=>document.addEventListener('click',focusPopoverOutsideClick),0)}else{document.removeEventListener('click',focusPopoverOutsideClick)}
+}
+function focusPopoverOutsideClick(e){const p=document.getElementById('focusPopover');const btn=document.getElementById('focusBtn');if(p&&p.classList.contains('open')&&!p.contains(e.target)&&!btn.contains(e.target)){closeFocusPopover();document.removeEventListener('click',focusPopoverOutsideClick)}}
 function toggleQCVoice(){
   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SpeechRecognition){toast('Voice input not supported in this browser. Try Chrome or Edge.');return}
@@ -1480,7 +1675,12 @@ function peopleOpts(sel){
   const ppl=(D.people||[]).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   return `<option value="">— Unassigned —</option>`+ppl.map(p=>`<option value="${esc(p.name)}"${sel===p.name?' selected':''}>${esc(p.name)}</option>`).join('');
 }
-const statusColors={'on-track':'pill-g','at-risk':'pill-a','blocked':'pill-r','complete':'pill-b','not-started':'pill-m'};
+const WS_STATUSES=[{value:'not-started',label:'Not Started'},{value:'reachout-kickoff',label:'Reachout / Kickoff'},{value:'discovery-workshops',label:'Discovery & Workshops'},{value:'prioritization-planning',label:'Prioritization & Planning'},{value:'resourcing',label:'Resourcing'},{value:'delivery',label:'Delivery'},{value:'pilot-validate',label:'Pilot & Validate'},{value:'deploy-scale',label:'Deploy & Scale'},{value:'complete',label:'Complete'}];
+function wsStatusLabel(v){if(!v)return'Not Started';const s=WS_STATUSES.find(x=>x.value===v);if(s)return s.label;if(['on-track','at-risk','blocked'].includes(v))return'Delivery';return String(v).replace(/-/g,' ');}
+function reportStatusClass(st){if(!st)return'not-started';if(st==='complete')return'complete';if(st==='not-started')return'not-started';return'in-progress';}
+function reportStatusClassOutcomes(st){const v=!st?'not-started':['on-track','at-risk','blocked'].includes(st)?'delivery':st;return v;}
+function wsStatusShortLabel(v){const short={ 'not-started':'Not started','reachout-kickoff':'Kickoff','discovery-workshops':'Discovery','prioritization-planning':'Planning','resourcing':'Resourcing','delivery':'Delivery','pilot-validate':'Pilot','deploy-scale':'Deploy','complete':'Complete'};const key=!v?'not-started':['on-track','at-risk','blocked'].includes(v)?'delivery':v;return short[key]||wsStatusLabel(v);}
+const statusColors={'not-started':'pill-m','reachout-kickoff':'pill-m','discovery-workshops':'pill-a','prioritization-planning':'pill-b','resourcing':'pill-v','delivery':'pill-g','pilot-validate':'pill-g','deploy-scale':'pill-t','complete':'pill-b','on-track':'pill-g','at-risk':'pill-a','blocked':'pill-r'};
 const engStatusColors={intake:'pill-m',scoping:'pill-a',active:'pill-i','on-hold':'pill-v',complete:'pill-g'};
 const engTypes=['Use Case','Question','Tool Evaluation','Licensing','Escalation','General Request'];
 const engTypeColors={'Use Case':'pill-i','Question':'pill-b','Tool Evaluation':'pill-v','Licensing':'pill-a','Escalation':'pill-r','General Request':'pill-m'};
@@ -1501,24 +1701,24 @@ function rDash(c){
   const msDone=allMs.filter(t=>t.status==='done');
   const msOD=allMs.filter(t=>t.status==='open'&&t.due&&t.due<today());
   const msUp=allMs.filter(t=>t.status==='open'&&(!t.due||t.due>=today()));
-  const allWs=(D.workstreams||[]);
+  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
   const activeWs=allWs.filter(w=>w.status!=='complete');
 
   const renderWsTile=(w)=>{
     const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;
     const wOD=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open'&&t.due&&t.due<today()).length;
-    const isWarn=w.status==='at-risk'||w.status==='blocked'||wOD>0;
+    const isWarn=wOD>0;
     const wc=wsColor(w.id);
     const lead=w.owner||(WS_DEFS.find(d=>d.id===w.id)?.owner)||'';
     return `<div style="border-radius:var(--r-lg);cursor:pointer;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s;position:relative;background:${wc}" onclick="openWsDetail('${w.id}')" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow='var(--shadow)'">
       ${wOD?'<div style="position:absolute;top:8px;right:10px;background:rgba(255,255,255,.9);color:var(--red);width:20px;height:20px;border-radius:50%;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;z-index:1" title="'+wOD+' overdue">!</div>':''}
-      <div style="padding:10px 14px;color:#fff;min-height:62px;display:flex;flex-direction:column;justify-content:space-between">
+      <div style="padding:12px 14px;color:#fff;min-height:82px;display:flex;flex-direction:column;justify-content:space-between">
         <div>
           <div style="font-size:12.5px;font-weight:700;line-height:1.25;margin-bottom:2px">${esc(w.name)}</div>
           <div style="font-size:10px;opacity:.8">${lead||'Unassigned'}${(()=>{const pn=new Set((D.people||[]).map(p=>p.name));const valid=(w.stakeholders||[]).filter(s=>pn.has(s));return valid.length?' &middot; '+valid.join(', '):''})()}</div>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
-          <span style="background:${w.status==='not-started'?'rgba(100,100,100,.4)':isWarn?'rgba(255,0,0,.35)':'rgba(255,255,255,.2)'};color:#fff;padding:1px 8px;border-radius:10px;font-size:9.5px;font-weight:600">${(w.status||'on-track').replace('-',' ')}</span>
+          <span style="background:${w.status==='not-started'?'rgba(100,100,100,.4)':isWarn?'rgba(255,0,0,.35)':'rgba(255,255,255,.2)'};color:#fff;padding:1px 8px;border-radius:10px;font-size:9.5px;font-weight:600">${wsStatusLabel(w.status)}</span>
           <span style="font-size:10px;opacity:.85">${wOpen?wOpen+' open':'0 items'}</span>
         </div>
       </div>
@@ -1537,13 +1737,13 @@ function rDash(c){
   </div>
 
   <div style="margin-bottom:16px;padding:14px 16px;border-radius:var(--r);background:rgba(99,102,241,.04);border:1px solid rgba(99,102,241,.1)">
-    <div style="font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px;color:var(--text)">Business Unit Workstreams</div>
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">${buWs.map(renderWsTile).join('')}</div>
+    <div style="font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px;color:var(--text)">Business Unit Workstreams (${buWs.length})</div>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px">${buWs.map(renderWsTile).join('')}</div>
   </div>
 
   <div style="margin-bottom:16px;padding:14px 16px;border-radius:var(--r);background:rgba(16,185,129,.04);border:1px solid rgba(16,185,129,.1)">
-    <div style="font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px;color:var(--text)">Crosscutting Workstreams</div>
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">${ccWs.map(renderWsTile).join('')}</div>
+    <div style="font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px;color:var(--text)">Crosscutting Workstreams (${ccWs.length})</div>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px">${ccWs.map(renderWsTile).join('')}</div>
   </div>
 
   <div class="card" style="margin-bottom:20px">
@@ -1586,7 +1786,7 @@ function rMyWork(c){
     return `<div style="border-radius:var(--r-lg);cursor:pointer;overflow:hidden;box-shadow:var(--shadow);background:${wc}" onclick="openWsDetail('${w.id}')">
       <div style="padding:12px 14px;color:#fff">
         <div style="font-size:13px;font-weight:700">${esc(w.name)}</div>
-        <div style="font-size:11px;opacity:.9;margin-top:4px">${(w.status||'on-track').replace('-',' ')} &middot; ${wOpen} open</div>
+        <div style="font-size:11px;opacity:.9;margin-top:4px">${wsStatusLabel(w.status)} &middot; ${wOpen} open</div>
       </div>
     </div>`;
   };
@@ -1866,7 +2066,8 @@ async function runAIInsights(){
 // ═══════════════════════════════════════════════════
 // WORKSTREAMS
 // ═══════════════════════════════════════════════════
-let wsLeadFilter='',wsCatFilter='',wsGroupCollapsed={};
+let wsLeadFilter='',wsCatFilter='',wsGroupCollapsed={},wsStatusFilter='';
+function wsStatusValue(w){const s=w.status;if(!s)return'not-started';if(['on-track','at-risk','blocked'].includes(s))return'delivery';return s;}
 function rWork(c){
   const q=(document.getElementById('search').value||'').toLowerCase();
   const leads=[...new Set((D.workstreams||[]).map(w=>w.owner).filter(Boolean))].sort();
@@ -1876,6 +2077,10 @@ function rWork(c){
   else if(wsLeadFilter)allWs=allWs.filter(w=>w.owner===wsLeadFilter);
   if(wsCatFilter)allWs=allWs.filter(w=>w.category===wsCatFilter);
   if(q)allWs=allWs.filter(w=>(w.name+' '+w.desc+' '+w.owner+' '+(w.category||'')).toLowerCase().includes(q));
+
+  const statusCounts={};
+  WS_STATUSES.forEach(s=>{statusCounts[s.value]=allWs.filter(w=>wsStatusValue(w)===s.value).length;});
+  if(wsStatusFilter)allWs=allWs.filter(w=>wsStatusValue(w)===wsStatusFilter);
 
   function wsSortKey(w){const n=(w.name||'');const beforeColon=n.split(':')[0].trim()||n;const firstWord=(beforeColon.split(' ')[0]||beforeColon).toLowerCase();return firstWord;}
   const buWs=allWs.filter(w=>w.category==='BU').slice().sort((a,b)=>wsSortKey(a).localeCompare(wsSortKey(b))||(a.name||'').localeCompare(b.name||''));
@@ -1895,7 +2100,7 @@ function rWork(c){
       <td style="font-weight:600;font-size:13.5px">${esc(w.name)}</td>
       <td style="font-size:12.5px;color:var(--muted)">${esc(w.owner)||'<span style="color:var(--light)">Unassigned</span>'}</td>
       <td style="font-size:12px;color:var(--muted)">${(w.stakeholders||[]).length?w.stakeholders.map(s=>esc(s)).join(', '):'—'}</td>
-      <td style="width:10%"><span class="pill ${sc}" style="font-size:10px">${w.status}</span></td>
+      <td style="width:10%"><span class="pill ${sc}" style="font-size:10px">${wsStatusLabel(w.status)}</span></td>
       <td style="width:10%;font-size:12px;color:var(--muted)">${wOpen} open / ${wAll.length} total</td>
       <td style="width:10%;font-size:12px;${risks?'color:var(--red);font-weight:600':'color:var(--muted)'}">${risks?risks+' risk'+(risks>1?'s':''):'—'}</td>
       <td style="width:120px">
@@ -1910,15 +2115,17 @@ function rWork(c){
   };
 
   const renderGroup=(items,label,gid,count)=>{
-    if(!items.length&&!wsLeadFilter&&!q)return'';
+    if(!items.length&&!wsLeadFilter&&!q&&!wsStatusFilter)return'';
     const collapsed=wsGroupCollapsed[gid];
-    return `<div style="margin-bottom:24px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer;user-select:none" onclick="wsGroupCollapsed['${gid}']=!wsGroupCollapsed['${gid}'];render()">
-        <span style="font-size:12px;color:var(--muted);width:16px;text-align:center;display:inline-block;transform:rotate(${collapsed?'0':'90'}deg);transition:transform .15s">&#9654;</span>
-        <span style="font-size:16px;font-weight:800;letter-spacing:-.02em">${label}</span>
-        <span style="font-size:12.5px;color:var(--muted)">${items.length} workstream${items.length!==1?'s':''}</span>
+    const barColor=gid==='_bu'?'#2563eb':'#475569';
+    return `<div class="page-section${collapsed?' collapsed':''}" data-gid="${gid}">
+      <div class="section-header" onclick="wsGroupCollapsed['${gid}']=!wsGroupCollapsed['${gid}'];render()">
+        <span class="section-chevron" style="transform:rotate(${collapsed?'0':'90'}deg)">&#9654;</span>
+        <div class="section-bar" style="background:${barColor}"></div>
+        <span class="section-label">${label}</span>
+        <span class="section-meta">${items.length} workstream${items.length!==1?'s':''}</span>
       </div>
-      ${collapsed?'':`${items.length?`<table class="tbl" style="width:100%">
+      ${collapsed?'':`<div class="section-body">${items.length?`<div class="card-inner"><table class="tbl" style="width:100%">
         <thead><tr>
           <th style="width:6px;padding:0"></th>
           <th>Workstream</th>
@@ -1930,30 +2137,44 @@ function rWork(c){
           <th style="width:120px">Progress</th>
         </tr></thead>
         <tbody>${items.map(renderRow).join('')}</tbody>
-      </table>`:'<div style="padding:12px 28px;font-size:13px;color:var(--muted)">No workstreams match the current filters</div>'}`}
+      </table></div>`:'<div class="card-inner" style="padding:20px 24px;font-size:13px;color:var(--muted)">No workstreams match the current filters</div>'}</div>`}
     </div>`;
   };
 
+  const pipelineStages=WS_STATUSES.map((s,i)=>({...s,count:statusCounts[s.value]||0}));
   c.innerHTML=`
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
-    <div style="font-size:16px;font-weight:800;letter-spacing:-.01em">Workstreams</div>
-    <span style="font-size:12.5px;color:var(--muted)">${allWs.length} total</span>
-    <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-      <select style="padding:5px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12.5px;font-family:inherit;background:var(--bg-subtle);color:var(--text);cursor:pointer;outline:none" onchange="wsCatFilter=this.value;render()">
+  <div class="page-wrap ws-page">
+  <div class="ws-pipeline">
+    <button type="button" class="ws-pipeline-stage ws-pipeline-stage-all${!wsStatusFilter?' on':''}" onclick="wsStatusFilter='';render()">
+      <span class="ws-pipeline-label">All</span>
+      <span class="ws-pipeline-count">${pipelineStages.reduce((a,x)=>a+x.count,0)}</span>
+    </button>
+    ${pipelineStages.map((s,i)=>`<span class="ws-pipeline-arrow" aria-hidden="true">→</span><button type="button" class="ws-pipeline-stage ws-pipeline-stage-${s.value}${wsStatusFilter===s.value?' on':''}" onclick="wsStatusFilter='${s.value}';render()">
+      <span class="ws-pipeline-label">${s.label}</span>
+      <span class="ws-pipeline-count">${s.count}</span>
+    </button>`).join('')}
+  </div>
+  <div class="page-toolbar ws-page-toolbar">
+    <span class="page-title">Workstreams</span>
+    <span style="font-size:13px;color:var(--muted)">${allWs.length} total${wsStatusFilter?' in '+wsStatusLabel(wsStatusFilter):''}</span>
+    <div class="toolbar-right">
+      <select onchange="wsCatFilter=this.value;render()">
         <option value="">All Categories</option>
         <option value="BU"${wsCatFilter==='BU'?' selected':''}>Business Unit (${totalBU})</option>
         <option value="Cross-cutting"${wsCatFilter==='Cross-cutting'?' selected':''}>Crosscutting (${totalCC})</option>
       </select>
-      <select style="padding:5px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12.5px;font-family:inherit;background:var(--bg-subtle);color:var(--text);cursor:pointer;outline:none" onchange="wsLeadFilter=this.value;render()">
+      <select onchange="wsLeadFilter=this.value;render()">
         <option value="">All Leads</option>
         <option value="__unassigned__"${wsLeadFilter==='__unassigned__'?' selected':''}>Unassigned</option>
         ${leads.map(l=>`<option value="${esc(l)}"${wsLeadFilter===l?' selected':''}>${esc(l)}</option>`).join('')}
       </select>
+      <button class="tb-btn" onclick="aiPopulateAllWorkstreamBusinessOutcomes()" title="Uses AI to overwrite each workstream's Business outcome / impact field">AI Populate Outcomes</button>
       <button class="tb-btn" style="background:var(--accent);color:#fff" onclick="openWsEdit()">+ Add Workstream</button>
     </div>
   </div>
   ${renderGroup(buWs,'Business Unit Workstreams','_bu',totalBU)}
-  ${renderGroup(ccWs,'Crosscutting Workstreams','_cc',totalCC)}`;
+  ${renderGroup(ccWs,'Crosscutting Workstreams','_cc',totalCC)}
+  </div>`;
 }
 
 function openWsEdit(id){
@@ -1976,7 +2197,7 @@ function openWsEdit(id){
       </div>
     </div>
     <div class="fg-row">
-      <div class="fg"><label>Status</label><select id="ws-status"><option value="on-track"${(!w||w?.status==='on-track')?' selected':''}>On Track</option><option value="at-risk"${w?.status==='at-risk'?' selected':''}>At Risk</option><option value="blocked"${w?.status==='blocked'?' selected':''}>Blocked</option><option value="complete"${w?.status==='complete'?' selected':''}>Complete</option><option value="not-started"${w?.status==='not-started'?' selected':''}>Not Started</option></select></div>
+      <div class="fg"><label>Status</label><select id="ws-status">${(()=>{const st=w?.status;const formVal=!st?'not-started':['on-track','at-risk','blocked'].includes(st)?'delivery':st;return WS_STATUSES.map(s=>`<option value="${s.value}"${formVal===s.value?' selected':''}>${s.label}</option>`).join('');})()}</select></div>
       <div class="fg"><label>Color</label><select id="ws-color">${colors.map(cl=>`<option value="${cl}"${(w?.color||'#6366f1')===cl?' selected':''} style="background:${cl};color:#fff">${cl}</option>`).join('')}</select></div>
     </div>
     <div class="fg"><label>Description</label><textarea id="ws-desc" style="min-height:50px">${w?esc(w.desc):''}</textarea></div>
@@ -1985,7 +2206,13 @@ function openWsEdit(id){
       <textarea id="ws-recent" style="min-height:44px;font-size:12px" placeholder="Brief bullets for report-out (e.g. Delivered X; Completed Y). Or use Suggest from app to fill from completed tasks.">${w?esc(w.recentAccomplishments||''):''}</textarea>
     </div>
     <div class="fg"><label>What's next</label><textarea id="ws-whatsnext" style="min-height:44px;font-size:12px" placeholder="Brief bullets for report-out (e.g. Launch pilot by Mar 20; Align with Legal). Or use Suggest from app to fill from open tasks.">${w?esc(w.whatsNext||''):''}</textarea></div>
-    <div class="fg"><label>Business outcome / impact</label><textarea id="ws-businessOutcome" style="min-height:44px;font-size:12px" placeholder="One line or short paragraph for executive outcomes report (e.g. Reduced manual effort by X%; Enabled Y capability for Z team).">${w?esc(w.businessOutcome||''):''}</textarea></div>
+    <div class="fg">
+      <label style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <span>Business outcome / impact</span>
+        ${w&&OPENAI_KEY?`<button type="button" class="pill pill-i" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="aiSuggestWorkstreamBusinessOutcome('${esc(w.id)}')">&#10024; Suggest with AI</button>`:''}
+      </label>
+      <textarea id="ws-businessOutcome" style="min-height:44px;font-size:12px" placeholder="1-2 sentences for executive outcomes report (e.g. Reduced manual effort by X%; Enabled Y capability for Z team).">${w?esc(w.businessOutcome||''):''}</textarea>
+    </div>
     <div class="fg"><label>Notes / Status Update</label><textarea id="ws-notes" style="min-height:50px">${w?esc(w.notes||''):''}</textarea></div>
     <div class="fg"><label>Documents</label>
       <div id="ws-links-list">${(w?.links||[]).map((l,i)=>`<div style="display:flex;gap:4px;margin-bottom:4px;align-items:center"><input class="ws-link-label" value="${esc(l.label)}" placeholder="Label" style="flex:1;max-width:140px"><input class="ws-link-url" value="${esc(l.url)}" placeholder="https://..." style="flex:2"><button type="button" style="color:var(--red);font-size:13px;background:none;border:none;cursor:pointer;padding:0 4px" onclick="this.parentElement.remove()">&#10005;</button></div>`).join('')}</div>
@@ -2215,16 +2442,22 @@ function rTasks(c){
   const owners=[...new Set((D.tasks||[]).map(t=>t.owner).filter(Boolean))].sort();
   const sIco=(col)=>taskSort===col?(taskSortDir===1?' &#9650;':' &#9660;'):'';
   c.innerHTML=`
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-    <div class="pill${taskFilter==='all'?' pill-i':' pill-m'}" style="cursor:pointer" onclick="taskFilter='all';render()">All (${D.tasks.length})</div>
-    <div class="pill${taskFilter==='open'?' pill-i':' pill-m'}" style="cursor:pointer" onclick="taskFilter='open';render()">Open (${open})</div>
-    <div class="pill${taskFilter==='done'?' pill-i':' pill-m'}" style="cursor:pointer" onclick="taskFilter='done';render()">Done (${done})</div>
-    <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" style="cursor:pointer" onclick="taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
-    <span style="font-size:11px;color:var(--muted);margin-left:8px">Groups:</span>
-    <button type="button" style="font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text);cursor:pointer" onclick="taskExpandAll();render()">Expand all</button>
-    <button type="button" style="font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text);cursor:pointer" onclick="taskCollapseAll();render()">Collapse all</button>
-    <div style="margin-left:auto">
-      <select style="padding:5px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12.5px;font-family:inherit;background:var(--bg-subtle);color:var(--text);cursor:pointer;outline:none" onchange="taskOwnerFilter=this.value;render()">
+  <div class="page-wrap tasks-page">
+  <div class="page-toolbar">
+    <span class="page-title">Action Items</span>
+    <div class="pill-filters">
+      <div class="pill${taskFilter==='all'?' pill-i':' pill-m'}" onclick="taskFilter='all';render()">All (${D.tasks.length})</div>
+      <div class="pill${taskFilter==='open'?' pill-i':' pill-m'}" onclick="taskFilter='open';render()">Open (${open})</div>
+      <div class="pill${taskFilter==='done'?' pill-i':' pill-m'}" onclick="taskFilter='done';render()">Done (${done})</div>
+      <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding-left:14px;margin-left:6px;border-left:1px solid var(--border-lt)">
+      <span style="font-size:12px;color:var(--muted);font-weight:500">Groups</span>
+      <button type="button" class="mbtn" style="font-size:12px;padding:5px 10px;background:var(--bg-subtle);border:1px solid var(--border);color:var(--text)" onclick="taskExpandAll();render()">Expand all</button>
+      <button type="button" class="mbtn" style="font-size:12px;padding:5px 10px;background:var(--bg-subtle);border:1px solid var(--border);color:var(--text)" onclick="taskCollapseAll();render()">Collapse all</button>
+    </div>
+    <div class="pill-actions">
+      <select onchange="taskOwnerFilter=this.value;render()">
         <option value="">All Owners</option>
         <option value="__unassigned__"${taskOwnerFilter==='__unassigned__'?' selected':''}>Unassigned</option>
         ${owners.map(o=>`<option value="${esc(o)}"${taskOwnerFilter===o?' selected':''}>${esc(o)}</option>`).join('')}
@@ -2232,7 +2465,7 @@ function rTasks(c){
     </div>
   </div>
   ${(()=>{
-    if(!items.length)return '<div class="empty"><h4>No action items match</h4><p>Try a different filter or add an action item</p></div>';
+    if(!items.length)return '<div class="empty"><h4>No action items match</h4><p>Try a different filter or add an action item</p></div></div>';
     const wsGroups={};const unlinked=[];
     items.forEach(t=>{
       if(t.workstream){if(!wsGroups[t.workstream])wsGroups[t.workstream]=[];wsGroups[t.workstream].push(t)}
@@ -2257,25 +2490,25 @@ function rTasks(c){
     const renderGroup=(label,color,groupItems,gid)=>{
       const openCount=groupItems.filter(t=>t.status==='open').length;
       const collapsed=taskGroupCollapsed[gid];
-      return `<div style="margin-bottom:20px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;cursor:pointer;user-select:none" onclick="taskGroupCollapsed['${gid}']=!taskGroupCollapsed['${gid}'];render()">
-          <span style="font-size:12px;color:var(--muted);width:16px;text-align:center;transition:transform .15s;display:inline-block;transform:rotate(${collapsed?'0':'90'}deg)">&#9654;</span>
-          <div style="width:4px;height:20px;border-radius:2px;background:${color}"></div>
-          <span style="font-size:14px;font-weight:700">${label}</span>
-          <span style="font-size:12px;color:var(--muted)">${openCount} open / ${groupItems.length} total</span>
+      return `<div class="page-section${collapsed?' collapsed':''}" data-gid="${gid}">
+        <div class="section-header" onclick="taskGroupCollapsed['${gid}']=!taskGroupCollapsed['${gid}'];render()">
+          <span class="section-chevron" style="transform:rotate(${collapsed?'0':'90'}deg)">&#9654;</span>
+          <div class="section-bar" style="background:${color}"></div>
+          <span class="section-label">${label}</span>
+          <span class="section-meta">${openCount} open / ${groupItems.length} total</span>
         </div>
-        ${collapsed?'':`<table class="tbl" style="width:100%">
+        ${collapsed?'':`<div class="section-body"><div class="card-inner"><table class="tbl" style="width:100%">
           <thead><tr>
             <th style="width:28px"></th>
-            <th style="cursor:pointer" onclick="sortTasks('title')">Action Item${sIco('title')}</th>
-            <th style="cursor:pointer;width:14%" onclick="sortTasks('owner')">Owner${sIco('owner')}</th>
-            <th style="cursor:pointer;width:8%" onclick="sortTasks('start')">Start${sIco('start')}</th>
-            <th style="cursor:pointer;width:8%" onclick="sortTasks('due')">Target${sIco('due')}</th>
-            <th style="cursor:pointer;width:7%" onclick="sortTasks('priority')">Priority${sIco('priority')}</th>
+            <th style="cursor:pointer" onclick="event.stopPropagation();sortTasks('title')">Action Item${sIco('title')}</th>
+            <th style="cursor:pointer;width:14%" onclick="event.stopPropagation();sortTasks('owner')">Owner${sIco('owner')}</th>
+            <th style="cursor:pointer;width:8%" onclick="event.stopPropagation();sortTasks('start')">Start${sIco('start')}</th>
+            <th style="cursor:pointer;width:8%" onclick="event.stopPropagation();sortTasks('due')">Target${sIco('due')}</th>
+            <th style="cursor:pointer;width:7%" onclick="event.stopPropagation();sortTasks('priority')">Priority${sIco('priority')}</th>
             <th style="width:28px"></th>
           </tr></thead>
           <tbody>${groupItems.map(renderRow).join('')}</tbody>
-        </table>`}
+        </table></div></div>`}
       </div>`;
     };
     let html='';
@@ -2284,7 +2517,7 @@ function rTasks(c){
       if(w)html+=renderGroup(w.name,wsColor(wsId),wsGroups[wsId],wsId);
     });
     if(unlinked.length)html+=renderGroup('Unassigned to Workstream','var(--muted)',unlinked,'_unlinked');
-    return html;
+    return html+'</div>';
   })()}`;
 }
 
@@ -2904,7 +3137,7 @@ function rReport(c){
   const ccWs=allWs.filter(w=>w.category==='Cross-cutting');
   const buWsSorted=[...buWs].sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
   const ccWsSorted=[...ccWs].sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
-  try{var reportViewMode=localStorage.getItem('atlas_report_view')||'exec'}catch(e){var reportViewMode='exec'}
+  try{var reportViewMode=localStorage.getItem('atlas_report_view')||'outcomes'}catch(e){var reportViewMode='outcomes'}
   function keyDatesForWs(wsId){
     const openWithDue=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open'&&t.due).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
     const nextTwo=openWithDue.slice(0,2).map(t=>fmtDate(t.due)+(t.title?' — '+t.title:'')).filter(Boolean);
@@ -2925,15 +3158,15 @@ function rReport(c){
     return '<ul class="rpt-ws-bullets">'+lines.map(l=>'<li>'+esc(l)+'</li>').join('')+'</ul>';
   }
   function renderWsRowExec(w){
-    const st=w.status||'on-track';
-    const statusClass=st==='complete'?'complete':st==='at-risk'?'at-risk':st==='blocked'?'blocked':st==='not-started'?'not-started':'on-track';
+    const st=w.status||'not-started';
+    const statusClass=reportStatusClass(st);
     const recentRaw=(w.recentAccomplishments||'').trim()||recentAccomplishmentsFromApp(w.id);
     const nextRaw=(w.whatsNext||'').trim()||whatsNextFromApp(w.id);
     const recent=bulletsHtml(recentRaw,3);
     const lookAhead=bulletsHtml(nextRaw,3);
     return `<tr>
       <td class="rpt-ws-name"><strong>${esc(w.name)}</strong></td>
-      <td><span class="rpt-status ${statusClass}">${st.replace('-',' ')}</span></td>
+      <td><span class="rpt-status ${statusClass}">${wsStatusLabel(st)}</span></td>
       <td class="rpt-ws-recent" style="font-size:11px;color:var(--text);vertical-align:top">${recent}</td>
       <td class="rpt-ws-keydates" style="font-size:11px;color:var(--text);vertical-align:top">${lookAhead}</td>
     </tr>`;
@@ -2942,12 +3175,12 @@ function rReport(c){
     const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);
     const wMsDone=wMs.filter(t=>t.status==='done').length;
     const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;
-    const st=w.status||'on-track';
-    const statusClass=st==='complete'?'complete':st==='at-risk'?'at-risk':st==='blocked'?'blocked':st==='not-started'?'not-started':'on-track';
+    const st=w.status||'not-started';
+    const statusClass=reportStatusClass(st);
     return `<tr>
       <td><strong>${esc(w.name)}</strong></td>
       <td class="rpt-scope">${esc((w.desc||'').slice(0,200))}${(w.desc||'').length>200?'…':''}</td>
-      <td><span class="rpt-status ${statusClass}">${st.replace('-',' ')}</span></td>
+      <td><span class="rpt-status ${statusClass}">${wsStatusLabel(st)}</span></td>
       <td style="font-size:11.5px">${esc(w.owner)||'TBD'}</td>
       <td style="font-size:11.5px">${wMsDone}/${wMs.length}</td>
       <td style="font-size:11.5px">${wOpen}</td>
@@ -2983,17 +3216,37 @@ function rReport(c){
   const outcomesGroupedHtml=Object.keys(outcomeToWorkstreams).length
     ?Object.entries(outcomeToWorkstreams).map(([outcomeText,names])=>`<div class="rpt-section" style="margin-bottom:14px"><div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)">${esc(outcomeText)}</div><div style="font-size:12px;color:var(--muted)">${names.map(n=>esc(n)).join(' · ')}</div></div>`).join('')
     :'<p style="color:var(--muted);font-size:13px">No workstreams. Add Business outcome / impact in Workstreams &rarr; edit workstream.</p>';
-  const outcomesTable=`<table class="rpt-exec-table rpt-ws-focus">
-    <thead><tr><th>Workstream</th><th>Business outcome / impact</th></tr></thead>
+  function renderOutcomesRow(w){
+    const st=w.status||'not-started';
+    const statusClass=reportStatusClassOutcomes(st);
+    const recentRaw=(w.recentAccomplishments||'').trim()||recentAccomplishmentsFromApp(w.id);
+    const nextRaw=(w.whatsNext||'').trim()||whatsNextFromApp(w.id);
+    const recent=bulletsHtml(recentRaw,3);
+    const nextLines=(nextRaw||'').trim().split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,2);
+    const wsRisks=(D.risks||[]).filter(r=>r.workstream===w.id&&r.status!=='closed').slice(0,2);
+    const riskLines=wsRisks.map(r=>(r.title||'').trim()).filter(Boolean);
+    const lookAheadLines=[...nextLines,...riskLines];
+    const lookAhead=bulletsHtml(lookAheadLines.join('\n'),4);
+    const outcomeTd=esc((w.businessOutcome||'').trim()||'—');
+    return `<tr>
+      <td class="rpt-ws-name"><strong>${esc(w.name)}</strong></td>
+      <td class="rpt-ws-outcome" style="font-size:12px;color:var(--text);vertical-align:top"><div class="rpt-ws-outcome-wrap">${outcomeTd}</div></td>
+      <td class="rpt-ws-status-cell"><span class="rpt-status rpt-status-${statusClass}">${wsStatusShortLabel(st)}</span></td>
+      <td class="rpt-ws-recent" style="font-size:11px;color:var(--text);vertical-align:top">${recent}</td>
+      <td class="rpt-ws-keydates" style="font-size:11px;color:var(--text);vertical-align:top">${lookAhead}</td>
+    </tr>`;
+  }
+  const outcomesTable=`<table class="rpt-exec-table rpt-ws-focus rpt-outcomes-5col">
+    <thead><tr><th>Workstream Name</th><th>Business Outcome</th><th>Status</th><th>Key Updates</th><th>Look Ahead + Risks</th></tr></thead>
     <tbody>
-      ${buWsSorted.length?'<tr class="rpt-group-header rpt-group-bu"><td colspan="2"><span>Business Unit</span></td></tr>':''}
-      ${buWsSorted.map(w=>`<tr><td class="rpt-ws-name"><strong>${esc(w.name)}</strong></td><td style="font-size:12px;color:var(--text);vertical-align:top">${esc((w.businessOutcome||'').trim()||'—')}</td></tr>`).join('')}
-      ${ccWsSorted.length?'<tr class="rpt-group-header rpt-group-cc"><td colspan="2"><span>Crosscutting</span></td></tr>':''}
-      ${ccWsSorted.map(w=>`<tr><td class="rpt-ws-name"><strong>${esc(w.name)}</strong></td><td style="font-size:12px;color:var(--text);vertical-align:top">${esc((w.businessOutcome||'').trim()||'—')}</td></tr>`).join('')}
+      ${buWsSorted.length?'<tr class="rpt-group-header rpt-group-bu"><td colspan="5"><span>Business Unit</span></td></tr>':''}
+      ${buWsSorted.map(renderOutcomesRow).join('')}
+      ${ccWsSorted.length?'<tr class="rpt-group-header rpt-group-cc"><td colspan="5"><span>Crosscutting</span></td></tr>':''}
+      ${ccWsSorted.map(renderOutcomesRow).join('')}
     </tbody>
   </table>`;
   const workstreamSection=reportViewMode==='outcomes'
-    ?`<div class="rpt-section"><h3>Outcomes by impact</h3><p style="font-size:12px;color:var(--muted);margin:0 0 10px">Workstreams that share the same business outcome are grouped together.</p>${outcomesGroupedHtml}</div><div class="rpt-section"><h3>Outcomes by workstream</h3>${allWs.length?outcomesTable:'<p style="color:var(--muted);font-size:13px">No workstreams.</p>'}</div><div class="rpt-section"><h3>Program-level outcomes</h3><div class="card rpt-field-card" style="padding:10px 14px"><textarea id="rpt-businessOutcomes" style="width:100%;border:none;font-size:14px;line-height:1.6;min-height:70px;outline:none;resize:vertical;font-family:inherit" placeholder="Bullet points: business value delivered, impact metrics, strategic outcomes (e.g. Time saved; Risk reduced; Capability enabled).">${esc(rn.businessOutcomes||'')}</textarea></div></div>`
+    ?`<div class="rpt-section rpt-outcomes-only">${allWs.length?outcomesTable:'<p style="color:var(--muted);font-size:13px">No workstreams.</p>'}</div>`
     :reportViewMode==='exec'
     ?`<div class="rpt-section">${allWs.length?execTableWorkstreamFocus:'<p style="color:var(--muted);font-size:13px">No workstreams defined.</p>'}</div>`
     :`<div class="rpt-section"><h3>Workstream Status</h3>${allWs.length?execTableFull:'<p style="color:var(--muted);font-size:13px">No workstreams defined.</p>'}</div>`;
@@ -3009,15 +3262,16 @@ function rReport(c){
 
   c.innerHTML=`<div class="rpt">
     <div id="report-export-area">
-    <div class="rpt-header">
+    ${reportViewMode!=='outcomes'?`<div class="rpt-header">
       <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px">
-        <h2 style="margin:0;font-size:1em">AI Program Status — ${reportViewMode==='outcomes'?'Business Outcomes & Impact':reportViewMode==='exec'?'Executive View':'Full View'}</h2>
+        <h2 style="margin:0;font-size:1em">AI Program Status — ${reportViewMode==='exec'?'Executive View':'Full View'}</h2>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <label style="font-size:14px;color:var(--muted);display:flex;align-items:center;gap:4px">Report as of <input type="date" id="rpt-asof" value="${reportAsOf}" style="padding:4px 8px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:14px;font-family:inherit" onchange="saveReportAsOf();render()"></label>
-          <div style="display:flex;gap:2px"><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='exec'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='exec'?'#fff':'var(--text)'}" onclick="localStorage.setItem('atlas_report_view','exec');render()">Executive</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='full'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='full'?'#fff':'var(--text)'}" onclick="localStorage.setItem('atlas_report_view','full');render()">Full</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='outcomes'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='outcomes'?'#fff':'var(--text)'}" onclick="localStorage.setItem('atlas_report_view','outcomes');render()">Outcomes</button></div>
+          <div style="display:flex;gap:2px"><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='exec'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='exec'?'#fff':'var(--text)'}" onclick="localStorage.setItem('atlas_report_view','exec');render()">Executive</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='full'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='full'?'#fff':'var(--text)'}" onclick="localStorage.setItem('atlas_report_view','full');render()">Full</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:var(--bg-subtle);color:var(--text)" onclick="localStorage.setItem('atlas_report_view','outcomes');render()">Outcomes</button></div>
         </div>
       </div>
-    </div>
+    </div>`:''}
+    ${reportViewMode==='outcomes'?`<div class="rpt-outcomes-bar" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap"><input type="hidden" id="rpt-asof" value="${reportAsOf}"><span style="font-size:12px;color:var(--muted)">View:</span><div style="display:flex;gap:2px"><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:var(--bg-subtle);color:var(--text)" onclick="localStorage.setItem('atlas_report_view','exec');render()">Executive</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:var(--bg-subtle);color:var(--text)" onclick="localStorage.setItem('atlas_report_view','full');render()">Full</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--accent);background:var(--accent);color:#fff;border-color:var(--accent)" onclick="localStorage.setItem('atlas_report_view','outcomes');render()">Outcomes</button></div></div>`:''}
 
     ${workstreamSection}
     ${milestoneSectionFull}
@@ -3073,7 +3327,7 @@ function copyReport(){
   const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
   const buWsCopy=allWs.filter(w=>w.category==='BU').sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
   const ccWsCopy=allWs.filter(w=>w.category==='Cross-cutting').sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
-  try{var reportViewMode=localStorage.getItem('atlas_report_view')||'exec'}catch(e){var reportViewMode='full'}
+  try{var reportViewMode=localStorage.getItem('atlas_report_view')||'outcomes'}catch(e){var reportViewMode='outcomes'}
   function keyDatesForWsCopy(wsId){
     const openWithDue=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open'&&t.due).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
     return openWithDue.slice(0,2).map(t=>fmtDate(t.due)+(t.title?' — '+t.title:'')).join('; ')||'—';
@@ -3081,12 +3335,22 @@ function copyReport(){
   let text=`AI PROGRAM STATUS — ${reportViewMode==='outcomes'?'BUSINESS OUTCOMES & IMPACT':reportViewMode==='exec'?'EXECUTIVE VIEW':'FULL VIEW'}\nAs of ${asOf}\n\n`;
   if(reportViewMode==='outcomes'){
     const allWsCopy=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
-    const outcomeToWs={};
-    allWsCopy.forEach(w=>{const o=(w.businessOutcome||'').trim()||'— No outcome specified';if(!outcomeToWs[o])outcomeToWs[o]=[];outcomeToWs[o].push(w.name)});
-    text+='OUTCOMES BY IMPACT\n\n';
-    Object.entries(outcomeToWs).forEach(([outcome,names])=>{text+=outcome+'\n  '+names.join(' · ')+'\n\n'});
-    const progOutcomes=(document.getElementById('rpt-businessOutcomes')?.value||(D.reportNotes||{}).businessOutcomes||'').trim();
-    if(progOutcomes)text+=`PROGRAM-LEVEL OUTCOMES\n${progOutcomes}\n`;
+    text+='OUTCOMES BY WORKSTREAM\n\n';
+    const addOutcomesWsRows=(list)=>{
+      list.forEach(w=>{
+        const outcomeTxt=(w.businessOutcome||'').trim()||'—';
+        const statusTxt=wsStatusLabel(w.status);
+        const recentTxt=(w.recentAccomplishments||'').trim()||recentAccomplishmentsFromApp(w.id);
+        const nextTxt=(w.whatsNext||'').trim()||whatsNextFromApp(w.id);
+        const recentBullets=recentTxt?(recentTxt.split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,3).map(s=>'  • '+s).join('\n')):'  —';
+        const nextLines=nextTxt?(nextTxt.split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,2)):[];
+        const wsRisks=(D.risks||[]).filter(r=>r.workstream===w.id&&r.status!=='closed').slice(0,2).map(r=>(r.title||'').trim()).filter(Boolean);
+        const lookAheadBullets=[...nextLines,...wsRisks].length?[...nextLines,...wsRisks].map(s=>'  • '+s).join('\n'):'  —';
+        text+=`${w.name}\n  Business Outcome: ${outcomeTxt}\n  Status: ${statusTxt}\n  Key Updates:\n${recentBullets}\n  Look Ahead + Risks:\n${lookAheadBullets}\n\n`;
+      });
+    };
+    if(buWsCopy.length){text+='Business Unit\n';addOutcomesWsRows(buWsCopy);}
+    if(ccWsCopy.length){text+='Crosscutting\n';addOutcomesWsRows(ccWsCopy);}
   }else if(reportViewMode==='exec'){
     const execSum=(D.reportNotes||{}).executiveSummary||'';
     if(execSum.trim())text+=execSum.trim()+'\n\n';
@@ -3095,14 +3359,14 @@ function copyReport(){
       const nextTxt=(w.whatsNext||'').trim()||whatsNextFromApp(w.id);
       const recentBullets=recentTxt?(recentTxt.split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,3).map(s=>'  • '+s).join('\n')):'  —';
       const nextBullets=nextTxt?(nextTxt.split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,2).map(s=>'  • '+s).join('\n')):'  —';
-      text+=`${w.name}\n  Status: ${(w.status||'on-track').replace('-',' ')}\n  Recent accomplishments:\n${recentBullets}\n  What's next:\n${nextBullets}\n\n`;
+      text+=`${w.name}\n  Status: ${wsStatusLabel(w.status)}\n  Recent accomplishments:\n${recentBullets}\n  What's next:\n${nextBullets}\n\n`;
     })}
     if(ccWsCopy.length){text+='CROSSCUTTING WORKSTREAMS\n\n';ccWsCopy.forEach(w=>{
       const recentTxt=(w.recentAccomplishments||'').trim()||recentAccomplishmentsFromApp(w.id);
       const nextTxt=(w.whatsNext||'').trim()||whatsNextFromApp(w.id);
       const recentBullets=recentTxt?(recentTxt.split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,3).map(s=>'  • '+s).join('\n')):'  —';
       const nextBullets=nextTxt?(nextTxt.split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,2).map(s=>'  • '+s).join('\n')):'  —';
-      text+=`${w.name}\n  Status: ${(w.status||'on-track').replace('-',' ')}\n  Recent accomplishments:\n${recentBullets}\n  What's next:\n${nextBullets}\n\n`;
+      text+=`${w.name}\n  Status: ${wsStatusLabel(w.status)}\n  Recent accomplishments:\n${recentBullets}\n  What's next:\n${nextBullets}\n\n`;
     })}
   }else{
     const buWs=allWs.filter(w=>w.category==='BU');
@@ -3215,6 +3479,81 @@ Return EXACTLY this JSON format (no markdown fences):
     if(nxt&&parsed.nextPeriod)nxt.value=parsed.nextPeriod;
     toast('AI summary generated — review and edit before saving');
   }catch(e){toast('Could not parse AI response — try again')}
+}
+
+function firstTwoSentences(text){
+  const clean=(text||'').replace(/\s+/g,' ').trim();
+  if(!clean)return '';
+  const matches=clean.match(/[^.!?]+[.!?]/g);
+  if(matches&&matches.length)return matches.slice(0,2).join(' ').trim();
+  return clean;
+}
+
+function getWorkstreamOutcomeContext(wsId){
+  const w=(D.workstreams||[]).find(x=>x.id===wsId);
+  if(!w)return '';
+  const recentRaw=(w.recentAccomplishments||'').trim()||recentAccomplishmentsFromApp(wsId);
+  const nextRaw=(w.whatsNext||'').trim()||whatsNextFromApp(wsId);
+  const open=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open').sort((a,b)=>(a.due||'9').localeCompare(b.due||'9')).slice(0,6);
+  const done=(D.tasks||[]).filter(t=>t.workstream===wsId&&(t.status==='done'||t.isMilestone)).sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,6);
+  const openTxt=open.map(t=>{
+    const due=t.due?(' due '+t.due):'';
+    return `${t.title}${due}${t.owner?(' — '+t.owner):''}`;
+  }).join('; ');
+  const doneTxt=done.map(t=>{
+    const due=t.due?(' due '+t.due):'';
+    return `${t.title}${due}`;
+  }).join('; ');
+  return `WORKSTREAM
+Name: ${w.name}
+Category: ${w.category||'BU'}
+Owner/Lead: ${w.owner||''}
+Status: ${wsStatusLabel(w.status)}
+Description: ${w.desc||''}
+
+Recent accomplishments (bullets): ${recentRaw||'None'}
+What's next (bullets): ${nextRaw||'None'}
+
+Open action items: ${openTxt||'None'}
+Recent completed items: ${doneTxt||'None'}`;
+}
+
+async function aiGenerateWorkstreamBusinessOutcome(wsId){
+  const ctx=getWorkstreamOutcomeContext(wsId);
+  const result=await callAI(
+    "You write executive-ready business outcome / impact statements for Digital Realty's AI Transformation Program (ATLAS). Output EXACTLY 1-2 sentences (no bullets, no headings). Focus on the business outcome/impact, not on process updates. If metrics or percentages are implied by the context, use them; otherwise use best-effort qualitative impact.",
+    `Generate the business outcome / impact statement for this workstream using ONLY the context below.\n\nCONTEXT:\n${ctx}\n\nOUTPUT FORMAT:\n- EXACTLY 1-2 sentences, plain text.`
+  );
+  return firstTwoSentences(result||'');
+}
+
+async function aiSuggestWorkstreamBusinessOutcome(wsId){
+  if(!OPENAI_KEY){toast('Set your OpenAI API key first');return}
+  const w=(D.workstreams||[]).find(x=>x.id===wsId);
+  if(!w){toast('Workstream not found');return}
+  toast('AI generating business outcome...');
+  const outcome=await aiGenerateWorkstreamBusinessOutcome(wsId);
+  if(!outcome){toast('AI did not return an outcome');return}
+  w.businessOutcome=outcome;
+  const el=document.getElementById('ws-businessOutcome');
+  if(el)el.value=outcome;
+  save();render();
+  log('AI updated business outcome for '+esc(w.name));
+  toast('Business outcome generated (overwrote existing) — save not required');
+}
+
+async function aiPopulateAllWorkstreamBusinessOutcomes(){
+  if(!OPENAI_KEY){toast('Set your OpenAI API key first');return}
+  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  if(!allWs.length){toast('No workstreams found');return}
+  if(!confirm('AI will overwrite Business outcome / impact for all workstreams. Continue?'))return;
+  toast('AI generating outcomes for '+allWs.length+' workstreams...');
+  for(const w of allWs){
+    const outcome=await aiGenerateWorkstreamBusinessOutcome(w.id);
+    if(outcome){w.businessOutcome=outcome;log('AI updated business outcome for '+esc(w.name))}
+  }
+  save();render();
+  toast('AI completed business outcome generation for '+allWs.length+' workstreams');
 }
 
 // ═══════════════════════════════════════════════════
@@ -3569,9 +3908,15 @@ function importJSON(e){const f=e.target.files[0];if(!f)return;const r=new FileRe
 // ═══════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════
-restoreSidebarState();
-restoreNavSections();
-initFirebase();
+setTimeout(function(){ var c=document.getElementById('connecting'); if(!c||!c.classList.contains('hide')) bootIfStillConnecting(); }, 8000);
+try{
+  restoreSidebarState();
+  restoreNavSections();
+  initFirebase();
+}catch(e){
+  console.error('ATLAS init error',e);
+  bootIfStillConnecting();
+}
 </script>
 </body>
 </html>
