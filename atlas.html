@@ -52,14 +52,14 @@ a{color:var(--indigo);text-decoration:none}
 button{cursor:pointer;border:none;background:none;font-family:inherit;font-size:inherit}
 
 /* SIDEBAR */
-.side{width:230px;background:linear-gradient(180deg,#111118 0%,#0d0d14 100%);color:#aaa;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;transition:width .2s ease}
+.side{width:230px;background:linear-gradient(180deg,#1a1a24 0%,#14141e 100%);color:#c0c0d0;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;transition:width .2s ease}
 .side::-webkit-scrollbar{width:4px}
 .side::-webkit-scrollbar-track{background:transparent}
 .side::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:4px}
 .side::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.15)}
 .side-hd{padding:20px 16px 14px;border-bottom:1px solid rgba(255,255,255,.04)}
-.side-collapse-btn{position:absolute;top:18px;right:10px;width:24px;height:24px;border-radius:6px;background:transparent;color:#6a6a8a;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;border:none;z-index:2}
-.side-collapse-btn:hover{background:rgba(255,255,255,.08);color:#b0b0c8}
+.side-collapse-btn{position:absolute;top:18px;right:10px;width:24px;height:24px;border-radius:6px;background:transparent;color:#8888a8;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;border:none;z-index:2}
+.side-collapse-btn:hover{background:rgba(255,255,255,.1);color:#c8c8e0}
 body.nav-collapsed .side{width:54px;overflow:hidden}
 body.nav-collapsed .side-hd h1,body.nav-collapsed .side-hd .sub,body.nav-collapsed .side-hd .sub2{display:none}
 body.nav-collapsed .side-hd{padding:12px 0;display:flex;flex-direction:column;align-items:center}
@@ -85,20 +85,20 @@ body.nav-collapsed .topbar-menu{display:flex}
 .side-hd .top-row{display:flex;align-items:center;gap:10px}
 .side-hd .logo{width:30px;height:30px;background:rgba(99,102,241,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:4px}
 .side-hd h1{font-size:16px;font-weight:800;color:#e8e8f0;line-height:1;letter-spacing:.4px;margin:0}
-.side-hd .sub{font-size:11px;font-weight:500;color:#8888a8;display:block;letter-spacing:.2px;margin-top:6px}
-.side-hd .sub2{font-size:10px;font-weight:400;color:#707090;display:block;font-style:italic;margin-top:2px}
+.side-hd .sub{font-size:11px;font-weight:500;color:#a0a0c0;display:block;letter-spacing:.2px;margin-top:6px}
+.side-hd .sub2{font-size:10px;font-weight:400;color:#8888a8;display:block;font-style:italic;margin-top:2px}
 .nav{flex:1;padding:8px 10px;overflow-y:auto}
-.nav-label{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#6a6a8a;padding:20px 12px 6px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;transition:color .15s}
-.nav-label:hover{color:#9a9ab8}
+.nav-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:#9898b8;padding:20px 12px 6px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;transition:color .15s}
+.nav-label:hover{color:#c8c8e0}
 .nav-label .nav-arrow{font-size:8px;transition:transform .2s;opacity:.5}
 .nav-label .nav-arrow.collapsed{transform:rotate(-90deg)}
 .nav-section:first-child .nav-label{padding-top:4px}
 .nav-section.collapsed .ni{display:none}
 .nav-section.collapsed .sidebar-link{display:none}
-.sidebar-link{display:flex;align-items:center;gap:8px;padding:7px 14px;font-size:13.5px;color:#a0a0bc;text-decoration:none;border-radius:var(--r-sm);transition:all .15s}
-.sidebar-link:hover{background:var(--sidebar-hov);color:#d8d8e8}
-.ni{display:flex;align-items:center;gap:10px;padding:8px 12px;margin:1px 0;border-radius:var(--r-sm);font-size:14px;color:#a0a0bc;cursor:pointer;transition:all .15s;position:relative;border-left:2px solid transparent}
-.ni:hover{background:rgba(255,255,255,.05);color:#d8d8e8}
+.sidebar-link{display:flex;align-items:center;gap:8px;padding:7px 14px;font-size:14.5px;color:#d0d0e4;text-decoration:none;border-radius:var(--r-sm);transition:all .15s}
+.sidebar-link:hover{background:var(--sidebar-hov);color:#f4f4ff}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:1px 0;border-radius:var(--r-sm);font-size:15px;color:#d8d8ea;cursor:pointer;transition:all .15s;position:relative;border-left:2px solid transparent}
+.ni:hover{background:rgba(255,255,255,.07);color:#f4f4ff}
 .ni.on{background:rgba(99,102,241,.12);color:#f0f0ff;font-weight:600;border-left-color:var(--accent)}
 .ni svg{width:17px;height:17px;flex-shrink:0;opacity:.5}
 .ni.on svg{opacity:.9;color:var(--accent)}
@@ -224,15 +224,17 @@ body.nav-collapsed .topbar-menu{display:flex}
 .page-section.collapsed .section-body{display:none}
 .page-section.collapsed .section-header{border-radius:var(--r-md);border-bottom-color:var(--border-lt)}
 .page-section.collapsed .section-header .section-chevron{transform:rotate(-90deg)}
-.tasks-page .page-section .section-header,.ws-page .page-section .section-header{background:#1e293b;border-color:#334155;border-bottom-color:#475569}
-.tasks-page .page-section .section-header:hover,.ws-page .page-section .section-header:hover{background:#334155;border-color:#475569}
-.tasks-page .page-section .section-header .section-chevron,.tasks-page .page-section .section-header .section-label,.tasks-page .page-section .section-header .section-meta,.ws-page .page-section .section-header .section-chevron,.ws-page .page-section .section-header .section-label,.ws-page .page-section .section-header .section-meta{color:#cbd5e1}
-.tasks-page .page-section .section-header .section-meta,.ws-page .page-section .section-header .section-meta{opacity:.9}
-.tasks-page .page-section.collapsed .section-header,.ws-page .page-section.collapsed .section-header{border-bottom-color:#334155}
-[data-theme="dark"] .tasks-page .page-section .section-header,[data-theme="dark"] .ws-page .page-section .section-header{background:#e2e8f0;border-color:#cbd5e1;border-bottom-color:#94a3b8}
-[data-theme="dark"] .tasks-page .page-section .section-header:hover,[data-theme="dark"] .ws-page .page-section .section-header:hover{background:#cbd5e1;border-color:#94a3b8}
-[data-theme="dark"] .tasks-page .page-section .section-header .section-chevron,[data-theme="dark"] .tasks-page .page-section .section-header .section-label,[data-theme="dark"] .tasks-page .page-section .section-header .section-meta,[data-theme="dark"] .ws-page .page-section .section-header .section-chevron,[data-theme="dark"] .ws-page .page-section .section-header .section-label,[data-theme="dark"] .ws-page .page-section .section-header .section-meta{color:#1e293b}
-[data-theme="dark"] .tasks-page .page-section.collapsed .section-header,[data-theme="dark"] .ws-page .page-section.collapsed .section-header{border-bottom-color:#cbd5e1}
+.tasks-page .page-section .section-header{transition:filter .12s,background .12s,border-color .12s}
+.tasks-page .page-section .section-header:hover{filter:brightness(.85)}
+.ws-page .page-section .section-header{background:#1e293b;border-color:#334155;border-bottom-color:#475569}
+.ws-page .page-section .section-header:hover{background:#334155;border-color:#475569}
+.ws-page .page-section .section-header .section-chevron,.ws-page .page-section .section-header .section-label,.ws-page .page-section .section-header .section-meta{color:#cbd5e1}
+.ws-page .page-section .section-header .section-meta{opacity:.9}
+.tasks-page .page-section.collapsed .section-header,.ws-page .page-section.collapsed .section-header{border-bottom-color:inherit}
+[data-theme="dark"] .ws-page .page-section .section-header{background:#e2e8f0;border-color:#cbd5e1;border-bottom-color:#94a3b8}
+[data-theme="dark"] .ws-page .page-section .section-header:hover{background:#cbd5e1;border-color:#94a3b8}
+[data-theme="dark"] .ws-page .page-section .section-header .section-chevron,[data-theme="dark"] .ws-page .page-section .section-header .section-label,[data-theme="dark"] .ws-page .page-section .section-header .section-meta{color:#1e293b}
+[data-theme="dark"] .ws-page .page-section.collapsed .section-header,[data-theme="dark"] .ws-page .page-section.collapsed .section-header{border-bottom-color:#cbd5e1}
 .ws-page-toolbar .page-title{font-size:17px;font-weight:800;letter-spacing:-.02em;padding-right:16px;margin-right:16px;border-right:1px solid var(--border-lt)}
 .ws-page-toolbar .toolbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto;padding-left:16px;border-left:1px solid var(--border-lt)}
 .ws-page-toolbar .toolbar-right select{padding:6px 10px 6px 12px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:12.5px;font-family:inherit;background:var(--bg-card);color:var(--text);cursor:pointer;outline:none}
@@ -240,13 +242,13 @@ body.nav-collapsed .topbar-menu{display:flex}
 .ws-page-toolbar .toolbar-right .tb-btn:first-of-type{background:var(--bg-subtle);color:var(--text);border:1px solid var(--border)}
 .ws-page-toolbar .toolbar-right .tb-btn:first-of-type:hover{background:var(--border-lt)}
 .ws-pipeline{display:flex;align-items:stretch;flex-wrap:nowrap;gap:0;padding:10px 8px;margin-bottom:14px;background:var(--bg-card);border:1px solid var(--border-lt);border-radius:var(--r-md);box-shadow:0 1px 3px rgba(0,0,0,.04);width:100%;box-sizing:border-box}
-.ws-pipeline-stage{display:flex;flex:1 1 0;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 6px;min-width:0;min-height:52px;border:1px solid var(--border-lt);border-radius:var(--r-sm);font-size:10px;font-weight:600;cursor:pointer;transition:all .15s;margin:0 2px}
+.ws-pipeline-stage{display:flex;flex:1 1 0;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:12px 6px;min-width:0;min-height:56px;border:1px solid var(--border-lt);border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;margin:0 2px}
 .ws-pipeline-stage:first-child{margin-left:0}
 .ws-pipeline-stage:hover{filter:brightness(0.96);border-color:var(--border)}
 .ws-pipeline-stage.on{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff!important}
 .ws-pipeline-stage .ws-pipeline-label{white-space:normal;text-align:center;line-height:1.25;max-width:100%;word-break:break-word}
-.ws-pipeline-stage .ws-pipeline-count{font-size:14px;font-weight:800;letter-spacing:-.02em}
-.ws-pipeline-arrow{color:var(--muted);font-size:10px;padding:0 2px;flex-shrink:0;align-self:center}
+.ws-pipeline-stage .ws-pipeline-count{font-size:17px;font-weight:800;letter-spacing:-.02em}
+.ws-pipeline-arrow{color:var(--muted);font-size:12px;padding:0 2px;flex-shrink:0;align-self:center}
 .ws-pipeline-stage-all{background:#e2e8f0;color:#334155;border-color:#cbd5e1}
 .ws-pipeline-stage-not-started{background:#f8fafc;color:#475569;border-color:#e2e8f0}
 .ws-pipeline-stage-reachout-kickoff{background:#f1f5f9;color:#475569;border-color:#e2e8f0}
@@ -278,6 +280,14 @@ body.nav-collapsed .topbar-menu{display:flex}
 .m-close:hover{color:var(--text);background:var(--border-lt)}
 .m-bd{padding:0 24px 18px}
 .m-ft{padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+.ws-section{border:1px solid var(--border-lt);border-radius:var(--r-sm);margin-bottom:12px;overflow:hidden}
+.ws-section-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;background:var(--bg-subtle);user-select:none;transition:background .15s}
+.ws-section-hd:hover{background:var(--border-lt)}
+.ws-section-hd h4{font-size:13px;font-weight:700;margin:0;letter-spacing:.01em}
+.ws-section-arrow{font-size:10px;color:var(--muted);transition:transform .2s}
+.ws-section.collapsed .ws-section-arrow{transform:rotate(-90deg)}
+.ws-section-bd{padding:14px}
+.ws-section.collapsed .ws-section-bd{display:none}
 .fg{margin-bottom:12px}
 .fg label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
 .fg input,.fg select,.fg textarea{width:100%;padding:10px 14px;border:1px solid var(--border-lt);border-radius:var(--r-sm);font-size:14px;font-family:inherit;outline:none;transition:border-color .15s;background:var(--bg-card);color:var(--text)}
@@ -540,7 +550,7 @@ body.nav-collapsed .topbar-menu{display:flex}
       <h1>ATLAS</h1>
     </div>
     <button class="side-collapse-btn" onclick="toggleSidebar()" title="Collapse sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg></button>
-    <span class="sub">AI Transformation Leadership &amp; Strategy</span>
+    <span class="sub">AI Transformation Program</span>
     <span class="sub2">Corporate Data Office</span>
   </div>
   <div class="nav">
@@ -550,35 +560,34 @@ body.nav-collapsed .topbar-menu{display:flex}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         Dashboard
       </div>
-      <div class="ni" data-v="workstreams" onclick="go('workstreams')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-        Workstreams <span class="badge" id="nb-ws">8</span>
-      </div>
+      <span id="nb-ws" style="display:none"></span>
+
       <span id="nb-eng" style="display:none"></span>
       <div class="ni" data-v="people" onclick="go('people')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         People <span class="badge" id="nb-ppl">0</span>
       </div>
+      <div class="ni" data-v="strategy" onclick="go('strategy')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Framework
+      </div>
     </div>
 
     <div class="nav-section" id="ns-work">
       <div class="nav-label" onclick="toggleNavSection('ns-work')">Work <span class="nav-arrow">&#9660;</span></div>
+      <div class="ni" data-v="workstreams" onclick="go('workstreams')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+        Workstreams <span class="badge" id="nb-ws2"></span>
+      </div>
       <div class="ni" data-v="tasks" onclick="go('tasks')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         Action Items <span class="badge" id="nb-tasks">0</span>
       </div>
-      <div class="ni" data-v="extract" onclick="go('extract')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>
-        Inbox <span class="badge" id="nb-inbox">0</span>
-      </div>
+      <div id="sidebar-links"></div>
     </div>
 
     <div class="nav-section" id="ns-gov">
       <div class="nav-label" onclick="toggleNavSection('ns-gov')">Governance <span class="nav-arrow">&#9660;</span></div>
-      <div class="ni" data-v="strategy" onclick="go('strategy')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        Strategy & Framework
-      </div>
       <div class="ni" data-v="decisions" onclick="go('decisions')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
         Decision Log
@@ -599,13 +608,8 @@ body.nav-collapsed .topbar-menu{display:flex}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Report Out
       </div>
-      <div class="ni" data-v="ask" onclick="go('ask')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        Ask AI
-      </div>
     </div>
 
-    <div id="sidebar-links" style="display:none"></div>
   </div>
   <div class="side-ft">
     <div class="user-badge" onclick="changeName()" id="userBadge" title="Click to change your name">
@@ -632,7 +636,6 @@ body.nav-collapsed .topbar-menu{display:flex}
     <div class="tb-right">
       <input type="text" id="search" placeholder="Search..." oninput="render()">
       <button class="tb-btn" id="addBtn" style="display:none" onclick="handleAdd()">+ Add</button>
-      <div id="topbar-links" style="display:flex;align-items:center;gap:6px"></div>
       <div style="position:relative">
         <button class="tb-btn" onclick="toggleAIPanel()" title="AI Program Insights" style="display:flex;align-items:center;gap:5px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 2a4 4 0 014 4v1a3 3 0 013 3v1a2 2 0 012 2v0a2 2 0 01-2 2h-1a3 3 0 01-3 3v1a4 4 0 01-8 0v-1a3 3 0 01-3-3H3a2 2 0 01-2-2v0a2 2 0 012-2h1a3 3 0 013-3V7a4 4 0 014-4z"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/></svg>AI Insights</button>
         <div id="aiPanel" style="display:none;position:absolute;right:0;top:100%;margin-top:8px;width:420px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-md);z-index:200;max-height:70vh;overflow-y:auto">
@@ -659,7 +662,6 @@ body.nav-collapsed .topbar-menu{display:flex}
           <div id="focusPopoverBody"></div>
         </div>
       </div>
-      <button class="tb-btn" onclick="go('mywork')" style="background:#fff;color:#1e293b;border:2px solid #94a3b8;display:flex;align-items:center;gap:6px;font-size:13px" title="Workstreams and action items assigned to you"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M9 11h6M9 15h6"/></svg>My Work Items</button>
       <div style="position:relative">
         <button class="tb-btn" onclick="toggleQC()" style="background:#ec4899;color:#fff;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Capture</button>
         <div class="qc-panel" id="qcPanel">
@@ -688,7 +690,7 @@ body.nav-collapsed .topbar-menu{display:flex}
 
 
 <script>
-let D,V='dashboard',ME='',dbRef=null,firebaseReady=false,ganttZoom='6m',ganttShowTasks=false,ganttCustomStart='';
+let D,V='dashboard',ME='',dbRef=null,firebaseReady=false,ganttZoom='6m',ganttShowTasks=false,ganttShowWs=false,ganttShowMs=false,ganttCustomStart='';
 const RELEASE_VERSION='2026-03-17';
 const RELEASE_NOTES=[
   {date:'March 17, 2026',whatsNew:[
@@ -703,7 +705,7 @@ const RELEASE_NOTES=[
     'Workstreams (8): GTM, Legal, HR, Operations (BU); Governance, Copilot, Data, Nexus (Cross-cutting). Status: Not Started, On Track, At Risk, Blocked, Complete. Stakeholders editable in Edit Workstream.',
     'Groups (8): CDO Leadership, CDO Team, Executive, Legal, HR, IT/Security, Business Stakeholder, Other.',
     'People: Name, role, group, email, phone, notes. Seed list for new installs.',
-    'Engagements, tasks, inbox, meetings, decisions, risks, metrics: workstream/engagement linkage supported.'
+    'Engagements, tasks (with inbox), meetings, decisions, risks, metrics: workstream/engagement linkage supported.'
   ]}
 ];
 const uid=()=>Math.random().toString(36).slice(2,10);
@@ -1409,7 +1411,7 @@ function renderPresence(){}
 // ═══════════════════════════════════════════════════
 // NAV
 // ═══════════════════════════════════════════════════
-let taskFilter='all',taskOwnerFilter='',qcType='task',taskSort='default',taskSortDir=1,taskGroupCollapsed={};
+let taskFilter='open',taskOwnerFilter='',qcType='task',taskSort='default',taskSortDir=1,taskGroupCollapsed={};
 
 function toggleSidebar(){
   document.body.classList.toggle('nav-collapsed');
@@ -1454,12 +1456,13 @@ function go(v){
     if(arrow)arrow.classList.toggle('collapsed',sec.classList.contains('collapsed'));
   });
   const titles={dashboard:'Dashboard',workstreams:'Workstreams',engagements:'Engagements',
-    tasks:'Action Items',extract:'Inbox',mywork:'My Work Items',people:'People',
-    report:'Report Out',ask:'Ask AI',strategy:'Strategy & Framework',decisions:'Decision Log',
+    tasks:'Action Items',mywork:'My Work Items',people:'People',
+    report:'Report Out',ask:'Ask AI',strategy:'Framework',decisions:'Decision Log',
     risks:'Risk Register',metrics:'Success Metrics'};
   document.getElementById('viewTitle').textContent=titles[v]||v;
   const ab=document.getElementById('addBtn');
   if(v==='engagements')v=V='workstreams';
+  if(v==='extract'){taskFilter='inbox';v=V='tasks'}
   if(v==='tasks'){ab.style.display='';ab.textContent='+ Add Action Item'}
   else if(v==='people'){ab.style.display='';ab.textContent='+ Add Person'}
   else{ab.style.display='none'}
@@ -1477,11 +1480,13 @@ function handleAdd(){
 function badges(){
   const open=(D.tasks||[]).filter(t=>t.status==='open');
   const overdue=open.filter(t=>t.due&&t.due<today());
-  const te=document.getElementById('nb-tasks');te.textContent=open.length;te.className='badge'+(overdue.length?' warn':open.length?' hot':'');
   const inboxCount=(D.inbox||[]).filter(x=>!x.processed).length;
-  const ie=document.getElementById('nb-inbox');ie.textContent=inboxCount||'';ie.className='badge'+(inboxCount?' warn':'');ie.style.display=inboxCount?'':'none';
+  const taskBadgeVal=inboxCount?open.length+' / '+inboxCount:open.length;
+  const te=document.getElementById('nb-tasks');te.textContent=taskBadgeVal;te.className='badge'+(inboxCount?' warn':overdue.length?' warn':open.length?' hot':'');
   const ee=document.getElementById('nb-eng');if(ee)ee.textContent=(D.engagements||[]).length;
-  const we=document.getElementById('nb-ws');if(we)we.textContent=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting').length;
+  const wsCount=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting').length;
+  const we=document.getElementById('nb-ws');if(we)we.textContent=wsCount;
+  const we2=document.getElementById('nb-ws2');if(we2){we2.textContent=wsCount;we2.className='badge'+(wsCount?' hot':'');}
   document.getElementById('nb-ppl').textContent=(D.people||[]).length;
   const f=getImmediateFocus();
   const focusCount=f.overdueTasks.length+f.overdueMilestones.length+(f.openRisks.filter(r=>r.impact==='critical'||r.impact==='high').length);
@@ -1510,12 +1515,6 @@ function renderLinks(){
       <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(lk.name)}</span>
     </a>`
   ).join('');
-  const tb=document.getElementById('topbar-links');
-  const linkColors=['#64748b','#78716c','#57534e','#71717a','#6b7280','#525252'];
-  if(tb)tb.innerHTML=links.map((lk,i)=>{
-    const bg=linkColors[i%linkColors.length];
-    return `<a href="${esc(lk.url)}" target="_blank" rel="noopener" class="tb-btn" style="background:${bg};color:#fff;display:inline-flex;align-items:center;gap:6px;text-decoration:none;white-space:nowrap" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'" title="${esc(lk.url)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${esc(lk.name)}</a>`
-  }).join('');
 }
 function addLink(){
   openModal(`<div class="m-hd"><h3>Add Link</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
@@ -1660,14 +1659,15 @@ function submitQC(){
   save();document.getElementById('qcText').value='';toggleQC();render();log('Quick capture to inbox');toast('Saved to Inbox');
 }
 
-function wsName(id){const w=(D.workstreams||[]).find(x=>x.id===id);return w?esc(w.name):'—'}
+function wsNamePlain(id){const w=(D.workstreams||[]).find(x=>x.id===id);return w?w.name:''}
+function wsName(id){const w=(D.workstreams||[]).find(x=>x.id===id);return w?'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(w.color||'var(--muted)')+';margin-right:5px;vertical-align:middle;flex-shrink:0"></span>'+esc(w.name):'—'}
 function wsColor(id){const w=(D.workstreams||[]).find(x=>x.id===id)||WS_DEFS.find(x=>x.id===id);return w?w.color:'var(--muted)'}
 function wsOpts(sel){
   const ws=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
-  const bu=ws.filter(w=>w.category==='BU');
-  const cc=ws.filter(w=>w.category==='Cross-cutting');
-  let html=`<optgroup label="Business Unit">${bu.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}</optgroup>`;
-  html+=`<optgroup label="Crosscutting">${cc.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}</optgroup>`;
+  const bu=ws.filter(w=>w.category==='BU').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const cc=ws.filter(w=>w.category==='Cross-cutting').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  let html=`<optgroup label="Business Unit">${bu.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''} style="border-left:4px solid ${w.color||'var(--muted)'};padding-left:6px">&#9679; ${esc(w.name)}</option>`).join('')}</optgroup>`;
+  html+=`<optgroup label="Crosscutting">${cc.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''} style="border-left:4px solid ${w.color||'var(--muted)'};padding-left:6px">&#9679; ${esc(w.name)}</option>`).join('')}</optgroup>`;
   return html;
 }
 function engOpts(sel){return(D.engagements||[]).filter(e=>e.type==='Use Case').sort((a,b)=>a.title.localeCompare(b.title)).map(e=>`<option value="${e.id}"${sel===e.id?' selected':''}>${esc(e.title)}</option>`).join('')}
@@ -1704,58 +1704,33 @@ function rDash(c){
   const msUp=allMs.filter(t=>t.status==='open'&&(!t.due||t.due>=today()));
   const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
   const activeWs=allWs.filter(w=>w.status!=='complete');
+  const myOpenTasks=ME?(D.tasks||[]).filter(t=>t.owner===ME&&t.status==='open'):[];
+  const myWsCount=ME?(D.workstreams||[]).filter(w=>{const o=w.owner||WS_DEFS.find(d=>d.id===w.id)?.owner||'';return o===ME}).length:0;
 
-  const renderWsTile=(w)=>{
-    const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;
-    const wOD=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open'&&t.due&&t.due<today()).length;
-    const isWarn=wOD>0;
-    const wc=wsColor(w.id);
-    const lead=w.owner||(WS_DEFS.find(d=>d.id===w.id)?.owner)||'';
-    return `<div style="border-radius:var(--r-lg);cursor:pointer;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s;position:relative;background:${wc}" onclick="openWsDetail('${w.id}')" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow='var(--shadow)'">
-      ${wOD?'<div style="position:absolute;top:8px;right:10px;background:rgba(255,255,255,.9);color:var(--red);width:20px;height:20px;border-radius:50%;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;z-index:1" title="'+wOD+' overdue">!</div>':''}
-      <div style="padding:12px 14px;color:#fff;min-height:82px;display:flex;flex-direction:column;justify-content:space-between">
-        <div>
-          <div style="font-size:12.5px;font-weight:700;line-height:1.25;margin-bottom:2px">${esc(w.name)}</div>
-          <div style="font-size:10px;opacity:.8">${lead||'Unassigned'}${(()=>{const pn=new Set((D.people||[]).map(p=>p.name));const valid=(w.stakeholders||[]).filter(s=>pn.has(s));return valid.length?' &middot; '+valid.join(', '):''})()}</div>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
-          <span style="background:${w.status==='not-started'?'rgba(100,100,100,.4)':isWarn?'rgba(255,0,0,.35)':'rgba(255,255,255,.2)'};color:#fff;padding:1px 8px;border-radius:10px;font-size:9.5px;font-weight:600">${wsStatusLabel(w.status)}</span>
-          <span style="font-size:10px;opacity:.85">${wOpen?wOpen+' open':'0 items'}</span>
-        </div>
-      </div>
-    </div>`;
-  };
-
-  function wsSortKey(w){const n=(w.name||'');const beforeColon=n.split(':')[0].trim()||n;const firstWord=(beforeColon.split(' ')[0]||beforeColon).toLowerCase();return firstWord;}
-  const buWs=(D.workstreams||[]).filter(w=>(w.category||WS_DEFS.find(d=>d.id===w.id)?.category)==='BU').slice().sort((a,b)=>wsSortKey(a).localeCompare(wsSortKey(b))||(a.name||'').localeCompare(b.name||''));
-  const ccWs=(D.workstreams||[]).filter(w=>(w.category||WS_DEFS.find(d=>d.id===w.id)?.category)==='Cross-cutting').slice().sort((a,b)=>wsSortKey(a).localeCompare(wsSortKey(b))||(a.name||'').localeCompare(b.name||''));
+  const atRiskWs=allWs.filter(w=>{const s=w.status;return s==='at-risk'||s==='blocked'||(D.tasks||[]).some(t=>t.workstream===w.id&&t.status==='open'&&t.due&&t.due<today())});
+  const completeWs=allWs.filter(w=>w.status==='complete');
 
   c.innerHTML=`
   <div class="kpi-row">
+    <div class="card kpi" style="cursor:pointer" onclick="go('workstreams')"><div class="acc" style="background:var(--violet)"></div><div class="lbl">Workstreams</div><div class="val" style="color:var(--violet)">${activeWs.length}<span style="font-size:18px;color:var(--light);font-weight:500">/${allWs.length}</span></div><div class="note">${atRiskWs.length?'<span style="color:var(--red);font-weight:600">'+atRiskWs.length+' need attention</span>':'<span style="color:var(--green)">All on track</span>'}${completeWs.length?' &middot; '+completeWs.length+' complete':''}</div></div>
     <div class="card kpi" style="cursor:pointer" onclick="go('tasks')"><div class="acc" style="background:var(--indigo)"></div><div class="lbl">Open Items</div><div class="val" style="color:var(--indigo)">${open.length}</div><div class="note">${overdue.length?'<span style="color:var(--red);font-weight:600">'+overdue.length+' overdue</span>':'<span style="color:var(--green)">All on track</span>'}${dueThisWeek.length?' &middot; <span style="color:var(--indigo);font-weight:600">'+dueThisWeek.length+' due this week</span>':''}</div></div>
     <div class="card kpi" style="cursor:pointer" onclick="taskFilter='milestones';go('tasks')"><div class="acc" style="background:var(--teal)"></div><div class="lbl">Milestones</div><div class="val" style="color:var(--teal)">${msDone.length}<span style="font-size:18px;color:var(--light);font-weight:500">/${allMs.length}</span></div><div class="note">${msOD.length?'<span style="color:var(--red);font-weight:600">'+msOD.length+' overdue</span>':msUp.length+' upcoming'}</div></div>
-    <div class="card kpi" style="cursor:pointer" onclick="go('workstreams')"><div class="acc" style="background:var(--violet)"></div><div class="lbl">Active Workstreams</div><div class="val" style="color:var(--violet)">${activeWs.length}</div><div class="note">${allWs.length} total</div></div>
+    <div class="card kpi" style="cursor:pointer" onclick="go('mywork')"><div class="acc" style="background:#ec4899"></div><div class="lbl">My Work Items</div><div class="val" style="color:#ec4899">${myOpenTasks.length}</div><div class="note">${ME?myWsCount+' workstream'+(myWsCount!==1?'s':''):'<span style="color:var(--muted)">Sign in to see</span>'}</div></div>
   </div>
 
-  <div style="margin-bottom:16px;padding:14px 16px;border-radius:var(--r);background:rgba(99,102,241,.04);border:1px solid rgba(99,102,241,.1)">
-    <div style="font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px;color:var(--text)">Business Unit Workstreams (${buWs.length})</div>
-    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px">${buWs.map(renderWsTile).join('')}</div>
-  </div>
-
-  <div style="margin-bottom:16px;padding:14px 16px;border-radius:var(--r);background:rgba(16,185,129,.04);border:1px solid rgba(16,185,129,.1)">
-    <div style="font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px;color:var(--text)">Crosscutting Workstreams (${ccWs.length})</div>
-    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px">${ccWs.map(renderWsTile).join('')}</div>
-  </div>
-
-  <div class="card" style="margin-bottom:20px">
-    <div class="dash-hd" style="font-size:16px;font-weight:800;letter-spacing:-.01em">Program Timeline</div>
-    ${buildGantt()}
+  <div class="ws-section" id="dashSec-timeline" style="margin-bottom:16px">
+    <div class="ws-section-hd" onclick="toggleWsSection('dashSec-timeline')"><h4>Program Timeline</h4><span class="ws-section-arrow">&#9660;</span></div>
+    <div class="ws-section-bd" style="padding:10px 14px">
+      ${buildGantt()}
+    </div>
   </div>
 
 
-  <div class="card" style="margin-top:16px">
-    <div class="dash-hd">Activity Log</div>
-    <div class="dash-bd" style="max-height:180px;overflow-y:auto">${(D.log||[]).slice(0,20).map(l=>`<div style="padding:4px 0;font-size:11.5px;border-bottom:1px solid var(--border-lt);display:flex;gap:8px"><span style="color:var(--light);flex-shrink:0;font-size:10px;min-width:60px">${new Date(l.ts).toLocaleDateString()}</span><span>${l.text}</span></div>`).join('')}</div>
+  <div class="ws-section collapsed" id="dashSec-log" style="margin-top:16px">
+    <div class="ws-section-hd" onclick="toggleWsSection('dashSec-log')"><h4>Activity Log</h4><span class="ws-section-arrow">&#9660;</span></div>
+    <div class="ws-section-bd" style="padding:10px 14px">
+      <div style="max-height:180px;overflow-y:auto">${(D.log||[]).slice(0,20).map(l=>`<div style="padding:4px 0;font-size:11.5px;border-bottom:1px solid var(--border-lt);display:flex;gap:8px"><span style="color:var(--light);flex-shrink:0;font-size:10px;min-width:60px">${new Date(l.ts).toLocaleDateString()}</span><span>${l.text}</span></div>`).join('')}</div>
+    </div>
   </div>`;
 }
 
@@ -1763,7 +1738,7 @@ function rMyWork(c){
   const myWs=(D.workstreams||[]).filter(w=>{
     const owner=w.owner||WS_DEFS.find(d=>d.id===w.id)?.owner||'';
     return owner===ME;
-  });
+  }).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const myTasks=(D.tasks||[]).filter(t=>t.owner===ME).sort((a,b)=>{
     if(a.status!==b.status)return (a.status==='open'?0:1)-(b.status==='open'?0:1);
     if(a.status==='open'&&a.due&&b.due)return (a.due||'9').localeCompare(b.due||'9');
@@ -1959,9 +1934,9 @@ function buildGantt(){
   const wsWithRanges=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting').map(w=>{
     const r=wsTimelineRange(w.id);
     return r&&r.effectiveStart&&r.effectiveEnd?{...w,effStart:r.effectiveStart,effEnd:r.effectiveEnd,isManual:r.isManual}:null;
-  }).filter(Boolean).sort((a,b)=>(a.effStart||'').localeCompare(b.effStart||''));
+  }).filter(Boolean).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const visDatedWs=wsWithRanges.filter(w=>{const l=pct(w.effStart),r=pct(w.effEnd);return r>0&&l<100});
-  if(visDatedWs.length){
+  if(ganttShowWs&&visDatedWs.length){
     const rowH=28;
     let wsBars='';
     visDatedWs.forEach((w,i)=>{
@@ -1983,7 +1958,7 @@ function buildGantt(){
 
   const milestones=(D.tasks||[]).filter(t=>t.isMilestone).slice().sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
   const visMs=milestones.filter(m=>{const x=pct(m.due||today());return x>=0&&x<=100});
-  if(visMs.length){
+  if(ganttShowMs&&visMs.length){
     rows+=`<div class="gantt-row" style="margin-top:10px">
       <div class="gantt-row-label phase-label">&#9733; Milestones</div>
       <div class="gantt-row-bars" style="height:${Math.max(32,visMs.length*24+8)}px;position:relative">
@@ -2047,14 +2022,17 @@ function buildGantt(){
     }
   }
 
-  const taskToggle=`<label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--muted);margin-left:12px;user-select:none"><input type="checkbox" ${ganttShowTasks?'checked':''} onchange="ganttShowTasks=this.checked;render()" style="cursor:pointer"> Action Items</label>`;
+  const swimToggles=`<span style="font-size:11px;color:var(--light);margin-left:8px">Show:</span>`
+    +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowWs?'checked':''} onchange="ganttShowWs=this.checked;render()" style="cursor:pointer"> Workstreams</label>`
+    +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowMs?'checked':''} onchange="ganttShowMs=this.checked;render()" style="cursor:pointer"> Milestones</label>`
+    +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowTasks?'checked':''} onchange="ganttShowTasks=this.checked;render()" style="cursor:pointer"> Action Items</label>`;
 
   return `<div class="gantt">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:0 4px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:0 4px;flex-wrap:wrap;gap:6px">
       <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">Starting <input type="date" value="${tStart.toISOString().slice(0,10)}" onchange="ganttCustomStart=this.value;render()" style="padding:2px 6px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--text);cursor:pointer"></div>
-      <div style="display:flex;gap:4px;align-items:center">
-        ${taskToggle}
-        <span style="font-size:12px;color:var(--light);margin-left:8px;margin-right:4px">Zoom:</span>${zoomBtns}
+      <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+        ${swimToggles}
+        <span style="font-size:11px;color:var(--light);margin-left:10px;margin-right:2px">Zoom:</span>${zoomBtns}
       </div>
     </div>
     <div style="display:flex">
@@ -2108,9 +2086,8 @@ function rWork(c){
   WS_STATUSES.forEach(s=>{statusCounts[s.value]=allWs.filter(w=>wsStatusValue(w)===s.value).length;});
   if(wsStatusFilter)allWs=allWs.filter(w=>wsStatusValue(w)===wsStatusFilter);
 
-  function wsSortKey(w){const n=(w.name||'');const beforeColon=n.split(':')[0].trim()||n;const firstWord=(beforeColon.split(' ')[0]||beforeColon).toLowerCase();return firstWord;}
-  const buWs=allWs.filter(w=>w.category==='BU').slice().sort((a,b)=>wsSortKey(a).localeCompare(wsSortKey(b))||(a.name||'').localeCompare(b.name||''));
-  const ccWs=allWs.filter(w=>w.category==='Cross-cutting').slice().sort((a,b)=>wsSortKey(a).localeCompare(wsSortKey(b))||(a.name||'').localeCompare(b.name||''));
+  const buWs=allWs.filter(w=>w.category==='BU').slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const ccWs=allWs.filter(w=>w.category==='Cross-cutting').slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const totalBU=(D.workstreams||[]).filter(w=>w.category==='BU').length;
   const totalCC=(D.workstreams||[]).filter(w=>w.category==='Cross-cutting').length;
 
@@ -2205,57 +2182,97 @@ function rWork(c){
 
 function openWsEdit(id){
   const w=id?(D.workstreams||[]).find(x=>x.id===id):null;
-  const colors=['#6366f1','#8b5cf6','#0ea5e9','#0d9488','#475569','#2563eb','#7c3aed','#059669','#d946ef','#f59e0b','#ef4444','#64748b'];
+  const colors=[
+    '#6366f1','#8b5cf6','#7c3aed','#a855f7','#d946ef','#ec4899',
+    '#2563eb','#0ea5e9','#06b6d4','#0891b2','#0d9488','#14b8a6',
+    '#059669','#10b981','#22c55e','#84cc16','#65a30d','#ca8a04',
+    '#f59e0b','#f97316','#ef4444','#dc2626','#e11d48','#be123c',
+    '#475569','#64748b','#78716c','#57534e','#334155','#1e293b'
+  ];
   openModal(`<div class="m-hd"><h3>${w?'Edit':'New'} Workstream</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
-    <div class="fg"><label>Name</label><input id="ws-name" value="${w?esc(w.name):''}"></div>
-    <div class="fg-row">
-      <div class="fg"><label>Lead</label><select id="ws-owner">${peopleOpts(w?.owner||'')}</select></div>
-      <div class="fg"><label>Category</label><select id="ws-cat"><option value="BU"${w?.category==='BU'?' selected':''}>Business Unit</option><option value="Cross-cutting"${(!w||w?.category==='Cross-cutting')?' selected':''}>Crosscutting</option></select></div>
-    </div>
-    <div class="fg"><label>Stakeholders</label>
-      <div id="ws-stakeholders" style="display:flex;flex-wrap:wrap;gap:4px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);min-height:36px;max-height:180px;overflow-y:auto">
-        ${(()=>{const sel=w?.stakeholders||[];const ppl=(D.people||[]).slice().sort((a,b)=>{const ac=sel.includes(a.name)?0:1,bc=sel.includes(b.name)?0:1;return ac!==bc?ac-bc:(a.name||'').localeCompare(b.name||'')});return ppl.map(p=>{const checked=sel.includes(p.name);return '<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;padding:2px 8px;border-radius:12px;border:1px solid '+(checked?'var(--accent)':'var(--border)')+';background:'+(checked?'rgba(99,102,241,.12)':'var(--bg)')+';white-space:nowrap;transition:all .1s" onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="if(!this.querySelector(\'input\').checked)this.style.borderColor=\'var(--border)\'" onclick="const cb=this.querySelector(\'input\');cb.checked=!cb.checked;this.style.background=cb.checked?\'rgba(99,102,241,.12)\':\'var(--bg)\';this.style.borderColor=cb.checked?\'var(--accent)\':\'var(--border)\'"><input type="checkbox" class="ws-sth-cb" value="'+esc(p.name)+'" '+(checked?'checked':'')+' style="accent-color:var(--accent);width:14px;height:14px;pointer-events:none"> '+esc(p.name)+'</label>'}).join('')})()}
+    <div class="ws-section" id="wsSec-basics">
+      <div class="ws-section-hd" onclick="toggleWsSection('wsSec-basics')"><h4>Basics</h4><span class="ws-section-arrow">&#9660;</span></div>
+      <div class="ws-section-bd">
+        <div class="fg"><label>Name</label><input id="ws-name" value="${w?esc(w.name):''}"></div>
+        <div class="fg-row">
+          <div class="fg"><label>Lead</label><select id="ws-owner">${peopleOpts(w?.owner||'')}</select></div>
+          <div class="fg"><label>Category</label><select id="ws-cat"><option value="BU"${w?.category==='BU'?' selected':''}>Business Unit</option><option value="Cross-cutting"${(!w||w?.category==='Cross-cutting')?' selected':''}>Crosscutting</option></select></div>
+        </div>
+        <div class="fg"><label>Stakeholders</label>
+          <div id="ws-stakeholders" style="display:flex;flex-wrap:wrap;gap:4px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);min-height:36px;max-height:180px;overflow-y:auto">
+            ${(()=>{const sel=w?.stakeholders||[];const ppl=(D.people||[]).slice().sort((a,b)=>{const ac=sel.includes(a.name)?0:1,bc=sel.includes(b.name)?0:1;return ac!==bc?ac-bc:(a.name||'').localeCompare(b.name||'')});return ppl.map(p=>{const checked=sel.includes(p.name);return '<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;padding:2px 8px;border-radius:12px;border:1px solid '+(checked?'var(--accent)':'var(--border)')+';background:'+(checked?'rgba(99,102,241,.12)':'var(--bg)')+';white-space:nowrap;transition:all .1s" onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="if(!this.querySelector(\'input\').checked)this.style.borderColor=\'var(--border)\'" onclick="const cb=this.querySelector(\'input\');cb.checked=!cb.checked;this.style.background=cb.checked?\'rgba(99,102,241,.12)\':\'var(--bg)\';this.style.borderColor=cb.checked?\'var(--accent)\':\'var(--border)\'"><input type="checkbox" class="ws-sth-cb" value="'+esc(p.name)+'" '+(checked?'checked':'')+' style="accent-color:var(--accent);width:14px;height:14px;pointer-events:none"> '+esc(p.name)+'</label>'}).join('')})()}
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+            <input id="ws-new-person" placeholder="Add new person..." style="flex:1;padding:4px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);color:var(--text);font-family:inherit">
+            <button type="button" style="font-size:12px;color:#fff;background:var(--accent);border:none;cursor:pointer;padding:4px 10px;border-radius:var(--r-sm);font-family:inherit;white-space:nowrap" onclick="addPersonFromWs()">+ Add</button>
+          </div>
+        </div>
+        <div class="fg-row">
+          <div class="fg"><label>Status</label><select id="ws-status">${(()=>{const st=w?.status;const formVal=!st?'not-started':['on-track','at-risk','blocked'].includes(st)?'delivery':st;return WS_STATUSES.map(s=>`<option value="${s.value}"${formVal===s.value?' selected':''}>${s.label}</option>`).join('');})()}</select></div>
+          <div class="fg"><label>Color</label><select id="ws-color">${colors.map(cl=>`<option value="${cl}"${(w?.color||'#6366f1')===cl?' selected':''} style="background:${cl};color:#fff">${cl}</option>`).join('')}</select></div>
+        </div>
+        <div class="fg"><label>Description</label><textarea id="ws-desc" style="min-height:50px">${w?esc(w.desc):''}</textarea></div>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
-        <input id="ws-new-person" placeholder="Add new person..." style="flex:1;padding:4px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);color:var(--text);font-family:inherit">
-        <button type="button" style="font-size:12px;color:#fff;background:var(--accent);border:none;cursor:pointer;padding:4px 10px;border-radius:var(--r-sm);font-family:inherit;white-space:nowrap" onclick="addPersonFromWs()">+ Add</button>
+    </div>
+    <div class="ws-section collapsed" id="wsSec-timeline">
+      <div class="ws-section-hd" onclick="toggleWsSection('wsSec-timeline')"><h4>Timeline</h4><span class="ws-section-arrow">&#9660;</span></div>
+      <div class="ws-section-bd">
+        <div class="fg-row">
+          <div class="fg"><label>Target start</label><input type="date" id="ws-targetStart" value="${w?.targetStart||''}"></div>
+          <div class="fg"><label>Target end</label><input type="date" id="ws-targetEnd" value="${w?.targetEnd||''}"></div>
+        </div>
+        ${w?wsTimeline(w.id):'<div style="padding:10px 12px;border:1px dashed var(--border);border-radius:var(--r-sm);color:var(--muted);font-size:12px">Save the workstream first, then timeline data will appear here.</div>'}
       </div>
     </div>
-    <div class="fg-row">
-      <div class="fg"><label>Status</label><select id="ws-status">${(()=>{const st=w?.status;const formVal=!st?'not-started':['on-track','at-risk','blocked'].includes(st)?'delivery':st;return WS_STATUSES.map(s=>`<option value="${s.value}"${formVal===s.value?' selected':''}>${s.label}</option>`).join('');})()}</select></div>
-      <div class="fg"><label>Color</label><select id="ws-color">${colors.map(cl=>`<option value="${cl}"${(w?.color||'#6366f1')===cl?' selected':''} style="background:${cl};color:#fff">${cl}</option>`).join('')}</select></div>
+    <div class="ws-section collapsed" id="wsSec-report">
+      <div class="ws-section-hd" onclick="toggleWsSection('wsSec-report')"><h4>Report Content</h4><span class="ws-section-arrow">&#9660;</span></div>
+      <div class="ws-section-bd">
+        <div class="fg">
+          <label style="display:flex;align-items:center;gap:8px">Recent accomplishments ${w?`<button type="button" class="mbtn" style="font-size:11px;padding:4px 8px;border:1px solid var(--border);background:var(--bg-subtle);color:var(--text)" onclick="fillWsFromApp('${esc(w.id)}')">Suggest from app</button>`:''}</label>
+          <textarea id="ws-recent" style="min-height:44px;font-size:12px" placeholder="Brief bullets for report-out (e.g. Delivered X; Completed Y). Or use Suggest from app to fill from completed tasks.">${w?esc(w.recentAccomplishments||''):''}</textarea>
+        </div>
+        <div class="fg"><label>What's next</label><textarea id="ws-whatsnext" style="min-height:44px;font-size:12px" placeholder="Brief bullets for report-out (e.g. Launch pilot by Mar 20; Align with Legal). Or use Suggest from app to fill from open tasks.">${w?esc(w.whatsNext||''):''}</textarea></div>
+        <div class="fg">
+          <label style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <span>Business outcome / impact</span>
+            ${w&&OPENAI_KEY?`<button type="button" class="pill pill-i" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="aiSuggestWorkstreamBusinessOutcome('${esc(w.id)}')">&#10024; Suggest with AI</button>`:''}
+          </label>
+          <textarea id="ws-businessOutcome" style="min-height:44px;font-size:12px" placeholder="1-2 sentences for executive outcomes report (e.g. Reduced manual effort by X%; Enabled Y capability for Z team).">${w?esc(w.businessOutcome||''):''}</textarea>
+        </div>
+        <div class="fg"><label>Notes / Status Update</label><textarea id="ws-notes" style="min-height:50px">${w?esc(w.notes||''):''}</textarea></div>
+      </div>
     </div>
-    <div class="fg-row">
-      <div class="fg"><label>Target start</label><input type="date" id="ws-targetStart" value="${w?.targetStart||''}"></div>
-      <div class="fg"><label>Target end</label><input type="date" id="ws-targetEnd" value="${w?.targetEnd||''}"></div>
+    <div class="ws-section collapsed" id="wsSec-details">
+      <div class="ws-section-hd" onclick="toggleWsSection('wsSec-details')"><h4>Details</h4><span class="ws-section-arrow">&#9660;</span></div>
+      <div class="ws-section-bd">
+        <div class="fg"><label>Documents</label>
+          <div id="ws-links-list">${(w?.links||[]).map((l,i)=>`<div style="display:flex;gap:4px;margin-bottom:4px;align-items:center"><input class="ws-link-label" value="${esc(l.label)}" placeholder="Label" style="flex:1;max-width:140px"><input class="ws-link-url" value="${esc(l.url)}" placeholder="https://..." style="flex:2"><button type="button" style="color:var(--red);font-size:13px;background:none;border:none;cursor:pointer;padding:0 4px" onclick="this.parentElement.remove()">&#10005;</button></div>`).join('')}</div>
+          <button type="button" style="font-size:12px;color:var(--indigo);background:none;border:none;cursor:pointer;padding:2px 0" onclick="addWsLink()">+ Add link</button>
+        </div>
+        ${w?`<div style="display:flex;gap:8px;margin:12px 0;flex-wrap:wrap">
+          <button type="button" class="pill pill-m" style="cursor:pointer;border:none;font-size:12px;padding:6px 14px" onclick="wsQuickAdd('task','${esc(w.id)}')">+ Action Item</button>
+          <button type="button" class="pill pill-m" style="cursor:pointer;border:none;font-size:12px;padding:6px 14px" onclick="wsQuickAdd('risk','${esc(w.id)}')">+ Risk</button>
+          <button type="button" class="pill pill-m" style="cursor:pointer;border:none;font-size:12px;padding:6px 14px" onclick="wsQuickAdd('decision','${esc(w.id)}')">+ Decision</button>
+        </div>`:''}
+        ${w?wsLinkedItems(w.id):''}
+      </div>
     </div>
-    <div class="fg"><label>Description</label><textarea id="ws-desc" style="min-height:50px">${w?esc(w.desc):''}</textarea></div>
-    <div class="fg">
-      <label style="display:flex;align-items:center;gap:8px">Recent accomplishments ${w?`<button type="button" class="mbtn" style="font-size:11px;padding:4px 8px;border:1px solid var(--border);background:var(--bg-subtle);color:var(--text)" onclick="fillWsFromApp('${esc(w.id)}')">Suggest from app</button>`:''}</label>
-      <textarea id="ws-recent" style="min-height:44px;font-size:12px" placeholder="Brief bullets for report-out (e.g. Delivered X; Completed Y). Or use Suggest from app to fill from completed tasks.">${w?esc(w.recentAccomplishments||''):''}</textarea>
-    </div>
-    <div class="fg"><label>What's next</label><textarea id="ws-whatsnext" style="min-height:44px;font-size:12px" placeholder="Brief bullets for report-out (e.g. Launch pilot by Mar 20; Align with Legal). Or use Suggest from app to fill from open tasks.">${w?esc(w.whatsNext||''):''}</textarea></div>
-    <div class="fg">
-      <label style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-        <span>Business outcome / impact</span>
-        ${w&&OPENAI_KEY?`<button type="button" class="pill pill-i" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="aiSuggestWorkstreamBusinessOutcome('${esc(w.id)}')">&#10024; Suggest with AI</button>`:''}
-      </label>
-      <textarea id="ws-businessOutcome" style="min-height:44px;font-size:12px" placeholder="1-2 sentences for executive outcomes report (e.g. Reduced manual effort by X%; Enabled Y capability for Z team).">${w?esc(w.businessOutcome||''):''}</textarea>
-    </div>
-    <div class="fg"><label>Notes / Status Update</label><textarea id="ws-notes" style="min-height:50px">${w?esc(w.notes||''):''}</textarea></div>
-    <div class="fg"><label>Documents</label>
-      <div id="ws-links-list">${(w?.links||[]).map((l,i)=>`<div style="display:flex;gap:4px;margin-bottom:4px;align-items:center"><input class="ws-link-label" value="${esc(l.label)}" placeholder="Label" style="flex:1;max-width:140px"><input class="ws-link-url" value="${esc(l.url)}" placeholder="https://..." style="flex:2"><button type="button" style="color:var(--red);font-size:13px;background:none;border:none;cursor:pointer;padding:0 4px" onclick="this.parentElement.remove()">&#10005;</button></div>`).join('')}</div>
-      <button type="button" style="font-size:12px;color:var(--indigo);background:none;border:none;cursor:pointer;padding:2px 0" onclick="addWsLink()">+ Add link</button>
-    </div>
-    ${w?wsTimeline(w.id):''}
-    ${w?wsLinkedItems(w.id):''}
   </div>
   <div class="m-ft">
     ${w?'<button class="mbtn mb-del" onclick="delWs(\''+w.id+'\');closeModal()">Delete</button>':''}
     <button class="mbtn mb-cancel" onclick="closeModal()">Cancel</button>
     <button class="mbtn mb-save" onclick="saveWs('${id||''}')">Save</button>
   </div>`);
+}
+function toggleWsSection(id){const el=document.getElementById(id);if(el)el.classList.toggle('collapsed')}
+function wsQuickAdd(type,wsId){
+  closeModal();
+  setTimeout(()=>{
+    if(type==='task'){openTaskModal();setTimeout(()=>{const s=document.getElementById('t-ws');if(s)s.value=wsId},50)}
+    else if(type==='risk'){openRiskModal();setTimeout(()=>{const s=document.getElementById('rk-ws');if(s)s.value=wsId},50)}
+    else if(type==='decision'){openDecModal();setTimeout(()=>{const s=document.getElementById('dec-ws');if(s)s.value=wsId},50)}
+  },150);
 }
 function addWsLink(){
   const c=document.getElementById('ws-links-list');if(!c)return;
@@ -2284,8 +2301,8 @@ function wsLinkedItems(wsId){
   const decs=(D.decisions||[]).filter(d=>d.workstream===wsId);
   const metrics=(D.metrics||[]).filter(m=>m.workstream===wsId);
   const total=tasks.length+risks.length+decs.length+metrics.length;
-  if(!total)return '<div style="margin-top:14px;padding:10px 12px;border:1px dashed var(--border);border-radius:var(--r-sm);color:var(--muted);font-size:12px">No linked items yet — link action items, risks, decisions, or metrics to this workstream.</div>';
-  let html='<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px"><h4 style="font-size:13px;font-weight:700;margin-bottom:8px">Linked Items ('+total+')</h4>';
+  if(!total)return '<div style="padding:10px 12px;border:1px dashed var(--border);border-radius:var(--r-sm);color:var(--muted);font-size:12px">No linked items yet — link action items, risks, decisions, or metrics to this workstream.</div>';
+  let html='<div><h4 style="font-size:13px;font-weight:700;margin-bottom:8px">Linked Items ('+total+')</h4>';
   if(tasks.length){
     const openT=tasks.filter(t=>t.status==='open');const doneT=tasks.filter(t=>t.status==='done');
     html+='<div style="margin-bottom:10px"><span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Action Items ('+tasks.length+' — '+openT.length+' open)</span>';
@@ -2330,10 +2347,9 @@ function wsTimeline(wsId){
   const hasManualRange=w.targetStart||w.targetEnd;
   const range=wsTimelineRange(wsId);
   const hasEffectiveRange=range&&(range.effectiveStart||range.effectiveEnd);
-  let html='<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">';
-  html+='<h4 style="font-size:13px;font-weight:700;margin-bottom:10px">Timeline</h4>';
+  let html='<div style="margin-top:10px">';
   if(!hasEffectiveRange&&!dated.length){
-    html+='<div style="padding:12px 14px;border:1px dashed var(--border);border-radius:var(--r-sm);color:var(--muted);font-size:12px">No timeline yet. Set <strong>Target start / end</strong> above, or add action items with due dates to auto-build a timeline.</div>';
+    html+='<div style="padding:12px 14px;border:1px dashed var(--border);border-radius:var(--r-sm);color:var(--muted);font-size:12px">No timeline data yet. Add action items with due dates to auto-build a timeline.</div>';
   }
   if(hasEffectiveRange){
     const rangeLabel=(range.effectiveStart?fmtDate(range.effectiveStart):'?')+' — '+(range.effectiveEnd?fmtDate(range.effectiveEnd):'?');
@@ -2533,6 +2549,7 @@ function delEng(id){if(!confirm('Delete this engagement?'))return;const e=D.enga
 // TASKS
 // ═══════════════════════════════════════════════════
 function rTasks(c){
+  if(taskFilter==='inbox'){rTasksInbox(c);return}
   const q=(document.getElementById('search').value||'').toLowerCase();
   let items=D.tasks||[];
   if(taskFilter==='open')items=items.filter(t=>t.status==='open');
@@ -2540,16 +2557,17 @@ function rTasks(c){
   else if(taskFilter==='milestones')items=items.filter(t=>t.isMilestone);
   if(taskOwnerFilter==='__unassigned__')items=items.filter(t=>!t.owner);
   else if(taskOwnerFilter)items=items.filter(t=>t.owner===taskOwnerFilter);
-  if(q)items=items.filter(t=>(t.title+' '+t.owner+' '+t.notes+' '+wsName(t.workstream)).toLowerCase().includes(q));
+  if(q)items=items.filter(t=>(t.title+' '+t.owner+' '+t.notes+' '+wsNamePlain(t.workstream)).toLowerCase().includes(q));
   const pv={high:0,medium:1,low:2};
   if(taskSort==='title')items.sort((a,b)=>taskSortDir*a.title.localeCompare(b.title));
   else if(taskSort==='owner')items.sort((a,b)=>taskSortDir*(a.owner||'').localeCompare(b.owner||''));
   else if(taskSort==='start')items.sort((a,b)=>taskSortDir*(a.startDate||'9').localeCompare(b.startDate||'9'));
   else if(taskSort==='due')items.sort((a,b)=>taskSortDir*(a.due||'9').localeCompare(b.due||'9'));
   else if(taskSort==='priority')items.sort((a,b)=>taskSortDir*((pv[a.priority]??1)-(pv[b.priority]??1)));
-  else if(taskSort==='workstream')items.sort((a,b)=>taskSortDir*wsName(a.workstream).localeCompare(wsName(b.workstream)));
+  else if(taskSort==='workstream')items.sort((a,b)=>taskSortDir*wsNamePlain(a.workstream).localeCompare(wsNamePlain(b.workstream)));
   else{items.sort((a,b)=>{if(a.status!==b.status)return a.status==='open'?-1:1;if((pv[a.priority]??1)!==(pv[b.priority]??1))return(pv[a.priority]??1)-(pv[b.priority]??1);return(a.due||'9').localeCompare(b.due||'9')})}
   const open=D.tasks.filter(t=>t.status==='open').length,done=D.tasks.filter(t=>t.status==='done').length,msCount=D.tasks.filter(t=>t.isMilestone).length;
+  const inboxCount=(D.inbox||[]).filter(x=>!x.processed).length;
   const owners=[...new Set((D.tasks||[]).map(t=>t.owner).filter(Boolean))].sort();
   const sIco=(col)=>taskSort===col?(taskSortDir===1?' &#9650;':' &#9660;'):'';
   c.innerHTML=`
@@ -2561,6 +2579,7 @@ function rTasks(c){
       <div class="pill${taskFilter==='open'?' pill-i':' pill-m'}" onclick="taskFilter='open';render()">Open (${open})</div>
       <div class="pill${taskFilter==='done'?' pill-i':' pill-m'}" onclick="taskFilter='done';render()">Done (${done})</div>
       <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
+      <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;padding-left:14px;margin-left:6px;border-left:1px solid var(--border-lt)">
       <span style="font-size:12px;color:var(--muted);font-weight:500">Groups</span>
@@ -2582,7 +2601,7 @@ function rTasks(c){
       if(t.workstream){if(!wsGroups[t.workstream])wsGroups[t.workstream]=[];wsGroups[t.workstream].push(t)}
       else unlinked.push(t);
     });
-    const wsOrder=(D.workstreams||[]).filter(w=>wsGroups[w.id]).map(w=>w.id);
+    const wsOrder=(D.workstreams||[]).filter(w=>wsGroups[w.id]).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(w=>w.id);
     const renderRow=(t)=>{
       const isOD=t.status==='open'&&t.due&&t.due<today();
       const isDueToday=t.status==='open'&&t.due&&t.due===today();
@@ -2602,11 +2621,10 @@ function rTasks(c){
       const openCount=groupItems.filter(t=>t.status==='open').length;
       const collapsed=taskGroupCollapsed[gid];
       return `<div class="page-section${collapsed?' collapsed':''}" data-gid="${gid}">
-        <div class="section-header" onclick="taskGroupCollapsed['${gid}']=!taskGroupCollapsed['${gid}'];render()">
-          <span class="section-chevron" style="transform:rotate(${collapsed?'0':'90'}deg)">&#9654;</span>
-          <div class="section-bar" style="background:${color}"></div>
-          <span class="section-label">${label}</span>
-          <span class="section-meta">${openCount} open / ${groupItems.length} total</span>
+        <div class="section-header" style="background:${color};border-color:${color}" onclick="taskGroupCollapsed['${gid}']=!taskGroupCollapsed['${gid}'];render()">
+          <span class="section-chevron" style="transform:rotate(${collapsed?'0':'90'}deg);color:#fff">&#9654;</span>
+          <span class="section-label" style="color:#fff">${label}</span>
+          <span class="section-meta" style="color:rgba(255,255,255,.8)">${openCount} open / ${groupItems.length} total</span>
         </div>
         ${collapsed?'':`<div class="section-body"><div class="card-inner"><table class="tbl" style="width:100%">
           <thead><tr>
@@ -2787,9 +2805,82 @@ function promoteMtgActions(id){
 function delMtg(id){if(!confirm('Delete this meeting?'))return;const m=D.meetings.find(x=>x.id===id);D.meetings=D.meetings.filter(x=>x.id!==id);log('Deleted meeting: '+esc(m?.title||''));save();render();toast('Deleted')}
 
 // ═══════════════════════════════════════════════════
-// EXTRACT TASKS
+// EXTRACT / INBOX (embedded in Action Items page)
 // ═══════════════════════════════════════════════════
 let inboxSrc='meeting-notes';
+
+function rTasksInbox(c){
+  const inboxItems=D.inbox||[];
+  const waiting=inboxItems.filter(d=>!d.processed);
+  const processed=inboxItems.filter(d=>d.processed);
+  const inboxCount=waiting.length;
+  const open=D.tasks.filter(t=>t.status==='open').length,done=D.tasks.filter(t=>t.status==='done').length,msCount=D.tasks.filter(t=>t.isMilestone).length;
+  c.innerHTML=`
+  <div class="page-wrap tasks-page">
+  <div class="page-toolbar">
+    <span class="page-title">Action Items</span>
+    <div class="pill-filters">
+      <div class="pill pill-m" onclick="taskFilter='all';render()">All (${D.tasks.length})</div>
+      <div class="pill pill-m" onclick="taskFilter='open';render()">Open (${open})</div>
+      <div class="pill pill-m" onclick="taskFilter='done';render()">Done (${done})</div>
+      <div class="pill pill-m" onclick="taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
+      <div class="pill pill-i" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:20px;padding:24px">
+    <h4 style="font-size:17px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px">Paste Anything ${OPENAI_KEY?'<span class="pill pill-g" style="font-size:10px;font-weight:500;vertical-align:middle">AI Powered</span>':''}</h4>
+    <p style="font-size:13.5px;color:var(--muted);line-height:1.65;margin-bottom:16px">Drop in meeting notes, an email thread, a Teams chat, a status update — anything. ${OPENAI_KEY?'<strong>AI will extract action items</strong> and you can route content to the right place in ATLAS.':'The app will scan for action items and let you route content where it belongs.'}</p>
+    <div class="fg-row">
+      <div class="fg"><label>Title</label><input id="in-title" placeholder="e.g. Weekly sync notes, Forrest's email about licensing"></div>
+      <div class="fg"><label>Source Type</label><select id="in-src" onchange="inboxSrc=this.value"><option value="meeting-notes">Meeting Notes</option><option value="email">Email Thread</option><option value="teams-chat">Teams Chat</option><option value="status-update">Status Update</option><option value="presentation">Presentation</option><option value="other">Other</option></select></div>
+    </div>
+    <div class="fg"><label>Content</label><textarea id="in-content" style="min-height:160px" placeholder="Paste the full text here — meeting notes, email chain, chat thread, anything..."></textarea></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px">
+      <button class="mbtn mb-cancel" onclick="if(document.getElementById('in-content').value.trim()){saveToInbox()}else{toast('Paste content first')}" style="font-size:13px">Save to Inbox</button>
+      <button class="tb-btn" onclick="submitInbox()" style="font-size:13.5px">Scan &amp; Extract Tasks</button>
+    </div>
+  </div>
+  ${waiting.length?`<div style="font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px">Needs Attention <span class="badge hot">${waiting.length}</span></div>`+waiting.map(d=>{
+    const taskCt=(d.extractedTasks||[]).length;
+    const srcLbl={'meeting-notes':'Meeting Notes','email':'Email','teams-chat':'Teams Chat','status-update':'Status Update','presentation':'Presentation','other':'Other'}[d.source]||d.source;
+    return `<div class="card" style="padding:18px 22px;margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <strong style="font-size:14.5px">${esc(d.title)}</strong>
+          <span class="pill pill-m" style="font-size:10px">${srcLbl}</span>
+        </div>
+        <div style="font-size:12.5px;color:var(--muted);max-height:38px;overflow:hidden;line-height:1.5">${esc((d.content||'').substring(0,220))}${(d.content||'').length>220?'...':''}</div>
+        <div style="font-size:11px;color:var(--light);margin-top:6px">${d.addedBy?'Added by '+esc(d.addedBy)+' · ':''}${d.created?new Date(d.created).toLocaleDateString():''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+        ${taskCt?'<button class="pill pill-i" style="cursor:pointer;border:none;font-size:12px;padding:5px 12px" onclick="event.stopPropagation();routeDoc(\''+d.id+'\')">Create '+taskCt+' task'+(taskCt>1?'s':'')+'</button>':''}
+        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="event.stopPropagation();inboxToTask('${d.id}')">+ Action Item</button>
+        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="event.stopPropagation();inboxToDecision('${d.id}')">+ Decision</button>
+        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="event.stopPropagation();inboxToRisk('${d.id}')">+ Risk</button>
+        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="event.stopPropagation();markInboxDone('${d.id}')">Archive</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:10px;border-top:1px solid var(--border-lt);padding-top:8px">
+      <button style="font-size:12px;color:var(--accent);font-weight:500;padding:3px 8px;border-radius:var(--r-xs);cursor:pointer;background:none;border:none" onclick="editDoc('${d.id}')">View / Edit</button>
+      <button style="font-size:12px;color:var(--red);font-weight:500;padding:3px 8px;border-radius:var(--r-xs);cursor:pointer;background:none;border:none" onclick="delDoc('${d.id}')">Delete</button>
+    </div>
+  </div>`}).join(''):''}
+  ${processed.length?`<div style="font-size:14px;font-weight:700;margin:${waiting.length?'20':'0'}px 0 10px;display:flex;align-items:center;gap:8px;color:var(--muted)">Archived <span style="font-size:12px;font-weight:500">(${processed.length})</span></div>`+processed.map(d=>{
+    const srcLbl={'meeting-notes':'Meeting Notes','email':'Email','teams-chat':'Teams Chat','status-update':'Status Update','presentation':'Presentation','other':'Other'}[d.source]||d.source;
+    return `<div class="card" style="padding:14px 20px;margin-bottom:8px;opacity:.7;cursor:pointer" onclick="editDoc('${d.id}')">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div><span style="font-size:13.5px;font-weight:600">${esc(d.title)}</span> <span class="pill pill-m" style="font-size:10px">${srcLbl}</span></div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span style="font-size:11px;color:var(--light)">${d.created?new Date(d.created).toLocaleDateString():''}</span>
+        <button style="font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;padding:2px 6px" onclick="event.stopPropagation();delDoc('${d.id}')">&#10005;</button>
+      </div>
+    </div>
+  </div>`}).join(''):''}
+  ${!inboxItems.length?'<div class="empty"><h4>Inbox is empty</h4><p>Paste meeting notes, emails, or any text above to get started.</p></div>':''}
+  </div>`;
+}
+
 function rExtract(c){
   const items=D.inbox||[];
   const waiting=items.filter(d=>!d.processed);
@@ -3276,7 +3367,7 @@ function rReport(c){
     const recent=bulletsHtml(recentRaw,3);
     const lookAhead=bulletsHtml(nextRaw,3);
     return `<tr>
-      <td class="rpt-ws-name"><strong>${esc(w.name)}</strong></td>
+      <td class="rpt-ws-name"><strong><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${w.color||'var(--muted)'};margin-right:6px;vertical-align:middle"></span>${esc(w.name)}</strong></td>
       <td><span class="rpt-status ${statusClass}">${wsStatusLabel(st)}</span></td>
       <td class="rpt-ws-recent" style="font-size:11px;color:var(--text);vertical-align:top">${recent}</td>
       <td class="rpt-ws-keydates" style="font-size:11px;color:var(--text);vertical-align:top">${lookAhead}</td>
@@ -3340,7 +3431,7 @@ function rReport(c){
     const lookAhead=bulletsHtml(lookAheadLines.join('\n'),4);
     const outcomeTd=esc((w.businessOutcome||'').trim()||'—');
     return `<tr>
-      <td class="rpt-ws-name"><strong>${esc(w.name)}</strong></td>
+      <td class="rpt-ws-name"><strong><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${w.color||'var(--muted)'};margin-right:6px;vertical-align:middle"></span>${esc(w.name)}</strong></td>
       <td class="rpt-ws-outcome" style="font-size:12px;color:var(--text);vertical-align:top"><div class="rpt-ws-outcome-wrap">${outcomeTd}</div></td>
       <td class="rpt-ws-status-cell"><span class="rpt-status rpt-status-${statusClass}">${wsStatusShortLabel(st)}</span></td>
       <td class="rpt-ws-recent" style="font-size:11px;color:var(--text);vertical-align:top">${recent}</td>
