@@ -609,10 +609,6 @@ body.nav-collapsed .topbar-menu{display:flex}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Report Out
       </div>
-      <div class="ni" data-v="execreport" onclick="go('execreport')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        Executive Report
-      </div>
     </div>
 
   </div>
@@ -695,7 +691,7 @@ body.nav-collapsed .topbar-menu{display:flex}
 
 
 <script>
-let D,V='dashboard',ME='',dbRef=null,firebaseReady=false,ganttZoom='3m',ganttShowTasks=false,ganttShowWs=false,ganttShowMs=false,ganttShowBU=false,ganttShowCC=false,ganttCustomStart='';
+let D,V='dashboard',ME='',dbRef=null,firebaseReady=false,ganttZoom='3m',ganttShowTasks=false,ganttShowMs=false,ganttShowBU=true,ganttShowCC=false,ganttCustomStart='';
 const RELEASE_VERSION='2026-03-17';
 const RELEASE_NOTES=[
   {date:'March 17, 2026',whatsNew:[
@@ -1462,7 +1458,7 @@ function go(v){
   });
   const titles={dashboard:'Dashboard',workstreams:'Workstreams',engagements:'Engagements',
     tasks:'Action Items',mywork:'My Work Items',people:'People',
-    report:'Report Out',execreport:'Executive Report',ask:'Ask AI',strategy:'Framework',decisions:'Decision Log',
+    report:'Report Out',ask:'Ask AI',strategy:'Framework',decisions:'Decision Log',
     risks:'Risk Register',metrics:'Success Metrics'};
   document.getElementById('viewTitle').textContent=titles[v]||v;
   const ab=document.getElementById('addBtn');
@@ -1501,7 +1497,7 @@ function badges(){
 function render(){
   const c=document.getElementById('content');
   ({dashboard:rDash,workstreams:rWork,
-    tasks:rTasks,extract:rExtract,mywork:rMyWork,people:rPeople,report:rReport,execreport:rExecReport,ask:rAsk,strategy:rStrategy,
+    tasks:rTasks,extract:rExtract,mywork:rMyWork,people:rPeople,report:rReport,ask:rAsk,strategy:rStrategy,
     decisions:rDecisions,risks:rRisks,metrics:rMetrics})[V]?.(c);
   badges();autoUpdateMilestones();
 }
@@ -1937,6 +1933,7 @@ function buildGantt(){
   }
 
   const wsWithRanges=(D.workstreams||[]).filter(w=>{
+    if(w.parentWs)return false;
     if(w.category==='BU')return ganttShowBU;
     if(w.category==='Cross-cutting')return ganttShowCC;
     return false;
@@ -1945,7 +1942,7 @@ function buildGantt(){
     return r&&r.effectiveStart&&r.effectiveEnd?{...w,effStart:r.effectiveStart,effEnd:r.effectiveEnd,isManual:r.isManual}:null;
   }).filter(Boolean).sort((a,b)=>(a.effStart||'').localeCompare(b.effStart||''));
   const visDatedWs=wsWithRanges.filter(w=>{const l=pct(w.effStart),r=pct(w.effEnd);return r>0&&l<100});
-  if(ganttShowWs&&visDatedWs.length){
+  if((ganttShowBU||ganttShowCC)&&visDatedWs.length){
     const rowH=28;
     let wsBars='';
     visDatedWs.forEach((w,i)=>{
@@ -2032,9 +2029,8 @@ function buildGantt(){
   }
 
   const swimToggles=`<span style="font-size:11px;color:var(--light);margin-left:8px">Show:</span>`
-    +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowWs?'checked':''} onchange="ganttShowWs=this.checked;render()" style="cursor:pointer"> Workstreams</label>`
-    +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowBU?'checked':''} onchange="ganttShowBU=this.checked;render()" style="cursor:pointer"> BU</label>`
-    +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowCC?'checked':''} onchange="ganttShowCC=this.checked;render()" style="cursor:pointer"> Crosscutting</label>`
+    +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowBU?'checked':''} onchange="ganttShowBU=this.checked;render()" style="cursor:pointer"> BU Workstreams</label>`
+    +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowCC?'checked':''} onchange="ganttShowCC=this.checked;render()" style="cursor:pointer"> Crosscutting Workstreams</label>`
     +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowMs?'checked':''} onchange="ganttShowMs=this.checked;render()" style="cursor:pointer"> Milestones</label>`
     +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowTasks?'checked':''} onchange="ganttShowTasks=this.checked;render()" style="cursor:pointer"> Action Items</label>`;
 
@@ -2097,21 +2093,38 @@ function rWork(c){
   WS_STATUSES.forEach(s=>{statusCounts[s.value]=allWs.filter(w=>wsStatusValue(w)===s.value).length;});
   if(wsStatusFilter)allWs=allWs.filter(w=>wsStatusValue(w)===wsStatusFilter);
 
-  const buWs=allWs.filter(w=>w.category==='BU').slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-  const ccWs=allWs.filter(w=>w.category==='Cross-cutting').slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  function hierarchicalSort(list){
+    const parents=list.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    const childMap={};
+    list.filter(w=>w.parentWs).forEach(w=>{if(!childMap[w.parentWs])childMap[w.parentWs]=[];childMap[w.parentWs].push(w)});
+    Object.values(childMap).forEach(arr=>arr.sort((a,b)=>(a.name||'').localeCompare(b.name||'')));
+    const out=[];
+    parents.forEach(p=>{out.push(p);(childMap[p.id]||[]).forEach(ch=>out.push(ch))});
+    list.filter(w=>w.parentWs&&!parents.find(p=>p.id===w.parentWs)).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).forEach(o=>out.push(o));
+    return out;
+  }
+  const buWs=hierarchicalSort(allWs.filter(w=>w.category==='BU'));
+  const ccWs=hierarchicalSort(allWs.filter(w=>w.category==='Cross-cutting'));
   const totalBU=(D.workstreams||[]).filter(w=>w.category==='BU').length;
   const totalCC=(D.workstreams||[]).filter(w=>w.category==='Cross-cutting').length;
 
   const renderRow=(w)=>{
-    const wAll=(D.tasks||[]).filter(t=>t.workstream===w.id);
+    const isChild=!!w.parentWs;
+    const children=(D.workstreams||[]).filter(c=>c.parentWs===w.id);
+    const isParent=children.length>0;
+    const wsIds=isParent?[w.id,...children.map(c=>c.id)]:[w.id];
+    const wAll=(D.tasks||[]).filter(t=>wsIds.includes(t.workstream));
     const wDone=wAll.filter(t=>t.status==='done').length;
     const wOpen=wAll.filter(t=>t.status==='open').length;
     const pct=wAll.length?Math.round(wDone/wAll.length*100):0;
     const sc=statusColors[w.status]||'pill-m';
-    const risks=(D.risks||[]).filter(r=>r.workstream===w.id).length;
-    return `<tr onclick="openWsDetail('${w.id}')" style="cursor:pointer;height:44px" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background=''">
+    const risks=(D.risks||[]).filter(r=>wsIds.includes(r.workstream)).length;
+    const nameHtml=isChild
+      ?`<span style="color:var(--muted);margin-right:4px">└</span><span style="font-weight:500;font-size:12.5px;color:var(--text)">${esc(w.name)}</span>`
+      :`<span style="font-weight:600;font-size:13.5px">${esc(w.name)}</span>${isParent?'<span style="font-size:9px;font-weight:700;color:var(--accent);background:rgba(99,102,241,.1);padding:1px 6px;border-radius:8px;margin-left:6px;vertical-align:middle">'+children.length+' sub</span>':''}`;
+    return `<tr onclick="openWsDetail('${w.id}')" style="cursor:pointer;height:44px${isChild?';background:rgba(99,102,241,.03)':''}" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background='${isChild?'rgba(99,102,241,.03)':''}'">
       <td style="width:6px;padding:0"><div style="width:5px;height:28px;border-radius:3px;background:${wsColor(w.id)}"></div></td>
-      <td style="font-weight:600;font-size:13.5px">${esc(w.name)}</td>
+      <td style="${isChild?'padding-left:24px':''}">${nameHtml}</td>
       <td style="font-size:12.5px;color:var(--muted)">${esc(w.owner)||'<span style="color:var(--light)">Unassigned</span>'}</td>
       <td style="font-size:12px;color:var(--muted)">${(w.stakeholders||[]).length?w.stakeholders.map(s=>esc(s)).join(', '):'—'}</td>
       <td style="width:10%"><span class="pill ${sc}" style="font-size:10px">${wsStatusLabel(w.status)}</span></td>
@@ -2200,8 +2213,16 @@ function openWsEdit(id){
     '#f59e0b','#f97316','#ef4444','#dc2626','#e11d48','#be123c',
     '#475569','#64748b','#78716c','#57534e','#334155','#1e293b'
   ];
+  const children=w?(D.workstreams||[]).filter(c=>c.parentWs===w.id).sort((a,b)=>(a.name||'').localeCompare(b.name||'')):[];
+  const parentObj=w?.parentWs?(D.workstreams||[]).find(p=>p.id===w.parentWs):null;
+  const hierarchyBanner=w&&(children.length||parentObj)?`<div style="padding:10px 14px;margin-bottom:12px;border-radius:var(--r-sm);border:1px solid ${children.length?'var(--accent)':'var(--border-lt)'};background:${children.length?'rgba(99,102,241,.06)':'var(--bg-subtle)'}">
+    ${parentObj?`<div style="font-size:12px;color:var(--muted);margin-bottom:${children.length?'6px':'0'}">Child of <strong style="color:var(--text);cursor:pointer" onclick="closeModal();setTimeout(()=>openWsDetail('${parentObj.id}'),200)">${esc(parentObj.name)}</strong></div>`:''}
+    ${children.length?`<div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:4px">Parent Workstream — ${children.length} sub-workstream${children.length!==1?'s':''}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px">${children.map(ch=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;padding:3px 10px;border-radius:12px;border:1px solid var(--border-lt);background:var(--bg);cursor:pointer;color:var(--text)" onclick="closeModal();setTimeout(()=>openWsDetail('${ch.id}'),200)"><span style="width:7px;height:7px;border-radius:50%;background:${ch.color||'var(--muted)'}"></span>${esc(ch.name)}</span>`).join('')}</div>`:''}
+  </div>`:'';
   openModal(`<div class="m-hd"><h3>${w?'Edit':'New'} Workstream</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
+    ${hierarchyBanner}
     <div class="ws-section" id="wsSec-basics">
       <div class="ws-section-hd" onclick="toggleWsSection('wsSec-basics')"><h4>Basics</h4><span class="ws-section-arrow">&#9660;</span></div>
       <div class="ws-section-bd">
@@ -2223,7 +2244,7 @@ function openWsEdit(id){
           <div class="fg"><label>Status</label><select id="ws-status">${(()=>{const st=w?.status;const formVal=!st?'not-started':['on-track','at-risk','blocked'].includes(st)?'delivery':st;return WS_STATUSES.map(s=>`<option value="${s.value}"${formVal===s.value?' selected':''}>${s.label}</option>`).join('');})()}</select></div>
           <div class="fg"><label>Color</label><select id="ws-color">${colors.map(cl=>`<option value="${cl}"${(w?.color||'#6366f1')===cl?' selected':''} style="background:${cl};color:#fff">${cl}</option>`).join('')}</select></div>
         </div>
-        <div class="fg"><label>Report Group</label><input id="ws-reportGroup" value="${w?.reportGroup?esc(w.reportGroup):''}" placeholder="e.g. Operations — groups workstreams in exec report"></div>
+        <div class="fg"><label>Parent Workstream</label><select id="ws-parentWs"><option value="">— None (top-level) —</option>${(D.workstreams||[]).filter(p=>p.id!==(w?.id||'')&&!p.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(p=>`<option value="${p.id}"${w?.parentWs===p.id?' selected':''}>${esc(p.name)}</option>`).join('')}</select></div>
         <div class="fg"><label>Description</label><textarea id="ws-desc" style="min-height:50px">${w?esc(w.desc):''}</textarea></div>
       </div>
     </div>
@@ -2342,7 +2363,9 @@ function wsLinkedItems(wsId){
 function wsTimelineRange(wsId){
   const w=(D.workstreams||[]).find(x=>x.id===wsId);
   if(!w)return null;
-  const tasks=(D.tasks||[]).filter(t=>t.workstream===wsId);
+  const childIds=(D.workstreams||[]).filter(c=>c.parentWs===wsId).map(c=>c.id);
+  const wsIds=[wsId,...childIds];
+  const tasks=(D.tasks||[]).filter(t=>wsIds.includes(t.workstream));
   const allDates=[];
   tasks.forEach(t=>{if(t.startDate)allDates.push(t.startDate);if(t.due)allDates.push(t.due)});
   const derivedStart=allDates.length?allDates.sort()[0]:null;
@@ -2427,7 +2450,7 @@ function saveWs(id){
   w.category=document.getElementById('ws-cat').value;
   w.status=document.getElementById('ws-status').value;
   w.color=document.getElementById('ws-color').value;
-  w.reportGroup=(document.getElementById('ws-reportGroup')?.value||'').trim();
+  w.parentWs=(document.getElementById('ws-parentWs')?.value||'');
   w.desc=document.getElementById('ws-desc').value.trim();
   w.recentAccomplishments=(document.getElementById('ws-recent')?.value||'').trim();
   w.whatsNext=(document.getElementById('ws-whatsnext')?.value||'').trim();
@@ -3460,10 +3483,107 @@ function rReport(c){
       ${ccWsSorted.map(renderOutcomesRow).join('')}
     </tbody>
   </table>`;
+  const execReportBuilder=(()=>{
+    if(reportViewMode!=='exec')return '';
+    const er=getExecReport();
+    const ta=`style="width:100%;font-size:12.5px;padding:8px 10px;border:1px solid var(--border-lt);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text);resize:vertical;font-family:Arial,sans-serif;line-height:1.5"`;
+    const wsCard=(w)=>{
+      const det=(er.wsDetails||{})[w.id]||{};
+      const tasks=(D.tasks||[]).filter(t=>t.workstream===w.id);
+      const done=tasks.filter(t=>t.status==='done').length;
+      const pct=tasks.length?Math.round(done/tasks.length*100):0;
+      const parentLabel=w.parentWs?(D.workstreams||[]).find(p=>p.id===w.parentWs)?.name||'':'';
+      return `<div style="background:var(--bg-card);border:1px solid var(--border-lt);border-radius:var(--r-md);padding:14px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${w.color||'var(--muted)'}"></span>
+          <strong style="font-size:13px">${esc(w.name)}</strong>
+          ${parentLabel?'<span style="font-size:11px;color:var(--muted)">('+esc(parentLabel)+')</span>':''}
+          <span class="pill pill-m" style="font-size:9px;margin-left:auto">${wsStatusLabel(w.status)}</span>
+          <span style="font-size:11px;color:var(--muted)">${pct}%</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Purpose</label>
+            <textarea ${ta} rows="2" placeholder="What this workstream aims to achieve…" onchange="saveExecWsDetail('${w.id}','purpose',this.value)">${esc(det.purpose||'')}</textarea></div>
+          <div><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Target Outcomes</label>
+            <textarea ${ta} rows="2" placeholder="• Outcome 1" onchange="saveExecWsDetail('${w.id}','outcomes',this.value)">${esc(det.outcomes||'')}</textarea></div>
+          <div><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Key Progress</label>
+            <textarea ${ta} rows="2" placeholder="• Progress item" onchange="saveExecWsDetail('${w.id}','progress',this.value)">${esc(det.progress||'')}</textarea></div>
+          <div><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Next Steps</label>
+            <textarea ${ta} rows="2" placeholder="• Next step" onchange="saveExecWsDetail('${w.id}','nextSteps',this.value)">${esc(det.nextSteps||'')}</textarea></div>
+        </div>
+        <div style="margin-top:8px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Enterprise Value</label>
+          <input type="text" value="${esc(det.value||'')}" placeholder="One-liner value statement" style="width:100%;font-size:12px;padding:5px 8px;border:1px solid var(--border-lt);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text)" onchange="saveExecWsDetail('${w.id}','value',this.value)"></div>
+      </div>`;
+    };
+    return `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <p style="margin:0;font-size:13px;color:var(--muted)">Edit slide content below, then export to PowerPoint. All fields save automatically.</p>
+      </div>
+      <button class="tb-btn" style="background:#00274C;color:#fff;font-size:13px;padding:8px 16px;font-weight:700;border-radius:var(--r-sm)" onclick="exportExecPptx()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export to PowerPoint
+      </button>
+    </div>
+    <div class="ws-section" id="execSec-1" style="margin-bottom:14px">
+      <div class="ws-section-hd" onclick="toggleWsSection('execSec-1')"><h4>Slide 1 — Executive Summary</h4><span class="ws-section-arrow">&#9660;</span></div>
+      <div class="ws-section-bd">
+        <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:100px;padding:10px 14px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-radius:var(--r-sm);text-align:center">
+            <div style="font-size:20px;font-weight:800;color:var(--accent)">${allWs.length}</div><div style="font-size:10px;color:var(--muted);font-weight:600">Workstreams</div></div>
+          <div style="flex:1;min-width:100px;padding:10px 14px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-radius:var(--r-sm);text-align:center">
+            <div style="font-size:20px;font-weight:800;color:var(--green)">${(D.tasks||[]).filter(t=>t.status==='done').length}</div><div style="font-size:10px;color:var(--muted);font-weight:600">Completed</div></div>
+          <div style="flex:1;min-width:100px;padding:10px 14px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-radius:var(--r-sm);text-align:center">
+            <div style="font-size:20px;font-weight:800;color:var(--yellow)">${(D.risks||[]).filter(r=>r.status==='open').length}</div><div style="font-size:10px;color:var(--muted);font-weight:600">Open Risks</div></div>
+          <div style="flex:1;min-width:100px;padding:10px 14px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-radius:var(--r-sm);text-align:center">
+            <div style="font-size:20px;font-weight:800;color:var(--text)">${(D.tasks||[]).filter(t=>t.isMilestone&&t.status==='done').length}</div><div style="font-size:10px;color:var(--muted);font-weight:600">Milestones Hit</div></div>
+        </div>
+        <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px">Executive Summary Narrative</label>
+        <textarea id="exec-summary" ${ta} style="min-height:120px" placeholder="Program vision, current state, key themes…" onchange="saveExecField('summary',this.value)">${esc(er.summary)}</textarea>
+      </div>
+    </div>
+    <div class="ws-section" id="execSec-2" style="margin-bottom:14px">
+      <div class="ws-section-hd" onclick="toggleWsSection('execSec-2')"><h4>Slide 2 — Progress & Wins</h4><span class="ws-section-arrow">&#9660;</span></div>
+      <div class="ws-section-bd">
+        <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px">Program-Wide Wins & Accomplishments</label>
+        <textarea id="exec-wins" ${ta} style="min-height:150px" placeholder="• Key accomplishment 1&#10;• Key accomplishment 2" onchange="saveExecField('wins',this.value)">${esc(er.wins)}</textarea>
+        <p style="margin:4px 0 0;font-size:11px;color:var(--muted)">Two-column bullet layout on slide. Use bullet lines (•, -, or *).</p>
+      </div>
+    </div>
+    <div class="ws-section collapsed" id="execSec-3" style="margin-bottom:14px">
+      <div class="ws-section-hd" onclick="toggleWsSection('execSec-3')"><h4>Slide 3 — Business Unit Workstreams (${buWs.length})</h4><span class="ws-section-arrow">&#9660;</span></div>
+      <div class="ws-section-bd">${buWs.length?buWs.map(wsCard).join(''):'<p style="color:var(--muted);font-size:13px">No BU workstreams.</p>'}</div>
+    </div>
+    <div class="ws-section collapsed" id="execSec-4" style="margin-bottom:14px">
+      <div class="ws-section-hd" onclick="toggleWsSection('execSec-4')"><h4>Slide 4 — Crosscutting Initiatives (${ccWs.length})</h4><span class="ws-section-arrow">&#9660;</span></div>
+      <div class="ws-section-bd">${ccWs.length?ccWs.map(wsCard).join(''):'<p style="color:var(--muted);font-size:13px">No crosscutting initiatives.</p>'}</div>
+    </div>
+    <div class="ws-section collapsed" id="execSec-hierarchy" style="margin-bottom:14px;border-top:2px dashed var(--border-lt);padding-top:10px">
+      <div class="ws-section-hd" onclick="toggleWsSection('execSec-hierarchy')"><h4>Workstream Hierarchy</h4><span class="ws-section-arrow">&#9660;</span></div>
+      <div class="ws-section-bd">
+        <p style="font-size:12px;color:var(--muted);margin:0 0 10px">Assign parent workstreams to roll children up in the report. Changes save individually on selection.</p>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="border-bottom:2px solid var(--border)">
+            <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase">Workstream</th>
+            <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase">Category</th>
+            <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase">Parent</th>
+          </tr></thead>
+          <tbody>${allWs.sort((a,b)=>(a.category||'').localeCompare(b.category||'')||(a.name||'').localeCompare(b.name||'')).map(w=>{
+            const opts=(D.workstreams||[]).filter(p=>p.id!==w.id&&!p.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+            return `<tr style="border-bottom:1px solid var(--border-lt)">
+              <td style="padding:6px 8px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${w.color||'var(--muted)'};margin-right:6px;vertical-align:middle"></span>${esc(w.name)}</td>
+              <td style="padding:6px 8px;color:var(--muted)">${esc(w.category||'—')}</td>
+              <td style="padding:6px 8px"><select style="width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--border-lt);border-radius:var(--r-xs);background:var(--bg-subtle);color:var(--text)" onchange="saveBulkParentWs('${w.id}',this.value)"><option value="">— None (top-level) —</option>${opts.map(p=>`<option value="${p.id}"${w.parentWs===p.id?' selected':''}>${esc(p.name)}</option>`).join('')}</select></td>
+            </tr>`;}).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+  })();
+
   const workstreamSection=reportViewMode==='outcomes'
     ?`<div class="rpt-section rpt-outcomes-only">${allWs.length?outcomesTable:'<p style="color:var(--muted);font-size:13px">No workstreams.</p>'}</div>`
     :reportViewMode==='exec'
-    ?`<div class="rpt-section">${allWs.length?execTableWorkstreamFocus:'<p style="color:var(--muted);font-size:13px">No workstreams defined.</p>'}</div>`
+    ?execReportBuilder
     :`<div class="rpt-section"><h3>Workstream Status</h3>${allWs.length?execTableFull:'<p style="color:var(--muted);font-size:13px">No workstreams defined.</p>'}</div>`;
   const milestoneSectionFull=reportViewMode==='full'?`<div class="rpt-section">
     <h3>Milestone Progress (${msDone.length}/${allMs.length} complete)</h3>
@@ -3477,16 +3597,15 @@ function rReport(c){
 
   c.innerHTML=`<div class="rpt">
     <div id="report-export-area">
-    ${reportViewMode!=='outcomes'?`<div class="rpt-header">
+    <div class="rpt-header">
       <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px">
-        <h2 style="margin:0;font-size:1em">AI Program Status — ${reportViewMode==='exec'?'Executive View':'Full View'}</h2>
+        <h2 style="margin:0;font-size:1em">${reportViewMode==='exec'?'Executive Report Builder':reportViewMode==='full'?'AI Program Status — Full View':'Business Outcomes & Impact'}</h2>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <label style="font-size:14px;color:var(--muted);display:flex;align-items:center;gap:4px">Report as of <input type="date" id="rpt-asof" value="${reportAsOf}" style="padding:4px 8px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:14px;font-family:inherit" onchange="saveReportAsOf();render()"></label>
-          <div style="display:flex;gap:2px"><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='exec'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='exec'?'#fff':'var(--text)'}" onclick="localStorage.setItem('atlas_report_view','exec');render()">Executive</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='full'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='full'?'#fff':'var(--text)'}" onclick="localStorage.setItem('atlas_report_view','full');render()">Full</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:var(--bg-subtle);color:var(--text)" onclick="localStorage.setItem('atlas_report_view','outcomes');render()">Outcomes</button></div>
+          ${reportViewMode!=='exec'?`<label style="font-size:14px;color:var(--muted);display:flex;align-items:center;gap:4px">Report as of <input type="date" id="rpt-asof" value="${reportAsOf}" style="padding:4px 8px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:14px;font-family:inherit" onchange="saveReportAsOf();render()"></label>`:`<input type="hidden" id="rpt-asof" value="${reportAsOf}">`}
+          <div style="display:flex;gap:2px"><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='exec'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='exec'?'#fff':'var(--text)'}" onclick="localStorage.setItem('atlas_report_view','exec');render()">Executive</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='full'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='full'?'#fff':'var(--text)'}" onclick="localStorage.setItem('atlas_report_view','full');render()">Full</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='outcomes'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='outcomes'?'#fff':'var(--text)'}" onclick="localStorage.setItem('atlas_report_view','outcomes');render()">Outcomes</button></div>
         </div>
       </div>
-    </div>`:''}
-    ${reportViewMode==='outcomes'?`<div class="rpt-outcomes-bar" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap"><input type="hidden" id="rpt-asof" value="${reportAsOf}"><span style="font-size:12px;color:var(--muted)">View:</span><div style="display:flex;gap:2px"><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:var(--bg-subtle);color:var(--text)" onclick="localStorage.setItem('atlas_report_view','exec');render()">Executive</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:var(--bg-subtle);color:var(--text)" onclick="localStorage.setItem('atlas_report_view','full');render()">Full</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--accent);background:var(--accent);color:#fff;border-color:var(--accent)" onclick="localStorage.setItem('atlas_report_view','outcomes');render()">Outcomes</button></div></div>`:''}
+    </div>
 
     ${workstreamSection}
     ${milestoneSectionFull}
@@ -3505,13 +3624,13 @@ function rReport(c){
     </div>`:''}
     </div>
 
-    <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap">
+    ${reportViewMode!=='exec'?`<div style="display:flex;gap:6px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap">
       <button class="mbtn" style="border:1px solid var(--border);color:var(--text)" onclick="updateAllWorkstreamsFromActionItems()">&#128260; Update from action items</button>
       <button class="mbtn" style="border:1px solid var(--border);color:var(--text)" onclick="copyReport()">&#128203; Copy text</button>
       <button class="mbtn" style="border:1px solid var(--border);color:var(--text)" onclick="copyReportImage()">&#128248; Copy image</button>
       ${OPENAI_KEY?'<button class="mbtn" style="background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;border:none" onclick="aiSummarizeReport()">&#10024; AI Summarize</button>':''}
       <button class="mbtn mb-save" onclick="saveReport()">Save</button>
-    </div>
+    </div>`:''}
   </div>`;
 }
 function saveReportAsOf(){
@@ -3801,141 +3920,12 @@ function saveExecWsDetail(wsId,field,val){
   er.wsDetails[wsId][field]=val;
   save();
 }
-
-function rExecReport(c){
-  const er=getExecReport();
-  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
-  const buWs=allWs.filter(w=>w.category==='BU').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-  const ccWs=allWs.filter(w=>w.category==='Cross-cutting').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-  const doneTasks=(D.tasks||[]).filter(t=>t.status==='done').length;
-  const openRisks=(D.risks||[]).filter(r=>r.status==='open').length;
-  const decCount=(D.decisions||[]).length;
-  const msHit=(D.tasks||[]).filter(t=>t.isMilestone&&t.status==='done').length;
-
-  const ta=`style="width:100%;font-size:12.5px;padding:8px 10px;border:1px solid var(--border-lt);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text);resize:vertical;font-family:Arial,sans-serif;line-height:1.5"`;
-
-  const wsCard=(w,idx)=>{
-    const det=(er.wsDetails||{})[w.id]||{};
-    return `<div style="background:var(--bg-card);border:1px solid var(--border-lt);border-radius:var(--r-md);padding:16px;margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-        <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${w.color||'var(--muted)'}"></span>
-        <strong style="font-size:14px">${esc(w.name)}</strong>
-        <span class="pill pill-m" style="font-size:10px;margin-left:auto">${wsStatusLabel(w.status)}</span>
-      </div>
-      <div style="margin-bottom:10px">
-        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Purpose</label>
-        <textarea ${ta} rows="2" placeholder="Deploy AI in this area to improve…"
-          onchange="saveExecWsDetail('${w.id}','purpose',this.value)">${esc(det.purpose||'')}</textarea>
-      </div>
-      <div style="margin-bottom:10px">
-        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Target Outcomes</label>
-        <textarea ${ta} rows="3" placeholder="• Outcome 1&#10;• Outcome 2"
-          onchange="saveExecWsDetail('${w.id}','outcomes',this.value)">${esc(det.outcomes||'')}</textarea>
-      </div>
-      <div style="margin-bottom:10px">
-        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Key Progress</label>
-        <textarea ${ta} rows="3" placeholder="• Kickoff complete&#10;• Platform aligned"
-          onchange="saveExecWsDetail('${w.id}','progress',this.value)">${esc(det.progress||'')}</textarea>
-      </div>
-      <div style="margin-bottom:10px">
-        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Next Steps</label>
-        <textarea ${ta} rows="3" placeholder="• April: Workshop series&#10;• May: Roadmap delivery"
-          onchange="saveExecWsDetail('${w.id}','nextSteps',this.value)">${esc(det.nextSteps||'')}</textarea>
-      </div>
-      <div>
-        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Enterprise Value (one-liner)</label>
-        <input type="text" value="${esc(det.value||'')}" placeholder="AI can be deployed safely & repeatably in…"
-          style="width:100%;font-size:12.5px;padding:6px 10px;border:1px solid var(--border-lt);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text)"
-          onchange="saveExecWsDetail('${w.id}','value',this.value)">
-      </div>
-    </div>`;
-  };
-
-  c.innerHTML=`
-  <div class="page-wrap" style="max-width:960px;margin:0 auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-      <div>
-        <h2 style="margin:0;font-size:20px;font-weight:800;letter-spacing:-.02em">Executive Report Builder</h2>
-        <p style="margin:4px 0 0;font-size:13px;color:var(--muted)">Edit slide content below, then export to PowerPoint. All fields save automatically.</p>
-      </div>
-      <button class="tb-btn" style="background:#00274C;color:#fff;font-size:13px;padding:8px 18px;font-weight:700;border-radius:var(--r-sm)" onclick="exportExecPptx()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Export to PowerPoint
-      </button>
-    </div>
-
-    <!-- SLIDE 1: Executive Summary -->
-    <div class="ws-section" id="execSec-1" style="margin-bottom:16px">
-      <div class="ws-section-hd" onclick="toggleWsSection('execSec-1')">
-        <h4>Slide 1 — Executive Summary</h4><span class="ws-section-arrow">&#9660;</span>
-      </div>
-      <div class="ws-section-bd">
-        <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">
-          <div style="flex:1;min-width:120px;padding:12px 16px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-radius:var(--r-sm);text-align:center">
-            <div style="font-size:22px;font-weight:800;color:var(--accent)">${allWs.length}</div>
-            <div style="font-size:11px;color:var(--muted);font-weight:600">Active Workstreams</div>
-          </div>
-          <div style="flex:1;min-width:120px;padding:12px 16px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-radius:var(--r-sm);text-align:center">
-            <div style="font-size:22px;font-weight:800;color:var(--green)">${doneTasks}</div>
-            <div style="font-size:11px;color:var(--muted);font-weight:600">Items Completed</div>
-          </div>
-          <div style="flex:1;min-width:120px;padding:12px 16px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-radius:var(--r-sm);text-align:center">
-            <div style="font-size:22px;font-weight:800;color:var(--yellow)">${openRisks}</div>
-            <div style="font-size:11px;color:var(--muted);font-weight:600">Open Risks</div>
-          </div>
-          <div style="flex:1;min-width:120px;padding:12px 16px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-radius:var(--r-sm);text-align:center">
-            <div style="font-size:22px;font-weight:800;color:var(--text)">${msHit}</div>
-            <div style="font-size:11px;color:var(--muted);font-weight:600">Milestones Hit</div>
-          </div>
-        </div>
-        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px">Executive Summary Narrative</label>
-        <textarea id="exec-summary" style="width:100%;min-height:140px;font-size:12.5px;padding:8px 10px;border:1px solid var(--border-lt);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text);resize:vertical;font-family:Arial,sans-serif;line-height:1.5"
-          placeholder="Program vision, current state, key themes…"
-          onchange="saveExecField('summary',this.value)">${esc(er.summary)}</textarea>
-      </div>
-    </div>
-
-    <!-- SLIDE 2: Progress & Wins -->
-    <div class="ws-section" id="execSec-2" style="margin-bottom:16px">
-      <div class="ws-section-hd" onclick="toggleWsSection('execSec-2')">
-        <h4>Slide 2 — Progress & Wins</h4><span class="ws-section-arrow">&#9660;</span>
-      </div>
-      <div class="ws-section-bd">
-        <div style="display:flex;gap:10px;margin-bottom:10px;font-size:12px;color:var(--muted)">
-          <span><strong>${doneTasks}</strong> items completed</span><span>•</span>
-          <span><strong>${msHit}</strong> milestones hit</span><span>•</span>
-          <span><strong>${decCount}</strong> decisions made</span>
-        </div>
-        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px">Program-Wide Wins & Accomplishments</label>
-        <textarea id="exec-wins" style="width:100%;min-height:180px;font-size:12.5px;padding:8px 10px;border:1px solid var(--border-lt);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text);resize:vertical;font-family:Arial,sans-serif;line-height:1.5"
-          placeholder="• Key accomplishment 1&#10;• Key accomplishment 2&#10;• Milestone reached…"
-          onchange="saveExecField('wins',this.value)">${esc(er.wins)}</textarea>
-        <p style="margin:6px 0 0;font-size:11px;color:var(--muted)">Two-column bullet layout on the slide. Use bullet lines (•, -, or *).</p>
-      </div>
-    </div>
-
-    <!-- SLIDE 3: BU Workstreams -->
-    <div class="ws-section" id="execSec-3" style="margin-bottom:16px">
-      <div class="ws-section-hd" onclick="toggleWsSection('execSec-3')">
-        <h4>Slide 3 — Business Unit Workstreams (${buWs.length})</h4><span class="ws-section-arrow">&#9660;</span>
-      </div>
-      <div class="ws-section-bd">
-        <p style="font-size:12px;color:var(--muted);margin:0 0 12px">${buWs.length<=2?'Two-column detail layout. Fill in Purpose, Outcomes, Progress, Next Steps, and Enterprise Value.':'Compact layout — all workstreams on one slide. Fill in details for each.'}</p>
-        ${buWs.length?buWs.map(wsCard).join(''):'<p style="color:var(--muted);font-size:13px">No BU workstreams.</p>'}
-      </div>
-    </div>
-
-    <!-- SLIDE 4: Crosscutting -->
-    <div class="ws-section" id="execSec-4" style="margin-bottom:16px">
-      <div class="ws-section-hd" onclick="toggleWsSection('execSec-4')">
-        <h4>Slide 4 — Crosscutting Initiatives (${ccWs.length})</h4><span class="ws-section-arrow">&#9660;</span>
-      </div>
-      <div class="ws-section-bd">
-        <p style="font-size:12px;color:var(--muted);margin:0 0 12px">${ccWs.length<=2?'Two-column detail layout.':'Compact layout — all initiatives on one slide.'}</p>
-        ${ccWs.length?ccWs.map(wsCard).join(''):'<p style="color:var(--muted);font-size:13px">No crosscutting initiatives.</p>'}
-      </div>
-    </div>
-  </div>`;
+function saveBulkParentWs(wsId,parentId){
+  const w=(D.workstreams||[]).find(x=>x.id===wsId);
+  if(!w)return;
+  w.parentWs=parentId||'';
+  save();
+  toast(esc(w.name)+(parentId?' → child of '+esc((D.workstreams||[]).find(p=>p.id===parentId)?.name||''):'  → top-level'));
 }
 
 // PPTX EXPORT
@@ -4021,18 +4011,22 @@ async function exportExecPptx(){
 
   // ── SLIDE 3 & 4: Workstreams ──
   function groupWsForReport(wsList){
+    const parents=wsList.filter(w=>!w.parentWs);
+    const children=wsList.filter(w=>w.parentWs);
     const groups=[];
-    const grouped={};
-    wsList.forEach(w=>{
-      const g=(w.reportGroup||'').trim();
-      if(g){
-        if(!grouped[g])grouped[g]={name:g,items:[],color:w.color||'999999'};
-        grouped[g].items.push(w);
+    parents.forEach(p=>{
+      const kids=children.filter(c=>c.parentWs===p.id);
+      if(kids.length){
+        groups.push({name:p.name,items:[p,...kids],color:p.color||'999999'});
       }else{
-        groups.push({name:w.name,items:[w],color:w.color||'999999'});
+        groups.push({name:p.name,items:[p],color:p.color||'999999'});
       }
     });
-    Object.values(grouped).forEach(g=>groups.push(g));
+    children.forEach(c=>{
+      if(!parents.find(p=>p.id===c.parentWs)){
+        groups.push({name:c.name,items:[c],color:c.color||'999999'});
+      }
+    });
     groups.sort((a,b)=>a.name.localeCompare(b.name));
     return groups;
   }
