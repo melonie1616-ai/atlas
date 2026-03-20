@@ -526,6 +526,7 @@ body.nav-collapsed .topbar-menu{display:flex}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/gitbrent/PptxGenJS@3.12.0/dist/pptxgen.bundle.js"></script>
 </head>
 <body>
 
@@ -607,6 +608,10 @@ body.nav-collapsed .topbar-menu{display:flex}
       <div class="ni" data-v="report" onclick="go('report')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Report Out
+      </div>
+      <div class="ni" data-v="execreport" onclick="go('execreport')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Executive Report
       </div>
     </div>
 
@@ -690,7 +695,7 @@ body.nav-collapsed .topbar-menu{display:flex}
 
 
 <script>
-let D,V='dashboard',ME='',dbRef=null,firebaseReady=false,ganttZoom='6m',ganttShowTasks=false,ganttShowWs=false,ganttShowMs=false,ganttCustomStart='';
+let D,V='dashboard',ME='',dbRef=null,firebaseReady=false,ganttZoom='3m',ganttShowTasks=false,ganttShowWs=false,ganttShowMs=false,ganttShowBU=false,ganttShowCC=false,ganttCustomStart='';
 const RELEASE_VERSION='2026-03-17';
 const RELEASE_NOTES=[
   {date:'March 17, 2026',whatsNew:[
@@ -1457,7 +1462,7 @@ function go(v){
   });
   const titles={dashboard:'Dashboard',workstreams:'Workstreams',engagements:'Engagements',
     tasks:'Action Items',mywork:'My Work Items',people:'People',
-    report:'Report Out',ask:'Ask AI',strategy:'Framework',decisions:'Decision Log',
+    report:'Report Out',execreport:'Executive Report',ask:'Ask AI',strategy:'Framework',decisions:'Decision Log',
     risks:'Risk Register',metrics:'Success Metrics'};
   document.getElementById('viewTitle').textContent=titles[v]||v;
   const ab=document.getElementById('addBtn');
@@ -1496,7 +1501,7 @@ function badges(){
 function render(){
   const c=document.getElementById('content');
   ({dashboard:rDash,workstreams:rWork,
-    tasks:rTasks,extract:rExtract,mywork:rMyWork,people:rPeople,report:rReport,ask:rAsk,strategy:rStrategy,
+    tasks:rTasks,extract:rExtract,mywork:rMyWork,people:rPeople,report:rReport,execreport:rExecReport,ask:rAsk,strategy:rStrategy,
     decisions:rDecisions,risks:rRisks,metrics:rMetrics})[V]?.(c);
   badges();autoUpdateMilestones();
 }
@@ -1931,10 +1936,14 @@ function buildGantt(){
     </div>`;
   }
 
-  const wsWithRanges=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting').map(w=>{
+  const wsWithRanges=(D.workstreams||[]).filter(w=>{
+    if(w.category==='BU')return ganttShowBU;
+    if(w.category==='Cross-cutting')return ganttShowCC;
+    return false;
+  }).map(w=>{
     const r=wsTimelineRange(w.id);
     return r&&r.effectiveStart&&r.effectiveEnd?{...w,effStart:r.effectiveStart,effEnd:r.effectiveEnd,isManual:r.isManual}:null;
-  }).filter(Boolean).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  }).filter(Boolean).sort((a,b)=>(a.effStart||'').localeCompare(b.effStart||''));
   const visDatedWs=wsWithRanges.filter(w=>{const l=pct(w.effStart),r=pct(w.effEnd);return r>0&&l<100});
   if(ganttShowWs&&visDatedWs.length){
     const rowH=28;
@@ -2024,6 +2033,8 @@ function buildGantt(){
 
   const swimToggles=`<span style="font-size:11px;color:var(--light);margin-left:8px">Show:</span>`
     +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowWs?'checked':''} onchange="ganttShowWs=this.checked;render()" style="cursor:pointer"> Workstreams</label>`
+    +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowBU?'checked':''} onchange="ganttShowBU=this.checked;render()" style="cursor:pointer"> BU</label>`
+    +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowCC?'checked':''} onchange="ganttShowCC=this.checked;render()" style="cursor:pointer"> Crosscutting</label>`
     +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowMs?'checked':''} onchange="ganttShowMs=this.checked;render()" style="cursor:pointer"> Milestones</label>`
     +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowTasks?'checked':''} onchange="ganttShowTasks=this.checked;render()" style="cursor:pointer"> Action Items</label>`;
 
@@ -2212,6 +2223,7 @@ function openWsEdit(id){
           <div class="fg"><label>Status</label><select id="ws-status">${(()=>{const st=w?.status;const formVal=!st?'not-started':['on-track','at-risk','blocked'].includes(st)?'delivery':st;return WS_STATUSES.map(s=>`<option value="${s.value}"${formVal===s.value?' selected':''}>${s.label}</option>`).join('');})()}</select></div>
           <div class="fg"><label>Color</label><select id="ws-color">${colors.map(cl=>`<option value="${cl}"${(w?.color||'#6366f1')===cl?' selected':''} style="background:${cl};color:#fff">${cl}</option>`).join('')}</select></div>
         </div>
+        <div class="fg"><label>Report Group</label><input id="ws-reportGroup" value="${w?.reportGroup?esc(w.reportGroup):''}" placeholder="e.g. Operations — groups workstreams in exec report"></div>
         <div class="fg"><label>Description</label><textarea id="ws-desc" style="min-height:50px">${w?esc(w.desc):''}</textarea></div>
       </div>
     </div>
@@ -2415,6 +2427,7 @@ function saveWs(id){
   w.category=document.getElementById('ws-cat').value;
   w.status=document.getElementById('ws-status').value;
   w.color=document.getElementById('ws-color').value;
+  w.reportGroup=(document.getElementById('ws-reportGroup')?.value||'').trim();
   w.desc=document.getElementById('ws-desc').value.trim();
   w.recentAccomplishments=(document.getElementById('ws-recent')?.value||'').trim();
   w.whatsNext=(document.getElementById('ws-whatsnext')?.value||'').trim();
@@ -3756,6 +3769,371 @@ async function aiPopulateAllWorkstreamBusinessOutcomes(){
   }
   save();render();
   toast('AI completed business outcome generation for '+allWs.length+' workstreams');
+}
+
+// ═══════════════════════════════════════════════════
+// EXECUTIVE REPORT
+// ═══════════════════════════════════════════════════
+
+function getExecReport(){
+  if(!D.execReport)D.execReport={};
+  const er=D.execReport;
+  if(!er.summary)er.summary='';
+  if(!er.wins)er.wins='';
+  if(!er.wsHighlights)er.wsHighlights={};
+  if(!er.wsDetails)er.wsDetails={};
+  return er;
+}
+
+function saveExecField(field,val){
+  const er=getExecReport();
+  er[field]=val;
+  save();
+}
+function saveExecWsHighlight(wsId,val){
+  const er=getExecReport();
+  er.wsHighlights[wsId]=val;
+  save();
+}
+function saveExecWsDetail(wsId,field,val){
+  const er=getExecReport();
+  if(!er.wsDetails[wsId])er.wsDetails[wsId]={};
+  er.wsDetails[wsId][field]=val;
+  save();
+}
+
+function rExecReport(c){
+  const er=getExecReport();
+  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  const buWs=allWs.filter(w=>w.category==='BU').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const ccWs=allWs.filter(w=>w.category==='Cross-cutting').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const doneTasks=(D.tasks||[]).filter(t=>t.status==='done').length;
+  const openRisks=(D.risks||[]).filter(r=>r.status==='open').length;
+  const decCount=(D.decisions||[]).length;
+  const msHit=(D.tasks||[]).filter(t=>t.isMilestone&&t.status==='done').length;
+
+  const ta=`style="width:100%;font-size:12.5px;padding:8px 10px;border:1px solid var(--border-lt);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text);resize:vertical;font-family:Arial,sans-serif;line-height:1.5"`;
+
+  const wsCard=(w,idx)=>{
+    const det=(er.wsDetails||{})[w.id]||{};
+    return `<div style="background:var(--bg-card);border:1px solid var(--border-lt);border-radius:var(--r-md);padding:16px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${w.color||'var(--muted)'}"></span>
+        <strong style="font-size:14px">${esc(w.name)}</strong>
+        <span class="pill pill-m" style="font-size:10px;margin-left:auto">${wsStatusLabel(w.status)}</span>
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Purpose</label>
+        <textarea ${ta} rows="2" placeholder="Deploy AI in this area to improve…"
+          onchange="saveExecWsDetail('${w.id}','purpose',this.value)">${esc(det.purpose||'')}</textarea>
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Target Outcomes</label>
+        <textarea ${ta} rows="3" placeholder="• Outcome 1&#10;• Outcome 2"
+          onchange="saveExecWsDetail('${w.id}','outcomes',this.value)">${esc(det.outcomes||'')}</textarea>
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Key Progress</label>
+        <textarea ${ta} rows="3" placeholder="• Kickoff complete&#10;• Platform aligned"
+          onchange="saveExecWsDetail('${w.id}','progress',this.value)">${esc(det.progress||'')}</textarea>
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Next Steps</label>
+        <textarea ${ta} rows="3" placeholder="• April: Workshop series&#10;• May: Roadmap delivery"
+          onchange="saveExecWsDetail('${w.id}','nextSteps',this.value)">${esc(det.nextSteps||'')}</textarea>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Enterprise Value (one-liner)</label>
+        <input type="text" value="${esc(det.value||'')}" placeholder="AI can be deployed safely & repeatably in…"
+          style="width:100%;font-size:12.5px;padding:6px 10px;border:1px solid var(--border-lt);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text)"
+          onchange="saveExecWsDetail('${w.id}','value',this.value)">
+      </div>
+    </div>`;
+  };
+
+  c.innerHTML=`
+  <div class="page-wrap" style="max-width:960px;margin:0 auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <h2 style="margin:0;font-size:20px;font-weight:800;letter-spacing:-.02em">Executive Report Builder</h2>
+        <p style="margin:4px 0 0;font-size:13px;color:var(--muted)">Edit slide content below, then export to PowerPoint. All fields save automatically.</p>
+      </div>
+      <button class="tb-btn" style="background:#00274C;color:#fff;font-size:13px;padding:8px 18px;font-weight:700;border-radius:var(--r-sm)" onclick="exportExecPptx()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export to PowerPoint
+      </button>
+    </div>
+
+    <!-- SLIDE 1: Executive Summary -->
+    <div class="ws-section" id="execSec-1" style="margin-bottom:16px">
+      <div class="ws-section-hd" onclick="toggleWsSection('execSec-1')">
+        <h4>Slide 1 — Executive Summary</h4><span class="ws-section-arrow">&#9660;</span>
+      </div>
+      <div class="ws-section-bd">
+        <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+          <div style="flex:1;min-width:120px;padding:12px 16px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-radius:var(--r-sm);text-align:center">
+            <div style="font-size:22px;font-weight:800;color:var(--accent)">${allWs.length}</div>
+            <div style="font-size:11px;color:var(--muted);font-weight:600">Active Workstreams</div>
+          </div>
+          <div style="flex:1;min-width:120px;padding:12px 16px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-radius:var(--r-sm);text-align:center">
+            <div style="font-size:22px;font-weight:800;color:var(--green)">${doneTasks}</div>
+            <div style="font-size:11px;color:var(--muted);font-weight:600">Items Completed</div>
+          </div>
+          <div style="flex:1;min-width:120px;padding:12px 16px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-radius:var(--r-sm);text-align:center">
+            <div style="font-size:22px;font-weight:800;color:var(--yellow)">${openRisks}</div>
+            <div style="font-size:11px;color:var(--muted);font-weight:600">Open Risks</div>
+          </div>
+          <div style="flex:1;min-width:120px;padding:12px 16px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-radius:var(--r-sm);text-align:center">
+            <div style="font-size:22px;font-weight:800;color:var(--text)">${msHit}</div>
+            <div style="font-size:11px;color:var(--muted);font-weight:600">Milestones Hit</div>
+          </div>
+        </div>
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px">Executive Summary Narrative</label>
+        <textarea id="exec-summary" style="width:100%;min-height:140px;font-size:12.5px;padding:8px 10px;border:1px solid var(--border-lt);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text);resize:vertical;font-family:Arial,sans-serif;line-height:1.5"
+          placeholder="Program vision, current state, key themes…"
+          onchange="saveExecField('summary',this.value)">${esc(er.summary)}</textarea>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Progress & Wins -->
+    <div class="ws-section" id="execSec-2" style="margin-bottom:16px">
+      <div class="ws-section-hd" onclick="toggleWsSection('execSec-2')">
+        <h4>Slide 2 — Progress & Wins</h4><span class="ws-section-arrow">&#9660;</span>
+      </div>
+      <div class="ws-section-bd">
+        <div style="display:flex;gap:10px;margin-bottom:10px;font-size:12px;color:var(--muted)">
+          <span><strong>${doneTasks}</strong> items completed</span><span>•</span>
+          <span><strong>${msHit}</strong> milestones hit</span><span>•</span>
+          <span><strong>${decCount}</strong> decisions made</span>
+        </div>
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px">Program-Wide Wins & Accomplishments</label>
+        <textarea id="exec-wins" style="width:100%;min-height:180px;font-size:12.5px;padding:8px 10px;border:1px solid var(--border-lt);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text);resize:vertical;font-family:Arial,sans-serif;line-height:1.5"
+          placeholder="• Key accomplishment 1&#10;• Key accomplishment 2&#10;• Milestone reached…"
+          onchange="saveExecField('wins',this.value)">${esc(er.wins)}</textarea>
+        <p style="margin:6px 0 0;font-size:11px;color:var(--muted)">Two-column bullet layout on the slide. Use bullet lines (•, -, or *).</p>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: BU Workstreams -->
+    <div class="ws-section" id="execSec-3" style="margin-bottom:16px">
+      <div class="ws-section-hd" onclick="toggleWsSection('execSec-3')">
+        <h4>Slide 3 — Business Unit Workstreams (${buWs.length})</h4><span class="ws-section-arrow">&#9660;</span>
+      </div>
+      <div class="ws-section-bd">
+        <p style="font-size:12px;color:var(--muted);margin:0 0 12px">${buWs.length<=2?'Two-column detail layout. Fill in Purpose, Outcomes, Progress, Next Steps, and Enterprise Value.':'Compact layout — all workstreams on one slide. Fill in details for each.'}</p>
+        ${buWs.length?buWs.map(wsCard).join(''):'<p style="color:var(--muted);font-size:13px">No BU workstreams.</p>'}
+      </div>
+    </div>
+
+    <!-- SLIDE 4: Crosscutting -->
+    <div class="ws-section" id="execSec-4" style="margin-bottom:16px">
+      <div class="ws-section-hd" onclick="toggleWsSection('execSec-4')">
+        <h4>Slide 4 — Crosscutting Initiatives (${ccWs.length})</h4><span class="ws-section-arrow">&#9660;</span>
+      </div>
+      <div class="ws-section-bd">
+        <p style="font-size:12px;color:var(--muted);margin:0 0 12px">${ccWs.length<=2?'Two-column detail layout.':'Compact layout — all initiatives on one slide.'}</p>
+        ${ccWs.length?ccWs.map(wsCard).join(''):'<p style="color:var(--muted);font-size:13px">No crosscutting initiatives.</p>'}
+      </div>
+    </div>
+  </div>`;
+}
+
+// PPTX EXPORT
+
+function parseBullets(text){
+  return (text||'').split('\n').map(l=>l.replace(/^[\s]*[•\-\*]\s*/,'')).filter(l=>l.trim());
+}
+
+async function exportExecPptx(){
+  if(typeof PptxGenJS==='undefined'){toast('PptxGenJS library not loaded');return}
+
+  const er=getExecReport();
+  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  const buWs=allWs.filter(w=>w.category==='BU').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const ccWs=allWs.filter(w=>w.category==='Cross-cutting').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const doneTasks=(D.tasks||[]).filter(t=>t.status==='done').length;
+  const openRisks=(D.risks||[]).filter(r=>r.status==='open').length;
+  const decCount=(D.decisions||[]).length;
+  const msHit=(D.tasks||[]).filter(t=>t.isMilestone&&t.status==='done').length;
+
+  let logoB64='';
+  try{
+    const resp=await fetch('dlr-logo.png');
+    const blob=await resp.blob();
+    logoB64=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(blob)});
+  }catch(e){}
+
+  const pptx=new PptxGenJS();
+  pptx.defineLayout({name:'DLR',width:13.333,height:7.5});
+  pptx.layout='DLR';
+
+  const BLACK='000000';
+  const NAVY='00274C';
+  const GRAY='666666';
+  const dateStr=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  let pageNum=0;
+
+  function addFooter(slide){
+    pageNum++;
+    if(logoB64)slide.addImage({data:logoB64,x:0.5,y:6.7,h:0.45,w:1.2,sizing:{type:'contain',w:1.2,h:0.45}});
+    slide.addText(String(pageNum),{x:12.3,y:6.85,w:0.6,h:0.3,fontSize:10,color:GRAY,align:'right',fontFace:'Arial'});
+  }
+
+  // ── SLIDE 1: Executive Summary ──
+  const s1=pptx.addSlide();
+  s1.addText('AI Transformation Program Update',{x:0.5,y:0.3,w:10,h:0.5,fontSize:30,bold:true,color:BLACK,fontFace:'Arial'});
+  s1.addText(dateStr,{x:10.5,y:0.3,w:2.5,h:0.5,fontSize:12,color:GRAY,fontFace:'Arial',align:'right'});
+
+  const kpis=[
+    {label:'Active Workstreams',val:String(allWs.length),clr:NAVY},
+    {label:'Items Completed',val:String(doneTasks),clr:'16A34A'},
+    {label:'Open Risks',val:String(openRisks),clr:'D97706'},
+    {label:'Milestones Hit',val:String(msHit),clr:NAVY}
+  ];
+  kpis.forEach((k,i)=>{
+    const kx=0.5+i*3.1;
+    s1.addShape(pptx.ShapeType.roundRect,{x:kx,y:1.05,w:2.7,h:0.8,fill:{color:'F5F5F5'},rectRadius:0.08});
+    s1.addText(k.val,{x:kx,y:1.05,w:2.7,h:0.48,fontSize:20,bold:true,color:k.clr,align:'center',fontFace:'Arial'});
+    s1.addText(k.label,{x:kx,y:1.48,w:2.7,h:0.3,fontSize:9,color:GRAY,align:'center',fontFace:'Arial'});
+  });
+
+  const summaryLines=parseBullets(er.summary);
+  if(summaryLines.length){
+    s1.addText(summaryLines.map(l=>({text:'\u2022  '+l+'\n',options:{fontSize:12,color:BLACK,fontFace:'Arial',bullet:false}})),{x:0.5,y:2.1,w:12,h:4.2,valign:'top',lineSpacingMultiple:1.3});
+  }else if(er.summary){
+    s1.addText(er.summary,{x:0.5,y:2.1,w:12,h:4.2,fontSize:12,color:BLACK,fontFace:'Arial',valign:'top',lineSpacingMultiple:1.3});
+  }
+  addFooter(s1);
+
+  // ── SLIDE 2: Progress & Wins ──
+  const s2=pptx.addSlide();
+  s2.addText('Progress & Wins',{x:0.5,y:0.4,w:10,h:0.55,fontSize:30,bold:true,color:BLACK,fontFace:'Arial'});
+  s2.addText(doneTasks+' items completed  \u2022  '+msHit+' milestones hit  \u2022  '+decCount+' decisions made',{x:0.5,y:1.0,w:12,h:0.3,fontSize:11,color:GRAY,fontFace:'Arial'});
+
+  const winLines=parseBullets(er.wins);
+  if(winLines.length){
+    const mid=Math.ceil(winLines.length/2);
+    const fmt=(arr)=>arr.map(l=>({text:'\u2022  '+l+'\n',options:{fontSize:12,color:BLACK,fontFace:'Arial',bullet:false}}));
+    s2.addText(fmt(winLines.slice(0,mid)),{x:0.5,y:1.5,w:5.8,h:4.8,valign:'top',lineSpacingMultiple:1.25});
+    if(winLines.length>mid)s2.addText(fmt(winLines.slice(mid)),{x:6.8,y:1.5,w:5.8,h:4.8,valign:'top',lineSpacingMultiple:1.25});
+  }
+  addFooter(s2);
+
+  // ── SLIDE 3 & 4: Workstreams ──
+  function groupWsForReport(wsList){
+    const groups=[];
+    const grouped={};
+    wsList.forEach(w=>{
+      const g=(w.reportGroup||'').trim();
+      if(g){
+        if(!grouped[g])grouped[g]={name:g,items:[],color:w.color||'999999'};
+        grouped[g].items.push(w);
+      }else{
+        groups.push({name:w.name,items:[w],color:w.color||'999999'});
+      }
+    });
+    Object.values(grouped).forEach(g=>groups.push(g));
+    groups.sort((a,b)=>a.name.localeCompare(b.name));
+    return groups;
+  }
+
+  function groupStats(items){
+    let totalTasks=0,totalDone=0;
+    const purposes=[],progresses=[],highlights=[];
+    items.forEach(w=>{
+      const tasks=(D.tasks||[]).filter(t=>t.workstream===w.id);
+      totalTasks+=tasks.length;totalDone+=tasks.filter(t=>t.status==='done').length;
+      const det=(er.wsDetails||{})[w.id]||{};
+      if(det.purpose)purposes.push(det.purpose);
+      if(det.progress)progresses.push(...parseBullets(det.progress));
+      const hl=(er.wsHighlights||{})[w.id];if(hl)highlights.push(hl);
+    });
+    return {pct:totalTasks?Math.round(totalDone/totalTasks*100):0,totalTasks,totalDone,purposes,progresses,highlights};
+  }
+
+  function addWsSlide(title,wsList){
+    const sl=pptx.addSlide();
+    sl.addText(title,{x:0.5,y:0.4,w:10,h:0.55,fontSize:30,bold:true,color:BLACK,fontFace:'Arial'});
+    sl.addText(dateStr,{x:10.5,y:0.4,w:2.5,h:0.55,fontSize:11,color:GRAY,fontFace:'Arial',align:'right'});
+
+    if(!wsList.length){
+      sl.addText('No workstreams in this category.',{x:0.5,y:1.5,w:10,h:0.5,fontSize:13,color:GRAY,fontFace:'Arial'});
+      addFooter(sl);return;
+    }
+
+    const reportRows=groupWsForReport(wsList);
+
+    if(reportRows.length<=2){
+      reportRows.forEach((g,ci)=>{
+        const xOff=ci===0?0.5:6.9;
+        const colW=5.8;
+        const w0=g.items[0];
+        const det=(er.wsDetails||{})[w0.id]||{};
+        const stats=groupStats(g.items);
+        const mergedPurpose=g.items.length===1?(det.purpose||''):stats.purposes.join(' | ');
+        const mergedOutcomes=g.items.length===1?(det.outcomes||''):g.items.map(w=>(er.wsDetails||{})[w.id]||{}).map(d=>d.outcomes||'').filter(Boolean).join('\n');
+        const mergedProgress=g.items.length===1?(det.progress||''):stats.progresses.map(l=>'• '+l).join('\n');
+        const mergedNext=g.items.length===1?(det.nextSteps||''):g.items.map(w=>(er.wsDetails||{})[w.id]||{}).map(d=>d.nextSteps||'').filter(Boolean).join('\n');
+        const mergedValue=g.items.length===1?(det.value||''):g.items.map(w=>((er.wsDetails||{})[w.id]||{}).value||'').filter(Boolean).join(' | ');
+
+        sl.addText(g.name,{x:xOff,y:1.1,w:colW,h:0.4,fontSize:16,bold:true,color:BLACK,fontFace:'Arial'});
+
+        let yPos=1.55;
+        const addSec=(label,text)=>{
+          sl.addText(label,{x:xOff,y:yPos,w:colW,h:0.25,fontSize:11,bold:true,color:NAVY,fontFace:'Arial'});
+          yPos+=0.25;
+          const lines=parseBullets(text);
+          if(lines.length){
+            const bH=Math.min(lines.length*0.22+0.05,1.6);
+            sl.addText(lines.map(l=>({text:'\u2022  '+l+'\n',options:{fontSize:11,color:BLACK,fontFace:'Arial',bullet:false}})),{x:xOff,y:yPos,w:colW,h:bH,valign:'top',lineSpacingMultiple:1.15});
+            yPos+=bH+0.04;
+          }else if(text){
+            sl.addText(text,{x:xOff,y:yPos,w:colW,h:0.35,fontSize:11,color:BLACK,fontFace:'Arial',valign:'top'});
+            yPos+=0.35;
+          }else{yPos+=0.04}
+        };
+        addSec('Purpose',mergedPurpose);
+        addSec('Target Outcomes',mergedOutcomes);
+        addSec('Key Progress',mergedProgress);
+        addSec('Next Steps',mergedNext);
+        if(mergedValue){
+          sl.addShape(pptx.ShapeType.roundRect,{x:xOff,y:Math.min(yPos+0.04,6.05),w:colW,h:0.35,fill:{color:'F0F4F8'},rectRadius:0.05});
+          sl.addText('Enterprise Value: '+mergedValue,{x:xOff+0.1,y:Math.min(yPos+0.04,6.05),w:colW-0.2,h:0.35,fontSize:9,italic:true,color:NAVY,fontFace:'Arial',valign:'middle'});
+        }
+      });
+      if(reportRows.length===2)sl.addShape(pptx.ShapeType.line,{x:6.55,y:1.1,w:0,h:5.2,line:{color:'DDDDDD',width:0.75}});
+    }else{
+      const rowH=Math.min(0.48,4.8/reportRows.length);
+      const fontSize=reportRows.length>8?9:10;
+      reportRows.forEach((g,ri)=>{
+        const ry=1.2+ri*rowH;
+        if(ry>6.3)return;
+        const stats=groupStats(g.items);
+        const hl=g.items.length===1?((er.wsDetails||{})[g.items[0].id]||{}).purpose||(er.wsHighlights||{})[g.items[0].id]||'':stats.purposes.join(' | ')||stats.highlights.join(' | ');
+
+        sl.addShape(pptx.ShapeType.ellipse,{x:0.5,y:ry+0.1,w:0.14,h:0.14,fill:{color:(g.color||'999999').replace('#','')}});
+        sl.addText(g.name+(g.items.length>1?' ('+g.items.length+')':''),{x:0.75,y:ry,w:3.2,h:rowH,fontSize:fontSize,bold:true,color:BLACK,fontFace:'Arial',valign:'middle'});
+        sl.addText(g.items.length===1?wsStatusLabel(g.items[0].status):'',{x:4.0,y:ry,w:1.6,h:rowH,fontSize:fontSize-1,color:GRAY,fontFace:'Arial',valign:'middle'});
+
+        const barX=5.7,barW=1.3,barH=0.09,barY=ry+(rowH/2)-0.04;
+        sl.addShape(pptx.ShapeType.rect,{x:barX,y:barY,w:barW,h:barH,fill:{color:'E5E5E5'}});
+        if(stats.pct>0)sl.addShape(pptx.ShapeType.rect,{x:barX,y:barY,w:barW*(stats.pct/100),h:barH,fill:{color:(g.color||'0072CE').replace('#','')}});
+        sl.addText(stats.pct+'%',{x:barX+barW+0.08,y:ry,w:0.5,h:rowH,fontSize:fontSize-1,color:GRAY,fontFace:'Arial',valign:'middle'});
+
+        sl.addText(hl,{x:7.6,y:ry,w:5.2,h:rowH,fontSize:fontSize-1,color:BLACK,fontFace:'Arial',valign:'middle'});
+
+        if(ri<reportRows.length-1)sl.addShape(pptx.ShapeType.line,{x:0.5,y:ry+rowH,w:12.3,h:0,line:{color:'EEEEEE',width:0.5}});
+      });
+    }
+    addFooter(sl);
+  }
+
+  addWsSlide('Business Unit Workstreams',buWs);
+  addWsSlide('Crosscutting Initiatives',ccWs);
+
+  const fileDate=new Date().toISOString().slice(0,10);
+  pptx.writeFile({fileName:'AI-Transformation-Executive-Report-'+fileDate+'.pptx'});
+  toast('PowerPoint exported');
 }
 
 // ═══════════════════════════════════════════════════
