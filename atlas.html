@@ -609,6 +609,10 @@ body.nav-collapsed .topbar-menu{display:flex}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Report Out
       </div>
+      <div class="ni" data-v="ado" onclick="go('ado')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        ADO Sync
+      </div>
     </div>
 
   </div>
@@ -1459,7 +1463,7 @@ function go(v){
   const titles={dashboard:'Dashboard',workstreams:'Workstreams',engagements:'Engagements',
     tasks:'Action Items',mywork:'My Work Items',people:'People',
     report:'Report Out',ask:'Ask AI',strategy:'Framework',decisions:'Decision Log',
-    risks:'Risk Register',metrics:'Success Metrics'};
+    risks:'Risk Register',metrics:'Success Metrics',ado:'ADO Sync'};
   document.getElementById('viewTitle').textContent=titles[v]||v;
   const ab=document.getElementById('addBtn');
   if(v==='engagements')v=V='workstreams';
@@ -1498,7 +1502,7 @@ function render(){
   const c=document.getElementById('content');
   ({dashboard:rDash,workstreams:rWork,
     tasks:rTasks,extract:rExtract,mywork:rMyWork,people:rPeople,report:rReport,ask:rAsk,strategy:rStrategy,
-    decisions:rDecisions,risks:rRisks,metrics:rMetrics})[V]?.(c);
+    decisions:rDecisions,risks:rRisks,metrics:rMetrics,ado:rAdo})[V]?.(c);
   badges();autoUpdateMilestones();
 }
 
@@ -2229,8 +2233,9 @@ function openWsEdit(id){
         <div class="fg"><label>Name</label><input id="ws-name" value="${w?esc(w.name):''}"></div>
         <div class="fg-row">
           <div class="fg"><label>Lead</label><select id="ws-owner">${peopleOpts(w?.owner||'')}</select></div>
-          <div class="fg"><label>Category</label><select id="ws-cat"><option value="BU"${w?.category==='BU'?' selected':''}>Business Unit</option><option value="Cross-cutting"${(!w||w?.category==='Cross-cutting')?' selected':''}>Crosscutting</option></select></div>
+          <div class="fg"><label>Category</label><select id="ws-cat" onchange="var r=document.getElementById('ws-cctype-wrap');if(r)r.style.display=this.value==='Cross-cutting'?'':'none'"><option value="BU"${w?.category==='BU'?' selected':''}>Business Unit</option><option value="Cross-cutting"${(!w||w?.category==='Cross-cutting')?' selected':''}>Crosscutting</option></select></div>
         </div>
+        <div class="fg" id="ws-cctype-wrap" style="display:${w?.category==='Cross-cutting'?'':'none'}"><label>Subcategory</label><select id="ws-ccType"><option value="horizontal"${w?.ccType==='horizontal'?' selected':''}>Horizontal (AI for the Employee)</option><option value="platform"${w?.ccType!=='horizontal'?' selected':''}>Platform (Supporting Infrastructure)</option></select></div>
         <div class="fg"><label>Stakeholders</label>
           <div id="ws-stakeholders" style="display:flex;flex-wrap:wrap;gap:4px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);min-height:36px;max-height:180px;overflow-y:auto">
             ${(()=>{const sel=w?.stakeholders||[];const ppl=(D.people||[]).slice().sort((a,b)=>{const ac=sel.includes(a.name)?0:1,bc=sel.includes(b.name)?0:1;return ac!==bc?ac-bc:(a.name||'').localeCompare(b.name||'')});return ppl.map(p=>{const checked=sel.includes(p.name);return '<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;padding:2px 8px;border-radius:12px;border:1px solid '+(checked?'var(--accent)':'var(--border)')+';background:'+(checked?'rgba(99,102,241,.12)':'var(--bg)')+';white-space:nowrap;transition:all .1s" onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="if(!this.querySelector(\'input\').checked)this.style.borderColor=\'var(--border)\'" onclick="const cb=this.querySelector(\'input\');cb.checked=!cb.checked;this.style.background=cb.checked?\'rgba(99,102,241,.12)\':\'var(--bg)\';this.style.borderColor=cb.checked?\'var(--accent)\':\'var(--border)\'"><input type="checkbox" class="ws-sth-cb" value="'+esc(p.name)+'" '+(checked?'checked':'')+' style="accent-color:var(--accent);width:14px;height:14px;pointer-events:none"> '+esc(p.name)+'</label>'}).join('')})()}
@@ -2448,6 +2453,7 @@ function saveWs(id){
   w.name=name;
   w.owner=document.getElementById('ws-owner').value.trim();
   w.category=document.getElementById('ws-cat').value;
+  w.ccType=(w.category==='Cross-cutting'?(document.getElementById('ws-ccType')?.value||'platform'):'');
   w.status=document.getElementById('ws-status').value;
   w.color=document.getElementById('ws-color').value;
   w.parentWs=(document.getElementById('ws-parentWs')?.value||'');
@@ -3487,94 +3493,122 @@ function rReport(c){
     if(reportViewMode!=='exec')return '';
     const er=getExecReport();
     const ta=`style="width:100%;font-size:12.5px;padding:8px 10px;border:1px solid var(--border-lt);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text);resize:vertical;font-family:Arial,sans-serif;line-height:1.5"`;
-    const wsCard=(w)=>{
-      const det=(er.wsDetails||{})[w.id]||{};
-      const tasks=(D.tasks||[]).filter(t=>t.workstream===w.id);
-      const done=tasks.filter(t=>t.status==='done').length;
-      const pct=tasks.length?Math.round(done/tasks.length*100):0;
-      const parentLabel=w.parentWs?(D.workstreams||[]).find(p=>p.id===w.parentWs)?.name||'':'';
-      return `<div style="background:var(--bg-card);border:1px solid var(--border-lt);border-radius:var(--r-md);padding:14px;margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${w.color||'var(--muted)'}"></span>
-          <strong style="font-size:13px">${esc(w.name)}</strong>
-          ${parentLabel?'<span style="font-size:11px;color:var(--muted)">('+esc(parentLabel)+')</span>':''}
-          <span class="pill pill-m" style="font-size:9px;margin-left:auto">${wsStatusLabel(w.status)}</span>
-          <span style="font-size:11px;color:var(--muted)">${pct}%</span>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Purpose</label>
-            <textarea ${ta} rows="2" placeholder="What this workstream aims to achieve…" onchange="saveExecWsDetail('${w.id}','purpose',this.value)">${esc(det.purpose||'')}</textarea></div>
-          <div><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Target Outcomes</label>
-            <textarea ${ta} rows="2" placeholder="• Outcome 1" onchange="saveExecWsDetail('${w.id}','outcomes',this.value)">${esc(det.outcomes||'')}</textarea></div>
-          <div><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Key Progress</label>
-            <textarea ${ta} rows="2" placeholder="• Progress item" onchange="saveExecWsDetail('${w.id}','progress',this.value)">${esc(det.progress||'')}</textarea></div>
-          <div><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Next Steps</label>
-            <textarea ${ta} rows="2" placeholder="• Next step" onchange="saveExecWsDetail('${w.id}','nextSteps',this.value)">${esc(det.nextSteps||'')}</textarea></div>
-        </div>
-        <div style="margin-top:8px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Enterprise Value</label>
-          <input type="text" value="${esc(det.value||'')}" placeholder="One-liner value statement" style="width:100%;font-size:12px;padding:5px 8px;border:1px solid var(--border-lt);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text)" onchange="saveExecWsDetail('${w.id}','value',this.value)"></div>
-      </div>`;
-    };
+    const inp=`style="width:100%;font-size:12.5px;padding:6px 10px;border:1px solid var(--border-lt);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text);font-family:Arial,sans-serif"`;
+    const buParents=buWsSorted.filter(w=>!w.parentWs);
+    const horizWs=ccWsSorted.filter(w=>w.ccType==='horizontal');
+    const platWs=ccWsSorted.filter(w=>w.ccType!=='horizontal');
+    const totalTasks=(D.tasks||[]).length;
+    const doneTasks=(D.tasks||[]).filter(t=>t.status==='done').length;
+    const openTasks=totalTasks-doneTasks;
+    const teamSize=er.teamSize||6;
+    const featIds=er.featuredWs||[];
+    const wsDet=(wsId)=>(er.wsDetails||{})[wsId]||{};
     return `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div>
-        <p style="margin:0;font-size:13px;color:var(--muted)">Edit slide content below, then export to PowerPoint. All fields save automatically.</p>
-      </div>
+      <p style="margin:0;font-size:13px;color:var(--muted)">Build your executive report below, then export to PowerPoint. All fields auto-save.</p>
       <button class="tb-btn" style="background:#00274C;color:#fff;font-size:13px;padding:8px 16px;font-weight:700;border-radius:var(--r-sm)" onclick="exportExecPptx()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Export to PowerPoint
       </button>
     </div>
     <div class="ws-section" id="execSec-1" style="margin-bottom:14px">
-      <div class="ws-section-hd" onclick="toggleWsSection('execSec-1')"><h4>Slide 1 — Executive Summary</h4><span class="ws-section-arrow">&#9660;</span></div>
+      <div class="ws-section-hd" onclick="toggleWsSection('execSec-1')"><h4>Slide 1 &mdash; Title</h4><span class="ws-section-arrow">&#9660;</span></div>
       <div class="ws-section-bd">
-        <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-          <div style="flex:1;min-width:100px;padding:10px 14px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-radius:var(--r-sm);text-align:center">
-            <div style="font-size:20px;font-weight:800;color:var(--accent)">${allWs.length}</div><div style="font-size:10px;color:var(--muted);font-weight:600">Workstreams</div></div>
-          <div style="flex:1;min-width:100px;padding:10px 14px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-radius:var(--r-sm);text-align:center">
-            <div style="font-size:20px;font-weight:800;color:var(--green)">${(D.tasks||[]).filter(t=>t.status==='done').length}</div><div style="font-size:10px;color:var(--muted);font-weight:600">Completed</div></div>
-          <div style="flex:1;min-width:100px;padding:10px 14px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-radius:var(--r-sm);text-align:center">
-            <div style="font-size:20px;font-weight:800;color:var(--yellow)">${(D.risks||[]).filter(r=>r.status==='open').length}</div><div style="font-size:10px;color:var(--muted);font-weight:600">Open Risks</div></div>
-          <div style="flex:1;min-width:100px;padding:10px 14px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-radius:var(--r-sm);text-align:center">
-            <div style="font-size:20px;font-weight:800;color:var(--text)">${(D.tasks||[]).filter(t=>t.isMilestone&&t.status==='done').length}</div><div style="font-size:10px;color:var(--muted);font-weight:600">Milestones Hit</div></div>
-        </div>
-        <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px">Executive Summary Narrative</label>
-        <textarea id="exec-summary" ${ta} style="min-height:120px" placeholder="Program vision, current state, key themes…" onchange="saveExecField('summary',this.value)">${esc(er.summary)}</textarea>
+        <div class="fg"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Program Title</label>
+          <input id="exec-title" ${inp} value="${esc(er.titleText||'AI Transformation Program Update')}" onchange="saveExecField('titleText',this.value)"></div>
+        <div class="fg" style="margin-top:8px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Subtitle</label>
+          <input id="exec-subtitle" ${inp} value="${esc(er.subtitleText||'Corporate Data & AI Office')}" onchange="saveExecField('subtitleText',this.value)"></div>
+        <p style="margin:8px 0 0;font-size:11px;color:var(--muted)">Date is auto-generated from the report date.</p>
       </div>
     </div>
     <div class="ws-section" id="execSec-2" style="margin-bottom:14px">
-      <div class="ws-section-hd" onclick="toggleWsSection('execSec-2')"><h4>Slide 2 — Progress & Wins</h4><span class="ws-section-arrow">&#9660;</span></div>
+      <div class="ws-section-hd" onclick="toggleWsSection('execSec-2')"><h4>Slide 2 &mdash; Program Capacity &amp; Summary</h4><span class="ws-section-arrow">&#9660;</span></div>
       <div class="ws-section-bd">
-        <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px">Program-Wide Wins & Accomplishments</label>
-        <textarea id="exec-wins" ${ta} style="min-height:150px" placeholder="• Key accomplishment 1&#10;• Key accomplishment 2" onchange="saveExecField('wins',this.value)">${esc(er.wins)}</textarea>
-        <p style="margin:4px 0 0;font-size:11px;color:var(--muted)">Two-column bullet layout on slide. Use bullet lines (•, -, or *).</p>
+        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+          <div style="flex:1;min-width:140px;padding:12px 16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--r-sm)">
+            <div style="font-size:22px;font-weight:800;color:#1a5632">${buWs.length}</div>
+            <div style="font-size:11px;font-weight:700;color:#1a5632">Vertical AI</div>
+            <div style="font-size:10px;color:#64748b">across ${buParents.length} BUs</div></div>
+          <div style="flex:1;min-width:140px;padding:12px 16px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--r-sm)">
+            <div style="font-size:22px;font-weight:800;color:#2c4a8a">${horizWs.length}</div>
+            <div style="font-size:11px;font-weight:700;color:#2c4a8a">Horizontal AI</div>
+            <div style="font-size:10px;color:#64748b">AI for the Employee</div></div>
+          <div style="flex:1;min-width:140px;padding:12px 16px;background:#faf5ff;border:1px solid #e9d5ff;border-radius:var(--r-sm)">
+            <div style="font-size:22px;font-weight:800;color:#6b21a8">${platWs.length}</div>
+            <div style="font-size:11px;font-weight:700;color:#6b21a8">Platform AI</div>
+            <div style="font-size:10px;color:#64748b">Supporting Foundations</div></div>
+        </div>
+        <div class="fg-row" style="margin-bottom:12px">
+          <div class="fg"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Team Size (Supply)</label>
+            <input type="number" id="exec-teamsize" ${inp} value="${teamSize}" min="1" max="100" onchange="saveExecField('teamSize',parseInt(this.value)||6)"></div>
+          <div class="fg"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Dedication</label>
+            <select id="exec-teamdedicated" ${inp} onchange="saveExecField('teamDedicated',this.value==='true')">
+              <option value="false"${!er.teamDedicated?' selected':''}>Non-dedicated</option>
+              <option value="true"${er.teamDedicated?' selected':''}>Dedicated</option></select></div>
+        </div>
+        <div style="margin-bottom:12px;padding:10px 14px;background:var(--bg-subtle);border-radius:var(--r-sm);font-size:12px;color:var(--muted)">
+          <strong style="color:var(--text)">${totalTasks}</strong> action items &middot; <strong style="color:var(--text)">${doneTasks}</strong> completed &middot; <strong style="color:var(--text)">${openTasks}</strong> open/in-progress</div>
+        <div class="fg"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Summary Bullets (2-3 key narrative points)</label>
+          <textarea id="exec-summary" ${ta} rows="4" placeholder="Key themes and takeaways for leadership..." onchange="saveExecField('summary',this.value)">${esc(er.summary)}</textarea></div>
       </div>
     </div>
     <div class="ws-section collapsed" id="execSec-3" style="margin-bottom:14px">
-      <div class="ws-section-hd" onclick="toggleWsSection('execSec-3')"><h4>Slide 3 — Business Unit Workstreams (${buWs.length})</h4><span class="ws-section-arrow">&#9660;</span></div>
-      <div class="ws-section-bd">${buWs.length?buWs.map(wsCard).join(''):'<p style="color:var(--muted);font-size:13px">No BU workstreams.</p>'}</div>
+      <div class="ws-section-hd" onclick="toggleWsSection('execSec-3')"><h4>Slide 3 &mdash; Vertical Engagements (${buParents.length} BUs)</h4><span class="ws-section-arrow">&#9660;</span></div>
+      <div class="ws-section-bd">
+        <p style="font-size:11px;color:var(--muted);margin:0 0 10px">Each row appears on the vertical timeline slide. Keep updates short (1-2 lines).</p>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="border-bottom:2px solid var(--border)">
+            <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase;width:150px">Vertical</th>
+            <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase">Key Update</th>
+            <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase">Next Step</th>
+          </tr></thead>
+          <tbody>${buParents.map(w=>{const det=wsDet(w.id);return '<tr style="border-bottom:1px solid var(--border-lt)"><td style="padding:6px 8px;vertical-align:top"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(w.color||'var(--muted)')+';margin-right:6px;vertical-align:middle"></span><strong>'+esc(w.name)+'</strong></td><td style="padding:6px 8px"><textarea '+ta+' rows="2" placeholder="Key progress..." onchange="saveExecWsDetail(\''+w.id+'\',\'keyUpdate\',this.value)">'+esc(det.keyUpdate||'')+'</textarea></td><td style="padding:6px 8px"><textarea '+ta+' rows="2" placeholder="What\'s next..." onchange="saveExecWsDetail(\''+w.id+'\',\'keyNext\',this.value)">'+esc(det.keyNext||'')+'</textarea></td></tr>';}).join('')}</tbody>
+        </table>
+      </div>
     </div>
     <div class="ws-section collapsed" id="execSec-4" style="margin-bottom:14px">
-      <div class="ws-section-hd" onclick="toggleWsSection('execSec-4')"><h4>Slide 4 — Crosscutting Initiatives (${ccWs.length})</h4><span class="ws-section-arrow">&#9660;</span></div>
-      <div class="ws-section-bd">${ccWs.length?ccWs.map(wsCard).join(''):'<p style="color:var(--muted);font-size:13px">No crosscutting initiatives.</p>'}</div>
-    </div>
-    <div class="ws-section collapsed" id="execSec-hierarchy" style="margin-bottom:14px;border-top:2px dashed var(--border-lt);padding-top:10px">
-      <div class="ws-section-hd" onclick="toggleWsSection('execSec-hierarchy')"><h4>Workstream Hierarchy</h4><span class="ws-section-arrow">&#9660;</span></div>
+      <div class="ws-section-hd" onclick="toggleWsSection('execSec-4')"><h4>Slide 4 &mdash; Horizontal AI (${horizWs.length} workstreams)</h4><span class="ws-section-arrow">&#9660;</span></div>
       <div class="ws-section-bd">
-        <p style="font-size:12px;color:var(--muted);margin:0 0 10px">Assign parent workstreams to roll children up in the report. Changes save individually on selection.</p>
+        <div class="fg" style="margin-bottom:12px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Slide Objective</label>
+          <input ${inp} value="${esc(er.horizObjective||'Improve enterprise-wide productivity and employee experience through governed, scalable AI tools.')}" onchange="saveExecField('horizObjective',this.value)"></div>
+        ${horizWs.length?horizWs.map(w=>{const det=wsDet(w.id);return '<div style="background:var(--bg-card);border:1px solid var(--border-lt);border-radius:var(--r-sm);padding:12px;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+(w.color||'var(--muted)')+'"></span><strong style="font-size:13px">'+esc(w.name)+'</strong></div><textarea '+ta+' rows="3" placeholder="+ Bullet 1&#10;+ Bullet 2" onchange="saveExecWsDetail(\''+w.id+'\',\'bullets\',this.value)">'+esc(det.bullets||'')+'</textarea></div>';}).join(''):'<p style="color:var(--muted);font-size:12px">No workstreams tagged as Horizontal. Set subcategory on Cross-cutting workstreams below.</p>'}
+      </div>
+    </div>
+    <div class="ws-section collapsed" id="execSec-5" style="margin-bottom:14px">
+      <div class="ws-section-hd" onclick="toggleWsSection('execSec-5')"><h4>Slide 5 &mdash; Platform AI (${platWs.length} workstreams)</h4><span class="ws-section-arrow">&#9660;</span></div>
+      <div class="ws-section-bd">
+        <div class="fg" style="margin-bottom:12px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Slide Objective</label>
+          <input ${inp} value="${esc(er.platformObjective||'Build the scalable infrastructure, data layer, and governance model that makes enterprise AI safe and reliable.')}" onchange="saveExecField('platformObjective',this.value)"></div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="border-bottom:2px solid var(--border)">
+            <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase;width:200px">Workstream</th>
+            <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase">Description</th>
+          </tr></thead>
+          <tbody>${platWs.map(w=>{const det=wsDet(w.id);return '<tr style="border-bottom:1px solid var(--border-lt)"><td style="padding:6px 8px;vertical-align:middle"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(w.color||'var(--muted)')+';margin-right:6px;vertical-align:middle"></span><strong>'+esc(w.name)+'</strong></td><td style="padding:6px 8px"><input '+inp+' value="'+esc(det.oneLiner||'')+'" placeholder="One-line description..." onchange="saveExecWsDetail(\''+w.id+'\',\'oneLiner\',this.value)"></td></tr>';}).join('')}</tbody>
+        </table>
+        ${!platWs.length?'<p style="color:var(--muted);font-size:12px;margin-top:8px">No workstreams tagged as Platform. Set subcategory below.</p>':''}
+      </div>
+    </div>
+    <div class="ws-section collapsed" id="execSec-6" style="margin-bottom:14px">
+      <div class="ws-section-hd" onclick="toggleWsSection('execSec-6')"><h4>Slide 6 &mdash; Featured Workstreams</h4><span class="ws-section-arrow">&#9660;</span></div>
+      <div class="ws-section-bd">
+        <p style="font-size:11px;color:var(--muted);margin:0 0 10px">Select 1-2 workstreams for a detailed deep-dive slide.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">${allWs.map(w=>{const sel=featIds.includes(w.id);return '<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;padding:4px 10px;border-radius:14px;border:1px solid '+(sel?'var(--accent)':'var(--border)')+';background:'+(sel?'rgba(99,102,241,.12)':'var(--bg)')+'" onclick="toggleFeaturedWs(\''+w.id+'\')"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(w.color||'var(--muted)')+'"></span>'+esc(w.name)+'</label>';}).join('')}</div>
+        ${featIds.map(id=>{const w=allWs.find(x=>x.id===id);if(!w)return '';const det=wsDet(w.id);return '<div style="background:var(--bg-card);border:1px solid var(--border-lt);border-radius:var(--r-md);padding:14px;margin-bottom:10px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+(w.color||'var(--muted)')+'"></span><strong style="font-size:14px">'+esc(w.name)+'</strong></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Purpose</label><textarea '+ta+' rows="2" placeholder="What this workstream aims to achieve..." onchange="saveExecWsDetail(\''+w.id+'\',\'purpose\',this.value)">'+esc(det.purpose||'')+'</textarea></div><div><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Target Outcomes</label><textarea '+ta+' rows="2" placeholder="Outcome 1" onchange="saveExecWsDetail(\''+w.id+'\',\'outcomes\',this.value)">'+esc(det.outcomes||'')+'</textarea></div><div><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Key Progress</label><textarea '+ta+' rows="2" placeholder="Progress item" onchange="saveExecWsDetail(\''+w.id+'\',\'progress\',this.value)">'+esc(det.progress||'')+'</textarea></div><div><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Next Steps</label><textarea '+ta+' rows="2" placeholder="Next step" onchange="saveExecWsDetail(\''+w.id+'\',\'nextSteps\',this.value)">'+esc(det.nextSteps||'')+'</textarea></div></div><div style="margin-top:8px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Enterprise Value</label><input type="text" value="'+esc(det.value||'')+'" placeholder="One-liner value statement" '+inp+' onchange="saveExecWsDetail(\''+w.id+'\',\'value\',this.value)"></div></div>';}).join('')}
+      </div>
+    </div>
+    <div class="ws-section collapsed" id="execSec-config" style="margin-bottom:14px;border-top:2px dashed var(--border-lt);padding-top:10px">
+      <div class="ws-section-hd" onclick="toggleWsSection('execSec-config')"><h4>Workstream Configuration</h4><span class="ws-section-arrow">&#9660;</span></div>
+      <div class="ws-section-bd">
+        <p style="font-size:12px;color:var(--muted);margin:0 0 10px">Manage parent hierarchy and subcategories for Cross-cutting workstreams.</p>
         <table style="width:100%;border-collapse:collapse;font-size:12px">
           <thead><tr style="border-bottom:2px solid var(--border)">
             <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase">Workstream</th>
             <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase">Category</th>
+            <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase">Subcategory</th>
             <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase">Parent</th>
           </tr></thead>
-          <tbody>${allWs.sort((a,b)=>(a.category||'').localeCompare(b.category||'')||(a.name||'').localeCompare(b.name||'')).map(w=>{
-            const opts=(D.workstreams||[]).filter(p=>p.id!==w.id&&!p.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-            return `<tr style="border-bottom:1px solid var(--border-lt)">
-              <td style="padding:6px 8px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${w.color||'var(--muted)'};margin-right:6px;vertical-align:middle"></span>${esc(w.name)}</td>
-              <td style="padding:6px 8px;color:var(--muted)">${esc(w.category||'—')}</td>
-              <td style="padding:6px 8px"><select style="width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--border-lt);border-radius:var(--r-xs);background:var(--bg-subtle);color:var(--text)" onchange="saveBulkParentWs('${w.id}',this.value)"><option value="">— None (top-level) —</option>${opts.map(p=>`<option value="${p.id}"${w.parentWs===p.id?' selected':''}>${esc(p.name)}</option>`).join('')}</select></td>
-            </tr>`;}).join('')}</tbody>
+          <tbody>${allWs.sort((a,b)=>(a.category||'').localeCompare(b.category||'')||(a.name||'').localeCompare(b.name||'')).map(w=>{const opts=(D.workstreams||[]).filter(p=>p.id!==w.id&&!p.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));const isCc=w.category==='Cross-cutting';return '<tr style="border-bottom:1px solid var(--border-lt)"><td style="padding:6px 8px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(w.color||'var(--muted)')+';margin-right:6px;vertical-align:middle"></span>'+esc(w.name)+'</td><td style="padding:6px 8px;color:var(--muted)">'+esc(w.category||'—')+'</td><td style="padding:6px 8px">'+(isCc?'<select style="width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--border-lt);border-radius:var(--r-xs);background:var(--bg-subtle);color:var(--text)" onchange="saveBulkCcType(\''+w.id+'\',this.value)"><option value="horizontal"'+(w.ccType==='horizontal'?' selected':'')+'>Horizontal</option><option value="platform"'+(w.ccType!=='horizontal'?' selected':'')+'>Platform</option></select>':'<span style="color:var(--muted)">&mdash;</span>')+'</td><td style="padding:6px 8px"><select style="width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--border-lt);border-radius:var(--r-xs);background:var(--bg-subtle);color:var(--text)" onchange="saveBulkParentWs(\''+w.id+'\',this.value)"><option value="">&mdash; None &mdash;</option>'+opts.map(p=>'<option value="'+p.id+'"'+(w.parentWs===p.id?' selected':'')+'>'+esc(p.name)+'</option>').join('')+'</select></td></tr>';}).join('')}</tbody>
         </table>
       </div>
     </div>`;
@@ -3901,6 +3935,8 @@ function getExecReport(){
   if(!er.wins)er.wins='';
   if(!er.wsHighlights)er.wsHighlights={};
   if(!er.wsDetails)er.wsDetails={};
+  if(!er.featuredWs)er.featuredWs=[];
+  if(!er.teamSize)er.teamSize=6;
   return er;
 }
 
@@ -3927,6 +3963,21 @@ function saveBulkParentWs(wsId,parentId){
   save();
   toast(esc(w.name)+(parentId?' → child of '+esc((D.workstreams||[]).find(p=>p.id===parentId)?.name||''):'  → top-level'));
 }
+function saveBulkCcType(wsId,val){
+  const w=(D.workstreams||[]).find(x=>x.id===wsId);
+  if(!w)return;
+  w.ccType=val;save();
+  toast(esc(w.name)+' \u2192 '+val);render();
+}
+function toggleFeaturedWs(wsId){
+  const er=getExecReport();
+  if(!er.featuredWs)er.featuredWs=[];
+  const idx=er.featuredWs.indexOf(wsId);
+  if(idx>=0)er.featuredWs.splice(idx,1);
+  else if(er.featuredWs.length<2)er.featuredWs.push(wsId);
+  else{toast('Maximum 2 featured workstreams');return}
+  save();render();
+}
 
 // PPTX EXPORT
 
@@ -3941,10 +3992,15 @@ async function exportExecPptx(){
   const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
   const buWs=allWs.filter(w=>w.category==='BU').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const ccWs=allWs.filter(w=>w.category==='Cross-cutting').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-  const doneTasks=(D.tasks||[]).filter(t=>t.status==='done').length;
-  const openRisks=(D.risks||[]).filter(r=>r.status==='open').length;
-  const decCount=(D.decisions||[]).length;
-  const msHit=(D.tasks||[]).filter(t=>t.isMilestone&&t.status==='done').length;
+  const buParents=buWs.filter(w=>!w.parentWs);
+  const horizWs=ccWs.filter(w=>w.ccType==='horizontal');
+  const platWs=ccWs.filter(w=>w.ccType!=='horizontal');
+
+  const allTasks=D.tasks||[];
+  const totalItems=allTasks.length;
+  const doneTasks=allTasks.filter(t=>t.status==='done').length;
+  const openTasks=totalItems-doneTasks;
+  const teamSize=er.teamSize||6;
 
   let logoB64='';
   try{
@@ -3957,177 +4013,537 @@ async function exportExecPptx(){
   pptx.defineLayout({name:'DLR',width:13.333,height:7.5});
   pptx.layout='DLR';
 
-  const BLACK='000000';
-  const NAVY='00274C';
-  const GRAY='666666';
+  const BLACK='000000',NAVY='00274C',GRAY='666666',LTGRAY='94A3B8';
+  const GREEN='1A5632',BLUE='2C4A8A',PURPLE='6B21A8',RED='DC2626';
   const dateStr=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
   let pageNum=0;
 
   function addFooter(slide){
     pageNum++;
-    if(logoB64)slide.addImage({data:logoB64,x:0.5,y:6.7,h:0.45,w:1.2,sizing:{type:'contain',w:1.2,h:0.45}});
-    slide.addText(String(pageNum),{x:12.3,y:6.85,w:0.6,h:0.3,fontSize:10,color:GRAY,align:'right',fontFace:'Arial'});
+    if(logoB64)slide.addImage({data:logoB64,x:0.56,y:7.02,h:0.21,w:1.39,sizing:{type:'contain',w:1.39,h:0.21}});
+    slide.addText(String(pageNum),{x:12.35,y:7.06,w:0.42,h:0.15,fontSize:8,color:GRAY,align:'right',fontFace:'Arial'});
   }
 
-  // ── SLIDE 1: Executive Summary ──
+  // ── SLIDE 1: Title (DLR "Title 2" layout) ──
   const s1=pptx.addSlide();
-  s1.addText('AI Transformation Program Update',{x:0.5,y:0.3,w:10,h:0.5,fontSize:30,bold:true,color:BLACK,fontFace:'Arial'});
-  s1.addText(dateStr,{x:10.5,y:0.3,w:2.5,h:0.5,fontSize:12,color:GRAY,fontFace:'Arial',align:'right'});
+  s1.addText(er.titleText||'AI Transformation\nProgram Update',{x:0.76,y:2.30,w:10.03,h:1.45,fontSize:36,bold:true,color:NAVY,fontFace:'Arial',lineSpacingMultiple:1.1});
+  s1.addText(er.subtitleText||'Corporate Data & AI Office',{x:0.76,y:3.96,w:8.00,h:0.88,fontSize:18,color:GRAY,fontFace:'Arial'});
+  s1.addText(dateStr,{x:0.76,y:5.05,w:5.91,h:0.53,fontSize:14,color:GRAY,fontFace:'Arial'});
+  if(logoB64)s1.addImage({data:logoB64,x:0.56,y:7.02,h:0.21,w:1.39,sizing:{type:'contain',w:1.39,h:0.21}});
 
-  const kpis=[
-    {label:'Active Workstreams',val:String(allWs.length),clr:NAVY},
-    {label:'Items Completed',val:String(doneTasks),clr:'16A34A'},
-    {label:'Open Risks',val:String(openRisks),clr:'D97706'},
-    {label:'Milestones Hit',val:String(msHit),clr:NAVY}
+  // ── SLIDE 2: Program Capacity & Summary ──
+  const s2=pptx.addSlide();
+  s2.addText('Program Capacity',{x:0.57,y:0.56,w:12.20,h:0.53,fontSize:30,bold:true,color:NAVY,fontFace:'Arial'});
+  s2.addText('AI demand is accelerating across the enterprise',{x:0.57,y:1.11,w:12.20,h:0.50,fontSize:20,color:GRAY,fontFace:'Arial'});
+
+  s2.addText(String(allWs.length),{x:0.57,y:1.88,w:4.0,h:1.3,fontSize:80,bold:true,color:NAVY,fontFace:'Arial',align:'center'});
+  s2.addText('workstreams',{x:0.57,y:3.08,w:4.0,h:0.25,fontSize:14,color:GRAY,fontFace:'Arial',align:'center'});
+  s2.addText(buParents.length+' business units   |   '+openTasks+' open action items',{x:0.57,y:3.30,w:4.0,h:0.25,fontSize:10,bold:true,color:NAVY,fontFace:'Arial',align:'center'});
+
+  s2.addText('vs.',{x:4.8,y:2.2,w:0.8,h:0.5,fontSize:16,bold:true,color:LTGRAY,fontFace:'Arial',align:'center'});
+
+  s2.addText(String(teamSize),{x:5.8,y:1.88,w:4.0,h:1.3,fontSize:80,bold:true,color:RED,fontFace:'Arial',align:'center'});
+  s2.addText(er.teamDedicated?'dedicated resources':'non-dedicated resources',{x:5.8,y:3.08,w:4.0,h:0.35,fontSize:12,color:GRAY,fontFace:'Arial',align:'center'});
+
+  const catCards=[
+    {label:'Vertical AI',sub:'AI for the Business',count:String(buWs.length),detail:buParents.length+' workstreams\nacross '+buParents.length+' BUs',fill:'E8F5E9',clr:GREEN,border:'A5D6A7'},
+    {label:'Horizontal AI',sub:'AI for the Employee',count:String(horizWs.length),detail:'workstreams',fill:'E3F2FD',clr:BLUE,border:'90CAF9'},
+    {label:'Platform AI',sub:'Supporting Workstreams',count:String(platWs.length),detail:'workstreams',fill:'F3E5F5',clr:PURPLE,border:'CE93D8'}
   ];
-  kpis.forEach((k,i)=>{
-    const kx=0.5+i*3.1;
-    s1.addShape(pptx.ShapeType.roundRect,{x:kx,y:1.05,w:2.7,h:0.8,fill:{color:'F5F5F5'},rectRadius:0.08});
-    s1.addText(k.val,{x:kx,y:1.05,w:2.7,h:0.48,fontSize:20,bold:true,color:k.clr,align:'center',fontFace:'Arial'});
-    s1.addText(k.label,{x:kx,y:1.48,w:2.7,h:0.3,fontSize:9,color:GRAY,align:'center',fontFace:'Arial'});
+  catCards.forEach((c,i)=>{
+    const cx=0.57+i*4.0;
+    s2.addShape(pptx.ShapeType.roundRect,{x:cx,y:3.65,w:3.7,h:1.1,fill:{color:c.fill},line:{color:c.border,width:0.5},rectRadius:0.06});
+    s2.addText(c.count,{x:cx+0.15,y:3.7,w:0.8,h:0.6,fontSize:28,bold:true,color:c.clr,fontFace:'Arial',valign:'middle'});
+    s2.addText(c.label,{x:cx+0.9,y:3.7,w:2.5,h:0.3,fontSize:11,bold:true,color:c.clr,fontFace:'Arial',valign:'middle'});
+    s2.addText(c.sub,{x:cx+0.9,y:3.98,w:2.5,h:0.25,fontSize:9,color:GRAY,fontFace:'Arial'});
+    s2.addText(c.detail,{x:cx+0.15,y:4.3,w:3.4,h:0.35,fontSize:9,color:GRAY,fontFace:'Arial',italic:true});
   });
 
   const summaryLines=parseBullets(er.summary);
   if(summaryLines.length){
-    s1.addText(summaryLines.map(l=>({text:'\u2022  '+l+'\n',options:{fontSize:12,color:BLACK,fontFace:'Arial',bullet:false}})),{x:0.5,y:2.1,w:12,h:4.2,valign:'top',lineSpacingMultiple:1.3});
-  }else if(er.summary){
-    s1.addText(er.summary,{x:0.5,y:2.1,w:12,h:4.2,fontSize:12,color:BLACK,fontFace:'Arial',valign:'top',lineSpacingMultiple:1.3});
+    s2.addText('Summary',{x:0.57,y:5.0,w:5,h:0.3,fontSize:12,bold:true,color:NAVY,fontFace:'Arial'});
+    s2.addText(summaryLines.map(l=>({text:l,options:{fontSize:11,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'},paraSpaceAfter:6}})),{x:0.57,y:5.35,w:11.6,h:1.3,valign:'top'});
   }
-  addFooter(s1);
 
-  // ── SLIDE 2: Progress & Wins ──
-  const s2=pptx.addSlide();
-  s2.addText('Progress & Wins',{x:0.5,y:0.4,w:10,h:0.55,fontSize:30,bold:true,color:BLACK,fontFace:'Arial'});
-  s2.addText(doneTasks+' items completed  \u2022  '+msHit+' milestones hit  \u2022  '+decCount+' decisions made',{x:0.5,y:1.0,w:12,h:0.3,fontSize:11,color:GRAY,fontFace:'Arial'});
-
-  const winLines=parseBullets(er.wins);
-  if(winLines.length){
-    const mid=Math.ceil(winLines.length/2);
-    const fmt=(arr)=>arr.map(l=>({text:'\u2022  '+l+'\n',options:{fontSize:12,color:BLACK,fontFace:'Arial',bullet:false}}));
-    s2.addText(fmt(winLines.slice(0,mid)),{x:0.5,y:1.5,w:5.8,h:4.8,valign:'top',lineSpacingMultiple:1.25});
-    if(winLines.length>mid)s2.addText(fmt(winLines.slice(mid)),{x:6.8,y:1.5,w:5.8,h:4.8,valign:'top',lineSpacingMultiple:1.25});
-  }
+  s2.addText(totalItems+' action items  |  '+doneTasks+' completed  |  '+openTasks+' open/in progress',{x:0.57,y:6.7,w:8,h:0.25,fontSize:10,color:GRAY,fontFace:'Arial'});
   addFooter(s2);
 
-  // ── SLIDE 3 & 4: Workstreams ──
-  function groupWsForReport(wsList){
-    const parents=wsList.filter(w=>!w.parentWs);
-    const children=wsList.filter(w=>w.parentWs);
-    const groups=[];
-    parents.forEach(p=>{
-      const kids=children.filter(c=>c.parentWs===p.id);
-      if(kids.length){
-        groups.push({name:p.name,items:[p,...kids],color:p.color||'999999'});
-      }else{
-        groups.push({name:p.name,items:[p],color:p.color||'999999'});
-      }
-    });
-    children.forEach(c=>{
-      if(!parents.find(p=>p.id===c.parentWs)){
-        groups.push({name:c.name,items:[c],color:c.color||'999999'});
-      }
-    });
-    groups.sort((a,b)=>a.name.localeCompare(b.name));
-    return groups;
-  }
+  // ── SLIDE 3: Vertical Engagements ──
+  const s3=pptx.addSlide();
+  s3.addText('Vertical Engagements',{x:0.57,y:0.56,w:12.20,h:0.53,fontSize:30,bold:true,color:NAVY,fontFace:'Arial'});
+  s3.addText('Discovery \u2192 Capability \u2192 Prioritize \u2192 Roadmap',{x:0.57,y:1.11,w:12.20,h:0.50,fontSize:20,color:GRAY,fontFace:'Arial'});
 
-  function groupStats(items){
-    let totalTasks=0,totalDone=0;
-    const purposes=[],progresses=[],highlights=[];
-    items.forEach(w=>{
-      const tasks=(D.tasks||[]).filter(t=>t.workstream===w.id);
-      totalTasks+=tasks.length;totalDone+=tasks.filter(t=>t.status==='done').length;
+  s3.addText('VERTICAL',{x:0.57,y:1.72,w:2.6,h:0.25,fontSize:8,bold:true,color:LTGRAY,fontFace:'Arial'});
+  s3.addText('KEY UPDATES',{x:3.2,y:1.72,w:5.8,h:0.25,fontSize:8,bold:true,color:LTGRAY,fontFace:'Arial'});
+  s3.addText('DISCOVERY to ROADMAP TIMELINE',{x:9.2,y:1.72,w:3.57,h:0.25,fontSize:8,bold:true,color:LTGRAY,fontFace:'Arial',align:'center'});
+  s3.addShape(pptx.ShapeType.line,{x:0.57,y:1.97,w:12.20,h:0,line:{color:'CCCCCC',width:1}});
+
+  const phaseColors=['4CAF50','2196F3','FF9800','9C27B0'];
+  const phaseLabels=['Disc','Cap','Pri','Road'];
+  const tlX=9.2,tlW=3.57;
+  const weekW=tlW/7;
+  const phW=weekW*1.6;
+  const stagger=buParents.length>1?(7-4)/(buParents.length-1):0;
+  const rowH3=Math.min(0.6,4.65/Math.max(buParents.length,1));
+
+  buParents.forEach((w,i)=>{
+    const ry=2.05+i*rowH3;
+    if(ry>6.7)return;
+    const det=(er.wsDetails||{})[w.id]||{};
+    const keyUp=det.keyUpdate||'';
+    const keyNx=det.keyNext||'';
+    const combined=[keyUp,keyNx].filter(Boolean).join('\n');
+
+    s3.addShape(pptx.ShapeType.ellipse,{x:0.57,y:ry+(rowH3/2)-0.06,w:0.12,h:0.12,fill:{color:(w.color||'999999').replace('#','')}});
+    s3.addText(w.name,{x:0.77,y:ry,w:2.33,h:rowH3,fontSize:10,bold:true,color:BLACK,fontFace:'Arial',valign:'top',lineSpacingMultiple:1.05});
+    s3.addText(combined||'\u2014',{x:3.2,y:ry,w:5.8,h:rowH3,fontSize:9,color:'333333',fontFace:'Arial',valign:'top',lineSpacingMultiple:1.1});
+
+    const startWeek=i*stagger;
+    phaseColors.forEach((pc,pi)=>{
+      const px=tlX+startWeek*weekW+pi*phW;
+      const barW=phW-0.04;
+      if(px+barW>tlX+tlW+0.3)return;
+      s3.addShape(pptx.ShapeType.roundRect,{x:px,y:ry+(rowH3/2)-0.1,w:barW,h:0.2,fill:{color:pc},rectRadius:0.03});
+      if(rowH3>0.4)s3.addText(phaseLabels[pi],{x:px,y:ry+(rowH3/2)-0.1,w:barW,h:0.2,fontSize:6,color:'FFFFFF',fontFace:'Arial',align:'center',valign:'middle',bold:true});
+    });
+
+    if(i<buParents.length-1)s3.addShape(pptx.ShapeType.line,{x:0.57,y:ry+rowH3,w:12.20,h:0,line:{color:'EEEEEE',width:0.5}});
+  });
+
+  const lgY=6.76;
+  phaseColors.forEach((pc,pi)=>{
+    const lx=9.2+pi*0.95;
+    s3.addShape(pptx.ShapeType.roundRect,{x:lx,y:lgY,w:0.2,h:0.14,fill:{color:pc},rectRadius:0.02});
+    s3.addText(['Discovery','Capability','Prioritize','Roadmap'][pi],{x:lx+0.24,y:lgY-0.02,w:0.7,h:0.18,fontSize:7,color:GRAY,fontFace:'Arial',valign:'middle'});
+  });
+  addFooter(s3);
+
+  // ── SLIDE 4: Horizontal AI ──
+  const s4=pptx.addSlide();
+  s4.addText('Horizontal View \u2014 AI for the Employee',{x:0.57,y:0.56,w:12.20,h:0.53,fontSize:30,bold:true,color:NAVY,fontFace:'Arial'});
+  s4.addText(er.horizObjective||'Improve enterprise-wide productivity and employee experience through governed, scalable AI tools.',{x:0.57,y:1.11,w:12.20,h:0.50,fontSize:20,italic:true,color:GRAY,fontFace:'Arial'});
+
+  horizWs.forEach((w,i)=>{
+    const col=i%2;
+    const row=Math.floor(i/2);
+    const xOff=col===0?0.57:7.09;
+    const colW=5.68;
+    const yOff=1.88+row*2.5;
+    const det=(er.wsDetails||{})[w.id]||{};
+    const bullets=parseBullets(det.bullets);
+
+    s4.addShape(pptx.ShapeType.ellipse,{x:xOff,y:yOff+0.08,w:0.14,h:0.14,fill:{color:(w.color||'2563eb').replace('#','')}});
+    s4.addText(w.name,{x:xOff+0.22,y:yOff,w:colW-0.22,h:0.35,fontSize:14,bold:true,color:NAVY,fontFace:'Arial',valign:'middle'});
+
+    if(bullets.length){
+      s4.addText(bullets.map(l=>({text:l,options:{fontSize:11,color:BLACK,fontFace:'Arial',bullet:{code:'2022'},paraSpaceAfter:4}})),{x:xOff+0.15,y:yOff+0.4,w:colW-0.15,h:2.0,valign:'top'});
+    }
+  });
+
+  if(!horizWs.length){
+    s4.addText('No workstreams tagged as Horizontal.',{x:0.57,y:2.5,w:10,h:0.5,fontSize:13,color:GRAY,fontFace:'Arial'});
+  }
+  addFooter(s4);
+
+  // ── SLIDE 5: Platform AI ──
+  const s5=pptx.addSlide();
+  s5.addText('Platform AI \u2014 Supporting Infrastructure',{x:0.57,y:0.56,w:12.20,h:0.53,fontSize:30,bold:true,color:NAVY,fontFace:'Arial'});
+  s5.addText(er.platformObjective||'Build the scalable infrastructure, data layer, and governance model that makes enterprise AI safe and reliable.',{x:0.57,y:1.11,w:12.20,h:0.50,fontSize:20,italic:true,color:GRAY,fontFace:'Arial'});
+
+  const platRowH=Math.min(1.0,4.65/Math.max(platWs.length,1));
+  platWs.forEach((w,i)=>{
+    const ry=1.88+i*platRowH;
+    if(ry>6.5)return;
+    const det=(er.wsDetails||{})[w.id]||{};
+    const desc=det.oneLiner||w.desc||'';
+
+    s5.addShape(pptx.ShapeType.roundRect,{x:0.57,y:ry,w:12.20,h:platRowH-0.12,fill:{color:'F8F9FA'},rectRadius:0.06});
+    s5.addShape(pptx.ShapeType.ellipse,{x:0.77,y:ry+(platRowH/2)-0.1,w:0.14,h:0.14,fill:{color:(w.color||'999999').replace('#','')}});
+    s5.addText(w.name,{x:1.02,y:ry,w:2.8,h:platRowH-0.12,fontSize:12,bold:true,color:NAVY,fontFace:'Arial',valign:'middle'});
+    s5.addText(desc,{x:3.95,y:ry,w:8.82,h:platRowH-0.12,fontSize:11,color:'333333',fontFace:'Arial',valign:'middle'});
+  });
+
+  if(!platWs.length){
+    s5.addText('No workstreams tagged as Platform.',{x:0.57,y:2.5,w:10,h:0.5,fontSize:13,color:GRAY,fontFace:'Arial'});
+  }
+  addFooter(s5);
+
+  // ── SLIDE 6: Featured Workstreams ──
+  const featIds=er.featuredWs||[];
+  const featWs=featIds.map(id=>allWs.find(w=>w.id===id)).filter(Boolean);
+  if(featWs.length){
+    const s6=pptx.addSlide();
+    s6.addText('Enterprise AI in Action',{x:0.57,y:0.56,w:12.20,h:0.53,fontSize:30,bold:true,color:NAVY,fontFace:'Arial'});
+    s6.addText('Executing Strategy Through Focused Pilots',{x:0.57,y:1.11,w:12.20,h:0.50,fontSize:20,color:GRAY,fontFace:'Arial'});
+    featWs.forEach((w,ci)=>{
+      const xOff=ci===0?0.57:7.09;
+      const colW=5.68;
       const det=(er.wsDetails||{})[w.id]||{};
-      if(det.purpose)purposes.push(det.purpose);
-      if(det.progress)progresses.push(...parseBullets(det.progress));
-      const hl=(er.wsHighlights||{})[w.id];if(hl)highlights.push(hl);
+
+      s6.addShape(pptx.ShapeType.ellipse,{x:xOff,y:1.95,w:0.16,h:0.16,fill:{color:(w.color||'999999').replace('#','')}});
+      s6.addText(w.name,{x:xOff+0.25,y:1.88,w:colW-0.25,h:0.35,fontSize:16,bold:true,color:NAVY,fontFace:'Arial',valign:'middle'});
+
+      let yPos=2.30;
+      const addSec=(label,text)=>{
+        s6.addText(label,{x:xOff,y:yPos,w:colW,h:0.25,fontSize:10,bold:true,color:NAVY,fontFace:'Arial'});
+        yPos+=0.25;
+        const lines=parseBullets(text);
+        if(lines.length){
+          const bH=Math.min(lines.length*0.22+0.05,1.4);
+          s6.addText(lines.map(l=>({text:l,options:{fontSize:10,color:BLACK,fontFace:'Arial',bullet:{code:'2022'},paraSpaceAfter:3}})),{x:xOff,y:yPos,w:colW,h:bH,valign:'top'});
+          yPos+=bH+0.04;
+        }else if(text){
+          s6.addText(text,{x:xOff,y:yPos,w:colW,h:0.3,fontSize:10,color:BLACK,fontFace:'Arial',valign:'top'});
+          yPos+=0.35;
+        }else{yPos+=0.04}
+      };
+      addSec('Purpose',det.purpose||'');
+      addSec('Target Outcomes',det.outcomes||'');
+      addSec('Key Progress',det.progress||'');
+      addSec('Next Steps',det.nextSteps||'');
+      if(det.value){
+        s6.addShape(pptx.ShapeType.roundRect,{x:xOff,y:Math.min(yPos+0.04,6.3),w:colW,h:0.35,fill:{color:'F0F4F8'},rectRadius:0.05});
+        s6.addText('Enterprise Value: '+det.value,{x:xOff+0.1,y:Math.min(yPos+0.04,6.3),w:colW-0.2,h:0.35,fontSize:9,italic:true,color:NAVY,fontFace:'Arial',valign:'middle'});
+      }
     });
-    return {pct:totalTasks?Math.round(totalDone/totalTasks*100):0,totalTasks,totalDone,purposes,progresses,highlights};
+
+    if(featWs.length===2)s6.addShape(pptx.ShapeType.line,{x:6.66,y:1.88,w:0,h:4.88,line:{color:'DDDDDD',width:0.75}});
+    addFooter(s6);
   }
-
-  function addWsSlide(title,wsList){
-    const sl=pptx.addSlide();
-    sl.addText(title,{x:0.5,y:0.4,w:10,h:0.55,fontSize:30,bold:true,color:BLACK,fontFace:'Arial'});
-    sl.addText(dateStr,{x:10.5,y:0.4,w:2.5,h:0.55,fontSize:11,color:GRAY,fontFace:'Arial',align:'right'});
-
-    if(!wsList.length){
-      sl.addText('No workstreams in this category.',{x:0.5,y:1.5,w:10,h:0.5,fontSize:13,color:GRAY,fontFace:'Arial'});
-      addFooter(sl);return;
-    }
-
-    const reportRows=groupWsForReport(wsList);
-
-    if(reportRows.length<=2){
-      reportRows.forEach((g,ci)=>{
-        const xOff=ci===0?0.5:6.9;
-        const colW=5.8;
-        const w0=g.items[0];
-        const det=(er.wsDetails||{})[w0.id]||{};
-        const stats=groupStats(g.items);
-        const mergedPurpose=g.items.length===1?(det.purpose||''):stats.purposes.join(' | ');
-        const mergedOutcomes=g.items.length===1?(det.outcomes||''):g.items.map(w=>(er.wsDetails||{})[w.id]||{}).map(d=>d.outcomes||'').filter(Boolean).join('\n');
-        const mergedProgress=g.items.length===1?(det.progress||''):stats.progresses.map(l=>'• '+l).join('\n');
-        const mergedNext=g.items.length===1?(det.nextSteps||''):g.items.map(w=>(er.wsDetails||{})[w.id]||{}).map(d=>d.nextSteps||'').filter(Boolean).join('\n');
-        const mergedValue=g.items.length===1?(det.value||''):g.items.map(w=>((er.wsDetails||{})[w.id]||{}).value||'').filter(Boolean).join(' | ');
-
-        sl.addText(g.name,{x:xOff,y:1.1,w:colW,h:0.4,fontSize:16,bold:true,color:BLACK,fontFace:'Arial'});
-
-        let yPos=1.55;
-        const addSec=(label,text)=>{
-          sl.addText(label,{x:xOff,y:yPos,w:colW,h:0.25,fontSize:11,bold:true,color:NAVY,fontFace:'Arial'});
-          yPos+=0.25;
-          const lines=parseBullets(text);
-          if(lines.length){
-            const bH=Math.min(lines.length*0.22+0.05,1.6);
-            sl.addText(lines.map(l=>({text:'\u2022  '+l+'\n',options:{fontSize:11,color:BLACK,fontFace:'Arial',bullet:false}})),{x:xOff,y:yPos,w:colW,h:bH,valign:'top',lineSpacingMultiple:1.15});
-            yPos+=bH+0.04;
-          }else if(text){
-            sl.addText(text,{x:xOff,y:yPos,w:colW,h:0.35,fontSize:11,color:BLACK,fontFace:'Arial',valign:'top'});
-            yPos+=0.35;
-          }else{yPos+=0.04}
-        };
-        addSec('Purpose',mergedPurpose);
-        addSec('Target Outcomes',mergedOutcomes);
-        addSec('Key Progress',mergedProgress);
-        addSec('Next Steps',mergedNext);
-        if(mergedValue){
-          sl.addShape(pptx.ShapeType.roundRect,{x:xOff,y:Math.min(yPos+0.04,6.05),w:colW,h:0.35,fill:{color:'F0F4F8'},rectRadius:0.05});
-          sl.addText('Enterprise Value: '+mergedValue,{x:xOff+0.1,y:Math.min(yPos+0.04,6.05),w:colW-0.2,h:0.35,fontSize:9,italic:true,color:NAVY,fontFace:'Arial',valign:'middle'});
-        }
-      });
-      if(reportRows.length===2)sl.addShape(pptx.ShapeType.line,{x:6.55,y:1.1,w:0,h:5.2,line:{color:'DDDDDD',width:0.75}});
-    }else{
-      const rowH=Math.min(0.48,4.8/reportRows.length);
-      const fontSize=reportRows.length>8?9:10;
-      reportRows.forEach((g,ri)=>{
-        const ry=1.2+ri*rowH;
-        if(ry>6.3)return;
-        const stats=groupStats(g.items);
-        const hl=g.items.length===1?((er.wsDetails||{})[g.items[0].id]||{}).purpose||(er.wsHighlights||{})[g.items[0].id]||'':stats.purposes.join(' | ')||stats.highlights.join(' | ');
-
-        sl.addShape(pptx.ShapeType.ellipse,{x:0.5,y:ry+0.1,w:0.14,h:0.14,fill:{color:(g.color||'999999').replace('#','')}});
-        sl.addText(g.name+(g.items.length>1?' ('+g.items.length+')':''),{x:0.75,y:ry,w:3.2,h:rowH,fontSize:fontSize,bold:true,color:BLACK,fontFace:'Arial',valign:'middle'});
-        sl.addText(g.items.length===1?wsStatusLabel(g.items[0].status):'',{x:4.0,y:ry,w:1.6,h:rowH,fontSize:fontSize-1,color:GRAY,fontFace:'Arial',valign:'middle'});
-
-        const barX=5.7,barW=1.3,barH=0.09,barY=ry+(rowH/2)-0.04;
-        sl.addShape(pptx.ShapeType.rect,{x:barX,y:barY,w:barW,h:barH,fill:{color:'E5E5E5'}});
-        if(stats.pct>0)sl.addShape(pptx.ShapeType.rect,{x:barX,y:barY,w:barW*(stats.pct/100),h:barH,fill:{color:(g.color||'0072CE').replace('#','')}});
-        sl.addText(stats.pct+'%',{x:barX+barW+0.08,y:ry,w:0.5,h:rowH,fontSize:fontSize-1,color:GRAY,fontFace:'Arial',valign:'middle'});
-
-        sl.addText(hl,{x:7.6,y:ry,w:5.2,h:rowH,fontSize:fontSize-1,color:BLACK,fontFace:'Arial',valign:'middle'});
-
-        if(ri<reportRows.length-1)sl.addShape(pptx.ShapeType.line,{x:0.5,y:ry+rowH,w:12.3,h:0,line:{color:'EEEEEE',width:0.5}});
-      });
-    }
-    addFooter(sl);
-  }
-
-  addWsSlide('Business Unit Workstreams',buWs);
-  addWsSlide('Crosscutting Initiatives',ccWs);
 
   const fileDate=new Date().toISOString().slice(0,10);
-  pptx.writeFile({fileName:'AI-Transformation-Executive-Report-'+fileDate+'.pptx'});
+  pptx.writeFile({fileName:'AI-Program-Update-'+fileDate+'.pptx'});
   toast('PowerPoint exported');
+}
+
+// ═══════════════════════════════════════════════════
+// ADO SYNC
+// ═══════════════════════════════════════════════════
+
+function getAdoConfig(){
+  if(!D.adoConfig)D.adoConfig={};
+  const c=D.adoConfig;
+  if(!c.org)c.org='https://dev.azure.com/CorporateDataOffice';
+  if(!c.project)c.project='Data and AI Enablement';
+  if(!c.areaPath)c.areaPath='Data and AI Enablement\\AI Transformation Program';
+  return c;
+}
+function getAdoPat(){return localStorage.getItem('atlas-ado-pat')||''}
+function setAdoPat(v){localStorage.setItem('atlas-ado-pat',v)}
+
+function adoStateForWs(status){return'New'}
+function adoStateForTask(status){return'New'}
+
+function adoCategoryTag(w){
+  if(w.category==='BU')return'Vertical AI';
+  if(w.ccType==='horizontal')return'Horizontal AI';
+  return'Platform AI';
+}
+
+async function adoApiCall(method,url,body){
+  const pat=getAdoPat();
+  if(!pat)throw new Error('ADO PAT not configured');
+  const headers={'Content-Type':'application/json-patch+json','Authorization':'Basic '+btoa(':'+pat)};
+  const opts={method,headers};
+  if(body)opts.body=JSON.stringify(body);
+  const resp=await fetch(url,opts);
+  if(!resp.ok){
+    let msg='ADO API error: '+resp.status;
+    try{const j=await resp.json();msg=j.message||msg}catch(e){}
+    throw new Error(msg);
+  }
+  return resp.json();
+}
+
+function adoBaseUrl(){
+  const c=getAdoConfig();
+  let org=c.org.replace(/\/$/,'');
+  return org+'/'+encodeURIComponent(c.project)+'/_apis/wit/workitems';
+}
+
+function buildAdoPatch(fields){
+  return fields.filter(f=>f.value!==undefined&&f.value!==null).map(f=>({op:'add',path:'/fields/'+f.field,value:f.value}));
+}
+
+async function adoCreateWorkItem(type,fields){
+  const url=adoBaseUrl()+'/$'+type+'?api-version=7.1';
+  return adoApiCall('POST',url,buildAdoPatch(fields));
+}
+
+async function adoUpdateWorkItem(id,fields){
+  const url=adoBaseUrl()+'/'+id+'?api-version=7.1';
+  return adoApiCall('PATCH',url,buildAdoPatch(fields));
+}
+
+async function adoLinkChild(childId,parentId){
+  const c=getAdoConfig();
+  let org=c.org.replace(/\/$/,'');
+  const url=org+'/'+encodeURIComponent(c.project)+'/_apis/wit/workitems/'+childId+'?api-version=7.1';
+  const parentUrl=org+'/'+encodeURIComponent(c.project)+'/_apis/wit/workitems/'+parentId;
+  const patch=[{op:'add',path:'/relations/-',value:{rel:'System.LinkTypes.Hierarchy-Reverse',url:parentUrl,attributes:{comment:'Linked by ATLAS'}}}];
+  return adoApiCall('PATCH',url,patch);
+}
+
+function getAdoSyncItems(){
+  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const milestones=(D.tasks||[]).filter(t=>t.isMilestone);
+  return{parents:allWs,milestones};
+}
+
+async function adoPushAll(){
+  const pat=getAdoPat();
+  if(!pat){toast('Set your ADO PAT first');return}
+  const cfg=getAdoConfig();
+  const {parents,milestones}=getAdoSyncItems();
+  const area=cfg.areaPath||'';
+
+  let created=0,updated=0,errors=0;
+  const log=[];
+  const statusEl=document.getElementById('ado-sync-status');
+  if(statusEl)statusEl.innerHTML='<span style="color:var(--accent)">Syncing...</span>';
+
+  for(const w of parents){
+    const desiredState=adoStateForWs(w.status);
+    const baseFields=[
+      {field:'System.Title',value:w.name},
+      {field:'System.Description',value:w.businessOutcome||w.desc||''},
+      {field:'System.Tags',value:adoCategoryTag(w)},
+      {field:'System.AreaPath',value:area}
+    ];
+    if(w.targetStart)baseFields.push({field:'Microsoft.VSTS.Scheduling.StartDate',value:w.targetStart});
+    if(w.targetEnd)baseFields.push({field:'Microsoft.VSTS.Scheduling.TargetDate',value:w.targetEnd});
+    try{
+      if(w.adoId){
+        await adoUpdateWorkItem(w.adoId,[...baseFields,{field:'System.State',value:desiredState}]);
+        updated++;log.push({name:w.name,type:'Epic',action:'Updated',ok:true});
+      }else{
+        const createFields=[...baseFields,{field:'System.State',value:'New'}];
+        const result=await adoCreateWorkItem('Epic',createFields);
+        w.adoId=result.id;
+        if(desiredState!=='New'){
+          try{await adoUpdateWorkItem(result.id,[{field:'System.State',value:desiredState}])}catch(e){}
+        }
+        created++;log.push({name:w.name,type:'Epic',action:'Created #'+result.id,ok:true});
+      }
+    }catch(e){
+      errors++;log.push({name:w.name,type:'Epic',action:'Error: '+e.message,ok:false});
+    }
+  }
+
+  for(const w of parents){
+    if(w.parentWs&&w.adoId){
+      const pw=parents.find(p=>p.id===w.parentWs);
+      if(pw&&pw.adoId){
+        try{await adoLinkChild(w.adoId,pw.adoId)}catch(e){}
+      }
+    }
+  }
+
+  for(const t of milestones){
+    const parentWs=parents.find(w=>w.id===t.workstream);
+    const desiredState=adoStateForTask(t.status);
+    const baseFields=[
+      {field:'System.Title',value:t.title},
+      {field:'System.Description',value:t.notes||''},
+      {field:'System.AreaPath',value:area}
+    ];
+    if(t.startDate)baseFields.push({field:'Microsoft.VSTS.Scheduling.StartDate',value:t.startDate});
+    if(t.due)baseFields.push({field:'Microsoft.VSTS.Scheduling.TargetDate',value:t.due});
+    try{
+      if(t.adoId){
+        await adoUpdateWorkItem(t.adoId,[...baseFields,{field:'System.State',value:desiredState}]);
+        updated++;log.push({name:t.title,type:'Feature',action:'Updated',ok:true});
+      }else{
+        const createFields=[...baseFields,{field:'System.State',value:'New'}];
+        const result=await adoCreateWorkItem('Feature',createFields);
+        t.adoId=result.id;
+        if(desiredState!=='New'){
+          try{await adoUpdateWorkItem(result.id,[{field:'System.State',value:desiredState}])}catch(e){}
+        }
+        created++;log.push({name:t.title,type:'Feature',action:'Created #'+result.id,ok:true});
+        if(parentWs&&parentWs.adoId){
+          try{await adoLinkChild(result.id,parentWs.adoId)}catch(e){}
+        }
+      }
+    }catch(e){
+      errors++;log.push({name:t.title,type:'Feature',action:'Error: '+e.message,ok:false});
+    }
+  }
+
+  cfg.lastSync=new Date().toISOString();
+  save();
+
+  const summary=(created?created+' created  ':'')+(updated?updated+' updated  ':'')+(errors?errors+' errors':'');
+  toast('ADO Sync: '+(summary||'Nothing to sync'));
+  if(statusEl){
+    statusEl.innerHTML='<span style="color:var(--green)">Last sync: '+new Date(cfg.lastSync).toLocaleString()+'</span>';
+  }
+  renderAdoLog(log);
+}
+
+function renderAdoLog(log){
+  const el=document.getElementById('ado-sync-log');
+  if(!el||!log.length)return;
+  el.innerHTML='<table class="tbl" style="margin-top:12px"><thead><tr><th>Item</th><th>Type</th><th>Result</th></tr></thead><tbody>'+
+    log.map(l=>'<tr><td>'+esc(l.name)+'</td><td><span class="badge" style="background:'+(l.type==='Epic'?'var(--accent)':'#7C3AED')+'">'+l.type+'</span></td><td style="color:'+(l.ok?'var(--green)':'var(--red)')+'">'+esc(l.action)+'</td></tr>').join('')+
+    '</tbody></table>';
+}
+
+function adoTestConnection(){
+  const pat=getAdoPat();
+  if(!pat){toast('Enter a PAT first');return}
+  const cfg=getAdoConfig();
+  let org=cfg.org.replace(/\/$/,'');
+  const url=org+'/'+encodeURIComponent(cfg.project)+'/_apis/wit/workitemtypes?api-version=7.1';
+  fetch(url,{headers:{'Authorization':'Basic '+btoa(':'+pat)}})
+    .then(r=>{if(!r.ok)throw new Error(r.status);return r.json()})
+    .then(j=>{
+      const types=(j.value||[]).map(t=>t.name).join(', ');
+      toast('Connected! Work item types: '+types);
+      document.getElementById('ado-conn-status').innerHTML='<span style="color:var(--green)">Connected</span>';
+    })
+    .catch(e=>{
+      toast('Connection failed: '+e.message);
+      document.getElementById('ado-conn-status').innerHTML='<span style="color:var(--red)">Failed: '+esc(e.message)+'</span>';
+    });
+}
+
+function saveAdoSettings(){
+  const cfg=getAdoConfig();
+  cfg.org=document.getElementById('ado-org').value.trim();
+  cfg.project=document.getElementById('ado-project').value.trim();
+  cfg.areaPath=document.getElementById('ado-area').value.trim();
+  setAdoPat(document.getElementById('ado-pat').value.trim());
+  save();
+  toast('ADO settings saved');
+  render();
+}
+
+function adoResetSync(){
+  const {parents,milestones}=getAdoSyncItems();
+  const linked=[...parents.filter(w=>w.adoId),...milestones.filter(t=>t.adoId)];
+  if(!linked.length){toast('Nothing to reset — no ADO IDs found');return}
+  if(!confirm('Reset '+linked.length+' ADO IDs?\n\nItems will remain in ADO but ATLAS will treat them as new on the next sync.')){return}
+  parents.forEach(w=>{delete w.adoId});
+  milestones.forEach(t=>{delete t.adoId});
+  const adoCfg=getAdoConfig();
+  delete adoCfg.lastSync;
+  save();
+  toast('All ADO IDs cleared — next sync will create new items');
+  render();
+}
+
+function rAdo(c){
+  const cfg=getAdoConfig();
+  const pat=getAdoPat();
+  const {parents,milestones}=getAdoSyncItems();
+  const lastSync=cfg.lastSync?new Date(cfg.lastSync).toLocaleString():'Never';
+
+  const wsRows=parents.map(w=>{
+    const wsMs=milestones.filter(t=>t.workstream===w.id);
+    const tag=adoCategoryTag(w);
+    const adoState=adoStateForWs(w.status);
+    const tagColor=tag==='Vertical AI'?'var(--green)':tag==='Horizontal AI'?'var(--accent)':'#7C3AED';
+    const pw=w.parentWs?parents.find(p=>p.id===w.parentWs):null;
+    return'<tr>'+
+      '<td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+(w.color||'#999')+';margin-right:6px"></span>'+(w.parentWs?'&nbsp;&nbsp;':'')+esc(w.name)+'</td>'+
+      '<td><span class="badge" style="background:var(--accent)">Epic</span></td>'+
+      '<td>'+(pw?esc(pw.name):'<span style="color:var(--muted)">\u2014</span>')+'</td>'+
+      '<td><span class="badge" style="background:'+tagColor+'">'+tag+'</span></td>'+
+      '<td>'+esc(adoState)+'</td>'+
+      '<td>'+(w.adoId?'<span style="color:var(--green)">#'+w.adoId+'</span>':'<span style="color:var(--muted)">New</span>')+'</td>'+
+      '<td>'+wsMs.length+'</td>'+
+      '</tr>';
+  }).join('');
+
+  const msRows=milestones.map(t=>{
+    const pw=parents.find(w=>w.id===t.workstream);
+    return'<tr>'+
+      '<td>'+esc(t.title)+'</td>'+
+      '<td><span class="badge" style="background:#7C3AED">Feature</span></td>'+
+      '<td>'+(pw?esc(pw.name):'<span style="color:var(--muted)">Unlinked</span>')+'</td>'+
+      '<td>'+esc(adoStateForTask(t.status))+'</td>'+
+      '<td>'+(t.adoId?'<span style="color:var(--green)">#'+t.adoId+'</span>':'<span style="color:var(--muted)">New</span>')+'</td>'+
+      '<td>'+(t.due||'\u2014')+'</td>'+
+      '</tr>';
+  }).join('');
+
+  c.innerHTML=`
+  <div class="card" style="margin-bottom:16px">
+    <div class="dash-hd" style="display:flex;justify-content:space-between;align-items:center">
+      ADO Connection
+      <span id="ado-conn-status" style="font-size:12px">${pat?'<span style="color:var(--green)">PAT configured</span>':'<span style="color:var(--amber)">No PAT set</span>'}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="fg"><label>Organization URL</label><input id="ado-org" value="${esc(cfg.org)}" class="fi" placeholder="https://dev.azure.com/org"></div>
+      <div class="fg"><label>Project</label><input id="ado-project" value="${esc(cfg.project)}" class="fi"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="fg"><label>Area Path</label><input id="ado-area" value="${esc(cfg.areaPath)}" class="fi"></div>
+      <div class="fg"><label>Personal Access Token <span style="font-size:10px;color:var(--muted)">(stored locally only)</span></label><input id="ado-pat" type="password" value="${esc(pat)}" class="fi" placeholder="Paste your PAT here"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="mbtn mb-save" onclick="saveAdoSettings()">Save Settings</button>
+      <button class="mbtn" onclick="adoTestConnection()">Test Connection</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="dash-hd" style="display:flex;justify-content:space-between;align-items:center">
+      Sync Preview
+      <div style="display:flex;align-items:center;gap:12px">
+        <span id="ado-sync-status" style="font-size:12px">Last sync: ${esc(lastSync)}</span>
+        <button class="mbtn mb-save" onclick="adoPushAll()" ${!pat?'disabled title="Set PAT first"':''}>Push to ADO</button>
+        <button class="mbtn" onclick="adoResetSync(false)" style="font-size:11px">Reset IDs</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;margin-bottom:14px">
+      <div style="background:var(--lt);border-radius:8px;padding:12px 20px;text-align:center;flex:1">
+        <div style="font-size:28px;font-weight:800;color:var(--accent)">${parents.length}</div>
+        <div style="font-size:11px;color:var(--muted)">Epics (All Workstreams)</div>
+      </div>
+      <div style="background:var(--lt);border-radius:8px;padding:12px 20px;text-align:center;flex:1">
+        <div style="font-size:28px;font-weight:800;color:#7C3AED">${milestones.length}</div>
+        <div style="font-size:11px;color:var(--muted)">Features (Milestones)</div>
+      </div>
+      <div style="background:var(--lt);border-radius:8px;padding:12px 20px;text-align:center;flex:1">
+        <div style="font-size:28px;font-weight:800;color:var(--green)">${parents.filter(w=>w.adoId).length+milestones.filter(t=>t.adoId).length}</div>
+        <div style="font-size:11px;color:var(--muted)">Already in ADO</div>
+      </div>
+      <div style="background:var(--lt);border-radius:8px;padding:12px 20px;text-align:center;flex:1">
+        <div style="font-size:28px;font-weight:800;color:var(--amber)">${parents.filter(w=>!w.adoId).length+milestones.filter(t=>!t.adoId).length}</div>
+        <div style="font-size:11px;color:var(--muted)">Will Be Created</div>
+      </div>
+    </div>
+
+    <details open style="margin-bottom:12px">
+      <summary style="cursor:pointer;font-weight:700;font-size:13px;margin-bottom:8px">Epics &mdash; All Workstreams (${parents.length})</summary>
+      <table class="tbl"><thead><tr><th>Workstream</th><th>Type</th><th>Parent</th><th>Category</th><th>ADO State</th><th>ADO ID</th><th>Milestones</th></tr></thead><tbody>${wsRows||'<tr><td colspan="7" style="color:var(--muted)">No workstreams found</td></tr>'}</tbody></table>
+    </details>
+
+    <details style="margin-bottom:12px">
+      <summary style="cursor:pointer;font-weight:700;font-size:13px;margin-bottom:8px">Features &mdash; Milestones (${milestones.length})</summary>
+      <table class="tbl"><thead><tr><th>Milestone</th><th>Type</th><th>Parent Epic</th><th>ADO State</th><th>ADO ID</th><th>Target Date</th></tr></thead><tbody>${msRows||'<tr><td colspan="6" style="color:var(--muted)">No milestones found. Mark action items as milestones to sync them as Features.</td></tr>'}</tbody></table>
+    </details>
+
+    <div id="ado-sync-log"></div>
+  </div>
+
+  <div class="card">
+    <div class="dash-hd">State Mapping Reference</div>
+    <table class="tbl"><thead><tr><th>ATLAS Status</th><th>ADO State</th></tr></thead><tbody>
+      <tr><td>Not Started</td><td>New</td></tr>
+      <tr><td>Reachout / Kickoff</td><td>Active</td></tr>
+      <tr><td>Discovery &amp; Stakeholder Alignment</td><td>Active</td></tr>
+      <tr><td>Capability Mapping</td><td>Active</td></tr>
+      <tr><td>Prioritization &amp; Business Case</td><td>Active</td></tr>
+      <tr><td>Roadmap Integration</td><td>Active</td></tr>
+      <tr><td>Resource/Funding Gate</td><td>Active</td></tr>
+      <tr><td>Delivery</td><td>Active</td></tr>
+      <tr><td>Complete</td><td>Closed</td></tr>
+    </tbody></table>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px">Milestones: open &rarr; New, done &rarr; Closed</p>
+  </div>`;
 }
 
 // ═══════════════════════════════════════════════════
