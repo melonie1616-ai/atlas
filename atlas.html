@@ -1476,7 +1476,7 @@ function renderPresence(){}
 // ═══════════════════════════════════════════════════
 // NAV
 // ═══════════════════════════════════════════════════
-let taskFilter='open',taskOwnerFilter='',qcType='task',taskSort='default',taskSortDir=1,taskGroupCollapsed={},taskViewMode='list';
+let taskFilter='open',taskOwnerFilter='',taskWsFilter='',qcType='task',taskSort='default',taskSortDir=1,taskGroupCollapsed={},taskViewMode='list';
 
 function toggleSidebar(){
   document.body.classList.toggle('nav-collapsed');
@@ -3063,6 +3063,8 @@ function rKanban(c){
   else if(taskFilter==='overdue')items=items.filter(t=>t.status!=='done'&&t.due&&t.due<today());
   if(taskOwnerFilter==='__unassigned__')items=items.filter(t=>!t.owner);
   else if(taskOwnerFilter)items=items.filter(t=>t.owner===taskOwnerFilter);
+  if(taskWsFilter==='__unlinked__')items=items.filter(t=>!t.workstream);
+  else if(taskWsFilter)items=items.filter(t=>t.workstream===taskWsFilter);
 
   const q=(document.getElementById('search')?.value||'').toLowerCase();
   if(q)items=items.filter(t=>(t.title+' '+t.owner+' '+t.notes+' '+wsNamePlain(t.workstream)).toLowerCase().includes(q));
@@ -3079,6 +3081,7 @@ function rKanban(c){
   const overdueCount=D.tasks.filter(t=>t.status!=='done'&&t.due&&t.due<today()).length;
   const inboxCount=(D.inbox||[]).filter(x=>!x.processed).length;
   const owners=[...new Set((D.tasks||[]).map(t=>t.owner).filter(Boolean))].sort();
+  const workstreams=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
 
   const renderCard=(t)=>{
     const w=(D.workstreams||[]).find(x=>x.id===t.workstream);
@@ -3127,6 +3130,11 @@ function rKanban(c){
       <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
     </div>
     <div class="pill-actions">
+      <select onchange="taskWsFilter=this.value;render()" style="margin-right:8px">
+        <option value="">All Workstreams</option>
+        <option value="__unlinked__"${taskWsFilter==='__unlinked__'?' selected':''}>Unlinked</option>
+        ${workstreams.map(w=>`<option value="${w.id}"${taskWsFilter===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}
+      </select>
       <select onchange="taskOwnerFilter=this.value;render()">
         <option value="">All Owners</option>
         <option value="__unassigned__"${taskOwnerFilter==='__unassigned__'?' selected':''}>Unassigned</option>
