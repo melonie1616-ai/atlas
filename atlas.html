@@ -723,12 +723,18 @@ let D,V='dashboard',ME='',dbRef=null,firebaseReady=false,ganttZoom='3m',ganttSho
 const RELEASE_VERSION='2026-03-27';
 const RELEASE_NOTES=[
   {date:'March 27, 2026',whatsNew:[
-    'Dashboard timeline toggles: Show/hide 90-Day Enterprise Plan, Enterprise AI Roadmap, BU/Crosscutting workstreams, Milestones, and Action Items.',
-    'Enhanced timeline visibility: Larger, more prominent Program Timeline section header with better visual separation.',
-    'AI Insights tab improvements: Larger, more visible Analyze and Ask tabs with uppercase labels.',
-    'Workstream modal updates: Business Outcome field moved under Description; Report Content section removed.',
-    'Action Items modal: Clickable workstream link shows parent workstream details.',
-    'Removed Slide Builder from AI Insights (will revisit PowerPoint generation).'
+    'Dashboard timeline toggles: Show/hide 90-Day Enterprise Plan, Enterprise AI Roadmap, BU/Crosscutting workstreams, Milestones, and Action Items independently.',
+    'Enhanced timeline visibility: Larger, more prominent Program Timeline section header with card-style background and better visual separation.',
+    'Kanban board improvements: Toggle between list and board view for action items; drag-and-drop to update status; overdue/due-today highlighting (red/amber).',
+    'AI Insights redesign: Full-page tabbed interface (Analyze + Ask) with larger, more visible tabs and uppercase labels for better clarity.',
+    'Workstream modal streamlined: Business Outcome field moved under Description; Report Content section removed for cleaner interface.',
+    'Action Items modal enhancement: Clickable workstream link with color indicator shows parent workstream details.',
+    'Visual refresh: Nearly-black navigation bar with clean white star icon replacing old network diagram; improved contrast and modern aesthetic.',
+    'Comment threads on action items: Add discussion comments with author attribution and timestamps for better collaboration.',
+    'Overdue filter: Dedicated "Overdue" pill on Action Items page (both list and Kanban views) to quickly surface past-due items.',
+    'Workstream attention indicators: Red dot appears on workstreams that are at-risk, blocked, or have overdue tasks.',
+    'Progress visualization: Workstream tiles show progress bars with % complete based on task completion status.',
+    'Last-updated timestamps: Relative "updated X ago" labels on tasks and workstreams for better context.'
   ],data:[]},
   {date:'March 12, 2026',whatsNew:[
     'Quick Capture button: Pink floating button in the top-right — paste or speak notes from any page, sent to Inbox for triage.',
