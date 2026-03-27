@@ -3087,19 +3087,13 @@ function rKanban(c){
     const isOD=t.status!=='done'&&t.due&&t.due<today();
     const isDueToday=t.status!=='done'&&t.due&&t.due===today();
     const cardCls='kb-card'+(isOD&&!isDueToday?' kb-overdue':'')+(isDueToday?' kb-due-today':'');
-    const pp={high:'pill-r',medium:'pill-a',low:'pill-g'}[t.priority]||'pill-m';
-    const updAgo=t.updatedAt?timeAgo(t.updatedAt):'';
     return `<div class="${cardCls}" draggable="true" data-id="${t.id}" onclick="openTaskModal('${t.id}')"
       ondragstart="event.dataTransfer.setData('text/plain','${t.id}');this.classList.add('dragging')"
       ondragend="this.classList.remove('dragging')">
       <div class="kb-card-title">${t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">&#9733;</span>':''}${esc(t.title)}</div>
-      <div class="kb-card-meta">
-        <span class="kb-card-ws"><span class="dot" style="background:${wc}"></span>${wName}</span>
-        ${t.owner?'<span>'+esc(t.owner)+'</span>':''}
-        <span class="pill ${pp}" style="font-size:10px;padding:1px 6px">${t.priority||'medium'}</span>
-        ${t.due?'<span class="'+(isOD?'kb-card-overdue':'')+(isDueToday?'kb-card-overdue':'')+'">'+(isOD&&!isDueToday?'&#9888; ':'')+(isDueToday?'&#9200; ':'')+fmtDate(t.due)+'</span>':''}
-        ${(t.comments||[]).length?'<span style="font-size:10px;color:var(--light)" title="'+t.comments.length+' comment'+(t.comments.length!==1?'s':'')+'">&#128172; '+t.comments.length+'</span>':''}
-        ${updAgo?'<span style="font-size:10px;color:var(--light)" title="Last updated">'+updAgo+'</span>':''}
+      <div class="kb-card-meta" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px">
+        <span style="font-size:11px;color:var(--light)">${t.owner?esc(t.owner):'Unassigned'}</span>
+        ${t.due?'<span style="font-size:11px;color:'+(isOD?'var(--red)':'var(--muted)')+';font-weight:'+(isOD||isDueToday?'600':'400')+'">'+(isOD?'&#9888; ':'')+(isDueToday?'&#9200; ':'')+fmtDate(t.due)+'</span>':''}
       </div>
     </div>`;
   };
