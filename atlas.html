@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ATLAS</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230f172a'/><path d='M32 12c-5 0-9 2-12 5s-5 7-5 12c0 3 1 6 2 8l-3 4s3 2 6 2h1c3 3 7 5 11 5s8-2 11-5h1c3 0 6-2 6-2l-3-4c1-2 2-5 2-8 0-5-2-9-5-12s-7-5-12-5z' stroke='%236366f1' stroke-width='2' fill='none'/><circle cx='26' cy='30' r='2.5' fill='%23ccc'/><circle cx='38' cy='30' r='2.5' fill='%23ccc'/><circle cx='32' cy='22' r='2.5' fill='%23ccc'/><circle cx='32' cy='36' r='2.5' fill='%23ccc'/><line x1='26' y1='30' x2='32' y2='22' stroke='%23ccc' stroke-width='1'/><line x1='38' y1='30' x2='32' y2='22' stroke='%23ccc' stroke-width='1'/><line x1='26' y1='30' x2='32' y2='36' stroke='%23ccc' stroke-width='1'/><line x1='38' y1='30' x2='32' y2='36' stroke='%23ccc' stroke-width='1'/><line x1='26' y1='30' x2='38' y2='30' stroke='%23ccc' stroke-width='1' opacity='.5'/></svg>">
+<link rel="icon" type="image/png" href="atlas-icon.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -52,7 +52,7 @@ a{color:var(--indigo);text-decoration:none}
 button{cursor:pointer;border:none;background:none;font-family:inherit;font-size:inherit}
 
 /* SIDEBAR */
-.side{width:230px;background:linear-gradient(180deg,#1a1a24 0%,#14141e 100%);color:#c0c0d0;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;transition:width .2s ease}
+.side{width:230px;background:linear-gradient(180deg,#0a0f0f 0%,#050808 100%);color:#e0f2f1;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;transition:width .2s ease}
 .side::-webkit-scrollbar{width:4px}
 .side::-webkit-scrollbar-track{background:transparent}
 .side::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:4px}
@@ -235,6 +235,47 @@ body.nav-collapsed .topbar-menu{display:flex}
 [data-theme="dark"] .ws-page .page-section .section-header:hover{background:#cbd5e1;border-color:#94a3b8}
 [data-theme="dark"] .ws-page .page-section .section-header .section-chevron,[data-theme="dark"] .ws-page .page-section .section-header .section-label,[data-theme="dark"] .ws-page .page-section .section-header .section-meta{color:#1e293b}
 [data-theme="dark"] .ws-page .page-section.collapsed .section-header,[data-theme="dark"] .ws-page .page-section.collapsed .section-header{border-bottom-color:#cbd5e1}
+
+/* KANBAN BOARD */
+.kb-board{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;padding:4px 0 8px;min-height:calc(100vh - 200px)}
+.kb-col{flex:1 1 0;min-width:240px;max-width:360px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-radius:var(--r-md);display:flex;flex-direction:column;max-height:calc(100vh - 200px)}
+.kb-col-hdr{padding:12px 14px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--border);position:sticky;top:0;background:var(--bg-subtle);border-radius:var(--r-md) var(--r-md) 0 0;z-index:1}
+.kb-col-hdr .kb-count{font-size:11px;font-weight:600;background:var(--border-lt);color:var(--muted);border-radius:10px;padding:2px 8px}
+.kb-col-body{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px;min-height:60px}
+.kb-col.drag-over .kb-col-body{background:rgba(99,102,241,.06);border-radius:0 0 var(--r-md) var(--r-md)}
+.kb-card{background:var(--bg-card);border:1px solid var(--border-lt);border-radius:var(--r-sm);padding:10px 12px;cursor:grab;transition:box-shadow .15s,transform .15s;position:relative}
+.kb-card:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.kb-card.dragging{opacity:.5;transform:rotate(2deg)}
+.kb-card-title{font-size:12.5px;font-weight:600;margin-bottom:6px;line-height:1.35}
+.kb-card-meta{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:11px;color:var(--muted);align-items:center}
+.kb-card-ws{display:inline-flex;align-items:center;gap:4px}
+.kb-card-ws .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.kb-card-overdue{color:var(--red);font-weight:600}
+.kb-card.kb-overdue{border-left:3px solid var(--red);background:var(--red-lt)}
+.kb-card.kb-due-today{border-left:3px solid var(--amber);background:var(--amber-lt)}
+
+/* QUICK CAPTURE BUTTON */
+.fab{position:fixed;top:16px;right:24px;height:36px;border-radius:20px;background:#ec4899;color:#fff;border:none;cursor:pointer;box-shadow:0 3px 12px rgba(236,72,153,.45);display:flex;align-items:center;gap:6px;padding:0 16px 0 12px;z-index:200;transition:transform .15s,box-shadow .15s;font-size:12px;font-weight:700;letter-spacing:.3px;white-space:nowrap}
+.fab:hover{transform:scale(1.04);box-shadow:0 5px 18px rgba(236,72,153,.55)}
+.fab:active{transform:scale(.96)}
+
+/* COMMENT THREAD */
+.comment-thread{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.comment-item{display:flex;gap:8px;padding:8px 10px;background:var(--bg-subtle);border-radius:var(--r-sm);border:1px solid var(--border-lt)}
+.comment-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.comment-body{flex:1;min-width:0}
+.comment-meta{font-size:11px;color:var(--muted);margin-bottom:2px}
+.comment-meta strong{color:var(--text);font-weight:600}
+.comment-text{font-size:12.5px;line-height:1.5;color:var(--text);white-space:pre-wrap;word-break:break-word}
+.comment-input-row{display:flex;gap:8px;margin-top:6px}
+.comment-input-row textarea{flex:1;min-height:36px;max-height:120px;padding:7px 10px;border:1px solid var(--border-lt);border-radius:var(--r-sm);font-size:12.5px;font-family:inherit;background:var(--bg-card);color:var(--text);resize:vertical}
+.comment-input-row button{align-self:flex-end;padding:7px 14px;font-size:12px;font-weight:600;border-radius:var(--r-sm);background:var(--accent);color:#fff;border:none;cursor:pointer}
+.comment-input-row button:hover{background:var(--accent-hov)}
+
+/* PROGRESS BAR */
+.ws-progress{height:6px;border-radius:3px;background:var(--border-lt);overflow:hidden;flex:1}
+.ws-progress-fill{height:100%;border-radius:3px;transition:width .3s}
+
 .ws-page-toolbar .page-title{font-size:17px;font-weight:800;letter-spacing:-.02em;padding-right:16px;margin-right:16px;border-right:1px solid var(--border-lt)}
 .ws-page-toolbar .toolbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto;padding-left:16px;border-left:1px solid var(--border-lt)}
 .ws-page-toolbar .toolbar-right select{padding:6px 10px 6px 12px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:12.5px;font-family:inherit;background:var(--bg-card);color:var(--text);cursor:pointer;outline:none}
@@ -489,7 +530,7 @@ body.nav-collapsed .topbar-menu{display:flex}
 .qc-tabs{display:flex;gap:6px;margin-bottom:12px}
 .qc-tab{padding:7px 16px;border-radius:99px;font-size:13px;font-weight:600;background:var(--bg-subtle);color:var(--muted);cursor:pointer;transition:all .15s}
 .qc-tab.on{background:var(--accent);color:#fff}
-.qc-ta{width:100%;padding:10px 14px;border:1px solid var(--border-lt);border-radius:var(--r-sm);font-size:14px;font-family:inherit;resize:vertical;min-height:60px;outline:none;background:var(--bg-card);color:var(--text);transition:border-color .15s}
+.qc-ta{width:100%;padding:10px 14px;border:1px solid var(--border-lt);border-radius:var(--r-sm);font-size:14px;font-family:inherit;resize:vertical;min-height:180px;outline:none;background:var(--bg-card);color:var(--text);transition:border-color .15s}
 .qc-ta:focus{border-color:var(--accent)}
 .qc-ft{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
 .qc-ft button{padding:9px 20px;border-radius:var(--r-sm);font-size:13px;font-weight:600}
@@ -547,7 +588,7 @@ body.nav-collapsed .topbar-menu{display:flex}
 <nav class="side" id="sidebar">
   <div class="side-hd" style="position:relative">
     <div class="top-row">
-      <div class="logo"><svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><path d="M32 10c-5 0-9 2-12 5s-5 7-5 12c0 3 1 6 2 8l-3 4c0 0 3 2 6 2h1c3 3 7 5 11 5s8-2 11-5h1c3 0 6-2 6-2l-3-4c1-2 2-5 2-8 0-5-2-9-5-12s-7-5-12-5z" stroke="#8888aa" stroke-width="2" opacity=".8" fill="none"/><path d="M24 27c0-2 1-4 3-5s4-1 5 0" stroke="#8888aa" stroke-width="1.5" stroke-linecap="round" opacity=".5"/><path d="M40 27c0-2-1-4-3-5s-4-1-5 0" stroke="#8888aa" stroke-width="1.5" stroke-linecap="round" opacity=".5"/><circle cx="26" cy="30" r="2" fill="#7a7a9a"/><circle cx="38" cy="30" r="2" fill="#7a7a9a"/><circle cx="32" cy="22" r="2" fill="#7a7a9a"/><circle cx="32" cy="36" r="2" fill="#7a7a9a"/><line x1="26" y1="30" x2="32" y2="22" stroke="#6a6a8a" stroke-width="1" opacity=".5"/><line x1="38" y1="30" x2="32" y2="22" stroke="#6a6a8a" stroke-width="1" opacity=".5"/><line x1="26" y1="30" x2="32" y2="36" stroke="#6a6a8a" stroke-width="1" opacity=".5"/><line x1="38" y1="30" x2="32" y2="36" stroke="#6a6a8a" stroke-width="1" opacity=".5"/><line x1="26" y1="30" x2="38" y2="30" stroke="#6a6a8a" stroke-width="1" opacity=".3"/></svg></div>
+      <div class="logo" style="background:transparent;padding:0"><img src="atlas-icon.png" alt="ATLAS" style="width:100%;height:100%;object-fit:contain"></div>
       <h1>ATLAS</h1>
     </div>
     <button class="side-collapse-btn" onclick="toggleSidebar()" title="Collapse sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg></button>
@@ -568,10 +609,7 @@ body.nav-collapsed .topbar-menu{display:flex}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         People <span class="badge" id="nb-ppl">0</span>
       </div>
-      <div class="ni" data-v="strategy" onclick="go('strategy')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        Framework
-      </div>
+      
     </div>
 
     <div class="nav-section" id="ns-work">
@@ -597,21 +635,19 @@ body.nav-collapsed .topbar-menu{display:flex}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         Risk Register
       </div>
-      <div class="ni" data-v="metrics" onclick="go('metrics')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        Success Metrics
-      </div>
+      
     </div>
 
     <div class="nav-section" id="ns-output">
       <div class="nav-label" onclick="toggleNavSection('ns-output')">Output <span class="nav-arrow">&#9660;</span></div>
-      <div class="ni" data-v="report" onclick="go('report')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Report Out
-      </div>
+      
       <div class="ni" data-v="ado" onclick="go('ado')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
         ADO Sync
+      </div>
+      <div class="ni" data-v="aiinsights" onclick="go('aiinsights')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 014 4v1a3 3 0 013 3v1a2 2 0 012 2v0a2 2 0 01-2 2h-1a3 3 0 01-3 3v1a4 4 0 01-8 0v-1a3 3 0 01-3-3H3a2 2 0 01-2-2v0a2 2 0 012-2h1a3 3 0 013-3V7a4 4 0 014-4z"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/></svg>
+        AI Insights
       </div>
     </div>
 
@@ -642,20 +678,7 @@ body.nav-collapsed .topbar-menu{display:flex}
       <input type="text" id="search" placeholder="Search..." oninput="render()">
       <button class="tb-btn" id="addBtn" style="display:none" onclick="handleAdd()">+ Add</button>
       <div style="position:relative">
-        <button class="tb-btn" onclick="toggleAIPanel()" title="AI Program Insights" style="display:flex;align-items:center;gap:5px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 2a4 4 0 014 4v1a3 3 0 013 3v1a2 2 0 012 2v0a2 2 0 01-2 2h-1a3 3 0 01-3 3v1a4 4 0 01-8 0v-1a3 3 0 01-3-3H3a2 2 0 01-2-2v0a2 2 0 012-2h1a3 3 0 013-3V7a4 4 0 014-4z"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/></svg>AI Insights</button>
-        <div id="aiPanel" style="display:none;position:absolute;right:0;top:100%;margin-top:8px;width:420px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-md);z-index:200;max-height:70vh;overflow-y:auto">
-          <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
-            <span style="background:var(--ai-glow);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800;font-size:15px">AI</span>
-            <span style="font-weight:700;font-size:14px">Program Insights</span>
-            <div style="margin-left:auto;display:flex;gap:6px">
-              <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px" onclick="copyInsights()">&#128203; Copy</button>
-              <button class="pill pill-i" style="cursor:pointer;border:none;font-size:11px" onclick="runAIInsights()">&#10024; Analyze</button>
-            </div>
-          </div>
-          <div id="ai-insights" style="padding:14px 16px;min-height:60px">
-            <p style="font-size:12.5px;color:var(--light)">Click "Analyze" to get AI-generated insights about your program's status, risks, and recommended actions.</p>
-          </div>
-        </div>
+        <button class="tb-btn" onclick="go('aiinsights')" title="AI Insights" style="display:flex;align-items:center;gap:5px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 2a4 4 0 014 4v1a3 3 0 013 3v1a2 2 0 012 2v0a2 2 0 01-2 2h-1a3 3 0 01-3 3v1a4 4 0 01-8 0v-1a3 3 0 01-3-3H3a2 2 0 01-2-2v0a2 2 0 012-2h1a3 3 0 013-3V7a4 4 0 014-4z"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/></svg>AI Insights</button>
       </div>
       <div style="position:relative">
         <button class="tb-btn" id="focusBtn" onclick="toggleFocusPopover()" title="What needs immediate attention (dates and risks)" style="background:#0f172a;color:#fff;display:flex;align-items:center;gap:6px;font-size:13px">
@@ -694,11 +717,31 @@ body.nav-collapsed .topbar-menu{display:flex}
 <div class="toast" id="toast"></div>
 
 
+
 <script>
-let D,V='dashboard',ME='',dbRef=null,firebaseReady=false,ganttZoom='3m',ganttShowTasks=false,ganttShowMs=false,ganttShowBU=true,ganttShowCC=false,ganttCustomStart='';
-const RELEASE_VERSION='2026-03-17';
+let D,V='dashboard',ME='',dbRef=null,firebaseReady=false,ganttZoom='3m',ganttShowTasks=false,ganttShowMs=false,ganttShowBU=true,ganttShowCC=false,ganttShowRoadmap=true,ganttShow90Day=true,ganttCustomStart='';
+const RELEASE_VERSION='2026-03-27';
 const RELEASE_NOTES=[
-  {date:'March 17, 2026',whatsNew:[
+  {date:'March 27, 2026',whatsNew:[
+    'Dashboard timeline toggles: Show/hide 90-Day Enterprise Plan, Enterprise AI Roadmap, BU/Crosscutting workstreams, Milestones, and Action Items.',
+    'Enhanced timeline visibility: Larger, more prominent Program Timeline section header with better visual separation.',
+    'AI Insights tab improvements: Larger, more visible Analyze and Ask tabs with uppercase labels.',
+    'Workstream modal updates: Business Outcome field moved under Description; Report Content section removed.',
+    'Action Items modal: Clickable workstream link shows parent workstream details.',
+    'Removed Slide Builder from AI Insights (will revisit PowerPoint generation).'
+  ],data:[]},
+  {date:'March 12, 2026',whatsNew:[
+    'Quick Capture button: Pink floating button in the top-right — paste or speak notes from any page, sent to Inbox for triage.',
+    'Kanban board: Drag-and-drop board view for action items with Not Started, Open, Blocked, and Done columns.',
+    'Overdue filter: New "Overdue" pill on the Action Items page highlights everything past due.',
+    'Workstream attention indicator: Red dot on workstreams that are at risk, blocked, or have overdue tasks.',
+    'Comment threads: Add discussion comments to any action item.',
+    'Overdue & due-today highlighting on Kanban cards (red / amber).',
+    'Last-updated timestamps on action items and workstream tiles.',
+    'Workstream progress bars showing % tasks complete.',
+    'Removed Framework and Success Metrics pages (streamlined navigation).'
+  ],data:[]},
+  {date:'March 17, 2026 (prior)',whatsNew:[
     'Manage groups: Shows all existing groups; list stays in sync on load and after add/rename/delete.',
     'Quick Capture: Paste or speak notes; voice dictation in Chrome/Edge. Notes go to Inbox.',
     'Report Out: Executive-style table; grouped by BU / Crosscutting; Copy, Print, AI Summarize.',
@@ -717,6 +760,17 @@ const uid=()=>Math.random().toString(36).slice(2,10);
 const today=()=>new Date().toISOString().slice(0,10);
 const esc=s=>s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):'';
 const fmtDate=d=>d?new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+function timeAgo(iso){
+  if(!iso)return '';
+  const ms=Date.now()-new Date(iso).getTime();
+  if(ms<0)return '';
+  const sec=Math.floor(ms/1000),min=Math.floor(sec/60),hr=Math.floor(min/60),day=Math.floor(hr/24);
+  if(day>30)return Math.floor(day/30)+'mo ago';
+  if(day>0)return day+'d ago';
+  if(hr>0)return hr+'h ago';
+  if(min>0)return min+'m ago';
+  return 'just now';
+}
 
 // PASTE YOUR FIREBASE CONFIG HERE
 const firebaseConfig = {
@@ -889,7 +943,7 @@ function loadLs(){
     D.milestones.forEach(m=>{
       if(!D.tasks.find(t=>t.id===m.id)){
         D.tasks.push({id:m.id,title:m.title,owner:m.owner||'',due:m.date||'',
-          status:m.status==='done'?'done':'open',priority:'high',
+          status:m.status==='done'?'done':'not-started',priority:'high',
           workstream:m.workstream||'',notes:m.notes||'',
           isMilestone:true,addedBy:m.addedBy||'',created:m.date||today()});
       }
@@ -1194,9 +1248,9 @@ function getProgramContext(){
   const ws=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting').map(w=>w.name+' ('+w.status+', owner: '+(w.owner||'TBD')+')').join('; ');
   const allMs=(D.tasks||[]).filter(t=>t.isMilestone);
   const ms=allMs.map(m=>m.title+' — owner: '+(m.owner||'Unassigned')+' — '+(m.status==='done'?'done':m.due&&m.due<today()?'overdue':'upcoming')+(m.due?' due '+m.due:'')).join('; ');
-  const openTasks=(D.tasks||[]).filter(t=>t.status==='open');
+  const openTasks=(D.tasks||[]).filter(t=>t.status!=='done');
   const overdueCount=openTasks.filter(t=>t.due&&t.due<today()).length;
-  const openT=openTasks.map(t=>t.title+' (owner: '+(t.owner||'Unassigned')+(t.due?'; due '+t.due:'')+')').join('; ');
+  const openT=openTasks.map(t=>t.title+' (owner: '+(t.owner||'Unassigned')+(t.due?'; due '+t.due:'')+'; status: '+taskStatusLabel(t.status)+')').join('; ');
   const doneT=(D.tasks||[]).filter(t=>t.status==='done').map(t=>t.title+' (owner: '+(t.owner||'Unassigned')+')').join('; ');
   const eng=(D.engagements||[]).map(e=>e.title+' ('+e.status+', type: '+(e.type||'N/A')+')').join('; ');
   const activeWsList=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
@@ -1218,7 +1272,7 @@ function getAskContext(){
   allWs.forEach(w=>{
     const rec=(w.recentAccomplishments||'').trim()||recentAccomplishmentsFromApp(w.id);
     const nxt=(w.whatsNext||'').trim()||whatsNextFromApp(w.id);
-    const openTasks=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').map(t=>t.title+(t.due?' (due '+t.due+')':'')+(t.owner?' — '+t.owner:''));
+    const openTasks=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status!=='done').map(t=>t.title+(t.due?' (due '+t.due+')':'')+(t.owner?' — '+t.owner:''));
     const doneTasks=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='done').slice(-5).map(t=>t.title+(t.due?' completed '+t.due:''));
     lines.push(`WORKSTREAM: ${w.name} (ID: ${w.id}) | Status: ${wsStatusLabel(w.status)} | Owner: ${w.owner||'TBD'}`);
     if(rec)lines.push('  Recent accomplishments: '+rec.replace(/\n/g,' '));
@@ -1416,7 +1470,7 @@ function renderPresence(){}
 // ═══════════════════════════════════════════════════
 // NAV
 // ═══════════════════════════════════════════════════
-let taskFilter='open',taskOwnerFilter='',qcType='task',taskSort='default',taskSortDir=1,taskGroupCollapsed={};
+let taskFilter='open',taskOwnerFilter='',qcType='task',taskSort='default',taskSortDir=1,taskGroupCollapsed={},taskViewMode='list';
 
 function toggleSidebar(){
   document.body.classList.toggle('nav-collapsed');
@@ -1462,8 +1516,8 @@ function go(v){
   });
   const titles={dashboard:'Dashboard',workstreams:'Workstreams',engagements:'Engagements',
     tasks:'Action Items',mywork:'My Work Items',people:'People',
-    report:'Report Out',ask:'Ask AI',strategy:'Framework',decisions:'Decision Log',
-    risks:'Risk Register',metrics:'Success Metrics',ado:'ADO Sync'};
+    report:'Report Out',ask:'Ask AI',decisions:'Decision Log',
+    risks:'Risk Register',ado:'ADO Sync',aiinsights:'AI Insights'};
   document.getElementById('viewTitle').textContent=titles[v]||v;
   const ab=document.getElementById('addBtn');
   if(v==='engagements')v=V='workstreams';
@@ -1483,7 +1537,7 @@ function handleAdd(){
 }
 
 function badges(){
-  const open=(D.tasks||[]).filter(t=>t.status==='open');
+  const open=(D.tasks||[]).filter(t=>t.status!=='done');
   const overdue=open.filter(t=>t.due&&t.due<today());
   const inboxCount=(D.inbox||[]).filter(x=>!x.processed).length;
   const taskBadgeVal=inboxCount?open.length+' / '+inboxCount:open.length;
@@ -1501,8 +1555,8 @@ function badges(){
 function render(){
   const c=document.getElementById('content');
   ({dashboard:rDash,workstreams:rWork,
-    tasks:rTasks,extract:rExtract,mywork:rMyWork,people:rPeople,report:rReport,ask:rAsk,strategy:rStrategy,
-    decisions:rDecisions,risks:rRisks,metrics:rMetrics,ado:rAdo})[V]?.(c);
+    tasks:rTasks,extract:rExtract,mywork:rMyWork,people:rPeople,report:rReport,ask:rAsk,
+    decisions:rDecisions,risks:rRisks,ado:rAdo,aiinsights:rAIInsights})[V]?.(c);
   badges();autoUpdateMilestones();
 }
 
@@ -1592,12 +1646,12 @@ function checkReleaseNotes(){
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
 let qcVoiceActive=false,qcRecognition=null;
-function toggleQC(){document.getElementById('qcPanel').classList.toggle('open');document.getElementById('aiPanel').style.display='none';document.getElementById('focusPopover').classList.remove('open');if(qcVoiceActive)toggleQCVoice()}
-function toggleAIPanel(){const p=document.getElementById('aiPanel');p.style.display=p.style.display==='none'?'block':'none';document.getElementById('qcPanel').classList.remove('open');document.getElementById('focusPopover').classList.remove('open')}
+function toggleQC(){document.getElementById('qcPanel').classList.toggle('open');document.getElementById('focusPopover').classList.remove('open');if(qcVoiceActive)toggleQCVoice()}
+function toggleAIPanel(){go('aiinsights')}
 function getImmediateFocus(){
   const t=()=>new Date().toISOString().slice(0,10);
   const now=t();
-  const tasks=(D.tasks||[]).filter(x=>x.status==='open');
+  const tasks=(D.tasks||[]).filter(x=>x.status!=='done');
   const overdueTasks=tasks.filter(x=>x.due&&x.due<now).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
   const allMs=tasks.filter(x=>x.isMilestone);
   const overdueMilestones=allMs.filter(x=>x.due&&x.due<now).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
@@ -1630,7 +1684,7 @@ function renderFocusPopover(){
 function closeFocusPopover(){document.getElementById('focusPopover').classList.remove('open')}
 function toggleFocusPopover(){
   const p=document.getElementById('focusPopover');const open=p.classList.toggle('open');
-  document.getElementById('aiPanel').style.display='none';document.getElementById('qcPanel').classList.remove('open');
+  document.getElementById('qcPanel').classList.remove('open');
   if(open){renderFocusPopover();setTimeout(()=>document.addEventListener('click',focusPopoverOutsideClick),0)}else{document.removeEventListener('click',focusPopoverOutsideClick)}
 }
 function focusPopoverOutsideClick(e){const p=document.getElementById('focusPopover');const btn=document.getElementById('focusBtn');if(p&&p.classList.contains('open')&&!p.contains(e.target)&&!btn.contains(e.target)){closeFocusPopover();document.removeEventListener('click',focusPopoverOutsideClick)}}
@@ -1686,6 +1740,11 @@ function wsStatusLabel(v){if(!v)return'Not Started';const s=WS_STATUSES.find(x=>
 function reportStatusClass(st){if(!st)return'not-started';if(st==='complete')return'complete';if(st==='not-started')return'not-started';return'in-progress';}
 function reportStatusClassOutcomes(st){const v=!st?'not-started':['on-track','at-risk','blocked','pilot-validate','deploy-scale'].includes(st)?'delivery':st;return v;}
 function wsStatusShortLabel(v){const short={ 'not-started':'Not started','reachout-kickoff':'Kickoff','discovery-workshops':'Discovery','capability-mapping':'Capability','prioritization-planning':'Prioritization','roadmap-integration':'Roadmap','resourcing':'Resource gate','delivery':'Delivery','complete':'Complete'};const key=!v?'not-started':['on-track','at-risk','blocked','pilot-validate','deploy-scale'].includes(v)?'delivery':v;return short[key]||wsStatusLabel(v);}
+const TASK_STATUSES={'not-started':'Not Started','open':'Open','blocked':'Blocked','done':'Done'};
+const TASK_STATUS_PILL={'not-started':'pill-m','open':'pill-a','blocked':'pill-r','done':'pill-g'};
+function taskStatusLabel(s){return TASK_STATUSES[s]||TASK_STATUSES['not-started']}
+function taskStatusPill(s){return TASK_STATUS_PILL[s]||'pill-m'}
+function isTaskActive(t){return t.status!=='done'}
 const statusColors={'not-started':'pill-m','reachout-kickoff':'pill-m','discovery-workshops':'pill-a','prioritization-planning':'pill-b','resourcing':'pill-v','delivery':'pill-g','pilot-validate':'pill-g','deploy-scale':'pill-t','complete':'pill-b','on-track':'pill-g','at-risk':'pill-a','blocked':'pill-r'};
 const engStatusColors={intake:'pill-m',scoping:'pill-a',active:'pill-i','on-hold':'pill-v',complete:'pill-g'};
 const engTypes=['Use Case','Question','Tool Evaluation','Licensing','Escalation','General Request'];
@@ -1695,7 +1754,7 @@ const engTypeColors={'Use Case':'pill-i','Question':'pill-b','Tool Evaluation':'
 // DASHBOARD
 // ═══════════════════════════════════════════════════
 function rDash(c){
-  const open=(D.tasks||[]).filter(t=>t.status==='open');
+  const open=(D.tasks||[]).filter(t=>t.status!=='done');
   const overdue=open.filter(t=>t.due&&t.due<today());
   const todayD=new Date(today()+'T00:00:00');
   const dayOfWeek=todayD.getDay();
@@ -1705,27 +1764,27 @@ function rDash(c){
   const dueThisWeek=open.filter(t=>t.due&&t.due>=wkS&&t.due<=wkE);
   const allMs=(D.tasks||[]).filter(t=>t.isMilestone);
   const msDone=allMs.filter(t=>t.status==='done');
-  const msOD=allMs.filter(t=>t.status==='open'&&t.due&&t.due<today());
-  const msUp=allMs.filter(t=>t.status==='open'&&(!t.due||t.due>=today()));
+  const msOD=allMs.filter(t=>t.status!=='done'&&t.due&&t.due<today());
+  const msUp=allMs.filter(t=>t.status!=='done'&&(!t.due||t.due>=today()));
   const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
   const activeWs=allWs.filter(w=>w.status!=='complete');
-  const myOpenTasks=ME?(D.tasks||[]).filter(t=>t.owner===ME&&t.status==='open'):[];
+  const myOpenTasks=ME?(D.tasks||[]).filter(t=>t.owner===ME&&t.status!=='done'):[];
   const myWsCount=ME?(D.workstreams||[]).filter(w=>{const o=w.owner||WS_DEFS.find(d=>d.id===w.id)?.owner||'';return o===ME}).length:0;
 
-  const atRiskWs=allWs.filter(w=>{const s=w.status;return s==='at-risk'||s==='blocked'||(D.tasks||[]).some(t=>t.workstream===w.id&&t.status==='open'&&t.due&&t.due<today())});
+  const atRiskWs=allWs.filter(w=>{const s=w.status;return s==='at-risk'||s==='blocked'||(D.tasks||[]).some(t=>t.workstream===w.id&&t.status!=='done'&&t.due&&t.due<today())});
   const completeWs=allWs.filter(w=>w.status==='complete');
 
   c.innerHTML=`
   <div class="kpi-row">
     <div class="card kpi" style="cursor:pointer" onclick="go('workstreams')"><div class="acc" style="background:var(--violet)"></div><div class="lbl">Workstreams</div><div class="val" style="color:var(--violet)">${activeWs.length}<span style="font-size:18px;color:var(--light);font-weight:500">/${allWs.length}</span></div><div class="note">${atRiskWs.length?'<span style="color:var(--red);font-weight:600">'+atRiskWs.length+' need attention</span>':'<span style="color:var(--green)">All on track</span>'}${completeWs.length?' &middot; '+completeWs.length+' complete':''}</div></div>
-    <div class="card kpi" style="cursor:pointer" onclick="go('tasks')"><div class="acc" style="background:var(--indigo)"></div><div class="lbl">Open Items</div><div class="val" style="color:var(--indigo)">${open.length}</div><div class="note">${overdue.length?'<span style="color:var(--red);font-weight:600">'+overdue.length+' overdue</span>':'<span style="color:var(--green)">All on track</span>'}${dueThisWeek.length?' &middot; <span style="color:var(--indigo);font-weight:600">'+dueThisWeek.length+' due this week</span>':''}</div></div>
+    <div class="card kpi" style="cursor:pointer" onclick="go('tasks')"><div class="acc" style="background:var(--indigo)"></div><div class="lbl">Open Action Items</div><div class="val" style="color:var(--indigo)">${open.length}</div><div class="note">${overdue.length?'<span style="color:var(--red);font-weight:600">'+overdue.length+' overdue</span>':'<span style="color:var(--green)">All on track</span>'}${dueThisWeek.length?' &middot; <span style="color:var(--indigo);font-weight:600">'+dueThisWeek.length+' due this week</span>':''}</div></div>
     <div class="card kpi" style="cursor:pointer" onclick="taskFilter='milestones';go('tasks')"><div class="acc" style="background:var(--teal)"></div><div class="lbl">Milestones</div><div class="val" style="color:var(--teal)">${msDone.length}<span style="font-size:18px;color:var(--light);font-weight:500">/${allMs.length}</span></div><div class="note">${msOD.length?'<span style="color:var(--red);font-weight:600">'+msOD.length+' overdue</span>':msUp.length+' upcoming'}</div></div>
     <div class="card kpi" style="cursor:pointer" onclick="go('mywork')"><div class="acc" style="background:#ec4899"></div><div class="lbl">My Work Items</div><div class="val" style="color:#ec4899">${myOpenTasks.length}</div><div class="note">${ME?myWsCount+' workstream'+(myWsCount!==1?'s':''):'<span style="color:var(--muted)">Sign in to see</span>'}</div></div>
   </div>
 
   <div class="ws-section" id="dashSec-timeline" style="margin-bottom:16px">
-    <div class="ws-section-hd" onclick="toggleWsSection('dashSec-timeline')"><h4>Program Timeline</h4><span class="ws-section-arrow">&#9660;</span></div>
-    <div class="ws-section-bd" style="padding:10px 14px">
+    <div class="ws-section-hd" onclick="toggleWsSection('dashSec-timeline')" style="background:var(--bg-card);padding:14px 18px;border-radius:var(--r-sm) var(--r-sm) 0 0;border:1px solid var(--border)"><h4 style="font-size:16px;font-weight:800;color:var(--text)">Program Timeline</h4><span class="ws-section-arrow">&#9660;</span></div>
+    <div class="ws-section-bd" style="padding:10px 14px;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r-sm) var(--r-sm)">
       ${buildGantt()}
     </div>
   </div>
@@ -1745,11 +1804,12 @@ function rMyWork(c){
     return owner===ME;
   }).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const myTasks=(D.tasks||[]).filter(t=>t.owner===ME).sort((a,b)=>{
-    if(a.status!==b.status)return (a.status==='open'?0:1)-(b.status==='open'?0:1);
-    if(a.status==='open'&&a.due&&b.due)return (a.due||'9').localeCompare(b.due||'9');
+    const so={'not-started':0,'open':1,'blocked':2,'done':3};
+    if(a.status!==b.status)return (so[a.status]??1)-(so[b.status]??1);
+    if(a.status!=='done'&&a.due&&b.due)return (a.due||'9').localeCompare(b.due||'9');
     return (a.title||'').localeCompare(b.title||'');
   });
-  const openTasks=myTasks.filter(t=>t.status==='open');
+  const openTasks=myTasks.filter(t=>t.status!=='done');
   const doneTasks=myTasks.filter(t=>t.status==='done');
 
   if(!ME){
@@ -1762,24 +1822,32 @@ function rMyWork(c){
   }
 
   const wsTile=(w)=>{
-    const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;
+    const wAll=(D.tasks||[]).filter(t=>t.workstream===w.id);
+    const wDone=wAll.filter(t=>t.status==='done').length;
+    const wOpen=wAll.filter(t=>t.status!=='done').length;
+    const pct=wAll.length?Math.round(wDone/wAll.length*100):0;
     const wc=wsColor(w.id);
     return `<div style="border-radius:var(--r-lg);cursor:pointer;overflow:hidden;box-shadow:var(--shadow);background:${wc}" onclick="openWsDetail('${w.id}')">
       <div style="padding:12px 14px;color:#fff">
         <div style="font-size:13px;font-weight:700">${esc(w.name)}</div>
         <div style="font-size:11px;opacity:.9;margin-top:4px">${wsStatusLabel(w.status)} &middot; ${wOpen} open</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+          <div style="flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.25);overflow:hidden"><div style="height:100%;border-radius:2px;background:#fff;width:${pct}%"></div></div>
+          <span style="font-size:10px;opacity:.85;font-weight:600">${pct}%</span>
+        </div>
       </div>
     </div>`;
   };
   const taskRow=(t)=>{
-    const isOD=t.status==='open'&&t.due&&t.due<today();
+    const isOD=t.status!=='done'&&t.due&&t.due<today();
     const rowBg=isOD?'background:var(--red-lt)':'';
     return `<tr onclick="openTaskModal('${t.id}')" style="cursor:pointer;${rowBg}">
       <td style="vertical-align:middle;width:28px" onclick="event.stopPropagation()"><div class="task-chk${t.status==='done'?' done':''}" onclick="toggleTask('${t.id}')">&#10003;</div></td>
       <td style="${t.status==='done'?'text-decoration:line-through;color:var(--muted)':''}">${t.isMilestone?'<span style="color:#f59e0b">&#9733;</span> ':''}${esc(t.title)}</td>
       <td style="font-size:12px;color:var(--muted)">${wsName(t.workstream)}</td>
       <td style="font-size:12px;color:var(--muted)">${t.due?fmtDate(t.due):'—'}</td>
-      <td><span class="pill ${t.status==='done'?'pill-g':'pill-a'}" style="font-size:10px">${t.status==='done'?'Done':'Open'}</span></td>
+      <td><span class="pill ${taskStatusPill(t.status)}" style="font-size:10px">${taskStatusLabel(t.status)}</span></td>
+      <td style="font-size:10px;color:var(--light)" title="${t.updatedAt||''}">${timeAgo(t.updatedAt)}</td>
     </tr>`;
   };
 
@@ -1892,7 +1960,7 @@ function buildGantt(){
   let rows='';
 
   const visPhases=phases.filter(p=>{const l=pct(p.start),r=pct(p.end);return r>0&&l<100});
-  if(visPhases.length){
+  if(ganttShow90Day&&visPhases.length){
     let phaseBars='';
     visPhases.forEach(p=>{
       const l=pct(p.start),r=pct(p.end);
@@ -1909,7 +1977,7 @@ function buildGantt(){
   }
 
   const visQuarters=quarters.filter(q=>{const l=pct(q.start),r=pct(q.end);return r>0&&l<100});
-  if(visQuarters.length){
+  if(ganttShowRoadmap&&visQuarters.length){
     const rowH=24;
     let yIdx=0;
     let rmBars='';
@@ -1976,7 +2044,7 @@ function buildGantt(){
         ${visMs.map((m,i)=>{
           const x=pct(m.due||today());
           const isDone=m.status==='done';
-          const isOD=m.status==='open'&&m.due&&m.due<today();
+          const isOD=m.status!=='done'&&m.due&&m.due<today();
           const color=isDone?'var(--green)':isOD?'var(--red)':wsColor(m.workstream);
           const icon=isDone?'&#10003;':isOD?'!':'&#9670;';
           return `<div style="position:absolute;left:${x}%;top:${i*24+4}px;transform:translateX(-8px);cursor:pointer" title="${esc(m.title)} — ${fmtDate(m.due)} (${isDone?'done':isOD?'overdue':'upcoming'})" onclick="openTaskModal('${m.id}')">
@@ -1992,7 +2060,7 @@ function buildGantt(){
   }
 
   if(ganttShowTasks){
-    const allTasks=(D.tasks||[]).filter(t=>!t.isMilestone&&t.status==='open').sort((a,b)=>(a.startDate||a.due||'9').localeCompare(b.startDate||b.due||'9'));
+    const allTasks=(D.tasks||[]).filter(t=>!t.isMilestone&&t.status!=='done').sort((a,b)=>(a.startDate||a.due||'9').localeCompare(b.startDate||b.due||'9'));
     const visTasks=allTasks.filter(t=>{
       const sd=t.startDate||t.due;const ed=t.due||t.startDate;
       if(!sd&&!ed)return false;
@@ -2007,7 +2075,7 @@ function buildGantt(){
         const hasRange=t.startDate&&t.due&&t.startDate!==t.due;
         const wc=wsColor(t.workstream)||'var(--muted)';
         const isDone=t.status==='done';
-        const isOD=t.status==='open'&&t.due&&t.due<today();
+        const isOD=t.status!=='done'&&t.due&&t.due<today();
         const barColor=isDone?'var(--green)':isOD?'var(--red)':wc;
         if(hasRange){
           const l=Math.max(0,pct(sd)),r=Math.min(100,pct(ed));
@@ -2033,6 +2101,8 @@ function buildGantt(){
   }
 
   const swimToggles=`<span style="font-size:11px;color:var(--light);margin-left:8px">Show:</span>`
+    +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShow90Day?'checked':''} onchange="ganttShow90Day=this.checked;render()" style="cursor:pointer"> 90-Day Enterprise Plan</label>`
+    +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowRoadmap?'checked':''} onchange="ganttShowRoadmap=this.checked;render()" style="cursor:pointer"> Enterprise AI Roadmap</label>`
     +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowBU?'checked':''} onchange="ganttShowBU=this.checked;render()" style="cursor:pointer"> BU Workstreams</label>`
     +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowCC?'checked':''} onchange="ganttShowCC=this.checked;render()" style="cursor:pointer"> Crosscutting Workstreams</label>`
     +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowMs?'checked':''} onchange="ganttShowMs=this.checked;render()" style="cursor:pointer"> Milestones</label>`
@@ -2056,7 +2126,7 @@ function buildGantt(){
 
 function copyInsights(){
   const el=document.getElementById('ai-insights');
-  if(!el||!el.innerText.trim()||el.innerText.includes('Click "Analyze"')){toast('Run an analysis first');return}
+  if(!el||!el.innerText.trim()||el.innerText.includes('Click Analyze')){toast('Run an analysis first');return}
   navigator.clipboard.writeText(el.innerText).then(()=>toast('Insights copied to clipboard')).catch(()=>toast('Copy failed'));
 }
 
@@ -2072,9 +2142,11 @@ async function runAIInsights(){
   if(!el)return;
   if(result){
     let clean=result.replace(/```html\s*/gi,'').replace(/```\s*/g,'').trim();
-    el.innerHTML=`<div style="font-size:13px;line-height:1.7">${clean}</div>`;
+    window._aiAnalysisResult=`<div style="font-size:13px;line-height:1.7">${clean}</div>`;
+    el.innerHTML=window._aiAnalysisResult;
   }else{
     el.innerHTML='<p style="font-size:12.5px;color:var(--red)">Could not generate insights. Check your API key and try again.</p>';
+    window._aiAnalysisResult='';
   }
 }
 
@@ -2119,13 +2191,16 @@ function rWork(c){
     const wsIds=isParent?[w.id,...children.map(c=>c.id)]:[w.id];
     const wAll=(D.tasks||[]).filter(t=>wsIds.includes(t.workstream));
     const wDone=wAll.filter(t=>t.status==='done').length;
-    const wOpen=wAll.filter(t=>t.status==='open').length;
+    const wOpen=wAll.filter(t=>t.status!=='done').length;
     const pct=wAll.length?Math.round(wDone/wAll.length*100):0;
     const sc=statusColors[w.status]||'pill-m';
     const risks=(D.risks||[]).filter(r=>wsIds.includes(r.workstream)).length;
+    const hasOverdue=wAll.some(t=>t.status!=='done'&&t.due&&t.due<today());
+    const needsAttention=w.status==='at-risk'||w.status==='blocked'||hasOverdue;
+    const attDot=needsAttention?'<span title="Needs attention'+(hasOverdue?' — has overdue items':'')+(w.status==='at-risk'?' — at risk':'')+(w.status==='blocked'?' — blocked':'')+'" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:6px;vertical-align:middle;flex-shrink:0;box-shadow:0 0 0 2px rgba(239,68,68,.25)"></span>':'';
     const nameHtml=isChild
-      ?`<span style="color:var(--muted);margin-right:4px">└</span><span style="font-weight:500;font-size:12.5px;color:var(--text)">${esc(w.name)}</span>`
-      :`<span style="font-weight:600;font-size:13.5px">${esc(w.name)}</span>${isParent?'<span style="font-size:9px;font-weight:700;color:var(--accent);background:rgba(99,102,241,.1);padding:1px 6px;border-radius:8px;margin-left:6px;vertical-align:middle">'+children.length+' sub</span>':''}`;
+      ?`${attDot}<span style="color:var(--muted);margin-right:4px">└</span><span style="font-weight:500;font-size:12.5px;color:var(--text)">${esc(w.name)}</span>`
+      :`${attDot}<span style="font-weight:600;font-size:13.5px">${esc(w.name)}</span>${isParent?'<span style="font-size:9px;font-weight:700;color:var(--accent);background:rgba(99,102,241,.1);padding:1px 6px;border-radius:8px;margin-left:6px;vertical-align:middle">'+children.length+' sub</span>':''}`;
     return `<tr onclick="openWsDetail('${w.id}')" style="cursor:pointer;height:44px${isChild?';background:rgba(99,102,241,.03)':''}" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background='${isChild?'rgba(99,102,241,.03)':''}'">
       <td style="width:6px;padding:0"><div style="width:5px;height:28px;border-radius:3px;background:${wsColor(w.id)}"></div></td>
       <td style="${isChild?'padding-left:24px':''}">${nameHtml}</td>
@@ -2251,6 +2326,14 @@ function openWsEdit(id){
         </div>
         <div class="fg"><label>Parent Workstream</label><select id="ws-parentWs"><option value="">— None (top-level) —</option>${(D.workstreams||[]).filter(p=>p.id!==(w?.id||'')&&!p.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(p=>`<option value="${p.id}"${w?.parentWs===p.id?' selected':''}>${esc(p.name)}</option>`).join('')}</select></div>
         <div class="fg"><label>Description</label><textarea id="ws-desc" style="min-height:50px">${w?esc(w.desc):''}</textarea></div>
+        <div class="fg">
+          <label style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <span>Business outcome / impact</span>
+            ${w&&OPENAI_KEY?`<button type="button" class="pill pill-i" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="aiSuggestWorkstreamBusinessOutcome('${esc(w.id)}')">&#10024; Suggest with AI</button>`:''}
+          </label>
+          <textarea id="ws-businessOutcome" style="min-height:44px;font-size:12px" placeholder="1-2 sentences for executive outcomes report (e.g. Reduced manual effort by X%; Enabled Y capability for Z team).">${w?esc(w.businessOutcome||''):''}</textarea>
+        </div>
+        <div class="fg"><label>Notes / Status Update</label><textarea id="ws-notes" style="min-height:50px">${w?esc(w.notes||''):''}</textarea></div>
       </div>
     </div>
     <div class="ws-section collapsed" id="wsSec-timeline">
@@ -2261,24 +2344,6 @@ function openWsEdit(id){
           <div class="fg"><label>Target end</label><input type="date" id="ws-targetEnd" value="${w?.targetEnd||''}"></div>
         </div>
         ${w?wsTimeline(w.id):'<div style="padding:10px 12px;border:1px dashed var(--border);border-radius:var(--r-sm);color:var(--muted);font-size:12px">Save the workstream first, then timeline data will appear here.</div>'}
-      </div>
-    </div>
-    <div class="ws-section collapsed" id="wsSec-report">
-      <div class="ws-section-hd" onclick="toggleWsSection('wsSec-report')"><h4>Report Content</h4><span class="ws-section-arrow">&#9660;</span></div>
-      <div class="ws-section-bd">
-        <div class="fg">
-          <label style="display:flex;align-items:center;gap:8px">Recent accomplishments ${w?`<button type="button" class="mbtn" style="font-size:11px;padding:4px 8px;border:1px solid var(--border);background:var(--bg-subtle);color:var(--text)" onclick="fillWsFromApp('${esc(w.id)}')">Suggest from app</button>`:''}</label>
-          <textarea id="ws-recent" style="min-height:44px;font-size:12px" placeholder="Brief bullets for report-out (e.g. Delivered X; Completed Y). Or use Suggest from app to fill from completed tasks.">${w?esc(w.recentAccomplishments||''):''}</textarea>
-        </div>
-        <div class="fg"><label>What's next</label><textarea id="ws-whatsnext" style="min-height:44px;font-size:12px" placeholder="Brief bullets for report-out (e.g. Launch pilot by Mar 20; Align with Legal). Or use Suggest from app to fill from open tasks.">${w?esc(w.whatsNext||''):''}</textarea></div>
-        <div class="fg">
-          <label style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-            <span>Business outcome / impact</span>
-            ${w&&OPENAI_KEY?`<button type="button" class="pill pill-i" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="aiSuggestWorkstreamBusinessOutcome('${esc(w.id)}')">&#10024; Suggest with AI</button>`:''}
-          </label>
-          <textarea id="ws-businessOutcome" style="min-height:44px;font-size:12px" placeholder="1-2 sentences for executive outcomes report (e.g. Reduced manual effort by X%; Enabled Y capability for Z team).">${w?esc(w.businessOutcome||''):''}</textarea>
-        </div>
-        <div class="fg"><label>Notes / Status Update</label><textarea id="ws-notes" style="min-height:50px">${w?esc(w.notes||''):''}</textarea></div>
       </div>
     </div>
     <div class="ws-section collapsed" id="wsSec-details">
@@ -2342,11 +2407,11 @@ function wsLinkedItems(wsId){
   if(!total)return '<div style="padding:10px 12px;border:1px dashed var(--border);border-radius:var(--r-sm);color:var(--muted);font-size:12px">No linked items yet — link action items, risks, decisions, or metrics to this workstream.</div>';
   let html='<div><h4 style="font-size:13px;font-weight:700;margin-bottom:8px">Linked Items ('+total+')</h4>';
   if(tasks.length){
-    const openT=tasks.filter(t=>t.status==='open');const doneT=tasks.filter(t=>t.status==='done');
+    const openT=tasks.filter(t=>t.status!=='done');const doneT=tasks.filter(t=>t.status==='done');
     html+='<div style="margin-bottom:10px"><span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Action Items ('+tasks.length+' — '+openT.length+' open)</span>';
     html+=tasks.slice(0,12).map(t=>{
-      const isDone=t.status==='done';const isOD=t.status==='open'&&t.due&&t.due<today();
-      return '<div style="display:flex;align-items:center;gap:6px;padding:4px;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openTaskModal(\''+t.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'">'+(t.isMilestone?'<span style="color:#f59e0b">&#9733;</span>':'')+'<span class="pill '+(isDone?'pill-g':isOD?'pill-r':'pill-a')+'" style="min-width:45px;text-align:center;font-size:10px">'+(isDone?'done':isOD?'overdue':'open')+'</span><span style="flex:1">'+esc(t.title)+'</span>'+(t.due?'<span style="color:var(--light);font-size:11px">'+fmtDate(t.due)+'</span>':'')+'</div>'}).join('');
+      const isDone=t.status==='done';const isOD=t.status!=='done'&&t.due&&t.due<today();
+      return '<div style="display:flex;align-items:center;gap:6px;padding:4px;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openTaskModal(\''+t.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'">'+(t.isMilestone?'<span style="color:#f59e0b">&#9733;</span>':'')+'<span class="pill '+(isDone?'pill-g':isOD?'pill-r':taskStatusPill(t.status))+'" style="min-width:45px;text-align:center;font-size:10px">'+(isDone?'done':isOD?'overdue':taskStatusLabel(t.status))+'</span><span style="flex:1">'+esc(t.title)+'</span>'+(t.due?'<span style="color:var(--light);font-size:11px">'+fmtDate(t.due)+'</span>':'')+'</div>'}).join('');
     if(tasks.length>12)html+='<div style="font-size:11px;color:var(--muted);padding:4px">... and '+(tasks.length-12)+' more</div>';
     html+='</div>';
   }
@@ -2423,7 +2488,7 @@ function wsTimeline(wsId){
     const milestones=dated.filter(t=>t.isMilestone&&t.due);
     milestones.forEach(m=>{
       const x=pct(m.due);
-      const isDone=m.status==='done';const isOD=m.status==='open'&&m.due&&m.due<today();
+      const isDone=m.status==='done';const isOD=m.status!=='done'&&m.due&&m.due<today();
       const mc=isDone?'var(--green)':isOD?'var(--red)':wc;
       barHtml+='<div style="position:absolute;left:'+x+'%;top:50%;transform:translate(-8px,-50%);z-index:3;cursor:pointer" title="'+esc(m.title)+' — '+fmtDate(m.due)+'" onclick="closeModal();setTimeout(()=>openTaskModal(\''+m.id+'\'),150)"><div style="width:14px;height:14px;border-radius:50%;background:'+mc+';border:2px solid var(--bg-card);display:flex;align-items:center;justify-content:center"><span style="font-size:7px;color:#fff;font-weight:700">'+(isDone?'&#10003;':isOD?'!':'&#9670;')+'</span></div></div>';
     });
@@ -2433,11 +2498,11 @@ function wsTimeline(wsId){
   if(dated.length){
     html+='<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Key dates ('+dated.length+')</div>';
     html+=dated.slice(0,15).map(t=>{
-      const isDone=t.status==='done';const isOD=t.status==='open'&&t.due&&t.due<today();
+      const isDone=t.status==='done';const isOD=t.status!=='done'&&t.due&&t.due<today();
       const icon=t.isMilestone?'<span style="color:#f59e0b;margin-right:2px">&#9733;</span>':'';
-      const pillCls=isDone?'pill-g':isOD?'pill-r':'pill-a';
+      const pillCls=isDone?'pill-g':isOD?'pill-r':taskStatusPill(t.status);
       const dateStr=t.due?fmtDate(t.due):(t.startDate?fmtDate(t.startDate):'');
-      return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer" onclick="closeModal();setTimeout(()=>openTaskModal(\''+t.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'">'+icon+'<span style="min-width:60px;flex-shrink:0;color:var(--light);font-size:11px">'+dateStr+'</span><span class="pill '+pillCls+'" style="min-width:40px;text-align:center;font-size:10px">'+(isDone?'done':isOD?'overdue':'open')+'</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.title)+'</span></div>';
+      return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer" onclick="closeModal();setTimeout(()=>openTaskModal(\''+t.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'">'+icon+'<span style="min-width:60px;flex-shrink:0;color:var(--light);font-size:11px">'+dateStr+'</span><span class="pill '+pillCls+'" style="min-width:40px;text-align:center;font-size:10px">'+(isDone?'done':isOD?'overdue':taskStatusLabel(t.status))+'</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.title)+'</span></div>';
     }).join('');
     if(dated.length>15)html+='<div style="font-size:11px;color:var(--muted);padding:4px 0">... and '+(dated.length-15)+' more</div>';
   }
@@ -2537,8 +2602,8 @@ function engLinkedItems(engId){
   if(tasks.length){
     html+='<div style="margin-bottom:8px"><span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Action Items ('+tasks.length+')</span>';
     html+=tasks.map(t=>{
-      const isDone=t.status==='done';const isOD=t.status==='open'&&t.due&&t.due<today();
-      return '<div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openTaskModal(\''+t.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'">'+(t.isMilestone?'<span style="color:#f59e0b">&#9733;</span>':'')+'<span class="pill '+(isDone?'pill-g':isOD?'pill-r':'pill-a')+'" style="min-width:45px;text-align:center;font-size:10px">'+(isDone?'done':isOD?'overdue':'open')+'</span><span style="flex:1">'+esc(t.title)+'</span>'+(t.due?'<span style="color:var(--light);font-size:11px">'+fmtDate(t.due)+'</span>':'')+'</div>'}).join('')+'</div>';
+      const isDone=t.status==='done';const isOD=t.status!=='done'&&t.due&&t.due<today();
+      return '<div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openTaskModal(\''+t.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'">'+(t.isMilestone?'<span style="color:#f59e0b">&#9733;</span>':'')+'<span class="pill '+(isDone?'pill-g':isOD?'pill-r':taskStatusPill(t.status))+'" style="min-width:45px;text-align:center;font-size:10px">'+(isDone?'done':isOD?'overdue':taskStatusLabel(t.status))+'</span><span style="flex:1">'+esc(t.title)+'</span>'+(t.due?'<span style="color:var(--light);font-size:11px">'+fmtDate(t.due)+'</span>':'')+'</div>'}).join('')+'</div>';
   }
   if(risks.length){
     html+='<div style="margin-bottom:8px"><span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Risks ('+risks.length+')</span>';
@@ -2592,11 +2657,13 @@ function delEng(id){if(!confirm('Delete this engagement?'))return;const e=D.enga
 // ═══════════════════════════════════════════════════
 function rTasks(c){
   if(taskFilter==='inbox'){rTasksInbox(c);return}
+  if(taskViewMode==='kanban'){rKanban(c);return}
   const q=(document.getElementById('search').value||'').toLowerCase();
   let items=D.tasks||[];
-  if(taskFilter==='open')items=items.filter(t=>t.status==='open');
+  if(taskFilter==='open')items=items.filter(t=>t.status!=='done');
   else if(taskFilter==='done')items=items.filter(t=>t.status==='done');
   else if(taskFilter==='milestones')items=items.filter(t=>t.isMilestone);
+  else if(taskFilter==='overdue')items=items.filter(t=>t.status!=='done'&&t.due&&t.due<today());
   if(taskOwnerFilter==='__unassigned__')items=items.filter(t=>!t.owner);
   else if(taskOwnerFilter)items=items.filter(t=>t.owner===taskOwnerFilter);
   if(q)items=items.filter(t=>(t.title+' '+t.owner+' '+t.notes+' '+wsNamePlain(t.workstream)).toLowerCase().includes(q));
@@ -2607,8 +2674,9 @@ function rTasks(c){
   else if(taskSort==='due')items.sort((a,b)=>taskSortDir*(a.due||'9').localeCompare(b.due||'9'));
   else if(taskSort==='priority')items.sort((a,b)=>taskSortDir*((pv[a.priority]??1)-(pv[b.priority]??1)));
   else if(taskSort==='workstream')items.sort((a,b)=>taskSortDir*wsNamePlain(a.workstream).localeCompare(wsNamePlain(b.workstream)));
-  else{items.sort((a,b)=>{if(a.status!==b.status)return a.status==='open'?-1:1;if((pv[a.priority]??1)!==(pv[b.priority]??1))return(pv[a.priority]??1)-(pv[b.priority]??1);return(a.due||'9').localeCompare(b.due||'9')})}
-  const open=D.tasks.filter(t=>t.status==='open').length,done=D.tasks.filter(t=>t.status==='done').length,msCount=D.tasks.filter(t=>t.isMilestone).length;
+  else{const so={'not-started':0,'open':1,'blocked':2,'done':3};items.sort((a,b)=>{if(a.status!==b.status)return(so[a.status]??1)-(so[b.status]??1);if((pv[a.priority]??1)!==(pv[b.priority]??1))return(pv[a.priority]??1)-(pv[b.priority]??1);return(a.due||'9').localeCompare(b.due||'9')})}
+  const open=D.tasks.filter(t=>t.status!=='done').length,done=D.tasks.filter(t=>t.status==='done').length,msCount=D.tasks.filter(t=>t.isMilestone).length;
+  const overdueCount=D.tasks.filter(t=>t.status!=='done'&&t.due&&t.due<today()).length;
   const inboxCount=(D.inbox||[]).filter(x=>!x.processed).length;
   const owners=[...new Set((D.tasks||[]).map(t=>t.owner).filter(Boolean))].sort();
   const sIco=(col)=>taskSort===col?(taskSortDir===1?' &#9650;':' &#9660;'):'';
@@ -2618,7 +2686,8 @@ function rTasks(c){
     <span class="page-title">Action Items</span>
     <div class="pill-filters">
       <div class="pill${taskFilter==='all'?' pill-i':' pill-m'}" onclick="taskFilter='all';render()">All (${D.tasks.length})</div>
-      <div class="pill${taskFilter==='open'?' pill-i':' pill-m'}" onclick="taskFilter='open';render()">Open (${open})</div>
+      <div class="pill${taskFilter==='open'?' pill-i':' pill-m'}" onclick="taskFilter='open';render()">Active (${open})</div>
+      <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
       <div class="pill${taskFilter==='done'?' pill-i':' pill-m'}" onclick="taskFilter='done';render()">Done (${done})</div>
       <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
       <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
@@ -2635,6 +2704,14 @@ function rTasks(c){
         ${owners.map(o=>`<option value="${esc(o)}"${taskOwnerFilter===o?' selected':''}>${esc(o)}</option>`).join('')}
       </select>
     </div>
+    <div style="display:flex;align-items:center;gap:2px;margin-left:auto;padding-left:14px;border-left:1px solid var(--border-lt)">
+      <button type="button" title="List view" onclick="taskViewMode='list';render()" style="padding:5px 8px;border:1px solid ${taskViewMode==='list'?'var(--accent)':'var(--border)'};border-radius:var(--r-xs) 0 0 var(--r-xs);background:${taskViewMode==='list'?'var(--accent)':'var(--bg-subtle)'};color:${taskViewMode==='list'?'#fff':'var(--muted)'};cursor:pointer;display:flex;align-items:center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      </button>
+      <button type="button" title="Kanban view" onclick="taskViewMode='kanban';render()" style="padding:5px 8px;border:1px solid ${taskViewMode==='kanban'?'var(--accent)':'var(--border)'};border-radius:0 var(--r-xs) var(--r-xs) 0;background:${taskViewMode==='kanban'?'var(--accent)':'var(--bg-subtle)'};color:${taskViewMode==='kanban'?'#fff':'var(--muted)'};cursor:pointer;display:flex;align-items:center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="15" rx="1"/></svg>
+      </button>
+    </div>
   </div>
   ${(()=>{
     if(!items.length)return '<div class="empty"><h4>No action items match</h4><p>Try a different filter or add an action item</p></div></div>';
@@ -2645,22 +2722,23 @@ function rTasks(c){
     });
     const wsOrder=(D.workstreams||[]).filter(w=>wsGroups[w.id]).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(w=>w.id);
     const renderRow=(t)=>{
-      const isOD=t.status==='open'&&t.due&&t.due<today();
-      const isDueToday=t.status==='open'&&t.due&&t.due===today();
+      const isOD=t.status!=='done'&&t.due&&t.due<today();
+      const isDueToday=t.status!=='done'&&t.due&&t.due===today();
       const rowBg=isOD&&!isDueToday?'background:var(--red-lt)':isDueToday?'background:var(--amber-lt)':'';
       const pp={high:'pill-r',medium:'pill-a',low:'pill-g'}[t.priority]||'pill-m';
       return `<tr onclick="openTaskModal('${t.id}')" style="height:36px;cursor:pointer;${rowBg}">
         <td style="width:28px" onclick="event.stopPropagation()"><div class="task-chk${t.status==='done'?' done':''}" onclick="toggleTask('${t.id}')">&#10003;</div></td>
-        <td style="overflow:hidden;text-overflow:ellipsis;${t.status==='done'?'text-decoration:line-through;color:var(--muted)':''}">${t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">&#9733;</span>':''}${esc(t.title)}</td>
+        <td style="overflow:hidden;text-overflow:ellipsis;${t.status==='done'?'text-decoration:line-through;color:var(--muted)':''}">${t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">&#9733;</span>':''}${esc(t.title)}${(t.comments||[]).length?'<span style="margin-left:6px;font-size:10px;color:var(--light)" title="'+t.comments.length+' comment'+(t.comments.length!==1?'s':'')+'">&#128172; '+t.comments.length+'</span>':''}</td>
         <td style="font-size:12px;color:var(--muted);width:14%">${esc(t.owner)||'—'}</td>
         <td style="font-size:11.5px;width:8%;color:var(--muted)">${t.startDate?fmtDate(t.startDate):'—'}</td>
         <td style="font-size:11.5px;width:8%;${isOD?'color:var(--red);font-weight:600':''}">${t.due?fmtDate(t.due):'—'}</td>
         <td style="width:7%"><span class="pill ${pp}" style="font-size:10px">${t.priority}</span></td>
+        <td style="width:6%;font-size:10px;color:var(--light)" title="${t.updatedAt||''}">${timeAgo(t.updatedAt)}</td>
         <td style="width:28px" onclick="event.stopPropagation()"><button style="color:var(--red);font-size:11px;background:none;border:none;cursor:pointer" onclick="delTask('${t.id}')">&#10005;</button></td>
       </tr>`;
     };
     const renderGroup=(label,color,groupItems,gid)=>{
-      const openCount=groupItems.filter(t=>t.status==='open').length;
+      const openCount=groupItems.filter(t=>t.status!=='done').length;
       const collapsed=taskGroupCollapsed[gid];
       return `<div class="page-section${collapsed?' collapsed':''}" data-gid="${gid}">
         <div class="section-header" style="background:${color};border-color:${color}" onclick="taskGroupCollapsed['${gid}']=!taskGroupCollapsed['${gid}'];render()">
@@ -2676,6 +2754,7 @@ function rTasks(c){
             <th style="cursor:pointer;width:8%" onclick="event.stopPropagation();sortTasks('start')">Start${sIco('start')}</th>
             <th style="cursor:pointer;width:8%" onclick="event.stopPropagation();sortTasks('due')">Target${sIco('due')}</th>
             <th style="cursor:pointer;width:7%" onclick="event.stopPropagation();sortTasks('priority')">Priority${sIco('priority')}</th>
+            <th style="width:6%;font-size:10px">Updated</th>
             <th style="width:28px"></th>
           </tr></thead>
           <tbody>${groupItems.map(renderRow).join('')}</tbody>
@@ -2713,15 +2792,32 @@ function openTaskModal(id){
       <div class="fg"><label>Owner</label><select id="t-owner">${peopleOpts(t?.owner||'')}</select></div>
       <div class="fg"><label>Workstream</label><select id="t-ws"><option value="">— None —</option>${wsOpts(t?.workstream)}</select></div>
     </div>
+    ${(()=>{if(!t?.workstream)return '';const pw=(D.workstreams||[]).find(x=>x.id===t.workstream);if(!pw)return '';return '<div style="font-size:12.5px;color:var(--muted);margin:-4px 0 10px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(pw.color||'var(--muted)')+'"></span><a href="#" onclick="event.preventDefault();closeModal();setTimeout(()=>openWsDetail(\''+pw.id+'\'),200)" style="color:var(--accent);text-decoration:none;font-weight:500">'+esc(pw.name)+'</a></div>'})()}
     <div class="fg-row">
       <div class="fg"><label>Start Date</label><input type="date" id="t-start" value="${t?.startDate||''}"></div>
       <div class="fg"><label>Target Date</label><input type="date" id="t-due" value="${t?t.due:''}"></div>
     </div>
     <div class="fg-row">
       <div class="fg"><label>Priority</label><select id="t-pri"><option value="high"${t?.priority==='high'?' selected':''}>High</option><option value="medium"${(!t||t.priority==='medium')?' selected':''}>Medium</option><option value="low"${t?.priority==='low'?' selected':''}>Low</option></select></div>
-      <div class="fg"><label>Status</label><select id="t-status"><option value="open"${(!t||t.status==='open')?' selected':''}>Open</option><option value="done"${t?.status==='done'?' selected':''}>Done</option></select></div>
+      <div class="fg"><label>Status</label><select id="t-status"><option value="not-started"${(!t||t.status==='not-started'||!t.status)?' selected':''}>Not Started</option><option value="open"${t?.status==='open'?' selected':''}>Open</option><option value="blocked"${t?.status==='blocked'?' selected':''}>Blocked / Waiting</option><option value="done"${t?.status==='done'?' selected':''}>Done</option></select></div>
     </div>
-    <div class="fg"><label>Notes</label><textarea id="t-notes" style="min-height:180px;resize:vertical">${t?esc(t.notes):''}</textarea></div>
+    <div class="fg"><label>Notes</label><textarea id="t-notes" style="min-height:120px;resize:vertical">${t?esc(t.notes):''}</textarea></div>
+    ${t?`<div class="fg" style="margin-top:4px">
+      <label style="display:flex;align-items:center;justify-content:space-between">Discussion <span style="font-size:11px;color:var(--light);font-weight:400">${(t.comments||[]).length} comment${(t.comments||[]).length!==1?'s':''}</span></label>
+      <div class="comment-thread" id="t-comments">
+        ${(t.comments||[]).map(cm=>`<div class="comment-item">
+          <div class="comment-avatar">${(cm.author||'?')[0].toUpperCase()}</div>
+          <div class="comment-body">
+            <div class="comment-meta"><strong>${esc(cm.author||'Unknown')}</strong> &middot; ${timeAgo(cm.ts)}</div>
+            <div class="comment-text">${esc(cm.text)}</div>
+          </div>
+        </div>`).join('')||'<div style="font-size:12px;color:var(--light);padding:6px 0">No comments yet</div>'}
+      </div>
+      <div class="comment-input-row">
+        <textarea id="t-new-comment" placeholder="Add a comment..." rows="1"></textarea>
+        <button onclick="addTaskComment('${t.id}')">Post</button>
+      </div>
+    </div>`:''}
   </div>
   <div class="m-ft">
     ${t?'<button class="mbtn mb-del" onclick="delTask(\''+t.id+'\');closeModal()">Delete</button>':''}
@@ -2748,10 +2844,30 @@ function saveTask(id){
   save();log((isNew?'Added':'Updated')+' '+label+': '+esc(title));
   closeModal();render();toast(isNew?label+' added':label+' updated');
 }
+function addTaskComment(id){
+  const el=document.getElementById('t-new-comment');
+  const text=(el?.value||'').trim();
+  if(!text){toast('Type a comment first');return}
+  const t=D.tasks.find(x=>x.id===id);if(!t)return;
+  if(!t.comments)t.comments=[];
+  t.comments.push({id:uid(),author:ME||'Anonymous',text,ts:new Date().toISOString()});
+  t.updatedBy=ME;t.updatedAt=new Date().toISOString();
+  save();
+  openTaskModal(id);
+  setTimeout(()=>{const tc=document.getElementById('t-comments');if(tc)tc.scrollIntoView({behavior:'smooth',block:'end'})},100);
+  toast('Comment added');
+}
 function toggleTask(id){
   const t=D.tasks.find(x=>x.id===id);if(!t)return;
-  t.status=t.status==='open'?'done':'open';
+  const cycle=['not-started','open','blocked','done'];
+  const ci=cycle.indexOf(t.status);
+  t.status=ci>=0&&ci<cycle.length-1?cycle[ci+1]:'done';
   t.updatedBy=ME;t.updatedAt=new Date().toISOString();
+  save();render();
+}
+function setTaskStatus(id,status){
+  const t=D.tasks.find(x=>x.id===id);if(!t)return;
+  t.status=status;t.updatedBy=ME;t.updatedAt=new Date().toISOString();
   save();render();
 }
 function delTask(id){if(!confirm('Delete this item?'))return;const t=D.tasks.find(x=>x.id===id);D.tasks=D.tasks.filter(x=>x.id!==id);log('Deleted '+(t?.isMilestone?'milestone':'task')+': '+esc(t?.title||''));save();render();toast('Deleted')}
@@ -2840,7 +2956,7 @@ function promoteMtgActions(id){
   if(!open.length){toast('No open action items');return}
   open.forEach(a=>{
     const exists=D.tasks.find(t=>t.title===a.text&&t.source===m.title);
-    if(!exists)D.tasks.push({id:uid(),title:a.text,owner:a.owner,due:'',status:'open',priority:'medium',workstream:'',notes:'From meeting: '+m.title,source:m.title,created:today(),addedBy:ME});
+    if(!exists)D.tasks.push({id:uid(),title:a.text,owner:a.owner,due:'',status:'not-started',priority:'medium',workstream:'',notes:'From meeting: '+m.title,source:m.title,created:today(),addedBy:ME});
   });
   save();log(open.length+' action(s) promoted from: '+esc(m.title));render();toast(open.length+' tasks created');
 }
@@ -2856,14 +2972,14 @@ function rTasksInbox(c){
   const waiting=inboxItems.filter(d=>!d.processed);
   const processed=inboxItems.filter(d=>d.processed);
   const inboxCount=waiting.length;
-  const open=D.tasks.filter(t=>t.status==='open').length,done=D.tasks.filter(t=>t.status==='done').length,msCount=D.tasks.filter(t=>t.isMilestone).length;
+  const open=D.tasks.filter(t=>t.status!=='done').length,done=D.tasks.filter(t=>t.status==='done').length,msCount=D.tasks.filter(t=>t.isMilestone).length;
   c.innerHTML=`
   <div class="page-wrap tasks-page">
   <div class="page-toolbar">
     <span class="page-title">Action Items</span>
     <div class="pill-filters">
       <div class="pill pill-m" onclick="taskFilter='all';render()">All (${D.tasks.length})</div>
-      <div class="pill pill-m" onclick="taskFilter='open';render()">Open (${open})</div>
+      <div class="pill pill-m" onclick="taskFilter='open';render()">Active (${open})</div>
       <div class="pill pill-m" onclick="taskFilter='done';render()">Done (${done})</div>
       <div class="pill pill-m" onclick="taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
       <div class="pill pill-i" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
@@ -2921,6 +3037,127 @@ function rTasksInbox(c){
   </div>`}).join(''):''}
   ${!inboxItems.length?'<div class="empty"><h4>Inbox is empty</h4><p>Paste meeting notes, emails, or any text above to get started.</p></div>':''}
   </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// KANBAN BOARD
+// ═══════════════════════════════════════════════════
+const KB_COLS=[
+  {key:'not-started',label:'Not Started',accent:'var(--muted)'},
+  {key:'open',label:'Open',accent:'var(--accent)'},
+  {key:'blocked',label:'Blocked / Waiting',accent:'var(--red)'},
+  {key:'done',label:'Done',accent:'var(--green)'}
+];
+
+function rKanban(c){
+  let items=D.tasks||[];
+  if(taskFilter==='open')items=items.filter(t=>t.status!=='done');
+  else if(taskFilter==='done')items=items.filter(t=>t.status==='done');
+  else if(taskFilter==='milestones')items=items.filter(t=>t.isMilestone);
+  else if(taskFilter==='overdue')items=items.filter(t=>t.status!=='done'&&t.due&&t.due<today());
+  if(taskOwnerFilter==='__unassigned__')items=items.filter(t=>!t.owner);
+  else if(taskOwnerFilter)items=items.filter(t=>t.owner===taskOwnerFilter);
+
+  const q=(document.getElementById('search')?.value||'').toLowerCase();
+  if(q)items=items.filter(t=>(t.title+' '+t.owner+' '+t.notes+' '+wsNamePlain(t.workstream)).toLowerCase().includes(q));
+
+  const grouped={};
+  KB_COLS.forEach(col=>grouped[col.key]=[]);
+  items.forEach(t=>{
+    const s=t.status||'not-started';
+    if(grouped[s])grouped[s].push(t);
+    else grouped['not-started'].push(t);
+  });
+
+  const open=D.tasks.filter(t=>t.status!=='done').length,done=D.tasks.filter(t=>t.status==='done').length,msCount=D.tasks.filter(t=>t.isMilestone).length;
+  const overdueCount=D.tasks.filter(t=>t.status!=='done'&&t.due&&t.due<today()).length;
+  const inboxCount=(D.inbox||[]).filter(x=>!x.processed).length;
+  const owners=[...new Set((D.tasks||[]).map(t=>t.owner).filter(Boolean))].sort();
+
+  const renderCard=(t)=>{
+    const w=(D.workstreams||[]).find(x=>x.id===t.workstream);
+    const wName=w?esc(w.name):'Unlinked';
+    const wc=wsColor(t.workstream)||'var(--muted)';
+    const isOD=t.status!=='done'&&t.due&&t.due<today();
+    const isDueToday=t.status!=='done'&&t.due&&t.due===today();
+    const cardCls='kb-card'+(isOD&&!isDueToday?' kb-overdue':'')+(isDueToday?' kb-due-today':'');
+    const pp={high:'pill-r',medium:'pill-a',low:'pill-g'}[t.priority]||'pill-m';
+    const updAgo=t.updatedAt?timeAgo(t.updatedAt):'';
+    return `<div class="${cardCls}" draggable="true" data-id="${t.id}" onclick="openTaskModal('${t.id}')"
+      ondragstart="event.dataTransfer.setData('text/plain','${t.id}');this.classList.add('dragging')"
+      ondragend="this.classList.remove('dragging')">
+      <div class="kb-card-title">${t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">&#9733;</span>':''}${esc(t.title)}</div>
+      <div class="kb-card-meta">
+        <span class="kb-card-ws"><span class="dot" style="background:${wc}"></span>${wName}</span>
+        ${t.owner?'<span>'+esc(t.owner)+'</span>':''}
+        <span class="pill ${pp}" style="font-size:10px;padding:1px 6px">${t.priority||'medium'}</span>
+        ${t.due?'<span class="'+(isOD?'kb-card-overdue':'')+(isDueToday?'kb-card-overdue':'')+'">'+(isOD&&!isDueToday?'&#9888; ':'')+(isDueToday?'&#9200; ':'')+fmtDate(t.due)+'</span>':''}
+        ${(t.comments||[]).length?'<span style="font-size:10px;color:var(--light)" title="'+t.comments.length+' comment'+(t.comments.length!==1?'s':'')+'">&#128172; '+t.comments.length+'</span>':''}
+        ${updAgo?'<span style="font-size:10px;color:var(--light)" title="Last updated">'+updAgo+'</span>':''}
+      </div>
+    </div>`;
+  };
+
+  const renderCol=(col)=>{
+    const colItems=grouped[col.key]||[];
+    return `<div class="kb-col" data-status="${col.key}"
+      ondragover="event.preventDefault();this.classList.add('drag-over')"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="kbDrop(event,'${col.key}');this.classList.remove('drag-over')">
+      <div class="kb-col-hdr" style="border-bottom-color:${col.accent}">
+        <span>${col.label}</span>
+        <span class="kb-count">${colItems.length}</span>
+      </div>
+      <div class="kb-col-body">
+        ${colItems.length?colItems.map(renderCard).join(''):'<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0">No items</div>'}
+      </div>
+    </div>`;
+  };
+
+  c.innerHTML=`
+  <div class="page-wrap tasks-page">
+  <div class="page-toolbar">
+    <span class="page-title">Action Items</span>
+    <div class="pill-filters">
+      <div class="pill${taskFilter==='all'?' pill-i':' pill-m'}" onclick="taskFilter='all';render()">All (${D.tasks.length})</div>
+      <div class="pill${taskFilter==='open'?' pill-i':' pill-m'}" onclick="taskFilter='open';render()">Active (${open})</div>
+      <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
+      <div class="pill${taskFilter==='done'?' pill-i':' pill-m'}" onclick="taskFilter='done';render()">Done (${done})</div>
+      <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
+      <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
+    </div>
+    <div class="pill-actions">
+      <select onchange="taskOwnerFilter=this.value;render()">
+        <option value="">All Owners</option>
+        <option value="__unassigned__"${taskOwnerFilter==='__unassigned__'?' selected':''}>Unassigned</option>
+        ${owners.map(o=>`<option value="${esc(o)}"${taskOwnerFilter===o?' selected':''}>${esc(o)}</option>`).join('')}
+      </select>
+    </div>
+    <div style="display:flex;align-items:center;gap:2px;margin-left:auto;padding-left:14px;border-left:1px solid var(--border-lt)">
+      <button type="button" title="List view" onclick="taskViewMode='list';render()" style="padding:5px 8px;border:1px solid ${taskViewMode==='list'?'var(--accent)':'var(--border)'};border-radius:var(--r-xs) 0 0 var(--r-xs);background:${taskViewMode==='list'?'var(--accent)':'var(--bg-subtle)'};color:${taskViewMode==='list'?'#fff':'var(--muted)'};cursor:pointer;display:flex;align-items:center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      </button>
+      <button type="button" title="Kanban view" onclick="taskViewMode='kanban';render()" style="padding:5px 8px;border:1px solid ${taskViewMode==='kanban'?'var(--accent)':'var(--border)'};border-radius:0 var(--r-xs) var(--r-xs) 0;background:${taskViewMode==='kanban'?'var(--accent)':'var(--bg-subtle)'};color:${taskViewMode==='kanban'?'#fff':'var(--muted)'};cursor:pointer;display:flex;align-items:center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="15" rx="1"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="kb-board" style="margin-top:8px">
+    ${KB_COLS.map(renderCol).join('')}
+  </div>
+  </div>`;
+}
+
+function kbDrop(event,newStatus){
+  event.preventDefault();
+  const id=event.dataTransfer.getData('text/plain');
+  if(!id)return;
+  const t=(D.tasks||[]).find(x=>x.id===id);
+  if(!t||t.status===newStatus)return;
+  t.status=newStatus;
+  t.updatedBy=ME;t.updatedAt=new Date().toISOString();
+  save();render();
+  toast('Moved to '+taskStatusLabel(newStatus));
 }
 
 function rExtract(c){
@@ -3074,12 +3311,12 @@ function routeDoc(id){
   if(!items.length&&!aiTasks.length){toast('No tasks found');return}
   if(aiTasks.length){
     aiTasks.forEach(t=>{
-      D.tasks.push({id:uid(),title:t.title||'Untitled',workstream:t.workstream||'',isMilestone:!!t.isMilestone,owner:t.owner||'',due:t.due||'',status:'open',priority:t.priority||'medium',notes:'From: '+d.title,source:d.title,created:today(),addedBy:ME});
+      D.tasks.push({id:uid(),title:t.title||'Untitled',workstream:t.workstream||'',isMilestone:!!t.isMilestone,owner:t.owner||'',due:t.due||'',status:'not-started',priority:t.priority||'medium',notes:'From: '+d.title,source:d.title,created:today(),addedBy:ME});
     });
     d.processed=true;d.updatedBy=ME;
     save();log(aiTasks.length+' AI item(s) from: '+esc(d.title));go('tasks');toast(aiTasks.length+' action items created with AI details');
   }else{
-    items.forEach(t=>D.tasks.push({id:uid(),title:t,workstream:'',isMilestone:false,owner:'',due:'',status:'open',priority:'medium',notes:'From: '+d.title,source:d.title,created:today(),addedBy:ME}));
+    items.forEach(t=>D.tasks.push({id:uid(),title:t,workstream:'',isMilestone:false,owner:'',due:'',status:'not-started',priority:'medium',notes:'From: '+d.title,source:d.title,created:today(),addedBy:ME}));
     d.processed=true;d.updatedBy=ME;
     save();log(items.length+' item(s) from: '+esc(d.title));go('tasks');toast(items.length+' action items created');
   }
@@ -3103,7 +3340,7 @@ function inboxToTask(id){
   const taskId=uid();
   const notes='From inbox: '+d.title+((d.content||'').trim()?'\n\n'+(d.content||'').substring(0,800):'');
   if(!D.tasks)D.tasks=[];
-  D.tasks.push({id:taskId,title:d.title||'Untitled',workstream:'',isMilestone:false,owner:'',due:'',startDate:'',status:'open',priority:'medium',notes,source:d.title,created:today(),addedBy:ME});
+  D.tasks.push({id:taskId,title:d.title||'Untitled',workstream:'',isMilestone:false,owner:'',due:'',startDate:'',status:'not-started',priority:'medium',notes,source:d.title,created:today(),addedBy:ME});
   d.processed=true;d.updatedBy=ME;
   save();log('Created action item from inbox: '+esc(d.title));
   render();openTaskModal(taskId);toast('Action item created — set workstream & dates');
@@ -3307,7 +3544,7 @@ function recentAccomplishmentsFromApp(wsId){
   return done.slice(0,3).map(t=>'• '+(t.title||'')+(t.due?' ('+fmtDate(t.due)+')':'')).filter(s=>s.length>2).join('\n')||'';
 }
 function whatsNextFromApp(wsId){
-  const open=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open').sort((a,b)=>{
+  const open=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status!=='done').sort((a,b)=>{
     const mile=(t)=>(t.isMilestone?1:0); if(mile(b)!==mile(a))return mile(b)-mile(a);
     return (a.due||'9').localeCompare(b.due||'9');
   });
@@ -3332,24 +3569,74 @@ function updateAllWorkstreamsFromActionItems(){
   save();render();
   toast(updated?'Recent accomplishments & What\'s next updated for '+updated+' workstreams from action items':'No report workstreams to update');
 }
-function rAsk(c){
+function rAsk(c){go('aiinsights');return}
+
+let aiInsightsTab='analyze';
+function rAIInsights(c){
   const hasKey=!!OPENAI_KEY;
-  c.innerHTML=`<div class="card" style="margin-bottom:20px;padding:24px">
-    <h4 style="font-size:17px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px">Ask AI ${hasKey?'<span class="pill pill-g" style="font-size:10px;font-weight:500">Active</span>':''}</h4>
-    <p style="font-size:13.5px;color:var(--muted);line-height:1.65;margin-bottom:16px">Ask anything about the program — workstreams, action items, status, or updates. Example: &ldquo;Give me all of the latest updates on the GTM AI workstream&rdquo; or &ldquo;What milestones are overdue?&rdquo;</p>
-    ${!hasKey?'<p style="font-size:12px;color:var(--red);margin-bottom:12px">Set your OpenAI API key in the sidebar to use Ask AI.</p>':''}
-    <div class="fg" style="margin-bottom:12px">
-      <label>Your question</label>
-      <textarea id="ask-input" style="min-height:80px;font-size:14px" placeholder="e.g. Give me all of the latest updates on the GTM AI workstream">${(window._askAILastQuestion||'').replace(/</g,'&lt;')}</textarea>
+  const tab=aiInsightsTab;
+  const tBtn=(id,label,icon)=>`<button type="button" onclick="aiInsightsTab='${id}';render()" style="flex:1;padding:14px 20px;font-size:14px;font-weight:700;border:none;cursor:pointer;border-bottom:3px solid ${tab===id?'var(--accent)':'transparent'};background:${tab===id?'rgba(99,102,241,.12)':'transparent'};color:${tab===id?'var(--accent)':'var(--muted)'};transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;text-transform:uppercase;letter-spacing:0.5px">${icon} <span>${label}</span></button>`;
+
+  let body='';
+  if(tab==='analyze'){
+    body=`<div class="card" style="padding:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div>
+          <h4 style="font-size:17px;font-weight:800;margin-bottom:4px">Program Analysis</h4>
+          <p style="font-size:13px;color:var(--muted)">AI reviews all workstreams, action items, milestones, and risks to produce an executive briefing.</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="mbtn" style="border:1px solid var(--border);color:var(--text);font-size:12px" onclick="copyInsights()">&#128203; Copy</button>
+          <button class="mbtn mb-save" onclick="runAIInsights()" ${!hasKey?'disabled':''} style="font-size:12px">&#10024; Analyze</button>
+        </div>
+      </div>
+      ${!hasKey?'<p style="font-size:12px;color:var(--red);margin-bottom:12px;padding:8px 12px;background:var(--red-lt);border-radius:var(--r-sm)">Set your OpenAI API key in the sidebar to use AI features.</p>':''}
+      <div id="ai-insights" style="min-height:80px;font-size:13.5px;line-height:1.7;border:1px solid var(--border-lt);border-radius:var(--r-sm);padding:16px;background:var(--bg)">
+        ${window._aiAnalysisResult||'<p style="color:var(--light)">Click <strong>Analyze</strong> to generate an AI-powered executive briefing of your program.</p>'}
+      </div>
+    </div>`;
+  } else if(tab==='ask'){
+    body=`<div class="card" style="padding:24px">
+      <h4 style="font-size:17px;font-weight:800;margin-bottom:4px">Ask About Your Program</h4>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Ask anything about what's in ATLAS — workstreams, action items, status, risks, decisions, or people. AI will answer using your live data.</p>
+      ${!hasKey?'<p style="font-size:12px;color:var(--red);margin-bottom:12px;padding:8px 12px;background:var(--red-lt);border-radius:var(--r-sm)">Set your OpenAI API key in the sidebar to use AI features.</p>':''}
+      <div class="fg" style="margin-bottom:8px">
+        <textarea id="ask-input" style="min-height:80px;font-size:14px" placeholder="e.g. What's the latest on the GTM workstream? / Which milestones are overdue? / Who owns the most open items?">${(window._askAILastQuestion||'').replace(/</g,'&lt;')}</textarea>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px" onclick="document.getElementById('ask-input').value='What milestones are overdue and who owns them?';runAskAI()">Overdue milestones</button>
+        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px" onclick="document.getElementById('ask-input').value='Give me a status update on each BU workstream';runAskAI()">BU workstream status</button>
+        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px" onclick="document.getElementById('ask-input').value='What are the top risks and blockers right now?';runAskAI()">Risks &amp; blockers</button>
+        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px" onclick="document.getElementById('ask-input').value='What has been accomplished in the last 2 weeks?';runAskAI()">Recent accomplishments</button>
+      </div>
+      <button class="mbtn mb-save" onclick="runAskAI()" ${!hasKey?'disabled':''}>Ask</button>
     </div>
-    <button class="mbtn mb-save" onclick="runAskAI()" ${!hasKey?'disabled':''}>Ask</button>
-  </div>
-  <div id="ask-response-wrap" class="card" style="padding:20px;display:none">
-    <h4 style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--muted)">Answer</h4>
-    <div id="ask-response" style="white-space:pre-wrap;font-size:14px;line-height:1.6"></div>
+    <div id="ask-response-wrap" class="card" style="padding:20px;margin-top:16px;display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h4 style="font-size:14px;font-weight:700;color:var(--muted)">Answer</h4>
+        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px" onclick="navigator.clipboard.writeText(document.getElementById('ask-response')?.innerText||'').then(()=>toast('Copied'))">&#128203; Copy</button>
+      </div>
+      <div id="ask-response" style="font-size:14px;line-height:1.7"></div>
+    </div>`;
+  }
+
+  c.innerHTML=`
+  <div class="page-wrap">
+    <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;background:var(--bg-card);border-radius:var(--r-sm) var(--r-sm) 0 0;overflow:hidden">
+      ${tBtn('analyze','Analyze','&#10024;')}
+      ${tBtn('ask','Ask','&#128172;')}
+    </div>
+    ${body}
   </div>`;
-  if(window._askAILastResponse){const wrap=document.getElementById('ask-response-wrap');const resp=document.getElementById('ask-response');if(wrap&&resp){wrap.style.display='';resp.textContent=window._askAILastResponse}}
+
+  if(tab==='ask'&&window._askAILastResponse){
+    const wrap=document.getElementById('ask-response-wrap');
+    const resp=document.getElementById('ask-response');
+    if(wrap&&resp){wrap.style.display='';resp.innerHTML=window._askAILastResponseHtml||'';if(!window._askAILastResponseHtml)resp.textContent=window._askAILastResponse}
+  }
+  
 }
+
 async function runAskAI(){
   const inp=document.getElementById('ask-input');
   const q=(inp&&inp.value||'').trim();
@@ -3358,24 +3645,31 @@ async function runAskAI(){
   const wrap=document.getElementById('ask-response-wrap');
   const respEl=document.getElementById('ask-response');
   if(wrap)wrap.style.display='';
-  if(respEl)respEl.textContent='Thinking...';
+  if(respEl)respEl.innerHTML='<p style="color:var(--muted)">Thinking...</p>';
   window._askAILastQuestion=q;
   const ctx=getAskContext();
   const result=await callAI(
-    'You are an assistant for Digital Realty\'s AI Transformation Program (ATLAS). Answer the user\'s question using ONLY the program data provided below. Format your answer in a categorized, bulleted style: use clear section headings (e.g. "Workstream status", "Recent accomplishments", "Open items") and bullet points (• or -) under each. Be concise and accurate. If the data does not contain enough information to answer, say so. Reference workstream names, owners, and specific accomplishments or action items when relevant.',
+    `You are an assistant for Digital Realty's AI Transformation Program (ATLAS). Answer the user's question using ONLY the program data provided below. STRICT RULES: (1) Output raw HTML only — NO code fences, NO backticks, NO markdown. (2) Use <strong> for section headings and <ul>/<li> for bullets. (3) Be concise and accurate. (4) Reference specific workstream names, owners, dates, and action items when relevant. (5) If the data doesn't support the answer, say so.`,
     `Program data (use this to answer):\n\n${ctx}\n\n---\n\nUser question: ${q}`
   );
-  if(respEl){respEl.textContent=result||'No response.'}
+  if(respEl){
+    if(result){
+      let clean=result.replace(/```html\s*/gi,'').replace(/```\s*/g,'').trim();
+      respEl.innerHTML=clean;
+      window._askAILastResponseHtml=clean;
+    }else{respEl.textContent='No response.';window._askAILastResponseHtml=''}
+  }
   window._askAILastResponse=result||'No response.';
   toast(result?'Done':'AI returned nothing');
 }
+
 function rReport(c){
   const rn=D.reportNotes||{};
   const reportAsOf=rn.asOf||today();
   const allMs=(D.tasks||[]).filter(t=>t.isMilestone);
   const msDone=allMs.filter(t=>t.status==='done');
-  const msUp=allMs.filter(t=>t.status==='open'&&(!t.due||t.due>=today())).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
-  const msOD=allMs.filter(t=>t.status==='open'&&t.due&&t.due<today());
+  const msUp=allMs.filter(t=>t.status!=='done'&&(!t.due||t.due>=today())).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
+  const msOD=allMs.filter(t=>t.status!=='done'&&t.due&&t.due<today());
   const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
   const buWs=allWs.filter(w=>w.category==='BU');
   const ccWs=allWs.filter(w=>w.category==='Cross-cutting');
@@ -3383,16 +3677,16 @@ function rReport(c){
   const ccWsSorted=[...ccWs].sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
   try{var reportViewMode=localStorage.getItem('atlas_report_view')||'outcomes'}catch(e){var reportViewMode='outcomes'}
   function keyDatesForWs(wsId){
-    const openWithDue=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open'&&t.due).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
+    const openWithDue=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status!=='done'&&t.due).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
     const nextTwo=openWithDue.slice(0,2).map(t=>fmtDate(t.due)+(t.title?' — '+t.title:'')).filter(Boolean);
     return nextTwo.length?nextTwo.join('; '):'—';
   }
   function keyDatesLinesForWs(wsId){
-    const openWithDue=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open'&&t.due).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
+    const openWithDue=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status!=='done'&&t.due).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
     return openWithDue.slice(0,3).map(t=>fmtDate(t.due)+(t.title?' — '+t.title:'')).filter(Boolean);
   }
   function nextDue(wsId){
-    const next=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open'&&t.due&&t.due>=today()).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'))[0];
+    const next=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status!=='done'&&t.due&&t.due>=today()).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'))[0];
     return next?fmtDate(next.due):'—';
   }
   function bulletsHtml(raw,maxItems){
@@ -3418,7 +3712,7 @@ function rReport(c){
   function renderWsRowFull(w){
     const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);
     const wMsDone=wMs.filter(t=>t.status==='done').length;
-    const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;
+    const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status!=='done').length;
     const st=w.status||'not-started';
     const statusClass=reportStatusClass(st);
     return `<tr>
@@ -3697,7 +3991,7 @@ function copyReport(){
   const ccWsCopy=allWs.filter(w=>w.category==='Cross-cutting').sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
   try{var reportViewMode=localStorage.getItem('atlas_report_view')||'outcomes'}catch(e){var reportViewMode='outcomes'}
   function keyDatesForWsCopy(wsId){
-    const openWithDue=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open'&&t.due).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
+    const openWithDue=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status!=='done'&&t.due).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
     return openWithDue.slice(0,2).map(t=>fmtDate(t.due)+(t.title?' — '+t.title:'')).join('; ')||'—';
   }
   let text=`AI PROGRAM STATUS — ${reportViewMode==='outcomes'?'BUSINESS OUTCOMES & IMPACT':reportViewMode==='exec'?'EXECUTIVE VIEW':'FULL VIEW'}\nAs of ${asOf}\n\n`;
@@ -3740,12 +4034,12 @@ function copyReport(){
     const buWs=allWs.filter(w=>w.category==='BU');
     const ccWs=allWs.filter(w=>w.category==='Cross-cutting');
     function nextDue(wsId){
-      const next=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open'&&t.due&&t.due>=today()).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'))[0];
+      const next=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status!=='done'&&t.due&&t.due>=today()).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'))[0];
       return next?fmtDate(next.due):'—';
     }
     text+='WORKSTREAMS\n';
-    if(buWs.length){text+='Business Unit\n';buWs.forEach(w=>{const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);const wMsDone=wMs.filter(t=>t.status==='done').length;const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;text+=`  ${w.name} | ${w.status} | ${wMsDone}/${wMs.length} MS | Next: ${nextDue(w.id)} | Open: ${wOpen}\n`})}
-    if(ccWs.length){text+='Crosscutting\n';ccWs.forEach(w=>{const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);const wMsDone=wMs.filter(t=>t.status==='done').length;const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status==='open').length;text+=`  ${w.name} | ${w.status} | ${wMsDone}/${wMs.length} MS | Next: ${nextDue(w.id)} | Open: ${wOpen}\n`})}
+    if(buWs.length){text+='Business Unit\n';buWs.forEach(w=>{const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);const wMsDone=wMs.filter(t=>t.status==='done').length;const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status!=='done').length;text+=`  ${w.name} | ${w.status} | ${wMsDone}/${wMs.length} MS | Next: ${nextDue(w.id)} | Open: ${wOpen}\n`})}
+    if(ccWs.length){text+='Crosscutting\n';ccWs.forEach(w=>{const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);const wMsDone=wMs.filter(t=>t.status==='done').length;const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status!=='done').length;text+=`  ${w.name} | ${w.status} | ${wMsDone}/${wMs.length} MS | Next: ${nextDue(w.id)} | Open: ${wOpen}\n`})}
     text+='\n';
   }
   const acc=(document.getElementById('rpt-acc')?.value||(D.reportNotes||{}).accomplishments||'').trim();
@@ -3862,7 +4156,7 @@ function getWorkstreamOutcomeContext(wsId){
   if(!w)return '';
   const recentRaw=(w.recentAccomplishments||'').trim()||recentAccomplishmentsFromApp(wsId);
   const nextRaw=(w.whatsNext||'').trim()||whatsNextFromApp(wsId);
-  const open=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='open').sort((a,b)=>(a.due||'9').localeCompare(b.due||'9')).slice(0,6);
+  const open=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status!=='done').sort((a,b)=>(a.due||'9').localeCompare(b.due||'9')).slice(0,6);
   const done=(D.tasks||[]).filter(t=>t.workstream===wsId&&(t.status==='done'||t.isMilestone)).sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,6);
   const openTxt=open.map(t=>{
     const due=t.due?(' due '+t.due):'';
@@ -4314,7 +4608,7 @@ async function adoPushAll(){
     if(w.targetEnd)baseFields.push({field:'Microsoft.VSTS.Scheduling.TargetDate',value:w.targetEnd});
     try{
       if(w.adoId){
-        await adoUpdateWorkItem(w.adoId,[...baseFields,{field:'System.State',value:desiredState}]);
+        await adoUpdateWorkItem(w.adoId,baseFields);
         updated++;log.push({name:w.name,type:'Epic',action:'Updated',ok:true});
       }else{
         const createFields=[...baseFields,{field:'System.State',value:'New'}];
@@ -4351,7 +4645,7 @@ async function adoPushAll(){
     if(t.due)baseFields.push({field:'Microsoft.VSTS.Scheduling.TargetDate',value:t.due});
     try{
       if(t.adoId){
-        await adoUpdateWorkItem(t.adoId,[...baseFields,{field:'System.State',value:desiredState}]);
+        await adoUpdateWorkItem(t.adoId,baseFields);
         updated++;log.push({name:t.title,type:'Feature',action:'Updated',ok:true});
       }else{
         const createFields=[...baseFields,{field:'System.State',value:'New'}];
