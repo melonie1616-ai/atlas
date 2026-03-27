@@ -34,6 +34,7 @@ jobs:
         run: |
           mkdir -p _site
           pagecrypt atlas.html _site/index.html "${{ secrets.SITE_PASSWORD }}"
+          cp atlas-icon.png _site/atlas-icon.png
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
