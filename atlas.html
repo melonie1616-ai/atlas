@@ -159,7 +159,7 @@ body.nav-collapsed .topbar-menu{display:flex}
 .pill-m{background:var(--border-lt);color:var(--muted)}
 .pill-v{background:var(--violet-lt);color:var(--violet)}
 .pill-t{background:var(--teal-lt);color:var(--teal)}
-.pill-i{background:var(--indigo-lt);color:var(--indigo)}
+.pill-i{background:var(--indigo);color:#fff;font-weight:700;border:2px solid var(--indigo);box-shadow:0 2px 6px rgba(99,102,241,.4)}
 
 /* WORKSTREAM CARDS */
 .ws-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
@@ -203,7 +203,7 @@ body.nav-collapsed .topbar-menu{display:flex}
 .page-toolbar .pill-filters{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .page-toolbar .pill-filters .pill{cursor:pointer;transition:all .15s;padding:5px 12px;font-size:12px;border-radius:var(--r-sm)}
 .page-toolbar .pill-filters .pill:hover{opacity:.92}
-.page-toolbar .pill-filters .pill.pill-i{box-shadow:0 1px 2px rgba(99,102,241,.2)}
+.page-toolbar .pill-filters .pill.pill-i{box-shadow:0 3px 8px rgba(99,102,241,.4);transform:translateY(-1px)}
 .page-toolbar .pill-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto;padding-left:16px;border-left:1px solid var(--border-lt)}
 .page-toolbar .pill-actions select{padding:6px 10px 6px 12px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:12.5px;font-family:inherit;background:var(--bg-card);color:var(--text);cursor:pointer;outline:none;min-width:0}
 .page-toolbar .pill-actions .mbtn{padding:6px 12px;font-size:12.5px}
@@ -1479,7 +1479,7 @@ function renderPresence(){}
 // ═══════════════════════════════════════════════════
 // NAV
 // ═══════════════════════════════════════════════════
-let taskFilter='all',taskStatusFilter='open',taskOwnerFilter='',taskWsFilter='',qcType='task',taskSort='default',taskSortDir=1,taskGroupCollapsed={},taskViewMode='list';
+let taskFilter='all',taskStatusFilter='open',taskOwnerFilter='',taskWsFilter='',qcType='task',taskSort='default',taskSortDir=1,taskGroupCollapsed={},taskViewMode='list',myWorkViewMode='list';
 
 function toggleSidebar(){
   document.body.classList.toggle('nav-collapsed');
@@ -1876,12 +1876,65 @@ function rMyWork(c){
   </div>
 
   <div class="card" style="margin-bottom:20px;padding:18px 20px">
-    <h3 style="font-size:15px;font-weight:700;margin:0 0 12px">Action items assigned to you</h3>
-    <p style="color:var(--muted);font-size:13px;margin:0 0 12px">${openTasks.length} open, ${doneTasks.length} done</p>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div>
+        <h3 style="font-size:15px;font-weight:700;margin:0">Action items assigned to you</h3>
+        <p style="color:var(--muted);font-size:13px;margin:4px 0 0">${openTasks.length} open, ${doneTasks.length} done</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:2px">
+        <button type="button" title="List view" onclick="myWorkViewMode='list';render()" style="padding:5px 8px;border:1px solid ${myWorkViewMode==='list'?'var(--accent)':'var(--border)'};border-radius:var(--r-xs) 0 0 var(--r-xs);background:${myWorkViewMode==='list'?'var(--accent)':'var(--bg-subtle)'};color:${myWorkViewMode==='list'?'#fff':'var(--muted)'};cursor:pointer;display:flex;align-items:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </button>
+        <button type="button" title="Kanban view" onclick="myWorkViewMode='kanban';render()" style="padding:5px 8px;border:1px solid ${myWorkViewMode==='kanban'?'var(--accent)':'var(--border)'};border-radius:0 var(--r-xs) var(--r-xs) 0;background:${myWorkViewMode==='kanban'?'var(--accent)':'var(--bg-subtle)'};color:${myWorkViewMode==='kanban'?'#fff':'var(--muted)'};cursor:pointer;display:flex;align-items:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="15" rx="1"/></svg>
+        </button>
+      </div>
+    </div>
     ${myTasks.length
-      ?`<table class="tbl" style="width:100%"><thead><tr><th style="width:28px"></th><th>Action Item</th><th style="width:18%">Workstream</th><th style="width:12%">Target</th><th style="width:80px">Status</th></tr></thead><tbody>${myTasks.map(taskRow).join('')}</tbody></table>`
+      ?(myWorkViewMode==='kanban'?renderMyWorkKanban(myTasks):`<table class="tbl" style="width:100%"><thead><tr><th style="width:28px"></th><th>Action Item</th><th style="width:18%">Workstream</th><th style="width:12%">Target</th><th style="width:80px">Status</th><th style="width:80px">Updated</th></tr></thead><tbody>${myTasks.map(taskRow).join('')}</tbody></table>`)
       :'<p style="color:var(--muted);font-size:13px;margin:0">No action items assigned to you. Set yourself as Owner on an action item in Action Items.</p>'}
   </div>`;
+}
+
+function renderMyWorkKanban(myTasks){
+  const grouped={};
+  KB_COLS.forEach(col=>grouped[col.key]=[]);
+  myTasks.forEach(t=>{
+    const s=t.status||'not-started';
+    if(grouped[s])grouped[s].push(t);
+    else grouped['not-started'].push(t);
+  });
+
+  const renderCard=(t)=>{
+    const w=(D.workstreams||[]).find(x=>x.id===t.workstream);
+    const wName=w?esc(w.name):'Unlinked';
+    const wc=wsColor(t.workstream)||'var(--muted)';
+    const isOD=t.status!=='done'&&t.due&&t.due<today();
+    const isDueToday=t.status!=='done'&&t.due&&t.due===today();
+    const cardCls='kb-card'+(isOD&&!isDueToday?' kb-overdue':'')+(isDueToday?' kb-due-today':'');
+    return `<div class="${cardCls}" onclick="openTaskModal('${t.id}')">
+      <div class="kb-card-title">${t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">&#9733;</span>':''}${t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">&#9670;</span>':''}${esc(t.title)}</div>
+      <div class="kb-card-meta" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px">
+        <span style="font-size:11px;color:var(--light)">${wName}</span>
+        ${t.due?'<span style="font-size:11px;color:'+(isOD?'var(--red)':'var(--muted)')+';font-weight:'+(isOD||isDueToday?'600':'400')+'">'+(isOD?'&#9888; ':'')+(isDueToday?'&#9200; ':'')+fmtDate(t.due)+'</span>':''}
+      </div>
+    </div>`;
+  };
+
+  const renderCol=(col)=>{
+    const colItems=grouped[col.key]||[];
+    return `<div class="kb-col">
+      <div class="kb-col-hd" style="background:${col.accent}">
+        <span>${col.label}</span>
+        <span class="kb-count">${colItems.length}</span>
+      </div>
+      <div class="kb-col-body">
+        ${colItems.length?colItems.map(renderCard).join(''):'<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0">No items</div>'}
+      </div>
+    </div>`;
+  };
+
+  return `<div class="kb-board">${KB_COLS.map(renderCol).join('')}</div>`;
 }
 
 function setGanttZoom(z){ganttZoom=z;render()}
