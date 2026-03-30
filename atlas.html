@@ -1912,7 +1912,9 @@ function renderMyWorkKanban(myTasks){
     const isOD=t.status!=='done'&&t.due&&t.due<today();
     const isDueToday=t.status!=='done'&&t.due&&t.due===today();
     const cardCls='kb-card'+(isOD&&!isDueToday?' kb-overdue':'')+(isDueToday?' kb-due-today':'');
-    return `<div class="${cardCls}" onclick="openTaskModal('${t.id}')">
+    return `<div class="${cardCls}" draggable="true" data-id="${t.id}" onclick="openTaskModal('${t.id}')"
+      ondragstart="event.dataTransfer.setData('text/plain','${t.id}');this.classList.add('dragging')"
+      ondragend="this.classList.remove('dragging')">
       <div class="kb-card-title">${t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">&#9733;</span>':''}${t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">&#9670;</span>':''}${esc(t.title)}</div>
       <div class="kb-card-meta" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px">
         <span style="font-size:11px;color:var(--light)">${wName}</span>
@@ -1923,7 +1925,10 @@ function renderMyWorkKanban(myTasks){
 
   const renderCol=(col)=>{
     const colItems=grouped[col.key]||[];
-    return `<div class="kb-col">
+    return `<div class="kb-col" data-status="${col.key}"
+      ondragover="event.preventDefault();this.classList.add('kb-col-over')"
+      ondragleave="this.classList.remove('kb-col-over')"
+      ondrop="const id=event.dataTransfer.getData('text/plain');kbDrop(id,'${col.key}');this.classList.remove('kb-col-over')">
       <div class="kb-col-hd" style="background:${col.accent}">
         <span>${col.label}</span>
         <span class="kb-count">${colItems.length}</span>
