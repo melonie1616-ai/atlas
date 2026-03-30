@@ -1464,7 +1464,7 @@ function renderPresence(){}
 // ═══════════════════════════════════════════════════
 // NAV
 // ═══════════════════════════════════════════════════
-let taskFilter='all',taskStatusFilter='open',taskOwnerFilter='',taskWsFilter='',qcType='task',taskSort='default',taskSortDir=1,taskGroupCollapsed={},taskViewMode='kanban',myWorkViewMode='kanban',dashTab='overview',govTab='risks';
+let taskFilter='all',taskStatusFilter='open',taskOwnerFilter='',taskWsFilter='',qcType='task',taskSort='default',taskSortDir=1,taskGroupCollapsed={},taskViewMode='list',myWorkViewMode='kanban',dashTab='overview',govTab='risks';
 
 function toggleSidebar(){
   document.body.classList.toggle('nav-collapsed');
@@ -1773,7 +1773,7 @@ function rDash(c){
   <div style="display:flex;gap:10px;margin-bottom:18px;padding:8px 12px;background:var(--bg-card);border-radius:var(--r-md);border:1px solid var(--border-lt)">
     <div class="pill${dashTab==='overview'?' pill-i':' pill-m'}" onclick="dashTab='overview';render()" style="cursor:pointer">Program Overview</div>
     <div class="pill${dashTab==='mywork'?' pill-i':' pill-m'}" onclick="dashTab='mywork';render()" style="cursor:pointer">My Work${ME&&myOpenTasks.length?' <span class=\"badge hot\" style=\"margin-left:4px;font-size:10px\">'+myOpenTasks.length+'</span>':''}</div>
-    <div class="pill${dashTab==='people'?' pill-i':' pill-m'}" onclick="dashTab='people';render()" style="cursor:pointer">Team</div>
+    <div class="pill${dashTab==='people'?' pill-i':' pill-m'}" onclick="dashTab='people';render()" style="cursor:pointer">People</div>
   </div>
   ${dashTab==='mywork'?renderMyWorkSection():dashTab==='people'?renderPeopleSection():renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,allPriorities,prioritiesDone,myOpenTasks,myWsCount)}`;
 }
@@ -1781,7 +1781,7 @@ function rDash(c){
 function renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,allPriorities,prioritiesDone,myOpenTasks,myWsCount){
   return `
   <div class="kpi-row">
-    <div class="card kpi" style="cursor:pointer" onclick="taskStatusFilter='open';taskFilter='priorities';go('tasks')"><div class="acc" style="background:#1e3a8a"></div><div class="lbl">Priority Initiatives</div><div class="val" style="color:#1e3a8a">${allPriorities.length}</div><div class="note">${prioritiesDone.length} complete &middot; ${allPriorities.length-prioritiesDone.length} active</div></div>
+    <div class="card kpi" style="cursor:pointer;background:linear-gradient(135deg,#1e3a8a,#3730a3)" onclick="taskStatusFilter='open';taskFilter='priorities';go('tasks')"><div class="acc" style="background:#818cf8"></div><div class="lbl" style="color:#e0e7ff">Priority Initiatives</div><div class="val" style="color:#fff">${allPriorities.length}</div><div class="note" style="color:#c7d2fe">${prioritiesDone.length} complete &middot; ${allPriorities.length-prioritiesDone.length} active</div></div>
     <div class="card kpi" style="cursor:pointer" onclick="go('workstreams')"><div class="acc" style="background:var(--violet)"></div><div class="lbl">Workstreams</div><div class="val" style="color:var(--violet)">${activeWs.length}<span style="font-size:18px;color:var(--light);font-weight:500">/${allWs.length}</span></div><div class="note">${atRiskWs.length?'<span style="color:var(--red);font-weight:600">'+atRiskWs.length+' need attention</span>':'<span style="color:var(--green)">All on track</span>'}${completeWs.length?' &middot; '+completeWs.length+' complete':''}</div></div>
     <div class="card kpi" style="cursor:pointer" onclick="taskStatusFilter='open';taskFilter='all';go('tasks')"><div class="acc" style="background:var(--indigo)"></div><div class="lbl">Open Action Items</div><div class="val" style="color:var(--indigo)">${open.length}</div><div class="note">${overdue.length?'<span style="color:var(--red);font-weight:600">'+overdue.length+' overdue</span>':'<span style="color:var(--green)">All on track</span>'}${dueThisWeek.length?' &middot; <span style="color:var(--indigo);font-weight:600">'+dueThisWeek.length+' due this week</span>':''}</div></div>
     <div class="card kpi" style="cursor:pointer" onclick="taskStatusFilter='open';taskFilter='milestones';go('tasks')"><div class="acc" style="background:var(--teal)"></div><div class="lbl">Milestones</div><div class="val" style="color:var(--teal)">${msDone.length}<span style="font-size:18px;color:var(--light);font-weight:500">/${allMs.length}</span></div><div class="note">${msOD.length?'<span style="color:var(--red);font-weight:600">'+msOD.length+' overdue</span>':msUp.length+' upcoming'}</div></div>
@@ -2506,8 +2506,8 @@ function wsLinkedItems(wsId){
   const decs=(D.decisions||[]).filter(d=>d.workstream===wsId);
   const metrics=(D.metrics||[]).filter(m=>m.workstream===wsId);
   const total=tasks.length+risks.length+decs.length+metrics.length;
-  if(!total)return '<div style="padding:10px 12px;border:1px dashed var(--border);border-radius:var(--r-sm);color:var(--muted);font-size:12px">No linked items yet — link action items, risks, decisions, or metrics to this workstream.</div>';
-  let html='<div><h4 style="font-size:13px;font-weight:700;margin-bottom:8px">Linked Items ('+total+')</h4>';
+  if(!total)return '<div style="padding:10px 12px;border:1px dashed var(--border);border-radius:var(--r-sm);color:var(--muted);font-size:12px;margin-bottom:8px">No linked items yet — link action items, risks, decisions, or metrics to this workstream.</div><div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="pill pill-i" style="cursor:pointer;border:none;font-size:11px;padding:5px 12px" onclick="wsQuickAdd(\'task\',\''+wsId+'\')">+ Action Item</button><button type="button" class="pill pill-i" style="cursor:pointer;border:none;font-size:11px;padding:5px 12px" onclick="wsQuickAdd(\'risk\',\''+wsId+'\')">+ Risk</button><button type="button" class="pill pill-i" style="cursor:pointer;border:none;font-size:11px;padding:5px 12px" onclick="wsQuickAdd(\'decision\',\''+wsId+'\')">+ Decision</button></div>';
+  let html='<div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h4 style="font-size:13px;font-weight:700;margin:0">Linked Items ('+total+')</h4><div style="display:flex;gap:6px"><button type="button" class="pill pill-m" style="cursor:pointer;border:none;font-size:10px;padding:3px 8px" onclick="wsQuickAdd(\'task\',\''+wsId+'\')">+ Action Item</button><button type="button" class="pill pill-m" style="cursor:pointer;border:none;font-size:10px;padding:3px 8px" onclick="wsQuickAdd(\'risk\',\''+wsId+'\')">+ Risk</button><button type="button" class="pill pill-m" style="cursor:pointer;border:none;font-size:10px;padding:3px 8px" onclick="wsQuickAdd(\'decision\',\''+wsId+'\')">+ Decision</button></div></div>';
   if(tasks.length){
     const openT=tasks.filter(t=>t.status!=='done');const doneT=tasks.filter(t=>t.status==='done');
     html+='<div style="margin-bottom:10px"><span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Action Items ('+tasks.length+' — '+openT.length+' open)</span>';
@@ -2804,6 +2804,7 @@ function rTasks(c){
       </select>
     </div>
     <div style="display:flex;align-items:center;gap:2px;margin-left:auto;padding-left:14px;border-left:1px solid var(--border-lt)">
+      ${taskViewMode==='list'?'<button type="button" title="Expand all" onclick="expandAllTaskGroups()" style="padding:5px 10px;border:1px solid var(--border);border-radius:var(--r-xs);background:var(--bg-subtle);color:var(--muted);cursor:pointer;font-size:11px;font-weight:600">Expand All</button><button type="button" title="Collapse all" onclick="collapseAllTaskGroups()" style="padding:5px 10px;border:1px solid var(--border);border-radius:var(--r-xs);background:var(--bg-subtle);color:var(--muted);cursor:pointer;font-size:11px;font-weight:600;margin-right:10px">Collapse All</button>':''}
       <button type="button" title="List view" onclick="taskViewMode='list';render()" style="padding:5px 8px;border:1px solid ${taskViewMode==='list'?'var(--accent)':'var(--border)'};border-radius:var(--r-xs) 0 0 var(--r-xs);background:${taskViewMode==='list'?'var(--accent)':'var(--bg-subtle)'};color:${taskViewMode==='list'?'#fff':'var(--muted)'};cursor:pointer;display:flex;align-items:center">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
       </button>
@@ -2906,9 +2907,10 @@ function openTaskModal(id){
     </div>
     ${(()=>{if(!t?.workstream)return '';const pw=(D.workstreams||[]).find(x=>x.id===t.workstream);if(!pw)return '';return '<div style="font-size:12.5px;color:var(--muted);margin:-4px 0 10px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(pw.color||'var(--muted)')+'"></span><a href="#" onclick="event.preventDefault();closeModal();setTimeout(()=>openWsDetail(\''+pw.id+'\'),200)" style="color:var(--accent);text-decoration:none;font-weight:500">'+esc(pw.name)+'</a></div>'})()}
     <div class="fg-row">
+      <div class="fg"><label>Start Date</label><input type="date" id="t-start" value="${t?t.startDate:''}"></div>
       <div class="fg"><label>Target Date</label><input type="date" id="t-due" value="${t?t.due:''}"></div>
-      <div class="fg"><label>Status</label><select id="t-status"><option value="not-started"${(!t||t.status==='not-started'||!t.status)?' selected':''}>Not Started</option><option value="open"${defaultStatus==='open'?' selected':''}>Open</option><option value="blocked"${t?.status==='blocked'?' selected':''}>Blocked / Waiting</option><option value="done"${t?.status==='done'?' selected':''}>Done</option></select></div>
     </div>
+    <div class="fg"><label>Status</label><select id="t-status"><option value="not-started"${(!t||t.status==='not-started'||!t.status)?' selected':''}>Not Started</option><option value="open"${defaultStatus==='open'?' selected':''}>Open</option><option value="blocked"${t?.status==='blocked'?' selected':''}>Blocked / Waiting</option><option value="done"${t?.status==='done'?' selected':''}>Done</option></select></div>
     <div class="fg"><label>Notes</label><textarea id="t-notes" style="min-height:90px;resize:vertical" placeholder="Optional details, context, or next steps">${t?esc(t.notes):''}</textarea></div>
     ${t?`<div class="fg" style="margin-top:4px">
       <label style="display:flex;align-items:center;justify-content:space-between">Discussion <span style="font-size:11px;color:var(--light);font-weight:400">${(t.comments||[]).length} comment${(t.comments||[]).length!==1?'s':''}</span></label>
@@ -2940,6 +2942,7 @@ function saveTask(id){
   const isNew=!t;
   if(!t){t={id:uid(),created:today(),source:'',addedBy:ME,priority:'medium',startDate:''};if(!D.tasks)D.tasks=[];D.tasks.push(t)}
   t.title=title;t.owner=document.getElementById('t-owner').value.trim();
+  t.startDate=document.getElementById('t-start').value;
   t.due=document.getElementById('t-due').value;
   t.status=document.getElementById('t-status').value;
   t.isMilestone=document.getElementById('t-milestone').checked;
@@ -2971,6 +2974,15 @@ function toggleTask(id){
   t.status=ci>=0&&ci<cycle.length-1?cycle[ci+1]:'done';
   t.updatedBy=ME;t.updatedAt=new Date().toISOString();
   save();render();
+}
+function expandAllTaskGroups(){
+  taskGroupCollapsed={};
+  render();
+}
+function collapseAllTaskGroups(){
+  taskGroupCollapsed['_unlinked']=true;
+  (D.workstreams||[]).forEach(ws=>taskGroupCollapsed[ws.id]=true);
+  render();
 }
 function setTaskStatus(id,status){
   const t=D.tasks.find(x=>x.id===id);if(!t)return;
