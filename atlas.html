@@ -1776,28 +1776,6 @@ function rDash(c){
     <div class="pill${dashTab==='people'?' pill-i':' pill-m'}" onclick="dashTab='people';render()" style="cursor:pointer">Team</div>
   </div>
   ${dashTab==='mywork'?renderMyWorkSection():dashTab==='people'?renderPeopleSection():renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,allPriorities,prioritiesDone,myOpenTasks,myWsCount)}`;
-  <div class="kpi-row">
-    <div class="card kpi" style="cursor:pointer" onclick="taskStatusFilter='all';taskFilter='priorities';go('tasks')"><div class="acc" style="background:#1e3a8a"></div><div class="lbl">Priority Initiatives</div><div class="val" style="color:#1e3a8a">${allPriorities.length}</div><div class="note">${prioritiesDone.length} complete &middot; ${allPriorities.length-prioritiesDone.length} active</div></div>
-    <div class="card kpi" style="cursor:pointer" onclick="go('workstreams')"><div class="acc" style="background:var(--violet)"></div><div class="lbl">Workstreams</div><div class="val" style="color:var(--violet)">${activeWs.length}<span style="font-size:18px;color:var(--light);font-weight:500">/${allWs.length}</span></div><div class="note">${atRiskWs.length?'<span style="color:var(--red);font-weight:600">'+atRiskWs.length+' need attention</span>':'<span style="color:var(--green)">All on track</span>'}${completeWs.length?' &middot; '+completeWs.length+' complete':''}</div></div>
-    <div class="card kpi" style="cursor:pointer" onclick="taskStatusFilter='open';taskFilter='all';go('tasks')"><div class="acc" style="background:var(--indigo)"></div><div class="lbl">Open Action Items</div><div class="val" style="color:var(--indigo)">${open.length}</div><div class="note">${overdue.length?'<span style="color:var(--red);font-weight:600">'+overdue.length+' overdue</span>':'<span style="color:var(--green)">All on track</span>'}${dueThisWeek.length?' &middot; <span style="color:var(--indigo);font-weight:600">'+dueThisWeek.length+' due this week</span>':''}</div></div>
-    <div class="card kpi" style="cursor:pointer" onclick="taskStatusFilter='all';taskFilter='milestones';go('tasks')"><div class="acc" style="background:var(--teal)"></div><div class="lbl">Milestones</div><div class="val" style="color:var(--teal)">${msDone.length}<span style="font-size:18px;color:var(--light);font-weight:500">/${allMs.length}</span></div><div class="note">${msOD.length?'<span style="color:var(--red);font-weight:600">'+msOD.length+' overdue</span>':msUp.length+' upcoming'}</div></div>
-    <div class="card kpi" style="cursor:pointer" onclick="go('mywork')"><div class="acc" style="background:#ec4899"></div><div class="lbl">My Work Items</div><div class="val" style="color:#ec4899">${myOpenTasks.length}</div><div class="note">${ME?myWsCount+' workstream'+(myWsCount!==1?'s':''):'<span style="color:var(--muted)">Sign in to see</span>'}</div></div>
-  </div>
-
-  <div class="ws-section" id="dashSec-timeline" style="margin-bottom:16px">
-    <div class="ws-section-hd" onclick="toggleWsSection('dashSec-timeline')" style="background:var(--bg-card);padding:14px 18px;border-radius:var(--r-sm) var(--r-sm) 0 0;border:1px solid var(--border)"><h4 style="font-size:16px;font-weight:800;color:var(--text)">Program Timeline</h4><span class="ws-section-arrow">&#9660;</span></div>
-    <div class="ws-section-bd" style="padding:10px 14px;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r-sm) var(--r-sm)">
-      ${buildGantt()}
-    </div>
-  </div>
-
-
-  <div class="ws-section collapsed" id="dashSec-log" style="margin-top:16px">
-    <div class="ws-section-hd" onclick="toggleWsSection('dashSec-log')"><h4>Activity Log</h4><span class="ws-section-arrow">&#9660;</span></div>
-    <div class="ws-section-bd" style="padding:10px 14px">
-      <div style="max-height:180px;overflow-y:auto">${(D.log||[]).slice(0,20).map(l=>`<div style="padding:4px 0;font-size:11.5px;border-bottom:1px solid var(--border-lt);display:flex;gap:8px"><span style="color:var(--light);flex-shrink:0;font-size:10px;min-width:60px">${new Date(l.ts).toLocaleDateString()}</span><span>${l.text}</span></div>`).join('')}</div>
-    </div>
-  </div>`;
 }
 
 function renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,allPriorities,prioritiesDone,myOpenTasks,myWsCount){
@@ -5074,6 +5052,11 @@ function rRisks(c){
   govTab='risks';
   rGovernance(c);
 }
+
+// ═══════════════════════════════════════════════════
+// SUCCESS METRICS
+// ═══════════════════════════════════════════════════
+function rMetrics(c){
   const items=(D.metrics||[]).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   c.innerHTML=`<div class="card"><div class="dash-hd" style="display:flex;justify-content:space-between;align-items:center">Success Metrics & KPIs <button class="mbtn mb-save" onclick="openMetricModal()">+ Metric</button></div>
   <div style="padding:0 18px 14px">${items.length?`<table class="tbl"><thead><tr><th>Metric</th><th>Current Value</th><th>Target</th><th>As Of</th><th>Trend</th></tr></thead><tbody>${items.map(m=>{
