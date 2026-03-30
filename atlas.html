@@ -2675,6 +2675,7 @@ function rTasks(c){
   if(taskFilter==='open')items=items.filter(t=>t.status!=='done');
   else if(taskFilter==='done')items=items.filter(t=>t.status==='done');
   else if(taskFilter==='milestones')items=items.filter(t=>t.isMilestone);
+  else if(taskFilter==='priorities')items=items.filter(t=>t.isPriority);
   else if(taskFilter==='overdue')items=items.filter(t=>t.status!=='done'&&t.due&&t.due<today());
   if(taskOwnerFilter==='__unassigned__')items=items.filter(t=>!t.owner);
   else if(taskOwnerFilter)items=items.filter(t=>t.owner===taskOwnerFilter);
@@ -2688,6 +2689,7 @@ function rTasks(c){
   else if(taskSort==='workstream')items.sort((a,b)=>taskSortDir*wsNamePlain(a.workstream).localeCompare(wsNamePlain(b.workstream)));
   else{const so={'not-started':0,'open':1,'blocked':2,'done':3};items.sort((a,b)=>{if(a.status!==b.status)return(so[a.status]??1)-(so[b.status]??1);if((pv[a.priority]??1)!==(pv[b.priority]??1))return(pv[a.priority]??1)-(pv[b.priority]??1);return(a.due||'9').localeCompare(b.due||'9')})}
   const open=D.tasks.filter(t=>t.status!=='done').length,done=D.tasks.filter(t=>t.status==='done').length,msCount=D.tasks.filter(t=>t.isMilestone).length;
+  const priorityCount=D.tasks.filter(t=>t.isPriority).length;
   const overdueCount=D.tasks.filter(t=>t.status!=='done'&&t.due&&t.due<today()).length;
   const inboxCount=(D.inbox||[]).filter(x=>!x.processed).length;
   const owners=[...new Set((D.tasks||[]).map(t=>t.owner).filter(Boolean))].sort();
@@ -2702,6 +2704,7 @@ function rTasks(c){
       <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
       <div class="pill${taskFilter==='done'?' pill-i':' pill-m'}" onclick="taskFilter='done';render()">Done (${done})</div>
       <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
+      <div class="pill${taskFilter==='priorities'?' pill-i':' pill-m'}" onclick="taskFilter='priorities';render()" style="${priorityCount?'background:#8b5cf6;color:#fff':''}">&#9670; Priorities (${priorityCount})</div>
       <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;padding-left:14px;margin-left:6px;border-left:1px solid var(--border-lt)">
@@ -2740,7 +2743,7 @@ function rTasks(c){
       const pp={high:'pill-r',medium:'pill-a',low:'pill-g'}[t.priority]||'pill-m';
       return `<tr onclick="openTaskModal('${t.id}')" style="height:36px;cursor:pointer;${rowBg}">
         <td style="width:28px" onclick="event.stopPropagation()"><div class="task-chk${t.status==='done'?' done':''}" onclick="toggleTask('${t.id}')">&#10003;</div></td>
-        <td style="overflow:hidden;text-overflow:ellipsis;${t.status==='done'?'text-decoration:line-through;color:var(--muted)':''}">${t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">&#9733;</span>':''}${esc(t.title)}${(t.comments||[]).length?'<span style="margin-left:6px;font-size:10px;color:var(--light)" title="'+t.comments.length+' comment'+(t.comments.length!==1?'s':'')+'">&#128172; '+t.comments.length+'</span>':''}</td>
+        <td style="overflow:hidden;text-overflow:ellipsis;${t.status==='done'?'text-decoration:line-through;color:var(--muted)':''}">${t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">&#9733;</span>':''}${t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">&#9670;</span>':''}${esc(t.title)}${(t.comments||[]).length?'<span style="margin-left:6px;font-size:10px;color:var(--light)" title="'+t.comments.length+' comment'+(t.comments.length!==1?'s':'')+'">&#128172; '+t.comments.length+'</span>':''}</td>
         <td style="font-size:12px;color:var(--muted);width:14%">${esc(t.owner)||'—'}</td>
         <td style="font-size:11.5px;width:8%;color:var(--muted)">${t.startDate?fmtDate(t.startDate):'—'}</td>
         <td style="font-size:11.5px;width:8%;${isOD?'color:var(--red);font-weight:600':''}">${t.due?fmtDate(t.due):'—'}</td>
@@ -2803,6 +2806,14 @@ function openTaskModal(id){
         <span style="color:var(--muted);font-size:12.5px">— shows on timeline and reports</span>
       </label>
     </div>
+    <div style="padding:10px 14px;margin:0 0 12px;border-radius:var(--r-sm);background:${t?.isPriority?'rgba(139,92,246,.12)':'var(--bg-subtle)'};border:1px solid ${t?.isPriority?'#8b5cf6':'var(--border)'}">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px" onclick="const cb=document.getElementById('t-priority-flag');cb.checked=!cb.checked;const box=this.parentElement;if(cb.checked){box.style.background='rgba(139,92,246,.12)';box.style.borderColor='#8b5cf6'}else{box.style.background='var(--bg-subtle)';box.style.borderColor='var(--border)'}">
+        <input type="checkbox" id="t-priority-flag" ${t?.isPriority?'checked':''} style="accent-color:#8b5cf6;width:18px;height:18px" onclick="event.stopPropagation();const box=this.closest('div');if(this.checked){box.style.background='rgba(139,92,246,.12)';box.style.borderColor='#8b5cf6'}else{box.style.background='var(--bg-subtle)';box.style.borderColor='var(--border)'}">
+        <span style="font-size:20px;color:#8b5cf6">&#9670;</span>
+        <strong style="font-size:14px">Priority Initiative</strong>
+        <span style="color:var(--muted);font-size:12.5px">— executive focus item</span>
+      </label>
+    </div>
     <div class="fg-row">
       <div class="fg"><label>Owner</label><select id="t-owner">${peopleOpts(t?.owner||'')}</select></div>
       <div class="fg"><label>Workstream</label><select id="t-ws"><option value="">— None —</option>${wsOpts(t?.workstream)}</select></div>
@@ -2852,6 +2863,7 @@ function saveTask(id){
   t.priority=document.getElementById('t-pri').value;
   t.status=document.getElementById('t-status').value;
   t.isMilestone=document.getElementById('t-milestone').checked;
+  t.isPriority=document.getElementById('t-priority-flag').checked;
   t.workstream=document.getElementById('t-ws').value;
   t.notes=document.getElementById('t-notes').value;
   t.updatedBy=ME;t.updatedAt=new Date().toISOString();
@@ -2997,6 +3009,7 @@ function rTasksInbox(c){
       <div class="pill pill-m" onclick="taskFilter='open';render()">Active (${open})</div>
       <div class="pill pill-m" onclick="taskFilter='done';render()">Done (${done})</div>
       <div class="pill pill-m" onclick="taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
+      <div class="pill pill-m" onclick="taskFilter='priorities';render()" style="${priorityCount?'background:#8b5cf6;color:#fff':''}">&#9670; Priorities (${priorityCount})</div>
       <div class="pill pill-i" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
     </div>
   </div>
@@ -3072,6 +3085,7 @@ function rKanban(c){
   if(taskFilter==='open')items=items.filter(t=>t.status!=='done');
   else if(taskFilter==='done')items=items.filter(t=>t.status==='done');
   else if(taskFilter==='milestones')items=items.filter(t=>t.isMilestone);
+  else if(taskFilter==='priorities')items=items.filter(t=>t.isPriority);
   else if(taskFilter==='overdue')items=items.filter(t=>t.status!=='done'&&t.due&&t.due<today());
   if(taskOwnerFilter==='__unassigned__')items=items.filter(t=>!t.owner);
   else if(taskOwnerFilter)items=items.filter(t=>t.owner===taskOwnerFilter);
@@ -3105,7 +3119,7 @@ function rKanban(c){
     return `<div class="${cardCls}" draggable="true" data-id="${t.id}" onclick="openTaskModal('${t.id}')"
       ondragstart="event.dataTransfer.setData('text/plain','${t.id}');this.classList.add('dragging')"
       ondragend="this.classList.remove('dragging')">
-      <div class="kb-card-title">${t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">&#9733;</span>':''}${esc(t.title)}</div>
+      <div class="kb-card-title">${t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">&#9733;</span>':''}${t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">&#9670;</span>':''}${esc(t.title)}</div>
       <div class="kb-card-meta" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px">
         <span style="font-size:11px;color:var(--light)">${t.owner?esc(t.owner):'Unassigned'}</span>
         ${t.due?'<span style="font-size:11px;color:'+(isOD?'var(--red)':'var(--muted)')+';font-weight:'+(isOD||isDueToday?'600':'400')+'">'+(isOD?'&#9888; ':'')+(isDueToday?'&#9200; ':'')+fmtDate(t.due)+'</span>':''}
@@ -3139,6 +3153,7 @@ function rKanban(c){
       <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
       <div class="pill${taskFilter==='done'?' pill-i':' pill-m'}" onclick="taskFilter='done';render()">Done (${done})</div>
       <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
+      <div class="pill${taskFilter==='priorities'?' pill-i':' pill-m'}" onclick="taskFilter='priorities';render()" style="${priorityCount?'background:#8b5cf6;color:#fff':''}">&#9670; Priorities (${priorityCount})</div>
       <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
     </div>
     <div class="pill-actions">
