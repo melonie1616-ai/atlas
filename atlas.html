@@ -2307,6 +2307,9 @@ function openWsEdit(id){
   </div>`:'';
   openModal(`<div class="m-hd"><h3>${w?'Edit':'New'} Workstream</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
+    <div style="padding:10px 14px;margin-bottom:12px;border-radius:var(--r-sm);background:#eff6ff;border:1px solid #3b82f6;font-size:12.5px;color:#1e40af">
+      <strong style="color:#1d4ed8">&#128193; Need to upload documents?</strong> Visit the <a href="https://digitalrealtyeur.sharepoint.com/sites/AITransformationProgram/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FAITransformationProgram%2FShared%20Documents%2FGeneral&viewid=be024a85%2D931b%2D4a01%2Dacac%2D217f020d89c0" target="_blank" style="color:#2563eb;text-decoration:underline;font-weight:600">AI Transformation Program SharePoint folder</a>
+    </div>
     ${hierarchyBanner}
     <div class="ws-section" id="wsSec-basics">
       <div class="ws-section-hd" onclick="toggleWsSection('wsSec-basics')"><h4>Basics</h4><span class="ws-section-arrow">&#9660;</span></div>
@@ -2785,6 +2788,9 @@ function openTaskModal(id){
   const t=id?D.tasks.find(x=>x.id===id):null;
   openModal(`<div class="m-hd"><h3>${t?'Edit':'New'} Action Item</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
+    <div style="padding:10px 14px;margin-bottom:12px;border-radius:var(--r-sm);background:#eff6ff;border:1px solid #3b82f6;font-size:12.5px;color:#1e40af">
+      <strong style="color:#1d4ed8">&#128193; Need to upload documents?</strong> Visit the <a href="https://digitalrealtyeur.sharepoint.com/sites/AITransformationProgram/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FAITransformationProgram%2FShared%20Documents%2FGeneral&viewid=be024a85%2D931b%2D4a01%2Dacac%2D217f020d89c0" target="_blank" style="color:#2563eb;text-decoration:underline;font-weight:600">AI Transformation Program SharePoint folder</a>
+    </div>
     <div class="fg"><label>Title</label><input id="t-title" value="${t?esc(t.title):''}"></div>
     <div style="padding:10px 14px;margin:8px 0 12px;border-radius:var(--r-sm);background:${t?.isMilestone?'rgba(245,158,11,.12)':'var(--bg-subtle)'};border:1px solid ${t?.isMilestone?'#f59e0b':'var(--border)'}">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px" onclick="const cb=document.getElementById('t-milestone');cb.checked=!cb.checked;const box=this.parentElement;if(cb.checked){box.style.background='rgba(245,158,11,.12)';box.style.borderColor='#f59e0b'}else{box.style.background='var(--bg-subtle)';box.style.borderColor='var(--border)'}">
