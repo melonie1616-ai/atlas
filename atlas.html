@@ -102,9 +102,9 @@ body.nav-collapsed .topbar-menu{display:flex}
 .ni.on{background:rgba(99,102,241,.12);color:#f0f0ff;font-weight:600;border-left-color:var(--accent)}
 .ni svg{width:17px;height:17px;flex-shrink:0;opacity:.5}
 .ni.on svg{opacity:.9;color:var(--accent)}
-.badge{font-size:10px;font-weight:700;min-width:17px;text-align:center;padding:2px 6px;border-radius:99px;background:rgba(255,255,255,.08);color:#8080a0;margin-left:auto}
-.badge.hot{background:var(--accent);color:#fff}
-.badge.warn{background:var(--red);color:#fff}
+.badge{font-size:10px;font-weight:600;min-width:16px;text-align:center;padding:1px 5px;border-radius:999px;background:rgba(255,255,255,.06);color:#7070a0;margin-left:auto}
+.badge.hot{background:rgba(99,102,241,.3);color:#b4b4ff}
+.badge.warn{background:rgba(239,68,68,.3);color:#fca5a5}
 .side-ft{padding:10px 10px 14px;border-top:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:1px}
 .side-ft button{text-align:left;padding:7px 12px;border-radius:var(--r-sm);font-size:13px;color:#8888a8;cursor:pointer;transition:all .15s}
 .side-ft button:hover{background:rgba(255,255,255,.06);color:#d0d0e0}
@@ -119,7 +119,7 @@ body.nav-collapsed .topbar-menu{display:flex}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 36px;background:var(--bg-card);border-bottom:1px solid var(--border-lt);position:sticky;top:0;z-index:50}
 .topbar h2{font-size:22px;font-weight:800;letter-spacing:-.01em}
 .topbar .tb-right{display:flex;align-items:center;gap:12px}
-.topbar input[type=text]{padding:9px 16px;border:1px solid var(--border-lt);border-radius:var(--r-sm);font-size:14px;width:240px;outline:none;background:var(--bg-card);color:var(--text);transition:border-color .15s}
+.topbar input[type=text]{padding:8px 16px 8px 36px;border:1px solid var(--border-lt);border-radius:var(--r-sm);font-size:14px;width:260px;outline:none;background:var(--bg-card);color:var(--text);transition:border-color .15s;background-image:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23888" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>');background-repeat:no-repeat;background-position:10px center;background-size:16px}
 .topbar input[type=text]:focus{border-color:var(--accent)}
 .tb-btn{padding:9px 22px;border-radius:var(--r-sm);font-size:14px;font-weight:600;background:var(--accent);color:#fff;transition:background .15s}
 .tb-btn:hover{background:var(--accent-hov)}
@@ -138,20 +138,20 @@ body.nav-collapsed .topbar-menu{display:flex}
 #content{padding:28px 40px 40px;flex:1;min-width:0}
 
 /* CARDS */
-.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:0 1px 2px rgba(0,0,0,.04);overflow:hidden}
 .card+.card{margin-top:14px}
 
 /* KPI ROW */
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px}
-.kpi{padding:22px 24px 22px 28px;position:relative;transition:transform .2s,box-shadow .2s}
-.kpi:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
-.kpi .acc{position:absolute;top:12px;bottom:12px;left:0;width:4px;border-radius:0 4px 4px 0}
-.kpi .lbl{font-size:12.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
-.kpi .val{font-size:32px;font-weight:800;line-height:1.1;letter-spacing:-.02em}
-.kpi .note{font-size:12.5px;color:var(--light);margin-top:6px}
+.kpi{padding:20px 24px 20px 26px;position:relative;transition:transform .15s,box-shadow .15s}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.kpi .acc{position:absolute;top:14px;bottom:14px;left:0;width:3px;border-radius:0 3px 3px 0}
+.kpi .lbl{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.kpi .val{font-size:30px;font-weight:700;line-height:1.1;letter-spacing:-.02em}
+.kpi .note{font-size:12px;color:var(--light);margin-top:6px}
 
 /* STATUS PILLS */
-.pill{display:inline-block;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap;letter-spacing:.02em}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;letter-spacing:.01em}
 .pill-g{background:var(--green-lt);color:var(--green)}
 .pill-a{background:var(--amber-lt);color:#92400e}
 .pill-r{background:var(--red-lt);color:var(--red)}
@@ -159,7 +159,7 @@ body.nav-collapsed .topbar-menu{display:flex}
 .pill-m{background:var(--border-lt);color:var(--muted)}
 .pill-v{background:var(--violet-lt);color:var(--violet)}
 .pill-t{background:var(--teal-lt);color:var(--teal)}
-.pill-i{background:var(--indigo);color:#fff;font-weight:700;border:2px solid var(--indigo);box-shadow:0 2px 6px rgba(99,102,241,.4)}
+.pill-i{background:var(--indigo);color:#fff;font-weight:600;border:1px solid var(--indigo);box-shadow:0 1px 3px rgba(99,102,241,.3)}
 
 /* WORKSTREAM CARDS */
 .ws-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
@@ -182,7 +182,7 @@ body.nav-collapsed .topbar-menu{display:flex}
 .tbl tr{cursor:pointer;transition:background .1s}
 
 /* DASH SECTIONS */
-.dash-hd{padding:18px 22px 10px;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
+.dash-hd{padding:18px 22px 10px;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:space-between}
 .dash-bd{padding:0 22px 18px}
 .dash-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .dash-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border-lt)}
@@ -603,13 +603,7 @@ body.nav-collapsed .topbar-menu{display:flex}
         Dashboard
       </div>
       <span id="nb-ws" style="display:none"></span>
-
       <span id="nb-eng" style="display:none"></span>
-      <div class="ni" data-v="people" onclick="go('people')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-        People <span class="badge" id="nb-ppl">0</span>
-      </div>
-      
     </div>
 
     <div class="nav-section" id="ns-work">
@@ -627,26 +621,20 @@ body.nav-collapsed .topbar-menu{display:flex}
 
     <div class="nav-section" id="ns-gov">
       <div class="nav-label" onclick="toggleNavSection('ns-gov')">Governance <span class="nav-arrow">&#9660;</span></div>
-      <div class="ni" data-v="decisions" onclick="go('decisions')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        Decision Log
+      <div class="ni" data-v="governance" onclick="go('governance')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Decisions & Risks
       </div>
-      <div class="ni" data-v="risks" onclick="go('risks')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        Risk Register
-      </div>
-      
     </div>
 
     <div class="nav-section" id="ns-output">
       <div class="nav-label" onclick="toggleNavSection('ns-output')">Output <span class="nav-arrow">&#9660;</span></div>
-      
       <div class="ni" data-v="ado" onclick="go('ado')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
         ADO Sync
       </div>
       <div class="ni" data-v="aiinsights" onclick="go('aiinsights')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 014 4v1a3 3 0 013 3v1a2 2 0 012 2v0a2 2 0 01-2 2h-1a3 3 0 01-3 3v1a4 4 0 01-8 0v-1a3 3 0 01-3-3H3a2 2 0 01-2-2v0a2 2 0 012-2h1a3 3 0 013-3V7a4 4 0 014-4z"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/></svg>
         AI Insights
       </div>
     </div>
@@ -675,7 +663,7 @@ body.nav-collapsed .topbar-menu{display:flex}
     <button class="topbar-menu" onclick="toggleSidebar()" title="Expand sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
     <h2 id="viewTitle">Dashboard</h2>
     <div class="tb-right">
-      <input type="text" id="search" placeholder="Search..." oninput="render()">
+      <input type="text" id="search" placeholder="Search anything..." oninput="render()">
       <button class="tb-btn" id="addBtn" style="display:none" onclick="handleAdd()">+ Add</button>
       <div style="position:relative">
         <button class="tb-btn" onclick="go('aiinsights')" title="AI Insights" style="display:flex;align-items:center;gap:5px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 2a4 4 0 014 4v1a3 3 0 013 3v1a2 2 0 012 2v0a2 2 0 01-2 2h-1a3 3 0 01-3 3v1a4 4 0 01-8 0v-1a3 3 0 01-3-3H3a2 2 0 01-2-2v0a2 2 0 012-2h1a3 3 0 013-3V7a4 4 0 014-4z"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/></svg>AI Insights</button>
@@ -694,17 +682,14 @@ body.nav-collapsed .topbar-menu{display:flex}
         <button class="tb-btn" onclick="toggleQC()" style="background:#ec4899;color:#fff;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Quick Capture</button>
         <div class="qc-panel" id="qcPanel">
           <h4>Quick Capture</h4>
-          <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Paste or speak notes, emails, or ideas. They'll go to the Inbox for triage.</p>
-          <div style="padding:8px 12px;margin-bottom:10px;border-radius:var(--r-sm);background:#eff6ff;border:1px solid #3b82f6;font-size:12px;color:#1e40af">
-            <strong style="color:#1d4ed8">&#128193; Need to upload documents?</strong> Visit the <a href="https://digitalrealtyeur.sharepoint.com/sites/AITransformationProgram/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FAITransformationProgram%2FShared%20Documents%2FGeneral&viewid=be024a85%2D931b%2D4a01%2Dacac%2D217f020d89c0" target="_blank" style="color:#2563eb;text-decoration:underline;font-weight:600">SharePoint folder</a>
-          </div>
-          <textarea class="qc-ta" id="qcText" placeholder="Paste or speak meeting notes, action items, ideas..."></textarea>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Paste or speak anything — it will be saved to the Inbox for triage</p>
+          <textarea class="qc-ta" id="qcText" placeholder="Paste meeting notes, action items, ideas..."></textarea>
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
             <button type="button" id="qcVoiceBtn" style="display:flex;align-items:center;gap:6px;padding:6px 12px;font-size:12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);color:var(--text);cursor:pointer;font-family:inherit" onclick="toggleQCVoice()" title="Use microphone to speak"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M12 1a3 3 0 0 1 3 3v8a3 3 0 0 1-6 0V4a3 3 0 0 1 3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg><span id="qcVoiceLabel">Start voice</span></button>
           </div>
           <div class="qc-ft">
             <button style="color:var(--muted)" onclick="toggleQC()">Cancel</button>
-            <button style="background:#ec4899;color:#fff;border-radius:var(--r-sm)" onclick="submitQC()">Send to Inbox</button>
+            <button style="background:#ec4899;color:#fff;border-radius:var(--r-sm)" onclick="submitQC()">Save to Inbox</button>
           </div>
         </div>
       </div>
@@ -1479,7 +1464,7 @@ function renderPresence(){}
 // ═══════════════════════════════════════════════════
 // NAV
 // ═══════════════════════════════════════════════════
-let taskFilter='all',taskStatusFilter='open',taskOwnerFilter='',taskWsFilter='',qcType='task',taskSort='default',taskSortDir=1,taskGroupCollapsed={},taskViewMode='list',myWorkViewMode='list';
+let taskFilter='all',taskStatusFilter='open',taskOwnerFilter='',taskWsFilter='',qcType='task',taskSort='default',taskSortDir=1,taskGroupCollapsed={},taskViewMode='kanban',myWorkViewMode='kanban',dashTab='overview',govTab='risks';
 
 function toggleSidebar(){
   document.body.classList.toggle('nav-collapsed');
@@ -1524,9 +1509,9 @@ function go(v){
     if(arrow)arrow.classList.toggle('collapsed',sec.classList.contains('collapsed'));
   });
   const titles={dashboard:'Dashboard',workstreams:'Workstreams',engagements:'Engagements',
-    tasks:'Action Items',mywork:'My Work Items',people:'People',
+    tasks:'Action Items',mywork:'My Work Items',people:'Team Directory',
     report:'Report Out',ask:'Ask AI',decisions:'Decision Log',
-    risks:'Risk Register',ado:'ADO Sync',aiinsights:'AI Insights'};
+    risks:'Risk Register',governance:'Decisions & Risks',ado:'ADO Sync',aiinsights:'AI Insights'};
   document.getElementById('viewTitle').textContent=titles[v]||v;
   const ab=document.getElementById('addBtn');
   if(v==='engagements')v=V='workstreams';
@@ -1565,7 +1550,7 @@ function render(){
   const c=document.getElementById('content');
   ({dashboard:rDash,workstreams:rWork,
     tasks:rTasks,extract:rExtract,mywork:rMyWork,people:rPeople,report:rReport,ask:rAsk,
-    decisions:rDecisions,risks:rRisks,ado:rAdo,aiinsights:rAIInsights})[V]?.(c);
+    decisions:rDecisions,risks:rRisks,governance:rGovernance,ado:rAdo,aiinsights:rAIInsights})[V]?.(c);
   badges();autoUpdateMilestones();
 }
 
@@ -1785,6 +1770,12 @@ function rDash(c){
   const myWsCount=ME?(D.workstreams||[]).filter(w=>{const o=w.owner||WS_DEFS.find(d=>d.id===w.id)?.owner||'';return o===ME}).length:0;
 
   c.innerHTML=`
+  <div style="display:flex;gap:10px;margin-bottom:18px;padding:8px 12px;background:var(--bg-card);border-radius:var(--r-md);border:1px solid var(--border-lt)">
+    <div class="pill${dashTab==='overview'?' pill-i':' pill-m'}" onclick="dashTab='overview';render()" style="cursor:pointer">Program Overview</div>
+    <div class="pill${dashTab==='mywork'?' pill-i':' pill-m'}" onclick="dashTab='mywork';render()" style="cursor:pointer">My Work${ME&&myOpenTasks.length?' <span class=\"badge hot\" style=\"margin-left:4px;font-size:10px\">'+myOpenTasks.length+'</span>':''}</div>
+    <div class="pill${dashTab==='people'?' pill-i':' pill-m'}" onclick="dashTab='people';render()" style="cursor:pointer">Team</div>
+  </div>
+  ${dashTab==='mywork'?renderMyWorkSection():dashTab==='people'?renderPeopleSection():renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,allPriorities,prioritiesDone,myOpenTasks,myWsCount)}`;
   <div class="kpi-row">
     <div class="card kpi" style="cursor:pointer" onclick="taskStatusFilter='all';taskFilter='priorities';go('tasks')"><div class="acc" style="background:#1e3a8a"></div><div class="lbl">Priority Initiatives</div><div class="val" style="color:#1e3a8a">${allPriorities.length}</div><div class="note">${prioritiesDone.length} complete &middot; ${allPriorities.length-prioritiesDone.length} active</div></div>
     <div class="card kpi" style="cursor:pointer" onclick="go('workstreams')"><div class="acc" style="background:var(--violet)"></div><div class="lbl">Workstreams</div><div class="val" style="color:var(--violet)">${activeWs.length}<span style="font-size:18px;color:var(--light);font-weight:500">/${allWs.length}</span></div><div class="note">${atRiskWs.length?'<span style="color:var(--red);font-weight:600">'+atRiskWs.length+' need attention</span>':'<span style="color:var(--green)">All on track</span>'}${completeWs.length?' &middot; '+completeWs.length+' complete':''}</div></div>
@@ -1809,7 +1800,52 @@ function rDash(c){
   </div>`;
 }
 
-function rMyWork(c){
+function renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,allPriorities,prioritiesDone,myOpenTasks,myWsCount){
+  return `
+  <div class="kpi-row">
+    <div class="card kpi" style="cursor:pointer" onclick="taskStatusFilter='open';taskFilter='priorities';go('tasks')"><div class="acc" style="background:#1e3a8a"></div><div class="lbl">Priority Initiatives</div><div class="val" style="color:#1e3a8a">${allPriorities.length}</div><div class="note">${prioritiesDone.length} complete &middot; ${allPriorities.length-prioritiesDone.length} active</div></div>
+    <div class="card kpi" style="cursor:pointer" onclick="go('workstreams')"><div class="acc" style="background:var(--violet)"></div><div class="lbl">Workstreams</div><div class="val" style="color:var(--violet)">${activeWs.length}<span style="font-size:18px;color:var(--light);font-weight:500">/${allWs.length}</span></div><div class="note">${atRiskWs.length?'<span style="color:var(--red);font-weight:600">'+atRiskWs.length+' need attention</span>':'<span style="color:var(--green)">All on track</span>'}${completeWs.length?' &middot; '+completeWs.length+' complete':''}</div></div>
+    <div class="card kpi" style="cursor:pointer" onclick="taskStatusFilter='open';taskFilter='all';go('tasks')"><div class="acc" style="background:var(--indigo)"></div><div class="lbl">Open Action Items</div><div class="val" style="color:var(--indigo)">${open.length}</div><div class="note">${overdue.length?'<span style="color:var(--red);font-weight:600">'+overdue.length+' overdue</span>':'<span style="color:var(--green)">All on track</span>'}${dueThisWeek.length?' &middot; <span style="color:var(--indigo);font-weight:600">'+dueThisWeek.length+' due this week</span>':''}</div></div>
+    <div class="card kpi" style="cursor:pointer" onclick="taskStatusFilter='open';taskFilter='milestones';go('tasks')"><div class="acc" style="background:var(--teal)"></div><div class="lbl">Milestones</div><div class="val" style="color:var(--teal)">${msDone.length}<span style="font-size:18px;color:var(--light);font-weight:500">/${allMs.length}</span></div><div class="note">${msOD.length?'<span style="color:var(--red);font-weight:600">'+msOD.length+' overdue</span>':msUp.length+' upcoming'}</div></div>
+    <div class="card kpi" style="cursor:pointer" onclick="dashTab='mywork';render()"><div class="acc" style="background:#ec4899"></div><div class="lbl">My Work Items</div><div class="val" style="color:#ec4899">${myOpenTasks.length}</div><div class="note">${ME?myWsCount+' workstream'+(myWsCount!==1?'s':''):'<span style="color:var(--muted)">Sign in to see</span>'}</div></div>
+  </div>
+
+  ${overdue.length||atRiskWs.length?`<div class="card" style="margin-bottom:20px;padding:18px 20px;background:var(--red-lt);border:1px solid var(--red)">
+    <h3 style="font-size:15px;font-weight:700;margin:0 0 10px;color:var(--red);display:flex;align-items:center;gap:8px">&#9888; Needs Attention</h3>
+    ${overdue.length?`<div style="margin-bottom:${atRiskWs.length?'12':'0'}px"><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">${overdue.length} Overdue Action Item${overdue.length!==1?'s':''}</div>
+      ${overdue.slice(0,3).map(t=>`<div style="padding:6px 10px;background:var(--bg-card);border-radius:var(--r-xs);margin-bottom:4px;cursor:pointer;display:flex;align-items:center;gap:8px" onclick="openTaskModal('${t.id}')">
+        <span style="font-size:11px;color:var(--red);font-weight:600">${fmtDate(t.due)}</span>
+        <span style="flex:1;font-size:13px">${t.isMilestone?'&#9733; ':''}${t.isPriority?'&#9670; ':''}${esc(t.title)}</span>
+        <span style="font-size:11px;color:var(--muted)">${esc(t.owner||'Unassigned')}</span>
+      </div>`).join('')}
+      ${overdue.length>3?`<div style="font-size:11px;color:var(--muted);padding:4px 10px;cursor:pointer" onclick="taskStatusFilter='open';taskFilter='overdue';go('tasks')">+ ${overdue.length-3} more &rarr;</div>`:''}
+    </div>`:''}
+    ${atRiskWs.length?`<div><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">${atRiskWs.length} Workstream${atRiskWs.length!==1?'s':''} Need Attention</div>
+      ${atRiskWs.slice(0,3).map(w=>`<div style="padding:6px 10px;background:var(--bg-card);border-radius:var(--r-xs);margin-bottom:4px;cursor:pointer;display:flex;align-items:center;gap:8px" onclick="openWsDetail('${w.id}')">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${w.color||'var(--muted)'}"></span>
+        <span style="flex:1;font-size:13px">${esc(w.name)}</span>
+        <span class="pill pill-r" style="font-size:10px">${wsStatusLabel(w.status)}</span>
+      </div>`).join('')}
+      ${atRiskWs.length>3?`<div style="font-size:11px;color:var(--muted);padding:4px 10px;cursor:pointer" onclick="go('workstreams')">+ ${atRiskWs.length-3} more &rarr;</div>`:''}
+    </div>`:''}
+  </div>`:''}
+
+  <div class="ws-section" id="dashSec-timeline" style="margin-bottom:16px">
+    <div class="ws-section-hd" onclick="toggleWsSection('dashSec-timeline')" style="background:var(--bg-card);padding:14px 18px;border-radius:var(--r-sm) var(--r-sm) 0 0;border:1px solid var(--border)"><h4 style="font-size:16px;font-weight:800;color:var(--text)">Program Timeline</h4><span class="ws-section-arrow">&#9660;</span></div>
+    <div class="ws-section-bd" style="padding:10px 14px;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r-sm) var(--r-sm)">
+      ${buildGantt()}
+    </div>
+  </div>
+
+  <div class="ws-section collapsed" id="dashSec-log" style="margin-top:16px">
+    <div class="ws-section-hd" onclick="toggleWsSection('dashSec-log')"><h4>Activity Log</h4><span class="ws-section-arrow">&#9660;</span></div>
+    <div class="ws-section-bd" style="padding:10px 14px">
+      <div style="max-height:180px;overflow-y:auto">${(D.log||[]).slice(0,20).map(l=>`<div style="padding:4px 0;font-size:11.5px;border-bottom:1px solid var(--border-lt);display:flex;gap:8px"><span style="color:var(--light);flex-shrink:0;font-size:10px;min-width:60px">${new Date(l.ts).toLocaleDateString()}</span><span>${l.text}</span></div>`).join('')}</div>
+    </div>
+  </div>`;
+}
+
+function renderMyWorkSection(){
   const myWs=(D.workstreams||[]).filter(w=>{
     const owner=w.owner||WS_DEFS.find(d=>d.id===w.id)?.owner||'';
     return owner===ME;
@@ -1824,12 +1860,11 @@ function rMyWork(c){
   const doneTasks=myTasks.filter(t=>t.status==='done');
 
   if(!ME){
-    c.innerHTML=`<div class="card" style="padding:32px;text-align:center">
+    return `<div class="card" style="padding:32px;text-align:center">
       <h3 style="margin-bottom:12px;font-size:18px">My Work Items</h3>
       <p style="color:var(--muted);margin-bottom:20px">Sign in to see workstreams and action items assigned to you.</p>
       <button class="mbtn mb-save" onclick="changeName()">Sign in</button>
     </div>`;
-    return;
   }
 
   const wsTile=(w)=>{
@@ -1854,7 +1889,7 @@ function rMyWork(c){
     const rowBg=isOD?'background:var(--red-lt)':'';
     return `<tr onclick="openTaskModal('${t.id}')" style="cursor:pointer;${rowBg}">
       <td style="vertical-align:middle;width:28px" onclick="event.stopPropagation()"><div class="task-chk${t.status==='done'?' done':''}" onclick="toggleTask('${t.id}')">&#10003;</div></td>
-      <td style="${t.status==='done'?'text-decoration:line-through;color:var(--muted)':''}">${t.isMilestone?'<span style="color:#f59e0b">&#9733;</span> ':''}${esc(t.title)}</td>
+      <td style="${t.status==='done'?'text-decoration:line-through;color:var(--muted)':''}">${t.isMilestone?'<span style="color:#f59e0b">&#9733;</span> ':''}${t.isPriority?'<span style="color:#8b5cf6">&#9670;</span> ':''}${esc(t.title)}</td>
       <td style="font-size:12px;color:var(--muted)">${wsName(t.workstream)}</td>
       <td style="font-size:12px;color:var(--muted)">${t.due?fmtDate(t.due):'—'}</td>
       <td><span class="pill ${taskStatusPill(t.status)}" style="font-size:10px">${taskStatusLabel(t.status)}</span></td>
@@ -1862,23 +1897,18 @@ function rMyWork(c){
     </tr>`;
   };
 
-  c.innerHTML=`
-  <div class="card" style="margin-bottom:20px;padding:20px">
-    <h2 style="margin:0 0 4px;font-size:20px;font-weight:800">My Work Items</h2>
-    <p style="color:var(--muted);font-size:14px;margin:0">Signed in as <strong>${esc(ME)}</strong></p>
-  </div>
-
+  return `
   <div class="card" style="margin-bottom:20px;padding:18px 20px">
     <h3 style="font-size:15px;font-weight:700;margin:0 0 12px">Workstreams you own</h3>
     ${myWs.length
       ?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">${myWs.map(wsTile).join('')}</div>`
-      :'<p style="color:var(--muted);font-size:13px;margin:0">No workstreams assigned to you. Workstream owners are set in Workstreams &rarr; edit a workstream.</p>'}
+      :'<p style="color:var(--muted);font-size:13px;margin:0">No workstreams assigned to you.</p>'}
   </div>
 
   <div class="card" style="margin-bottom:20px;padding:18px 20px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div>
-        <h3 style="font-size:15px;font-weight:700;margin:0">Action items assigned to you</h3>
+        <h3 style="font-size:15px;font-weight:700;margin:0">Your action items</h3>
         <p style="color:var(--muted);font-size:13px;margin:4px 0 0">${openTasks.length} open, ${doneTasks.length} done</p>
       </div>
       <div style="display:flex;align-items:center;gap:2px">
@@ -1892,8 +1922,35 @@ function rMyWork(c){
     </div>
     ${myTasks.length
       ?(myWorkViewMode==='kanban'?renderMyWorkKanban(myTasks):`<table class="tbl" style="width:100%"><thead><tr><th style="width:28px"></th><th>Action Item</th><th style="width:18%">Workstream</th><th style="width:12%">Target</th><th style="width:80px">Status</th><th style="width:80px">Updated</th></tr></thead><tbody>${myTasks.map(taskRow).join('')}</tbody></table>`)
-      :'<p style="color:var(--muted);font-size:13px;margin:0">No action items assigned to you. Set yourself as Owner on an action item in Action Items.</p>'}
+      :'<p style="color:var(--muted);font-size:13px;margin:0">No action items assigned to you.</p>'}
   </div>`;
+}
+
+function renderPeopleSection(){
+  const ppl=(D.people||[]).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  return `
+  <div class="card" style="margin-bottom:20px;padding:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <h2 style="margin:0 0 4px;font-size:20px;font-weight:800">Team Directory</h2>
+        <p style="color:var(--muted);font-size:14px;margin:0">${ppl.length} people in the program</p>
+      </div>
+      <button class="tb-btn" onclick="openPersonModal()">+ Add Person</button>
+    </div>
+  </div>
+  ${ppl.length?`<div class="card" style="padding:18px 20px"><table class="tbl" style="width:100%"><thead><tr><th>Name</th><th>Role</th><th>Group</th><th>Contact</th><th style="width:60px"></th></tr></thead><tbody>${ppl.map(p=>`<tr onclick="openPersonModal('${p.id}')" style="cursor:pointer">
+    <td style="font-weight:600">${esc(p.name)}</td>
+    <td style="font-size:12.5px;color:var(--muted)">${esc(p.role||'—')}</td>
+    <td style="font-size:12.5px;color:var(--muted)">${esc(p.group||'—')}</td>
+    <td style="font-size:12px;color:var(--muted)">${p.email?'<a href="mailto:'+esc(p.email)+'" onclick="event.stopPropagation()" style="color:var(--accent)">'+esc(p.email)+'</a>':'—'}</td>
+    <td><button class="pill pill-m" style="font-size:10px;cursor:pointer;border:none" onclick="event.stopPropagation();openPersonModal('${p.id}')">Edit</button></td>
+  </tr>`).join('')}</tbody></table></div>`:'<div class="empty"><h4>No people yet</h4><p><button class="mbtn mb-save" onclick="openPersonModal()">Add your first team member</button></p></div>'}`;
+}
+
+function rMyWork(c){
+  dashTab='mywork';
+  V='dashboard';
+  rDash(c);
 }
 
 function renderMyWorkKanban(myTasks){
@@ -2354,6 +2411,7 @@ function rWork(c){
 
 function openWsEdit(id){
   const w=id?(D.workstreams||[]).find(x=>x.id===id):null;
+  const defaultOwner=w?w.owner:(ME||'');
   const colors=[
     '#6366f1','#8b5cf6','#7c3aed','#a855f7','#d946ef','#ec4899',
     '#2563eb','#0ea5e9','#06b6d4','#0891b2','#0d9488','#14b8a6',
@@ -2377,9 +2435,9 @@ function openWsEdit(id){
     <div class="ws-section" id="wsSec-basics">
       <div class="ws-section-hd" onclick="toggleWsSection('wsSec-basics')"><h4>Basics</h4><span class="ws-section-arrow">&#9660;</span></div>
       <div class="ws-section-bd">
-        <div class="fg"><label>Name</label><input id="ws-name" value="${w?esc(w.name):''}"></div>
+        <div class="fg"><label>Name</label><input id="ws-name" value="${w?esc(w.name):''}" placeholder="Brief, descriptive name"></div>
         <div class="fg-row">
-          <div class="fg"><label>Lead</label><select id="ws-owner">${peopleOpts(w?.owner||'')}</select></div>
+          <div class="fg"><label>Lead</label><select id="ws-owner">${peopleOpts(defaultOwner)}</select></div>
           <div class="fg"><label>Category</label><select id="ws-cat" onchange="var r=document.getElementById('ws-cctype-wrap');if(r)r.style.display=this.value==='Cross-cutting'?'':'none'"><option value="BU"${w?.category==='BU'?' selected':''}>Business Unit</option><option value="Cross-cutting"${(!w||w?.category==='Cross-cutting')?' selected':''}>Crosscutting</option></select></div>
         </div>
         <div class="fg" id="ws-cctype-wrap" style="display:${w?.category==='Cross-cutting'?'':'none'}"><label>Subcategory</label><select id="ws-ccType"><option value="horizontal"${w?.ccType==='horizontal'?' selected':''}>Horizontal (AI for the Employee)</option><option value="platform"${w?.ccType!=='horizontal'?' selected':''}>Platform (Supporting Infrastructure)</option></select></div>
@@ -2397,19 +2455,18 @@ function openWsEdit(id){
           <div class="fg"><label>Color</label><select id="ws-color">${colors.map(cl=>`<option value="${cl}"${(w?.color||'#6366f1')===cl?' selected':''} style="background:${cl};color:#fff">${cl}</option>`).join('')}</select></div>
         </div>
         <div class="fg"><label>Parent Workstream</label><select id="ws-parentWs"><option value="">— None (top-level) —</option>${(D.workstreams||[]).filter(p=>p.id!==(w?.id||'')&&!p.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(p=>`<option value="${p.id}"${w?.parentWs===p.id?' selected':''}>${esc(p.name)}</option>`).join('')}</select></div>
-        <div class="fg"><label>Description</label><textarea id="ws-desc" style="min-height:50px">${w?esc(w.desc):''}</textarea></div>
+        <div class="fg"><label>Description</label><textarea id="ws-desc" style="min-height:60px">${w?esc(w.desc):''}</textarea></div>
         <div class="fg">
           <label style="display:flex;align-items:center;justify-content:space-between;gap:10px">
             <span>Business outcome / impact</span>
-            ${w&&OPENAI_KEY?`<button type="button" class="pill pill-i" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="aiSuggestWorkstreamBusinessOutcome('${esc(w.id)}')">&#10024; Suggest with AI</button>`:''}
+            ${w&&OPENAI_KEY?`<button type="button" class="pill pill-i" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="aiSuggestWorkstreamBusinessOutcome('${esc(w.id)}')">&#10024; AI Suggest</button>`:''}
           </label>
-          <textarea id="ws-businessOutcome" style="min-height:44px;font-size:12px" placeholder="1-2 sentences for executive outcomes report (e.g. Reduced manual effort by X%; Enabled Y capability for Z team).">${w?esc(w.businessOutcome||''):''}</textarea>
+          <textarea id="ws-businessOutcome" style="min-height:60px;font-size:12px" placeholder="1-2 sentences describing business impact (e.g. Reduced manual effort by X%; Enabled Y capability)">${w?esc(w.businessOutcome||''):''}</textarea>
         </div>
-        <div class="fg"><label>Notes / Status Update</label><textarea id="ws-notes" style="min-height:50px">${w?esc(w.notes||''):''}</textarea></div>
       </div>
     </div>
     <div class="ws-section collapsed" id="wsSec-timeline">
-      <div class="ws-section-hd" onclick="toggleWsSection('wsSec-timeline')"><h4>Timeline</h4><span class="ws-section-arrow">&#9660;</span></div>
+      <div class="ws-section-hd" onclick="toggleWsSection('wsSec-timeline')"><h4>Timeline & Dates</h4><span class="ws-section-arrow">&#9660;</span></div>
       <div class="ws-section-bd">
         <div class="fg-row">
           <div class="fg"><label>Target start</label><input type="date" id="ws-targetStart" value="${w?.targetStart||''}"></div>
@@ -2419,17 +2476,12 @@ function openWsEdit(id){
       </div>
     </div>
     <div class="ws-section collapsed" id="wsSec-details">
-      <div class="ws-section-hd" onclick="toggleWsSection('wsSec-details')"><h4>Details</h4><span class="ws-section-arrow">&#9660;</span></div>
+      <div class="ws-section-hd" onclick="toggleWsSection('wsSec-details')"><h4>Documents & Linked Items</h4><span class="ws-section-arrow">&#9660;</span></div>
       <div class="ws-section-bd">
         <div class="fg"><label>Documents</label>
           <div id="ws-links-list">${(w?.links||[]).map((l,i)=>`<div style="display:flex;gap:4px;margin-bottom:4px;align-items:center"><input class="ws-link-label" value="${esc(l.label)}" placeholder="Label" style="flex:1;max-width:140px"><input class="ws-link-url" value="${esc(l.url)}" placeholder="https://..." style="flex:2"><button type="button" style="color:var(--red);font-size:13px;background:none;border:none;cursor:pointer;padding:0 4px" onclick="this.parentElement.remove()">&#10005;</button></div>`).join('')}</div>
           <button type="button" style="font-size:12px;color:var(--indigo);background:none;border:none;cursor:pointer;padding:2px 0" onclick="addWsLink()">+ Add link</button>
         </div>
-        ${w?`<div style="display:flex;gap:8px;margin:12px 0;flex-wrap:wrap">
-          <button type="button" class="pill pill-m" style="cursor:pointer;border:none;font-size:12px;padding:6px 14px" onclick="wsQuickAdd('task','${esc(w.id)}')">+ Action Item</button>
-          <button type="button" class="pill pill-m" style="cursor:pointer;border:none;font-size:12px;padding:6px 14px" onclick="wsQuickAdd('risk','${esc(w.id)}')">+ Risk</button>
-          <button type="button" class="pill pill-m" style="cursor:pointer;border:none;font-size:12px;padding:6px 14px" onclick="wsQuickAdd('decision','${esc(w.id)}')">+ Decision</button>
-        </div>`:''}
         ${w?wsLinkedItems(w.id):''}
       </div>
     </div>
@@ -2595,10 +2647,7 @@ function saveWs(id){
   w.color=document.getElementById('ws-color').value;
   w.parentWs=(document.getElementById('ws-parentWs')?.value||'');
   w.desc=document.getElementById('ws-desc').value.trim();
-  w.recentAccomplishments=(document.getElementById('ws-recent')?.value||'').trim();
-  w.whatsNext=(document.getElementById('ws-whatsnext')?.value||'').trim();
   w.businessOutcome=(document.getElementById('ws-businessOutcome')?.value||'').trim();
-  w.notes=document.getElementById('ws-notes').value;
   w.targetStart=(document.getElementById('ws-targetStart')?.value||'').trim();
   w.targetEnd=(document.getElementById('ws-targetEnd')?.value||'').trim();
   w.stakeholders=[...document.querySelectorAll('.ws-sth-cb')].filter(cb=>cb.checked).map(cb=>cb.value);
@@ -2762,21 +2811,12 @@ function rTasks(c){
   <div class="page-toolbar">
     <span class="page-title">Action Items</span>
     <div class="pill-filters">
-      <div class="pill${taskStatusFilter==='all'?' pill-i':' pill-m'}" onclick="taskStatusFilter='all';render()">All (${D.tasks.length})</div>
-      <div class="pill${taskStatusFilter==='open'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';render()">Active (${open})</div>
-      <div class="pill${taskStatusFilter==='done'?' pill-i':' pill-m'}" onclick="taskStatusFilter='done';render()">Done (${done})</div>
-    </div>
-    <div class="pill-filters" style="margin-left:12px;padding-left:12px;border-left:1px solid var(--border-lt)">
-      <div class="pill${taskFilter==='all'?' pill-i':' pill-m'}" onclick="taskFilter='all';render()">All Items</div>
-      <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
-      <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
-      <div class="pill${taskFilter==='priorities'?' pill-i':' pill-m'}" onclick="taskFilter='priorities';render()">&#9670; Priorities (${priorityCount})</div>
-      <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;padding-left:14px;margin-left:6px;border-left:1px solid var(--border-lt)">
-      <span style="font-size:12px;color:var(--muted);font-weight:500">Groups</span>
-      <button type="button" class="mbtn" style="font-size:12px;padding:5px 10px;background:var(--bg-subtle);border:1px solid var(--border);color:var(--text)" onclick="taskExpandAll();render()">Expand all</button>
-      <button type="button" class="mbtn" style="font-size:12px;padding:5px 10px;background:var(--bg-subtle);border:1px solid var(--border);color:var(--text)" onclick="taskCollapseAll();render()">Collapse all</button>
+      <div class="pill${taskFilter==='all'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='all';render()">Open (${open})</div>
+      <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
+      <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
+      <div class="pill${taskFilter==='priorities'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='priorities';render()">&#9670; Priorities (${priorityCount})</div>
+      <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
+      <div class="pill${taskStatusFilter==='done'?' pill-i':' pill-m'}" onclick="taskStatusFilter='done';taskFilter='all';render()" style="margin-left:auto">Done (${done})</div>
     </div>
     <div class="pill-actions">
       <select onchange="taskOwnerFilter=this.value;render()">
@@ -2795,7 +2835,7 @@ function rTasks(c){
     </div>
   </div>
   ${(()=>{
-    if(!items.length)return '<div class="empty"><h4>No action items match</h4><p>Try a different filter or add an action item</p></div></div>';
+    if(!items.length)return '<div class="empty"><h4>No action items match</h4><p>Try a different filter or <button class="mbtn mb-save" style="display:inline-flex;margin-left:4px" onclick="openTaskModal()">Add an action item</button></p></div></div>';
     const wsGroups={};const unlinked=[];
     items.forEach(t=>{
       if(t.workstream){if(!wsGroups[t.workstream])wsGroups[t.workstream]=[];wsGroups[t.workstream].push(t)}
@@ -2858,12 +2898,14 @@ function sortTasks(col){if(taskSort===col)taskSortDir*=-1;else{taskSort=col;task
 
 function openTaskModal(id){
   const t=id?D.tasks.find(x=>x.id===id):null;
+  const defaultOwner=t?t.owner:(ME||'');
+  const defaultStatus=t?t.status:'open';
   openModal(`<div class="m-hd"><h3>${t?'Edit':'New'} Action Item</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
     <div style="padding:10px 14px;margin-bottom:12px;border-radius:var(--r-sm);background:#eff6ff;border:1px solid #3b82f6;font-size:12.5px;color:#1e40af">
       <strong style="color:#1d4ed8">&#128193; Need to upload documents?</strong> Visit the <a href="https://digitalrealtyeur.sharepoint.com/sites/AITransformationProgram/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FAITransformationProgram%2FShared%20Documents%2FGeneral&viewid=be024a85%2D931b%2D4a01%2Dacac%2D217f020d89c0" target="_blank" style="color:#2563eb;text-decoration:underline;font-weight:600">AI Transformation Program SharePoint folder</a>
     </div>
-    <div class="fg"><label>Title</label><input id="t-title" value="${t?esc(t.title):''}"></div>
+    <div class="fg"><label>Title</label><input id="t-title" value="${t?esc(t.title):''}" placeholder="Brief, clear description of the action item"></div>
     <div style="padding:10px 14px;margin:8px 0 12px;border-radius:var(--r-sm);background:${t?.isMilestone?'rgba(245,158,11,.12)':'var(--bg-subtle)'};border:1px solid ${t?.isMilestone?'#f59e0b':'var(--border)'}">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px" onclick="const cb=document.getElementById('t-milestone');cb.checked=!cb.checked;const box=this.parentElement;if(cb.checked){box.style.background='rgba(245,158,11,.12)';box.style.borderColor='#f59e0b'}else{box.style.background='var(--bg-subtle)';box.style.borderColor='var(--border)'}">
         <input type="checkbox" id="t-milestone" ${t?.isMilestone?'checked':''} style="accent-color:#f59e0b;width:18px;height:18px" onclick="event.stopPropagation();const box=this.closest('div');if(this.checked){box.style.background='rgba(245,158,11,.12)';box.style.borderColor='#f59e0b'}else{box.style.background='var(--bg-subtle)';box.style.borderColor='var(--border)'}">
@@ -2881,19 +2923,15 @@ function openTaskModal(id){
       </label>
     </div>
     <div class="fg-row">
-      <div class="fg"><label>Owner</label><select id="t-owner">${peopleOpts(t?.owner||'')}</select></div>
+      <div class="fg"><label>Owner</label><select id="t-owner">${peopleOpts(defaultOwner)}</select></div>
       <div class="fg"><label>Workstream</label><select id="t-ws"><option value="">— None —</option>${wsOpts(t?.workstream)}</select></div>
     </div>
     ${(()=>{if(!t?.workstream)return '';const pw=(D.workstreams||[]).find(x=>x.id===t.workstream);if(!pw)return '';return '<div style="font-size:12.5px;color:var(--muted);margin:-4px 0 10px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(pw.color||'var(--muted)')+'"></span><a href="#" onclick="event.preventDefault();closeModal();setTimeout(()=>openWsDetail(\''+pw.id+'\'),200)" style="color:var(--accent);text-decoration:none;font-weight:500">'+esc(pw.name)+'</a></div>'})()}
     <div class="fg-row">
-      <div class="fg"><label>Start Date</label><input type="date" id="t-start" value="${t?.startDate||''}"></div>
       <div class="fg"><label>Target Date</label><input type="date" id="t-due" value="${t?t.due:''}"></div>
+      <div class="fg"><label>Status</label><select id="t-status"><option value="not-started"${(!t||t.status==='not-started'||!t.status)?' selected':''}>Not Started</option><option value="open"${defaultStatus==='open'?' selected':''}>Open</option><option value="blocked"${t?.status==='blocked'?' selected':''}>Blocked / Waiting</option><option value="done"${t?.status==='done'?' selected':''}>Done</option></select></div>
     </div>
-    <div class="fg-row">
-      <div class="fg"><label>Priority</label><select id="t-pri"><option value="high"${t?.priority==='high'?' selected':''}>High</option><option value="medium"${(!t||t.priority==='medium')?' selected':''}>Medium</option><option value="low"${t?.priority==='low'?' selected':''}>Low</option></select></div>
-      <div class="fg"><label>Status</label><select id="t-status"><option value="not-started"${(!t||t.status==='not-started'||!t.status)?' selected':''}>Not Started</option><option value="open"${t?.status==='open'?' selected':''}>Open</option><option value="blocked"${t?.status==='blocked'?' selected':''}>Blocked / Waiting</option><option value="done"${t?.status==='done'?' selected':''}>Done</option></select></div>
-    </div>
-    <div class="fg"><label>Notes</label><textarea id="t-notes" style="min-height:120px;resize:vertical">${t?esc(t.notes):''}</textarea></div>
+    <div class="fg"><label>Notes</label><textarea id="t-notes" style="min-height:90px;resize:vertical" placeholder="Optional details, context, or next steps">${t?esc(t.notes):''}</textarea></div>
     ${t?`<div class="fg" style="margin-top:4px">
       <label style="display:flex;align-items:center;justify-content:space-between">Discussion <span style="font-size:11px;color:var(--light);font-weight:400">${(t.comments||[]).length} comment${(t.comments||[]).length!==1?'s':''}</span></label>
       <div class="comment-thread" id="t-comments">
@@ -2922,11 +2960,9 @@ function saveTask(id){
   if(!title){toast('Title is required');return}
   let t=id?D.tasks.find(x=>x.id===id):null;
   const isNew=!t;
-  if(!t){t={id:uid(),created:today(),source:'',addedBy:ME};if(!D.tasks)D.tasks=[];D.tasks.push(t)}
+  if(!t){t={id:uid(),created:today(),source:'',addedBy:ME,priority:'medium',startDate:''};if(!D.tasks)D.tasks=[];D.tasks.push(t)}
   t.title=title;t.owner=document.getElementById('t-owner').value.trim();
-  t.startDate=document.getElementById('t-start').value;
   t.due=document.getElementById('t-due').value;
-  t.priority=document.getElementById('t-pri').value;
   t.status=document.getElementById('t-status').value;
   t.isMilestone=document.getElementById('t-milestone').checked;
   t.isPriority=document.getElementById('t-priority-flag').checked;
@@ -3072,15 +3108,11 @@ function rTasksInbox(c){
   <div class="page-toolbar">
     <span class="page-title">Action Items</span>
     <div class="pill-filters">
-      <div class="pill pill-m" onclick="taskStatusFilter='all';taskFilter='all';render()">All (${D.tasks.length})</div>
-      <div class="pill pill-m" onclick="taskStatusFilter='open';taskFilter='all';render()">Active (${open})</div>
-      <div class="pill pill-m" onclick="taskStatusFilter='done';taskFilter='all';render()">Done (${done})</div>
-    </div>
-    <div class="pill-filters" style="margin-left:12px;padding-left:12px;border-left:1px solid var(--border-lt)">
-      <div class="pill pill-m" onclick="taskFilter='all';render()">All Items</div>
-      <div class="pill pill-m" onclick="taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
-      <div class="pill pill-m" onclick="taskFilter='priorities';render()">&#9670; Priorities (${priorityCount})</div>
+      <div class="pill pill-m" onclick="taskStatusFilter='open';taskFilter='all';render()">Open (${open})</div>
+      <div class="pill pill-m" onclick="taskStatusFilter='open';taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
+      <div class="pill pill-m" onclick="taskStatusFilter='open';taskFilter='priorities';render()">&#9670; Priorities (${priorityCount})</div>
       <div class="pill pill-i" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
+      <div class="pill pill-m" onclick="taskStatusFilter='done';taskFilter='all';render()" style="margin-left:auto">Done (${done})</div>
     </div>
   </div>
   <div class="card" style="margin-bottom:20px;padding:24px">
@@ -3222,16 +3254,12 @@ function rKanban(c){
   <div class="page-toolbar">
     <span class="page-title">Action Items</span>
     <div class="pill-filters">
-      <div class="pill${taskStatusFilter==='all'?' pill-i':' pill-m'}" onclick="taskStatusFilter='all';render()">All (${D.tasks.length})</div>
-      <div class="pill${taskStatusFilter==='open'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';render()">Active (${open})</div>
-      <div class="pill${taskStatusFilter==='done'?' pill-i':' pill-m'}" onclick="taskStatusFilter='done';render()">Done (${done})</div>
-    </div>
-    <div class="pill-filters" style="margin-left:12px;padding-left:12px;border-left:1px solid var(--border-lt)">
-      <div class="pill${taskFilter==='all'?' pill-i':' pill-m'}" onclick="taskFilter='all';render()">All Items</div>
-      <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
-      <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
-      <div class="pill${taskFilter==='priorities'?' pill-i':' pill-m'}" onclick="taskFilter='priorities';render()">&#9670; Priorities (${priorityCount})</div>
-      <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
+      <div class="pill${taskFilter==='all'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='all';render()">Open (${open})</div>
+      <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
+      <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
+      <div class="pill${taskFilter==='priorities'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='priorities';render()">&#9670; Priorities (${priorityCount})</div>
+      <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
+      <div class="pill${taskStatusFilter==='done'?' pill-i':' pill-m'}" onclick="taskStatusFilter='done';taskFilter='all';render()" style="margin-left:auto">Done (${done})</div>
     </div>
     <div class="pill-actions">
       <select onchange="taskWsFilter=this.value;render()" style="margin-right:8px">
@@ -3481,33 +3509,9 @@ function getPplGroups(){const fromData=(D.groups||[]).slice();const fromPeople=[
 let pplFilter='all';
 
 function rPeople(c){
-  const q=(document.getElementById('search').value||'').toLowerCase();
-  let items=(D.people||[]).slice();
-  if(pplFilter!=='all')items=items.filter(p=>p.group===pplFilter);
-  if(q)items=items.filter(p=>(p.name+' '+p.role+' '+(p.notes||'')+' '+(p.group||'')).toLowerCase().includes(q));
-  items.sort((a,b)=>a.name.localeCompare(b.name));
-
-  const pplGroups=getPplGroups();
-  const groupCounts={};(D.people||[]).forEach(p=>{if(p.group)groupCounts[p.group]=(groupCounts[p.group]||0)+1});
-
-  c.innerHTML=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:16px;flex-wrap:wrap">
-    <div class="pill${pplFilter==='all'?' pill-i':' pill-m'}" style="cursor:pointer" onclick="pplFilter='all';render()">All (${(D.people||[]).length})</div>
-    ${pplGroups.map(g=>'<div class="pill'+(pplFilter===g?' pill-i':' pill-m')+'" style="cursor:pointer" onclick="pplFilter=\''+esc(g)+'\';render()">'+esc(g)+(groupCounts[g]?' ('+groupCounts[g]+')':'')+'</div>').join('')}
-    <button class="tb-btn" style="margin-left:auto;font-size:12px;padding:4px 10px" onclick="openManageGroupsModal()">Manage groups</button>
-  </div>
-  ${items.length?`<div class="card"><table class="tbl">
-    <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Group</th><th>Contact</th><th style="width:40px"></th></tr></thead>
-    <tbody>${items.map(p=>{
-      const initials=p.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-      return `<tr onclick="openPersonModal('${p.id}')">
-        <td style="font-weight:600"><div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:var(--ai-glow);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">${initials}</div>${esc(p.name)}</div></td>
-        <td style="font-size:13px;color:var(--muted)">${p.username?esc(p.username)+(p.pinHash?' <span style="color:var(--green);font-size:10px" title="Account active">&#9679;</span>':''):'<span style="color:var(--light)">—</span>'}</td>
-        <td>${esc(p.role)}</td>
-        <td><span class="pill pill-m">${esc(p.group||'')}</span></td>
-        <td style="font-size:13px">${p.email?'<a href="mailto:'+esc(p.email)+'" onclick="event.stopPropagation()" style="color:var(--accent)">'+esc(p.email)+'</a>':'—'}</td>
-        <td onclick="event.stopPropagation()"><button style="color:var(--red);font-size:12px" onclick="delPerson('${p.id}')">&#10005;</button></td>
-      </tr>`}).join('')}</tbody></table></div>`:
-    '<div class="empty"><h4>No people match</h4><p>Add team members and stakeholders</p></div>'}`;
+  dashTab='people';
+  V='dashboard';
+  rDash(c);
 }
 
 function openPersonModal(id){
@@ -3686,62 +3690,50 @@ function rAsk(c){go('aiinsights');return}
 let aiInsightsTab='analyze';
 function rAIInsights(c){
   const hasKey=!!OPENAI_KEY;
-  const tab=aiInsightsTab;
-  const tBtn=(id,label,icon)=>`<button type="button" onclick="aiInsightsTab='${id}';render()" style="flex:1;padding:14px 20px;font-size:14px;font-weight:700;border:none;cursor:pointer;border-bottom:3px solid ${tab===id?'var(--accent)':'transparent'};background:${tab===id?'rgba(99,102,241,.12)':'transparent'};color:${tab===id?'var(--accent)':'var(--muted)'};transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;text-transform:uppercase;letter-spacing:0.5px">${icon} <span>${label}</span></button>`;
-
-  let body='';
-  if(tab==='analyze'){
-    body=`<div class="card" style="padding:24px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <div>
-          <h4 style="font-size:17px;font-weight:800;margin-bottom:4px">Program Analysis</h4>
-          <p style="font-size:13px;color:var(--muted)">AI reviews all workstreams, action items, milestones, and risks to produce an executive briefing.</p>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="mbtn" style="border:1px solid var(--border);color:var(--text);font-size:12px" onclick="copyInsights()">&#128203; Copy</button>
-          <button class="mbtn mb-save" onclick="runAIInsights()" ${!hasKey?'disabled':''} style="font-size:12px">&#10024; Analyze</button>
-        </div>
-      </div>
-      ${!hasKey?'<p style="font-size:12px;color:var(--red);margin-bottom:12px;padding:8px 12px;background:var(--red-lt);border-radius:var(--r-sm)">Set your OpenAI API key in the sidebar to use AI features.</p>':''}
-      <div id="ai-insights" style="min-height:80px;font-size:13.5px;line-height:1.7;border:1px solid var(--border-lt);border-radius:var(--r-sm);padding:16px;background:var(--bg)">
-        ${window._aiAnalysisResult||'<p style="color:var(--light)">Click <strong>Analyze</strong> to generate an AI-powered executive briefing of your program.</p>'}
-      </div>
-    </div>`;
-  } else if(tab==='ask'){
-    body=`<div class="card" style="padding:24px">
-      <h4 style="font-size:17px;font-weight:800;margin-bottom:4px">Ask About Your Program</h4>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Ask anything about what's in ATLAS — workstreams, action items, status, risks, decisions, or people. AI will answer using your live data.</p>
-      ${!hasKey?'<p style="font-size:12px;color:var(--red);margin-bottom:12px;padding:8px 12px;background:var(--red-lt);border-radius:var(--r-sm)">Set your OpenAI API key in the sidebar to use AI features.</p>':''}
-      <div class="fg" style="margin-bottom:8px">
-        <textarea id="ask-input" style="min-height:80px;font-size:14px" placeholder="e.g. What's the latest on the GTM workstream? / Which milestones are overdue? / Who owns the most open items?">${(window._askAILastQuestion||'').replace(/</g,'&lt;')}</textarea>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px" onclick="document.getElementById('ask-input').value='What milestones are overdue and who owns them?';runAskAI()">Overdue milestones</button>
-        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px" onclick="document.getElementById('ask-input').value='Give me a status update on each BU workstream';runAskAI()">BU workstream status</button>
-        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px" onclick="document.getElementById('ask-input').value='What are the top risks and blockers right now?';runAskAI()">Risks &amp; blockers</button>
-        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px" onclick="document.getElementById('ask-input').value='What has been accomplished in the last 2 weeks?';runAskAI()">Recent accomplishments</button>
-      </div>
-      <button class="mbtn mb-save" onclick="runAskAI()" ${!hasKey?'disabled':''}>Ask</button>
-    </div>
-    <div id="ask-response-wrap" class="card" style="padding:20px;margin-top:16px;display:none">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <h4 style="font-size:14px;font-weight:700;color:var(--muted)">Answer</h4>
-        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px" onclick="navigator.clipboard.writeText(document.getElementById('ask-response')?.innerText||'').then(()=>toast('Copied'))">&#128203; Copy</button>
-      </div>
-      <div id="ask-response" style="font-size:14px;line-height:1.7"></div>
-    </div>`;
-  }
 
   c.innerHTML=`
   <div class="page-wrap">
-    <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;background:var(--bg-card);border-radius:var(--r-sm) var(--r-sm) 0 0;overflow:hidden">
-      ${tBtn('analyze','Analyze','&#10024;')}
-      ${tBtn('ask','Ask','&#128172;')}
+    ${!hasKey?'<div class="card" style="margin-bottom:20px;padding:18px 20px;background:var(--red-lt);border:1px solid var(--red)"><p style="font-size:13px;color:var(--red);margin:0"><strong>&#9888; API Key Required</strong> — Set your OpenAI API key in the sidebar to use AI features.</p></div>':''}
+    
+    <div class="card" style="margin-bottom:20px;padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <h3 style="font-size:16px;font-weight:800;margin:0 0 4px">&#10024; AI Program Analysis</h3>
+          <p style="font-size:13px;color:var(--muted);margin:0">Generate an executive briefing from all program data</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="mbtn" style="border:1px solid var(--border);color:var(--text);font-size:12px;padding:6px 12px" onclick="copyInsights()">Copy</button>
+          <button class="mbtn mb-save" onclick="runAIInsights()" ${!hasKey?'disabled':''} style="font-size:12px;padding:6px 16px">Analyze</button>
+        </div>
+      </div>
+      <div id="ai-insights" style="min-height:80px;font-size:13.5px;line-height:1.7;border:1px solid var(--border-lt);border-radius:var(--r-sm);padding:16px;background:var(--bg)">
+        ${window._aiAnalysisResult||'<p style="color:var(--light)">Click <strong>Analyze</strong> to generate an AI-powered executive briefing.</p>'}
+      </div>
     </div>
-    ${body}
+
+    <div class="card" style="padding:20px">
+      <h3 style="font-size:16px;font-weight:800;margin:0 0 4px">&#128172; Ask Questions</h3>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 16px">Ask anything about your program data</p>
+      <div class="fg" style="margin-bottom:8px">
+        <textarea id="ask-input" style="min-height:70px;font-size:14px" placeholder="e.g. What's the latest on GTM? Which milestones are overdue?">${(window._askAILastQuestion||'').replace(/</g,'&lt;')}</textarea>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="document.getElementById('ask-input').value='What milestones are overdue?';runAskAI()">Overdue milestones</button>
+        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="document.getElementById('ask-input').value='Status on each BU workstream';runAskAI()">BU status</button>
+        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="document.getElementById('ask-input').value='Top risks and blockers';runAskAI()">Risks &amp; blockers</button>
+      </div>
+      <button class="mbtn mb-save" onclick="runAskAI()" ${!hasKey?'disabled':''}>Ask</button>
+      <div id="ask-response-wrap" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-lt);display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <h4 style="font-size:13px;font-weight:700;color:var(--muted);margin:0">Answer</h4>
+          <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px" onclick="navigator.clipboard.writeText(document.getElementById('ask-response')?.innerText||'').then(()=>toast('Copied'))">Copy</button>
+        </div>
+        <div id="ask-response" style="font-size:13.5px;line-height:1.7"></div>
+      </div>
+    </div>
   </div>`;
 
-  if(tab==='ask'&&window._askAILastResponse){
+  if(window._askAILastResponse){
     const wrap=document.getElementById('ask-response-wrap');
     const resp=document.getElementById('ask-response');
     if(wrap&&resp){wrap.style.display='';resp.innerHTML=window._askAILastResponseHtml||'';if(!window._askAILastResponseHtml)resp.textContent=window._askAILastResponse}
@@ -4960,12 +4952,8 @@ function rAdo(c){
 // ═══════════════════════════════════════════════════
 const decStatuses=['proposed','approved','superseded','deferred'];
 function rDecisions(c){
-  const q=(document.getElementById('search')?.value||'').toLowerCase();
-  const items=(D.decisions||[]).filter(d=>!q||d.title?.toLowerCase().includes(q)||d.rationale?.toLowerCase().includes(q)).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  c.innerHTML=`<div class="card"><div class="dash-hd" style="display:flex;justify-content:space-between;align-items:center">Decision Log <button class="mbtn mb-save" onclick="openDecModal()">+ Decision</button></div>
-  <div style="padding:0 18px 14px">${items.length?`<table class="tbl"><thead><tr><th>Date</th><th>Decision</th><th>Status</th><th>Decided By</th><th>Workstream</th></tr></thead><tbody>${items.map(d=>{
-    const sc=d.status==='approved'?'pill-g':d.status==='superseded'?'pill-r':d.status==='deferred'?'pill-a':'pill-m';
-    return `<tr style="cursor:pointer" onclick="openDecModal('${d.id}')"><td style="white-space:nowrap;font-size:12px">${fmtDate(d.date)}</td><td><strong>${esc(d.title)}</strong>${d.rationale?'<div style="font-size:11.5px;color:var(--muted);margin-top:2px">'+esc(d.rationale)+'</div>':''}</td><td><span class="pill ${sc}">${d.status}</span></td><td style="font-size:12px">${esc(d.decidedBy||'')}</td><td style="font-size:12px">${wsName(d.workstream)}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty"><h4>No decisions recorded</h4><p>Record key program decisions, tool selections, and policy positions.</p></div>'}</div></div>`;
+  govTab='decisions';
+  rGovernance(c);
 }
 function openDecModal(id){
   const d=id?(D.decisions||[]).find(x=>x.id===id):null;
@@ -5052,10 +5040,40 @@ function saveRisk(id){
 }
 function delRisk(id){if(!confirm('Delete?'))return;D.risks=(D.risks||[]).filter(x=>x.id!==id);save();render();toast('Deleted')}
 
+function rGovernance(c){
+  const q=(document.getElementById('search')?.value||'').toLowerCase();
+  const risks=(D.risks||[]).filter(r=>!q||r.title?.toLowerCase().includes(q)||r.mitigation?.toLowerCase().includes(q)).sort((a,b)=>{const o={critical:0,high:1,medium:2,low:3};return (o[a.impact]||2)-(o[b.impact]||2)});
+  const decisions=(D.decisions||[]).filter(d=>!q||d.title?.toLowerCase().includes(q)||d.rationale?.toLowerCase().includes(q)).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const openRisks=risks.filter(r=>r.status!=='closed');
+  const criticalRisks=openRisks.filter(r=>r.impact==='critical'||r.impact==='high');
+  
+  c.innerHTML=`
+  <div style="display:flex;gap:10px;margin-bottom:18px;padding:8px 12px;background:var(--bg-card);border-radius:var(--r-md);border:1px solid var(--border-lt)">
+    <div class="pill${govTab==='risks'?' pill-i':' pill-m'}" onclick="govTab='risks';render()" style="cursor:pointer">
+      Risks${criticalRisks.length?' <span class=\"badge hot\" style=\"margin-left:4px;font-size:10px\">'+criticalRisks.length+'</span>':''}
+    </div>
+    <div class="pill${govTab==='decisions'?' pill-i':' pill-m'}" onclick="govTab='decisions';render()" style="cursor:pointer">Decisions</div>
+  </div>
+
+  ${govTab==='decisions'?`<div class="card"><div class="dash-hd" style="display:flex;justify-content:space-between;align-items:center">Decision Log <button class="mbtn mb-save" onclick="openDecModal()">+ Decision</button></div>
+  <div style="padding:0 18px 14px">${decisions.length?`<table class="tbl"><thead><tr><th>Date</th><th>Decision</th><th>Status</th><th>Decided By</th><th>Workstream</th></tr></thead><tbody>${decisions.map(d=>{
+    const sc=d.status==='approved'?'pill-g':d.status==='superseded'?'pill-r':d.status==='deferred'?'pill-a':'pill-m';
+    return `<tr style="cursor:pointer" onclick="openDecModal('${d.id}')"><td style="font-size:12px">${d.date?fmtDate(d.date):'—'}</td><td><strong>${esc(d.title)}</strong>${d.rationale?'<div style="font-size:11.5px;color:var(--muted);margin-top:2px">'+esc(d.rationale)+'</div>':''}</td><td><span class="pill ${sc}">${d.status}</span></td><td style="font-size:12px">${esc(d.decidedBy||'')}</td><td style="font-size:12px">${wsName(d.workstream)}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty"><h4>No decisions logged</h4><p>Track key decisions, architectural choices, and trade-offs. <button class="mbtn mb-save" style="margin-top:10px" onclick="openDecModal()">Add your first decision</button></p></div>'}</div></div>`
+  :`<div class="card"><div class="dash-hd" style="display:flex;justify-content:space-between;align-items:center">Risk Register <button class="mbtn mb-save" onclick="openRiskModal()">+ Risk</button></div>
+  <div style="padding:0 18px 14px">${risks.length?`<table class="tbl"><thead><tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Status</th><th>Owner</th></tr></thead><tbody>${risks.map(r=>{
+    const ic=r.impact==='critical'?'pill-r':r.impact==='high'?'pill-a':r.impact==='medium'?'pill-m':'pill-g';
+    const sc=r.status==='closed'?'pill-g':r.status==='accepted'?'pill-b':r.status==='mitigating'?'pill-a':'pill-r';
+    return `<tr style="cursor:pointer" onclick="openRiskModal('${r.id}')"><td><strong>${esc(r.title)}</strong>${r.mitigation?'<div style="font-size:11.5px;color:var(--muted);margin-top:2px">Mitigation: '+esc(r.mitigation)+'</div>':''}</td><td><span class="pill ${r.likelihood==='high'||r.likelihood==='critical'?'pill-r':r.likelihood==='medium'?'pill-a':'pill-g'}">${r.likelihood||'—'}</span></td><td><span class="pill ${ic}">${r.impact||'—'}</span></td><td><span class="pill ${sc}">${r.status}</span></td><td style="font-size:12px">${esc(r.owner||'')}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty"><h4>No risks logged</h4><p>Track regulatory, ethical, data privacy, vendor, and adoption risks. <button class="mbtn mb-save" style="margin-top:10px" onclick="openRiskModal()">Add your first risk</button></p></div>'}</div></div>`}
+  `;
+}
+
 // ═══════════════════════════════════════════════════
-// SUCCESS METRICS
+// RISKS (kept for backward compatibility routing)
 // ═══════════════════════════════════════════════════
-function rMetrics(c){
+function rRisks(c){
+  govTab='risks';
+  rGovernance(c);
+}
   const items=(D.metrics||[]).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   c.innerHTML=`<div class="card"><div class="dash-hd" style="display:flex;justify-content:space-between;align-items:center">Success Metrics & KPIs <button class="mbtn mb-save" onclick="openMetricModal()">+ Metric</button></div>
   <div style="padding:0 18px 14px">${items.length?`<table class="tbl"><thead><tr><th>Metric</th><th>Current Value</th><th>Target</th><th>As Of</th><th>Trend</th></tr></thead><tbody>${items.map(m=>{
