@@ -1928,7 +1928,7 @@ function renderMyWorkKanban(myTasks){
     return `<div class="kb-col" data-status="${col.key}"
       ondragover="event.preventDefault();this.classList.add('kb-col-over')"
       ondragleave="this.classList.remove('kb-col-over')"
-      ondrop="const id=event.dataTransfer.getData('text/plain');kbDrop(id,'${col.key}');this.classList.remove('kb-col-over')">
+      ondrop="kbDrop(event,'${col.key}');this.classList.remove('kb-col-over')">
       <div class="kb-col-hd" style="background:${col.accent}">
         <span>${col.label}</span>
         <span class="kb-count">${colItems.length}</span>
