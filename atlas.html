@@ -2712,7 +2712,7 @@ function rTasks(c){
       <div class="pill${taskFilter==='all'?' pill-i':' pill-m'}" onclick="taskFilter='all';render()">All Items</div>
       <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
       <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
-      <div class="pill${taskFilter==='priorities'?' pill-i':' pill-m'}" onclick="taskFilter='priorities';render()" style="${priorityCount?'background:#8b5cf6;color:#fff':''}">&#9670; Priorities (${priorityCount})</div>
+      <div class="pill${taskFilter==='priorities'?' pill-i':' pill-m'}" onclick="taskFilter='priorities';render()">&#9670; Priorities (${priorityCount})</div>
       <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;padding-left:14px;margin-left:6px;border-left:1px solid var(--border-lt)">
@@ -3021,7 +3021,7 @@ function rTasksInbox(c){
     <div class="pill-filters" style="margin-left:12px;padding-left:12px;border-left:1px solid var(--border-lt)">
       <div class="pill pill-m" onclick="taskFilter='all';render()">All Items</div>
       <div class="pill pill-m" onclick="taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
-      <div class="pill pill-m" onclick="taskFilter='priorities';render()" style="${priorityCount?'background:#8b5cf6;color:#fff':''}">&#9670; Priorities (${priorityCount})</div>
+      <div class="pill pill-m" onclick="taskFilter='priorities';render()">&#9670; Priorities (${priorityCount})</div>
       <div class="pill pill-i" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
     </div>
   </div>
@@ -3172,7 +3172,7 @@ function rKanban(c){
       <div class="pill${taskFilter==='all'?' pill-i':' pill-m'}" onclick="taskFilter='all';render()">All Items</div>
       <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
       <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
-      <div class="pill${taskFilter==='priorities'?' pill-i':' pill-m'}" onclick="taskFilter='priorities';render()" style="${priorityCount?'background:#8b5cf6;color:#fff':''}">&#9670; Priorities (${priorityCount})</div>
+      <div class="pill${taskFilter==='priorities'?' pill-i':' pill-m'}" onclick="taskFilter='priorities';render()">&#9670; Priorities (${priorityCount})</div>
       <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
     </div>
     <div class="pill-actions">
