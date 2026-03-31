@@ -1756,33 +1756,27 @@ function generateDailyUpdate(){
   // Recent Updates Table
   if(recentUpdates.length){
     report+='RECENT UPDATES (Last 24h)\n';
-    report+='─────────────────────────────────────────────────────────────────────────────\n';
-    report+=`${'Item'.padEnd(35)} ${'Owner'.padEnd(15)} ${'Status'.padEnd(12)} Workstream\n`;
-    report+='─────────────────────────────────────────────────────────────────────────────\n';
+    report+=`Item\tOwner\tStatus\tWorkstream\n`;
     recentUpdates.slice(0,8).forEach(t=>{
       const title=(t.isMilestone?'★ ':'')+t.title;
-      const titleTrunc=title.length>34?title.substring(0,31)+'...':title;
-      const owner=(t.owner||'Unassigned').substring(0,14);
-      const status=t.status==='done'?'✓ Done':(taskStatusLabel(t.status)||'').substring(0,11);
-      const ws=(wsNamePlain(t.workstream)||'—').substring(0,20);
-      report+=`${titleTrunc.padEnd(35)} ${owner.padEnd(15)} ${status.padEnd(12)} ${ws}\n`;
+      const owner=t.owner||'Unassigned';
+      const status=t.status==='done'?'✓ Done':taskStatusLabel(t.status);
+      const ws=wsNamePlain(t.workstream)||'—';
+      report+=`${title}\t${owner}\t${status}\t${ws}\n`;
     });
-    if(recentUpdates.length>8)report+=`... and ${recentUpdates.length-8} more\n`;
+    if(recentUpdates.length>8)report+=`\n... and ${recentUpdates.length-8} more\n`;
     report+='\n';
   }
   
   // Due Today Table
   if(dueToday.length){
     report+='DUE TODAY\n';
-    report+='─────────────────────────────────────────────────────────────────────────────\n';
-    report+=`${'Item'.padEnd(40)} ${'Owner'.padEnd(15)} Workstream\n`;
-    report+='─────────────────────────────────────────────────────────────────────────────\n';
+    report+=`Item\tOwner\tWorkstream\n`;
     dueToday.forEach(t=>{
       const title=(t.isMilestone?'★ ':'')+t.title;
-      const titleTrunc=title.length>39?title.substring(0,36)+'...':title;
-      const owner=(t.owner||'Unassigned').substring(0,14);
-      const ws=(wsNamePlain(t.workstream)||'—').substring(0,25);
-      report+=`${titleTrunc.padEnd(40)} ${owner.padEnd(15)} ${ws}\n`;
+      const owner=t.owner||'Unassigned';
+      const ws=wsNamePlain(t.workstream)||'—';
+      report+=`${title}\t${owner}\t${ws}\n`;
     });
     report+='\n';
   }
@@ -1790,51 +1784,48 @@ function generateDailyUpdate(){
   // Due Next 3 Days Table
   if(dueNext3.length){
     report+='DUE IN NEXT 3 DAYS\n';
-    report+='─────────────────────────────────────────────────────────────────────────────\n';
-    report+=`${'Date'.padEnd(12)} ${'Item'.padEnd(32)} ${'Owner'.padEnd(15)} Workstream\n`;
-    report+='─────────────────────────────────────────────────────────────────────────────\n';
+    report+=`Date\tItem\tOwner\tWorkstream\n`;
     dueNext3.forEach(t=>{
       const date=fmtDate(t.due);
       const title=(t.isMilestone?'★ ':'')+t.title;
-      const titleTrunc=title.length>31?title.substring(0,28)+'...':title;
-      const owner=(t.owner||'Unassigned').substring(0,14);
-      const ws=(wsNamePlain(t.workstream)||'—').substring(0,20);
-      report+=`${date.padEnd(12)} ${titleTrunc.padEnd(32)} ${owner.padEnd(15)} ${ws}\n`;
+      const owner=t.owner||'Unassigned';
+      const ws=wsNamePlain(t.workstream)||'—';
+      report+=`${date}\t${title}\t${owner}\t${ws}\n`;
     });
     report+='\n';
   }
   
   // Issues & Concerns
   if(overdue.length||atRiskWs.length||openRisks.length){
-    report+='⚠️  ISSUES & CONCERNS\n';
-    report+='─────────────────────────────────────────────────────────────────────────────\n';
+    report+='⚠️  ISSUES & CONCERNS\n\n';
     
     if(overdue.length){
-      report+=`OVERDUE (${overdue.length}):\n`;
+      report+=`Overdue (${overdue.length}):\n`;
+      report+=`Due Date\tItem\tOwner\n`;
       overdue.slice(0,6).forEach(t=>{
         const title=(t.isMilestone?'★ ':'')+t.title;
-        const titleTrunc=title.length>35?title.substring(0,32)+'...':title;
-        report+=`  ${fmtDate(t.due)} | ${titleTrunc} | ${t.owner||'Unassigned'}\n`;
+        report+=`${fmtDate(t.due)}\t${title}\t${t.owner||'Unassigned'}\n`;
       });
-      if(overdue.length>6)report+=`  ... and ${overdue.length-6} more\n`;
+      if(overdue.length>6)report+=`\n... and ${overdue.length-6} more\n`;
       report+='\n';
     }
     
     if(atRiskWs.length){
-      report+=`AT-RISK WORKSTREAMS (${atRiskWs.length}):\n`;
+      report+=`At-Risk Workstreams (${atRiskWs.length}):\n`;
+      report+=`Workstream\tLead\n`;
       atRiskWs.forEach(w=>{
-        report+=`  ${w.name} — ${w.owner||'TBD'}\n`;
+        report+=`${w.name}\t${w.owner||'TBD'}\n`;
       });
       report+='\n';
     }
     
     if(openRisks.length){
-      report+=`HIGH/CRITICAL RISKS (${openRisks.length}):\n`;
+      report+=`High/Critical Risks (${openRisks.length}):\n`;
+      report+=`Impact\tRisk\n`;
       openRisks.slice(0,4).forEach(r=>{
-        const titleTrunc=r.title.length>50?r.title.substring(0,47)+'...':r.title;
-        report+=`  [${r.impact.toUpperCase()}] ${titleTrunc}\n`;
+        report+=`${r.impact.toUpperCase()}\t${r.title}\n`;
       });
-      if(openRisks.length>4)report+=`  ... and ${openRisks.length-4} more\n`;
+      if(openRisks.length>4)report+=`\n... and ${openRisks.length-4} more\n`;
       report+='\n';
     }
   }
