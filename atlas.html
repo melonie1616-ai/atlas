@@ -1753,81 +1753,67 @@ function generateDailyUpdate(){
   
   let report=`DAILY UPDATE — ${new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})}\n\n`;
   
-  // Recent Updates Table
+  // Recent Updates
   if(recentUpdates.length){
-    report+='RECENT UPDATES (Last 24h)\n';
-    report+=`Item\tOwner\tStatus\tWorkstream\n`;
+    report+='📊 RECENT UPDATES (Last 24h)\n';
     recentUpdates.slice(0,8).forEach(t=>{
-      const title=(t.isMilestone?'★ ':'')+t.title;
-      const owner=t.owner||'Unassigned';
+      const ws=wsNamePlain(t.workstream)||'No workstream';
       const status=t.status==='done'?'✓ Done':taskStatusLabel(t.status);
-      const ws=wsNamePlain(t.workstream)||'—';
-      report+=`${title}\t${owner}\t${status}\t${ws}\n`;
+      report+=`  • ${t.isMilestone?'★ ':''}${t.title} — ${t.owner||'Unassigned'} (${status}, ${ws})\n`;
     });
-    if(recentUpdates.length>8)report+=`\n... and ${recentUpdates.length-8} more\n`;
+    if(recentUpdates.length>8)report+=`  ... and ${recentUpdates.length-8} more\n`;
     report+='\n';
   }
   
-  // Due Today Table
+  // Due Today
   if(dueToday.length){
-    report+='DUE TODAY\n';
-    report+=`Item\tOwner\tWorkstream\n`;
+    report+='📅 DUE TODAY\n';
     dueToday.forEach(t=>{
-      const title=(t.isMilestone?'★ ':'')+t.title;
-      const owner=t.owner||'Unassigned';
-      const ws=wsNamePlain(t.workstream)||'—';
-      report+=`${title}\t${owner}\t${ws}\n`;
+      const ws=wsNamePlain(t.workstream)||'No workstream';
+      report+=`  • ${t.isMilestone?'★ ':''}${t.title} — ${t.owner||'Unassigned'} (${ws})\n`;
     });
     report+='\n';
   }
   
-  // Due Next 3 Days Table
+  // Due Next 3 Days
   if(dueNext3.length){
-    report+='DUE IN NEXT 3 DAYS\n';
-    report+=`Date\tItem\tOwner\tWorkstream\n`;
+    report+='📅 DUE IN NEXT 3 DAYS\n';
     dueNext3.forEach(t=>{
-      const date=fmtDate(t.due);
-      const title=(t.isMilestone?'★ ':'')+t.title;
-      const owner=t.owner||'Unassigned';
-      const ws=wsNamePlain(t.workstream)||'—';
-      report+=`${date}\t${title}\t${owner}\t${ws}\n`;
+      const ws=wsNamePlain(t.workstream)||'No workstream';
+      report+=`  • ${fmtDate(t.due)}: ${t.isMilestone?'★ ':''}${t.title} — ${t.owner||'Unassigned'} (${ws})\n`;
     });
     report+='\n';
   }
   
   // Issues & Concerns
   if(overdue.length||atRiskWs.length||openRisks.length){
-    report+='⚠️  ISSUES & CONCERNS\n\n';
+    report+='⚠️  ISSUES & CONCERNS\n';
     
     if(overdue.length){
-      report+=`Overdue (${overdue.length}):\n`;
-      report+=`Due Date\tItem\tOwner\n`;
+      report+=`  Overdue (${overdue.length}):\n`;
       overdue.slice(0,6).forEach(t=>{
-        const title=(t.isMilestone?'★ ':'')+t.title;
-        report+=`${fmtDate(t.due)}\t${title}\t${t.owner||'Unassigned'}\n`;
+        report+=`    • ${fmtDate(t.due)}: ${t.isMilestone?'★ ':''}${t.title} — ${t.owner||'Unassigned'}\n`;
       });
-      if(overdue.length>6)report+=`\n... and ${overdue.length-6} more\n`;
-      report+='\n';
+      if(overdue.length>6)report+=`    ... and ${overdue.length-6} more\n`;
     }
     
     if(atRiskWs.length){
-      report+=`At-Risk Workstreams (${atRiskWs.length}):\n`;
-      report+=`Workstream\tLead\n`;
+      if(overdue.length)report+='\n';
+      report+=`  At-Risk Workstreams (${atRiskWs.length}):\n`;
       atRiskWs.forEach(w=>{
-        report+=`${w.name}\t${w.owner||'TBD'}\n`;
+        report+=`    • ${w.name} — ${w.owner||'TBD'}\n`;
       });
-      report+='\n';
     }
     
     if(openRisks.length){
-      report+=`High/Critical Risks (${openRisks.length}):\n`;
-      report+=`Impact\tRisk\n`;
+      if(overdue.length||atRiskWs.length)report+='\n';
+      report+=`  High/Critical Risks (${openRisks.length}):\n`;
       openRisks.slice(0,4).forEach(r=>{
-        report+=`${r.impact.toUpperCase()}\t${r.title}\n`;
+        report+=`    • [${r.impact.toUpperCase()}] ${r.title}\n`;
       });
-      if(openRisks.length>4)report+=`\n... and ${openRisks.length-4} more\n`;
-      report+='\n';
+      if(openRisks.length>4)report+=`    ... and ${openRisks.length-4} more\n`;
     }
+    report+='\n';
   }
   
   if(!recentUpdates.length&&!dueToday.length&&!dueNext3.length&&!overdue.length&&!atRiskWs.length&&!openRisks.length){
@@ -2015,7 +2001,7 @@ function exportDailyUpdate(){
   openModal(`<div class="m-hd"><h3>Daily Update</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
     <div style="padding:12px 16px;margin-bottom:14px;border-radius:var(--r-sm);background:#d1fae5;border:1px solid #10b981;font-size:12.5px;color:#065f46">
-      <strong>✓ Copied to clipboard</strong> — Paste into Outlook/email (tables will format automatically)
+      <strong>✓ Copied to clipboard</strong> — Bullet format ready to paste
     </div>
     <div id="daily-update-content" style="max-height:500px;overflow-y:auto">
       ${reportHtml}
@@ -2030,16 +2016,8 @@ function exportDailyUpdate(){
 }
 
 function copyDailyUpdateTable(){
-  const content=document.getElementById('daily-update-content');
-  if(!content)return;
-  
-  const htmlContent=content.innerHTML;
-  
-  try{
-    const blob=new Blob([htmlContent],{type:'text/html'});
-    const clipboardItem=new ClipboardItem({'text/html':blob});
-    navigator.clipboard.write([clipboardItem]).then(()=>{}).catch(()=>{});
-  }catch(e){}
+  const bulletText=generateDailyUpdate();
+  navigator.clipboard.writeText(bulletText).then(()=>toast('Copied to clipboard')).catch(()=>toast('Copy failed'));
 }
 
 function wsNamePlain(id){const w=(D.workstreams||[]).find(x=>x.id===id);return w?w.name:''}
