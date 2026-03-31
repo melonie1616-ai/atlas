@@ -1839,19 +1839,22 @@ function generateDailyUpdate(){
 
 function exportDailyUpdate(){
   const report=generateDailyUpdate();
-  navigator.clipboard.writeText(report).then(()=>{
-    toast('Daily update copied to clipboard');
-  }).catch(()=>{
-    // Fallback: show in modal
-    openModal(`<div class="m-hd"><h3>Daily Update</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
-    <div class="m-bd">
-      <pre style="white-space:pre-wrap;font-family:monospace;font-size:12px;line-height:1.6;max-height:500px;overflow-y:auto">${esc(report)}</pre>
+  
+  // Always show modal and copy to clipboard
+  openModal(`<div class="m-hd"><h3>Daily Update</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd">
+    <div style="padding:12px 16px;margin-bottom:14px;border-radius:var(--r-sm);background:#d1fae5;border:1px solid #10b981;font-size:12.5px;color:#065f46">
+      <strong>✓ Copied to clipboard</strong> — Ready to paste into email or chat
     </div>
-    <div class="m-ft">
-      <button class="mbtn mb-cancel" onclick="closeModal()">Close</button>
-      <button class="mbtn mb-save" onclick="navigator.clipboard.writeText(\`${report.replace(/`/g,'\\`')}\`).then(()=>toast('Copied')).catch(()=>toast('Copy failed'))">Copy to Clipboard</button>
-    </div>`);
-  });
+    <pre style="white-space:pre-wrap;font-family:monospace;font-size:12px;line-height:1.6;max-height:500px;overflow-y:auto;background:var(--bg-subtle);padding:14px;border-radius:var(--r-sm);border:1px solid var(--border)">${esc(report)}</pre>
+  </div>
+  <div class="m-ft">
+    <button class="mbtn mb-cancel" onclick="closeModal()">Close</button>
+    <button class="mbtn mb-save" onclick="navigator.clipboard.writeText(\`${report.replace(/`/g,'\\`').replace(/\$/g,'\\$')}\`).then(()=>toast('Copied again'))">Copy Again</button>
+  </div>`);
+  
+  // Copy to clipboard
+  navigator.clipboard.writeText(report).catch(()=>toast('Could not copy to clipboard'));
 }
 
 function wsNamePlain(id){const w=(D.workstreams||[]).find(x=>x.id===id);return w?w.name:''}
