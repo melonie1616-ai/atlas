@@ -1837,24 +1837,209 @@ function generateDailyUpdate(){
   return report;
 }
 
-function exportDailyUpdate(){
-  const report=generateDailyUpdate();
+function generateDailyUpdateHTML(){
+  const now=today();
+  const yesterday=new Date(now+'T00:00:00');
+  yesterday.setDate(yesterday.getDate()-1);
+  const yesterdayStr=yesterday.toISOString().slice(0,10);
   
-  // Always show modal and copy to clipboard
+  const next3Days=new Date(now+'T00:00:00');
+  next3Days.setDate(next3Days.getDate()+3);
+  const next3DaysStr=next3Days.toISOString().slice(0,10);
+  
+  const recentUpdates=(D.tasks||[]).filter(t=>{
+    const updated=t.updatedAt?t.updatedAt.slice(0,10):t.created;
+    return updated>=yesterdayStr;
+  }).sort((a,b)=>(b.updatedAt||b.created||'').localeCompare(a.updatedAt||a.created||''));
+  
+  const dueToday=(D.tasks||[]).filter(t=>t.status!=='done'&&t.due===now).sort((a,b)=>(a.title||'').localeCompare(b.title||''));
+  const dueNext3=(D.tasks||[]).filter(t=>t.status!=='done'&&t.due>now&&t.due<=next3DaysStr).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
+  const overdue=(D.tasks||[]).filter(t=>t.status!=='done'&&t.due&&t.due<now).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
+  const atRiskWs=(D.workstreams||[]).filter(w=>{const s=w.status;return s==='at-risk'||s==='blocked';});
+  const openRisks=(D.risks||[]).filter(r=>r.status!=='closed'&&(r.impact==='critical'||r.impact==='high')).sort((a,b)=>{const o={critical:0,high:1};return (o[a.impact]||1)-(o[b.impact]||1);});
+  
+  let html=`<h3 style="font-size:16px;font-weight:700;margin:0 0 16px">Daily Update — ${new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})}</h3>`;
+  
+  if(recentUpdates.length){
+    html+=`<div style="margin-bottom:20px">
+      <h4 style="font-size:13px;font-weight:700;margin:0 0 8px;color:var(--text)">📊 RECENT UPDATES (Last 24h)</h4>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:var(--bg-subtle)">
+            <th style="text-align:left;padding:8px;border:1px solid var(--border)">Item</th>
+            <th style="text-align:left;padding:8px;border:1px solid var(--border);width:20%">Owner</th>
+            <th style="text-align:left;padding:8px;border:1px solid var(--border);width:15%">Status</th>
+            <th style="text-align:left;padding:8px;border:1px solid var(--border);width:22%">Workstream</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${recentUpdates.slice(0,8).map(t=>`<tr>
+            <td style="padding:8px;border:1px solid var(--border)">${t.isMilestone?'★ ':''}${esc(t.title)}</td>
+            <td style="padding:8px;border:1px solid var(--border)">${esc(t.owner||'Unassigned')}</td>
+            <td style="padding:8px;border:1px solid var(--border)">${t.status==='done'?'✓ Done':taskStatusLabel(t.status)}</td>
+            <td style="padding:8px;border:1px solid var(--border)">${esc(wsNamePlain(t.workstream)||'—')}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      ${recentUpdates.length>8?`<div style="font-size:11px;color:var(--muted);margin-top:6px">... and ${recentUpdates.length-8} more</div>`:''}
+    </div>`;
+  }
+  
+  if(dueToday.length){
+    html+=`<div style="margin-bottom:20px">
+      <h4 style="font-size:13px;font-weight:700;margin:0 0 8px;color:var(--text)">📅 DUE TODAY</h4>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:var(--bg-subtle)">
+            <th style="text-align:left;padding:8px;border:1px solid var(--border)">Item</th>
+            <th style="text-align:left;padding:8px;border:1px solid var(--border);width:22%">Owner</th>
+            <th style="text-align:left;padding:8px;border:1px solid var(--border);width:25%">Workstream</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${dueToday.map(t=>`<tr>
+            <td style="padding:8px;border:1px solid var(--border)">${t.isMilestone?'★ ':''}${esc(t.title)}</td>
+            <td style="padding:8px;border:1px solid var(--border)">${esc(t.owner||'Unassigned')}</td>
+            <td style="padding:8px;border:1px solid var(--border)">${esc(wsNamePlain(t.workstream)||'—')}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  }
+  
+  if(dueNext3.length){
+    html+=`<div style="margin-bottom:20px">
+      <h4 style="font-size:13px;font-weight:700;margin:0 0 8px;color:var(--text)">📅 DUE IN NEXT 3 DAYS</h4>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:var(--bg-subtle)">
+            <th style="text-align:left;padding:8px;border:1px solid var(--border);width:12%">Date</th>
+            <th style="text-align:left;padding:8px;border:1px solid var(--border)">Item</th>
+            <th style="text-align:left;padding:8px;border:1px solid var(--border);width:20%">Owner</th>
+            <th style="text-align:left;padding:8px;border:1px solid var(--border);width:22%">Workstream</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${dueNext3.map(t=>`<tr>
+            <td style="padding:8px;border:1px solid var(--border)">${fmtDate(t.due)}</td>
+            <td style="padding:8px;border:1px solid var(--border)">${t.isMilestone?'★ ':''}${esc(t.title)}</td>
+            <td style="padding:8px;border:1px solid var(--border)">${esc(t.owner||'Unassigned')}</td>
+            <td style="padding:8px;border:1px solid var(--border)">${esc(wsNamePlain(t.workstream)||'—')}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  }
+  
+  if(overdue.length||atRiskWs.length||openRisks.length){
+    html+=`<div style="margin-bottom:20px">
+      <h4 style="font-size:13px;font-weight:700;margin:0 0 8px;color:var(--red)">⚠️ ISSUES & CONCERNS</h4>`;
+    
+    if(overdue.length){
+      html+=`<div style="margin-bottom:12px">
+        <div style="font-size:12px;font-weight:600;margin-bottom:6px">Overdue (${overdue.length})</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:var(--bg-subtle)">
+              <th style="text-align:left;padding:8px;border:1px solid var(--border);width:12%">Due Date</th>
+              <th style="text-align:left;padding:8px;border:1px solid var(--border)">Item</th>
+              <th style="text-align:left;padding:8px;border:1px solid var(--border);width:20%">Owner</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${overdue.slice(0,6).map(t=>`<tr>
+              <td style="padding:8px;border:1px solid var(--border)">${fmtDate(t.due)}</td>
+              <td style="padding:8px;border:1px solid var(--border)">${t.isMilestone?'★ ':''}${esc(t.title)}</td>
+              <td style="padding:8px;border:1px solid var(--border)">${esc(t.owner||'Unassigned')}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        ${overdue.length>6?`<div style="font-size:11px;color:var(--muted);margin-top:6px">... and ${overdue.length-6} more</div>`:''}
+      </div>`;
+    }
+    
+    if(atRiskWs.length){
+      html+=`<div style="margin-bottom:12px">
+        <div style="font-size:12px;font-weight:600;margin-bottom:6px">At-Risk Workstreams (${atRiskWs.length})</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:var(--bg-subtle)">
+              <th style="text-align:left;padding:8px;border:1px solid var(--border)">Workstream</th>
+              <th style="text-align:left;padding:8px;border:1px solid var(--border);width:25%">Lead</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${atRiskWs.map(w=>`<tr>
+              <td style="padding:8px;border:1px solid var(--border)">${esc(w.name)}</td>
+              <td style="padding:8px;border:1px solid var(--border)">${esc(w.owner||'TBD')}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+    }
+    
+    if(openRisks.length){
+      html+=`<div style="margin-bottom:12px">
+        <div style="font-size:12px;font-weight:600;margin-bottom:6px">High/Critical Risks (${openRisks.length})</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:var(--bg-subtle)">
+              <th style="text-align:left;padding:8px;border:1px solid var(--border);width:15%">Impact</th>
+              <th style="text-align:left;padding:8px;border:1px solid var(--border)">Risk</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${openRisks.slice(0,4).map(r=>`<tr>
+              <td style="padding:8px;border:1px solid var(--border)">${r.impact.toUpperCase()}</td>
+              <td style="padding:8px;border:1px solid var(--border)">${esc(r.title)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        ${openRisks.length>4?`<div style="font-size:11px;color:var(--muted);margin-top:6px">... and ${openRisks.length-4} more</div>`:''}
+      </div>`;
+    }
+    
+    html+=`</div>`;
+  }
+  
+  if(!recentUpdates.length&&!dueToday.length&&!dueNext3.length&&!overdue.length&&!atRiskWs.length&&!openRisks.length){
+    html+='<p style="color:var(--muted);font-size:13px">No updates, items due, or concerns to report.</p>';
+  }
+  
+  return html;
+}
+
+function exportDailyUpdate(){
+  const reportHtml=generateDailyUpdateHTML();
+  
   openModal(`<div class="m-hd"><h3>Daily Update</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
     <div style="padding:12px 16px;margin-bottom:14px;border-radius:var(--r-sm);background:#d1fae5;border:1px solid #10b981;font-size:12.5px;color:#065f46">
-      <strong>✓ Copied to clipboard</strong> — Ready to paste into email or chat
+      <strong>✓ Copied to clipboard</strong> — Paste into Outlook/email (tables will format automatically)
     </div>
-    <pre style="white-space:pre-wrap;font-family:monospace;font-size:12px;line-height:1.6;max-height:500px;overflow-y:auto;background:var(--bg-subtle);padding:14px;border-radius:var(--r-sm);border:1px solid var(--border)">${esc(report)}</pre>
+    <div id="daily-update-content" style="max-height:500px;overflow-y:auto">
+      ${reportHtml}
+    </div>
   </div>
   <div class="m-ft">
     <button class="mbtn mb-cancel" onclick="closeModal()">Close</button>
-    <button class="mbtn mb-save" onclick="navigator.clipboard.writeText(\`${report.replace(/`/g,'\\`').replace(/\$/g,'\\$')}\`).then(()=>toast('Copied again'))">Copy Again</button>
+    <button class="mbtn mb-save" onclick="copyDailyUpdateTable()">Copy Again</button>
   </div>`);
   
-  // Copy to clipboard
-  navigator.clipboard.writeText(report).catch(()=>toast('Could not copy to clipboard'));
+  copyDailyUpdateTable();
+}
+
+function copyDailyUpdateTable(){
+  const content=document.getElementById('daily-update-content');
+  if(!content)return;
+  
+  const htmlContent=content.innerHTML;
+  
+  try{
+    const blob=new Blob([htmlContent],{type:'text/html'});
+    const clipboardItem=new ClipboardItem({'text/html':blob});
+    navigator.clipboard.write([clipboardItem]).then(()=>{}).catch(()=>{});
+  }catch(e){}
 }
 
 function wsNamePlain(id){const w=(D.workstreams||[]).find(x=>x.id===id);return w?w.name:''}
