@@ -2151,7 +2151,7 @@ function buildGantt(){
           const isOD=m.status!=='done'&&m.due&&m.due<today();
           const color=isDone?'var(--green)':isOD?'var(--red)':wsColor(m.workstream);
           const icon=isDone?'&#10003;':isOD?'!':'&#9670;';
-          const ownerText=m.owner?` • ${esc(m.owner)}`:'';
+          const ownerText=m.owner?` • <span style="font-style:italic">${esc(m.owner)}</span>`:'';
           return `<div style="position:absolute;left:${x}%;top:${i*24+4}px;transform:translateX(-8px);cursor:pointer" title="${esc(m.title)} — ${fmtDate(m.due)} (${isDone?'done':isOD?'overdue':'upcoming'})" onclick="openTaskModal('${m.id}')">
             <div style="display:flex;align-items:center;gap:4px">
               <div style="width:16px;height:16px;border-radius:50%;background:${color};color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0">${icon}</div>
