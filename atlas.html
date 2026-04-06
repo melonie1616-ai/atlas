@@ -3507,6 +3507,14 @@ function rKanban(c){
   if(taskFilter==='milestones')items=items.filter(t=>t.isMilestone);
   else if(taskFilter==='priorities')items=items.filter(t=>t.isPriority);
   else if(taskFilter==='overdue')items=items.filter(t=>t.status!=='done'&&t.due&&t.due<today());
+  else if(taskFilter==='thisweek'){
+    const todayD=new Date(today()+'T00:00:00');
+    const dayOfWeek=todayD.getDay();
+    const saturday=new Date(todayD);
+    saturday.setDate(todayD.getDate()+(6-dayOfWeek));
+    const saturdayStr=saturday.toISOString().slice(0,10);
+    items=items.filter(t=>t.status!=='done'&&t.due&&t.due>=today()&&t.due<=saturdayStr);
+  }
   
   if(taskOwnerFilter==='__unassigned__')items=items.filter(t=>!t.owner);
   else if(taskOwnerFilter)items=items.filter(t=>t.owner===taskOwnerFilter);
@@ -3527,6 +3535,14 @@ function rKanban(c){
   const open=D.tasks.filter(t=>t.status!=='done').length,done=D.tasks.filter(t=>t.status==='done').length,msCount=D.tasks.filter(t=>t.isMilestone).length;
   const priorityCount=D.tasks.filter(t=>t.isPriority).length;
   const overdueCount=D.tasks.filter(t=>t.status!=='done'&&t.due&&t.due<today()).length;
+  const thisWeekCount=(()=>{
+    const todayD=new Date(today()+'T00:00:00');
+    const dayOfWeek=todayD.getDay();
+    const saturday=new Date(todayD);
+    saturday.setDate(todayD.getDate()+(6-dayOfWeek));
+    const saturdayStr=saturday.toISOString().slice(0,10);
+    return D.tasks.filter(t=>t.status!=='done'&&t.due&&t.due>=today()&&t.due<=saturdayStr).length;
+  })();
   const inboxCount=(D.inbox||[]).filter(x=>!x.processed).length;
   const owners=[...new Set((D.tasks||[]).map(t=>t.owner).filter(Boolean))].sort();
   const workstreams=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
