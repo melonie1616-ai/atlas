@@ -3075,6 +3075,14 @@ function rTasks(c){
   if(taskFilter==='milestones')items=items.filter(t=>t.isMilestone);
   else if(taskFilter==='priorities')items=items.filter(t=>t.isPriority);
   else if(taskFilter==='overdue')items=items.filter(t=>t.status!=='done'&&t.due&&t.due<today());
+  else if(taskFilter==='thisweek'){
+    const todayD=new Date(today()+'T00:00:00');
+    const dayOfWeek=todayD.getDay();
+    const saturday=new Date(todayD);
+    saturday.setDate(todayD.getDate()+(6-dayOfWeek));
+    const saturdayStr=saturday.toISOString().slice(0,10);
+    items=items.filter(t=>t.status!=='done'&&t.due&&t.due>=today()&&t.due<=saturdayStr);
+  }
   
   if(taskOwnerFilter==='__unassigned__')items=items.filter(t=>!t.owner);
   else if(taskOwnerFilter)items=items.filter(t=>t.owner===taskOwnerFilter);
@@ -3090,6 +3098,14 @@ function rTasks(c){
   const open=D.tasks.filter(t=>t.status!=='done').length,done=D.tasks.filter(t=>t.status==='done').length,msCount=D.tasks.filter(t=>t.isMilestone).length;
   const priorityCount=D.tasks.filter(t=>t.isPriority).length;
   const overdueCount=D.tasks.filter(t=>t.status!=='done'&&t.due&&t.due<today()).length;
+  const thisWeekCount=(()=>{
+    const todayD=new Date(today()+'T00:00:00');
+    const dayOfWeek=todayD.getDay();
+    const saturday=new Date(todayD);
+    saturday.setDate(todayD.getDate()+(6-dayOfWeek));
+    const saturdayStr=saturday.toISOString().slice(0,10);
+    return D.tasks.filter(t=>t.status!=='done'&&t.due&&t.due>=today()&&t.due<=saturdayStr).length;
+  })();
   const inboxCount=(D.inbox||[]).filter(x=>!x.processed).length;
   const owners=[...new Set((D.tasks||[]).map(t=>t.owner).filter(Boolean))].sort();
   const sIco=(col)=>taskSort===col?(taskSortDir===1?' &#9650;':' &#9660;'):'';
@@ -3100,6 +3116,7 @@ function rTasks(c){
     <div class="pill-filters">
       <div class="pill${taskFilter==='all'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='all';render()">Open (${open})</div>
       <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
+      <div class="pill${taskFilter==='thisweek'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='thisweek';render()" style="${thisWeekCount?'':'opacity:.6'}">&#128197; This Week (${thisWeekCount})</div>
       <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
       <div class="pill${taskFilter==='priorities'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='priorities';render()">&#9670; Priorities (${priorityCount})</div>
       <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
@@ -3555,6 +3572,7 @@ function rKanban(c){
     <div class="pill-filters">
       <div class="pill${taskFilter==='all'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='all';render()">Open (${open})</div>
       <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
+      <div class="pill${taskFilter==='thisweek'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='thisweek';render()" style="${thisWeekCount?'':'opacity:.6'}">&#128197; This Week (${thisWeekCount})</div>
       <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
       <div class="pill${taskFilter==='priorities'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='priorities';render()">&#9670; Priorities (${priorityCount})</div>
       <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
