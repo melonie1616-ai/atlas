@@ -1470,7 +1470,7 @@ function renderPresence(){}
 // ═══════════════════════════════════════════════════
 // NAV
 // ═══════════════════════════════════════════════════
-let taskFilter='all',taskStatusFilter='open',taskOwnerFilter='',taskWsFilter='',qcType='task',taskSort='default',taskSortDir=1,taskGroupCollapsed={},taskViewMode='list',myWorkViewMode='kanban',dashTab='overview',govTab='risks';
+let taskFilter='all',taskStatusFilter='open',taskOwnerFilter='',taskWsFilter='',qcType='task',taskSort='default',taskSortDir=1,taskGroupCollapsed={},taskViewMode='kanban',myWorkViewMode='kanban',dashTab='overview',govTab='risks';
 
 function toggleSidebar(){
   document.body.classList.toggle('nav-collapsed');
@@ -2042,10 +2042,26 @@ function wsStatusLabel(v){if(!v)return'Not Started';const s=WS_STATUSES.find(x=>
 function reportStatusClass(st){if(!st)return'not-started';if(st==='complete')return'complete';if(st==='not-started')return'not-started';return'in-progress';}
 function reportStatusClassOutcomes(st){const v=!st?'not-started':['on-track','at-risk','blocked','pilot-validate','deploy-scale'].includes(st)?'delivery':st;return v;}
 function wsStatusShortLabel(v){const short={ 'not-started':'Not started','reachout-kickoff':'Kickoff','discovery-workshops':'Discovery','capability-mapping':'Capability','prioritization-planning':'Prioritization','roadmap-integration':'Roadmap','resourcing':'Resource gate','delivery':'Delivery','complete':'Complete'};const key=!v?'not-started':['on-track','at-risk','blocked','pilot-validate','deploy-scale'].includes(v)?'delivery':v;return short[key]||wsStatusLabel(v);}
-const TASK_STATUSES={'not-started':'Not Started','open':'Open','blocked':'Blocked','done':'Done'};
-const TASK_STATUS_PILL={'not-started':'pill-m','open':'pill-a','blocked':'pill-r','done':'pill-g'};
-function taskStatusLabel(s){return TASK_STATUSES[s]||TASK_STATUSES['not-started']}
-function taskStatusPill(s){return TASK_STATUS_PILL[s]||'pill-m'}
+function normalizeTaskStatus(s){
+  if(s==='blocked')return'blocked-dependency';
+  return s||'not-started';
+}
+const TASK_STATUSES={
+  'not-started':'Not Started',
+  'open':'Open',
+  'delayed':'Delayed',
+  'blocked-dependency':'Blocked/Dependency',
+  'done':'Done'
+};
+const TASK_STATUS_PILL={
+  'not-started':'pill-m',
+  'open':'pill-a',
+  'delayed':'pill-v',
+  'blocked-dependency':'pill-r',
+  'done':'pill-g'
+};
+function taskStatusLabel(s){return TASK_STATUSES[normalizeTaskStatus(s)]||TASK_STATUSES['not-started']}
+function taskStatusPill(s){return TASK_STATUS_PILL[normalizeTaskStatus(s)]||'pill-m'}
 function isTaskActive(t){return t.status!=='done'}
 const statusColors={'not-started':'pill-m','reachout-kickoff':'pill-m','discovery-workshops':'pill-a','prioritization-planning':'pill-b','resourcing':'pill-v','delivery':'pill-g','pilot-validate':'pill-g','deploy-scale':'pill-t','complete':'pill-b','on-track':'pill-g','at-risk':'pill-a','blocked':'pill-r'};
 const engStatusColors={intake:'pill-m',scoping:'pill-a',active:'pill-i','on-hold':'pill-v',complete:'pill-g'};
@@ -2096,25 +2112,30 @@ function renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue
     <div class="card kpi" style="cursor:pointer" onclick="dashTab='mywork';render()"><div class="acc" style="background:#ec4899"></div><div class="lbl">My Work Items</div><div class="val" style="color:#ec4899">${myOpenTasks.length}</div><div class="note">${ME?myWsCount+' workstream'+(myWsCount!==1?'s':''):'<span style="color:var(--muted)">Sign in to see</span>'}</div></div>
   </div>
 
-  ${overdue.length||atRiskWs.length?`<div class="card" style="margin-bottom:20px;padding:18px 20px;background:var(--red-lt);border:1px solid var(--red)">
+  ${(()=>{
+    const delayedItems=open.filter(t=>normalizeTaskStatus(t.status)==='delayed');
+    const blockedItems=open.filter(t=>normalizeTaskStatus(t.status)==='blocked-dependency');
+    if(!delayedItems.length&&!blockedItems.length)return '';
+    return `<div class="card" style="margin-bottom:20px;padding:18px 20px;background:var(--red-lt);border:1px solid var(--red)">
     <h3 style="font-size:15px;font-weight:700;margin:0 0 10px;color:var(--red);display:flex;align-items:center;gap:8px">&#9888; Needs Attention</h3>
-    ${overdue.length?`<div style="margin-bottom:${atRiskWs.length?'12':'0'}px"><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">${overdue.length} Overdue Action Item${overdue.length!==1?'s':''}</div>
-      ${overdue.slice(0,3).map(t=>`<div style="padding:6px 10px;background:var(--bg-card);border-radius:var(--r-xs);margin-bottom:4px;cursor:pointer;display:flex;align-items:center;gap:8px" onclick="openTaskModal('${t.id}')">
-        <span style="font-size:11px;color:var(--red);font-weight:600">${fmtDate(t.due)}</span>
+    ${delayedItems.length?`<div style="margin-bottom:${blockedItems.length?'12':'0'}px"><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">${delayedItems.length} Delayed Action Item${delayedItems.length!==1?'s':''}</div>
+      ${delayedItems.slice(0,3).map(t=>`<div style="padding:6px 10px;background:var(--bg-card);border-radius:var(--r-xs);margin-bottom:4px;cursor:pointer;display:flex;align-items:center;gap:8px" onclick="openTaskModal('${t.id}')">
+        <span class="pill pill-v" style="font-size:10px">Delayed</span>
         <span style="flex:1;font-size:13px">${t.isMilestone?'&#9733; ':''}${t.isPriority?'&#9670; ':''}${esc(t.title)}</span>
-        <span style="font-size:11px;color:var(--muted)">${esc(t.owner||'Unassigned')}</span>
+        <span style="font-size:11px;color:var(--muted)">${esc(t.owner||'Unassigned')}${t.blockedBy?' · '+esc(t.blockedBy):''}</span>
       </div>`).join('')}
-      ${overdue.length>3?`<div style="font-size:11px;color:var(--muted);padding:4px 10px;cursor:pointer" onclick="taskStatusFilter='open';taskFilter='overdue';go('tasks')">+ ${overdue.length-3} more &rarr;</div>`:''}
+      ${delayedItems.length>3?`<div style="font-size:11px;color:var(--muted);padding:4px 10px;cursor:pointer" onclick="taskStatusFilter='open';taskFilter='all';go('tasks')">+ ${delayedItems.length-3} more &rarr;</div>`:''}
     </div>`:''}
-    ${atRiskWs.length?`<div><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">${atRiskWs.length} Workstream${atRiskWs.length!==1?'s':''} Need Attention</div>
-      ${atRiskWs.slice(0,3).map(w=>`<div style="padding:6px 10px;background:var(--bg-card);border-radius:var(--r-xs);margin-bottom:4px;cursor:pointer;display:flex;align-items:center;gap:8px" onclick="openWsDetail('${w.id}')">
-        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${w.color||'var(--muted)'}"></span>
-        <span style="flex:1;font-size:13px">${esc(w.name)}</span>
-        <span class="pill pill-r" style="font-size:10px">${wsStatusLabel(w.status)}</span>
+    ${blockedItems.length?`<div><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">${blockedItems.length} Blocked/Dependency Action Item${blockedItems.length!==1?'s':''}</div>
+      ${blockedItems.slice(0,3).map(t=>`<div style="padding:6px 10px;background:var(--bg-card);border-radius:var(--r-xs);margin-bottom:4px;cursor:pointer;display:flex;align-items:center;gap:8px" onclick="openTaskModal('${t.id}')">
+        <span class="pill pill-r" style="font-size:10px">Blocked</span>
+        <span style="flex:1;font-size:13px">${t.isMilestone?'&#9733; ':''}${t.isPriority?'&#9670; ':''}${esc(t.title)}</span>
+        <span style="font-size:11px;color:var(--muted)">${esc(t.owner||'Unassigned')}${t.blockedBy?' · '+esc(t.blockedBy):''}</span>
       </div>`).join('')}
-      ${atRiskWs.length>3?`<div style="font-size:11px;color:var(--muted);padding:4px 10px;cursor:pointer" onclick="go('workstreams')">+ ${atRiskWs.length-3} more &rarr;</div>`:''}
+      ${blockedItems.length>3?`<div style="font-size:11px;color:var(--muted);padding:4px 10px;cursor:pointer" onclick="taskStatusFilter='open';taskFilter='all';go('tasks')">+ ${blockedItems.length-3} more &rarr;</div>`:''}
     </div>`:''}
-  </div>`:''}
+  </div>`;
+  })()}
 
   <div class="ws-section" id="dashSec-timeline" style="margin-bottom:16px">
     <div class="ws-section-hd" onclick="toggleWsSection('dashSec-timeline')" style="background:var(--bg-card);padding:14px 18px;border-radius:var(--r-sm) var(--r-sm) 0 0;border:1px solid var(--border)"><h4 style="font-size:16px;font-weight:800;color:var(--text)">Program Timeline</h4><span class="ws-section-arrow">&#9660;</span></div>
@@ -2137,8 +2158,8 @@ function renderMyWorkSection(){
     return owner===ME;
   }).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const myTasks=(D.tasks||[]).filter(t=>t.owner===ME).sort((a,b)=>{
-    const so={'not-started':0,'open':1,'blocked':2,'done':3};
-    if(a.status!==b.status)return (so[a.status]??1)-(so[b.status]??1);
+    const so={'not-started':0,'open':1,'delayed':2,'blocked-dependency':3,'done':4,'blocked':3};
+    if(normalizeTaskStatus(a.status)!==normalizeTaskStatus(b.status))return (so[normalizeTaskStatus(a.status)]??1)-(so[normalizeTaskStatus(b.status)]??1);
     if(a.status!=='done'&&a.due&&b.due)return (a.due||'9').localeCompare(b.due||'9');
     return (a.title||'').localeCompare(b.title||'');
   });
@@ -2255,7 +2276,10 @@ function renderMyWorkKanban(myTasks){
     const isOD=t.status!=='done'&&t.due&&t.due<today();
     const isDueToday=t.status!=='done'&&t.due&&t.due===today();
     const cardCls='kb-card'+(isOD&&!isDueToday?' kb-overdue':'')+(isDueToday?' kb-due-today':'');
+    const canAdvance=normalizeTaskStatus(t.status)!=='done';
     return `<div class="${cardCls}" draggable="true" data-id="${t.id}" onclick="openTaskModal('${t.id}')"
+      ondragover="event.preventDefault();event.stopPropagation();this.closest('.kb-col').classList.add('drag-over')"
+      ondrop="event.preventDefault();event.stopPropagation();kbDrop(event,this.closest('.kb-col').dataset.status);this.closest('.kb-col').classList.remove('drag-over')"
       ondragstart="event.dataTransfer.setData('text/plain','${t.id}');this.classList.add('dragging')"
       ondragend="this.classList.remove('dragging')">
       <div class="kb-card-title">${t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">&#9733;</span>':''}${t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">&#9670;</span>':''}${esc(t.title)}</div>
@@ -2263,21 +2287,25 @@ function renderMyWorkKanban(myTasks){
         <span style="font-size:11px;color:var(--light)">${wName}</span>
         ${t.due?'<span style="font-size:11px;color:'+(isOD?'var(--red)':'var(--muted)')+';font-weight:'+(isOD||isDueToday?'600':'400')+'">'+(isOD?'&#9888; ':'')+(isDueToday?'&#9200; ':'')+fmtDate(t.due)+'</span>':''}
       </div>
+      ${canAdvance?`<div style="margin-top:8px;display:flex;justify-content:flex-end"><button type="button" style="font-size:10.5px;border:1px solid var(--border);border-radius:var(--r-xs);padding:3px 8px;background:var(--bg-subtle);color:var(--muted);cursor:pointer" onclick="event.stopPropagation();advanceTaskStatus('${t.id}')">Next &#8594;</button></div>`:''}
     </div>`;
   };
 
   const renderCol=(col)=>{
     const colItems=grouped[col.key]||[];
     return `<div class="kb-col" data-status="${col.key}"
-      ondragover="event.preventDefault();this.classList.add('kb-col-over')"
-      ondragleave="this.classList.remove('kb-col-over')"
-      ondrop="kbDrop(event,'${col.key}');this.classList.remove('kb-col-over')">
-      <div class="kb-col-hd" style="background:${col.accent}">
+      ondragover="event.preventDefault();this.classList.add('drag-over')"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="kbDrop(event,'${col.key}');this.classList.remove('drag-over')">
+      <div class="kb-col-hdr" style="border-bottom-color:${col.accent}">
         <span>${col.label}</span>
         <span class="kb-count">${colItems.length}</span>
       </div>
-      <div class="kb-col-body">
-        ${colItems.length?colItems.map(renderCard).join(''):'<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0">No items</div>'}
+      <div class="kb-col-body"
+        ondragover="event.preventDefault();event.stopPropagation();this.closest('.kb-col').classList.add('drag-over')"
+        ondragleave="this.closest('.kb-col').classList.remove('drag-over')"
+        ondrop="event.preventDefault();event.stopPropagation();kbDrop(event,'${col.key}');this.closest('.kb-col').classList.remove('drag-over')">
+        ${colItems.length?colItems.map(renderCard).join(''):'<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;pointer-events:none">No items</div>'}
       </div>
     </div>`;
   };
@@ -3086,7 +3114,7 @@ function rTasks(c){
   
   if(taskOwnerFilter==='__unassigned__')items=items.filter(t=>!t.owner);
   else if(taskOwnerFilter)items=items.filter(t=>t.owner===taskOwnerFilter);
-  if(q)items=items.filter(t=>(t.title+' '+t.owner+' '+t.notes+' '+wsNamePlain(t.workstream)).toLowerCase().includes(q));
+  if(q)items=items.filter(t=>(t.title+' '+t.owner+' '+t.notes+' '+(t.blockedBy||'')+' '+wsNamePlain(t.workstream)).toLowerCase().includes(q));
   const pv={high:0,medium:1,low:2};
   if(taskSort==='title')items.sort((a,b)=>taskSortDir*a.title.localeCompare(b.title));
   else if(taskSort==='owner')items.sort((a,b)=>taskSortDir*(a.owner||'').localeCompare(b.owner||''));
@@ -3094,7 +3122,7 @@ function rTasks(c){
   else if(taskSort==='due')items.sort((a,b)=>taskSortDir*(a.due||'9').localeCompare(b.due||'9'));
   else if(taskSort==='priority')items.sort((a,b)=>taskSortDir*((pv[a.priority]??1)-(pv[b.priority]??1)));
   else if(taskSort==='workstream')items.sort((a,b)=>taskSortDir*wsNamePlain(a.workstream).localeCompare(wsNamePlain(b.workstream)));
-  else{const so={'not-started':0,'open':1,'blocked':2,'done':3};items.sort((a,b)=>{if(a.status!==b.status)return(so[a.status]??1)-(so[b.status]??1);if((pv[a.priority]??1)!==(pv[b.priority]??1))return(pv[a.priority]??1)-(pv[b.priority]??1);return(a.due||'9').localeCompare(b.due||'9')})}
+  else{const so={'not-started':0,'open':1,'delayed':2,'blocked-dependency':3,'done':4,'blocked':3};items.sort((a,b)=>{if(normalizeTaskStatus(a.status)!==normalizeTaskStatus(b.status))return(so[normalizeTaskStatus(a.status)]??1)-(so[normalizeTaskStatus(b.status)]??1);if((pv[a.priority]??1)!==(pv[b.priority]??1))return(pv[a.priority]??1)-(pv[b.priority]??1);return(a.due||'9').localeCompare(b.due||'9')})}
   const open=D.tasks.filter(t=>t.status!=='done').length,done=D.tasks.filter(t=>t.status==='done').length,msCount=D.tasks.filter(t=>t.isMilestone).length;
   const priorityCount=D.tasks.filter(t=>t.isPriority).length;
   const overdueCount=D.tasks.filter(t=>t.status!=='done'&&t.due&&t.due<today()).length;
@@ -3204,7 +3232,7 @@ function sortTasks(col){if(taskSort===col)taskSortDir*=-1;else{taskSort=col;task
 function openTaskModal(id){
   const t=id?D.tasks.find(x=>x.id===id):null;
   const defaultOwner=t?t.owner:(ME||'');
-  const defaultStatus=t?t.status:'open';
+  const defaultStatus=normalizeTaskStatus(t?t.status:'open');
   openModal(`<div class="m-hd"><h3>${t?'Edit':'New'} Action Item</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
     <div style="padding:10px 14px;margin-bottom:12px;border-radius:var(--r-sm);background:#eff6ff;border:1px solid #3b82f6;font-size:12.5px;color:#1e40af">
@@ -3236,7 +3264,8 @@ function openTaskModal(id){
       <div class="fg"><label>Start Date</label><input type="date" id="t-start" value="${t?t.startDate:''}"></div>
       <div class="fg"><label>Target Date</label><input type="date" id="t-due" value="${t?t.due:''}"></div>
     </div>
-    <div class="fg"><label>Status</label><select id="t-status"><option value="not-started"${(!t||t.status==='not-started'||!t.status)?' selected':''}>Not Started</option><option value="open"${defaultStatus==='open'?' selected':''}>Open</option><option value="blocked"${t?.status==='blocked'?' selected':''}>Blocked / Waiting</option><option value="done"${t?.status==='done'?' selected':''}>Done</option></select></div>
+    <div class="fg"><label>Status</label><select id="t-status"><option value="not-started"${(!t||defaultStatus==='not-started'||!t.status)?' selected':''}>Not Started</option><option value="open"${defaultStatus==='open'?' selected':''}>Open</option><option value="delayed"${defaultStatus==='delayed'?' selected':''}>Delayed</option><option value="blocked-dependency"${defaultStatus==='blocked-dependency'?' selected':''}>Blocked/Dependency</option><option value="done"${defaultStatus==='done'?' selected':''}>Done</option></select></div>
+    <div class="fg"><label>Blocked By</label><input id="t-blocked-by" value="${t?esc(t.blockedBy||''):''}" placeholder="Optional: group or person blocking progress"></div>
     <div class="fg"><label>Notes</label><textarea id="t-notes" style="min-height:90px;resize:vertical" placeholder="Optional details, context, or next steps">${t?esc(t.notes):''}</textarea></div>
     ${t?`<div class="fg" style="margin-top:4px">
       <label style="display:flex;align-items:center;justify-content:space-between">Discussion <span style="font-size:11px;color:var(--light);font-weight:400">${(t.comments||[]).length} comment${(t.comments||[]).length!==1?'s':''}</span></label>
@@ -3271,6 +3300,7 @@ function saveTask(id){
   t.startDate=document.getElementById('t-start').value;
   t.due=document.getElementById('t-due').value;
   t.status=document.getElementById('t-status').value;
+  t.blockedBy=document.getElementById('t-blocked-by').value.trim();
   t.isMilestone=document.getElementById('t-milestone').checked;
   t.isPriority=document.getElementById('t-priority-flag').checked;
   t.workstream=document.getElementById('t-ws').value;
@@ -3295,8 +3325,8 @@ function addTaskComment(id){
 }
 function toggleTask(id){
   const t=D.tasks.find(x=>x.id===id);if(!t)return;
-  const cycle=['not-started','open','blocked','done'];
-  const ci=cycle.indexOf(t.status);
+  const cycle=['not-started','open','delayed','blocked-dependency','done'];
+  const ci=cycle.indexOf(normalizeTaskStatus(t.status));
   t.status=ci>=0&&ci<cycle.length-1?cycle[ci+1]:'done';
   t.updatedBy=ME;t.updatedAt=new Date().toISOString();
   save();render();
@@ -3494,7 +3524,8 @@ function rTasksInbox(c){
 const KB_COLS=[
   {key:'not-started',label:'Not Started',accent:'var(--muted)'},
   {key:'open',label:'Open',accent:'var(--accent)'},
-  {key:'blocked',label:'Blocked / Waiting',accent:'var(--red)'},
+  {key:'delayed',label:'Delayed',accent:'#a855f7'},
+  {key:'blocked-dependency',label:'Blocked/Dependency',accent:'var(--red)'},
   {key:'done',label:'Done',accent:'var(--green)'}
 ];
 
@@ -3522,12 +3553,12 @@ function rKanban(c){
   else if(taskWsFilter)items=items.filter(t=>t.workstream===taskWsFilter);
 
   const q=(document.getElementById('search')?.value||'').toLowerCase();
-  if(q)items=items.filter(t=>(t.title+' '+t.owner+' '+t.notes+' '+wsNamePlain(t.workstream)).toLowerCase().includes(q));
+  if(q)items=items.filter(t=>(t.title+' '+t.owner+' '+t.notes+' '+(t.blockedBy||'')+' '+wsNamePlain(t.workstream)).toLowerCase().includes(q));
 
   const grouped={};
   KB_COLS.forEach(col=>grouped[col.key]=[]);
   items.forEach(t=>{
-    const s=t.status||'not-started';
+    const s=normalizeTaskStatus(t.status);
     if(grouped[s])grouped[s].push(t);
     else grouped['not-started'].push(t);
   });
@@ -3554,7 +3585,10 @@ function rKanban(c){
     const isOD=t.status!=='done'&&t.due&&t.due<today();
     const isDueToday=t.status!=='done'&&t.due&&t.due===today();
     const cardCls='kb-card'+(isOD&&!isDueToday?' kb-overdue':'')+(isDueToday?' kb-due-today':'');
+    const canAdvance=normalizeTaskStatus(t.status)!=='done';
     return `<div class="${cardCls}" draggable="true" data-id="${t.id}" onclick="openTaskModal('${t.id}')"
+      ondragover="event.preventDefault();event.stopPropagation();this.closest('.kb-col').classList.add('drag-over')"
+      ondrop="event.preventDefault();event.stopPropagation();kbDrop(event,this.closest('.kb-col').dataset.status);this.closest('.kb-col').classList.remove('drag-over')"
       ondragstart="event.dataTransfer.setData('text/plain','${t.id}');this.classList.add('dragging')"
       ondragend="this.classList.remove('dragging')">
       <div class="kb-card-title">${t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">&#9733;</span>':''}${t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">&#9670;</span>':''}${esc(t.title)}</div>
@@ -3562,6 +3596,8 @@ function rKanban(c){
         <span style="font-size:11px;color:var(--light)">${t.owner?esc(t.owner):'Unassigned'}</span>
         ${t.due?'<span style="font-size:11px;color:'+(isOD?'var(--red)':'var(--muted)')+';font-weight:'+(isOD||isDueToday?'600':'400')+'">'+(isOD?'&#9888; ':'')+(isDueToday?'&#9200; ':'')+fmtDate(t.due)+'</span>':''}
       </div>
+      ${t.blockedBy&&['delayed','blocked-dependency'].includes(normalizeTaskStatus(t.status))?`<div style="margin-top:6px;font-size:11px;color:var(--muted)">Blocked by: ${esc(t.blockedBy)}</div>`:''}
+      ${canAdvance?`<div style="margin-top:8px;display:flex;justify-content:flex-end"><button type="button" style="font-size:10.5px;border:1px solid var(--border);border-radius:var(--r-xs);padding:3px 8px;background:var(--bg-subtle);color:var(--muted);cursor:pointer" onclick="event.stopPropagation();advanceTaskStatus('${t.id}')">Next &#8594;</button></div>`:''}
     </div>`;
   };
 
@@ -3575,8 +3611,11 @@ function rKanban(c){
         <span>${col.label}</span>
         <span class="kb-count">${colItems.length}</span>
       </div>
-      <div class="kb-col-body">
-        ${colItems.length?colItems.map(renderCard).join(''):'<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0">No items</div>'}
+      <div class="kb-col-body"
+        ondragover="event.preventDefault();event.stopPropagation();this.closest('.kb-col').classList.add('drag-over')"
+        ondragleave="this.closest('.kb-col').classList.remove('drag-over')"
+        ondrop="event.preventDefault();event.stopPropagation();kbDrop(event,'${col.key}');this.closest('.kb-col').classList.remove('drag-over')">
+        ${colItems.length?colItems.map(renderCard).join(''):'<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;pointer-events:none">No items</div>'}
       </div>
     </div>`;
   };
@@ -3626,11 +3665,26 @@ function kbDrop(event,newStatus){
   const id=event.dataTransfer.getData('text/plain');
   if(!id)return;
   const t=(D.tasks||[]).find(x=>x.id===id);
-  if(!t||t.status===newStatus)return;
+  if(!t||normalizeTaskStatus(t.status)===newStatus)return;
   t.status=newStatus;
+  if(newStatus==='done'&&taskStatusFilter==='open')taskStatusFilter='';
   t.updatedBy=ME;t.updatedAt=new Date().toISOString();
   save();render();
   toast('Moved to '+taskStatusLabel(newStatus));
+}
+function advanceTaskStatus(id){
+  const t=(D.tasks||[]).find(x=>x.id===id);
+  if(!t)return;
+  const flow=['not-started','open','delayed','blocked-dependency','done'];
+  const current=normalizeTaskStatus(t.status);
+  const idx=flow.indexOf(current);
+  if(idx<0||idx>=flow.length-1)return;
+  const nextStatus=flow[idx+1];
+  t.status=nextStatus;
+  if(nextStatus==='done'&&taskStatusFilter==='open')taskStatusFilter='';
+  t.updatedBy=ME;t.updatedAt=new Date().toISOString();
+  save();render();
+  toast('Moved to '+taskStatusLabel(nextStatus));
 }
 
 function rExtract(c){
