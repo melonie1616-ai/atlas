@@ -105,6 +105,11 @@ body.nav-collapsed .topbar-menu{display:flex}
 .badge{font-size:10px;font-weight:600;min-width:16px;text-align:center;padding:1px 5px;border-radius:999px;background:rgba(255,255,255,.06);color:#7070a0;margin-left:auto}
 .badge.hot{background:rgba(99,102,241,.3);color:#b4b4ff}
 .badge.warn{background:rgba(239,68,68,.3);color:#fca5a5}
+.badge.inbox-alert{background:#ec4899;color:#fff;animation:pulse-inbox 1.5s ease-in-out infinite}
+@keyframes pulse-inbox{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(1.08)}}
+.inbox-dot{display:none;width:8px;height:8px;background:#ec4899;border-radius:50%;margin-left:6px;animation:pulse-inbox 1.5s ease-in-out infinite}
+.inbox-dot.show{display:inline-block}
+#nav-tasks.has-inbox{background:rgba(236,72,153,.1);border-left:3px solid #ec4899}
 .side-ft{padding:10px 10px 14px;border-top:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:1px}
 .side-ft button{text-align:left;padding:7px 12px;border-radius:var(--r-sm);font-size:13px;color:#8888a8;cursor:pointer;transition:all .15s}
 .side-ft button:hover{background:rgba(255,255,255,.06);color:#d0d0e0}
@@ -612,9 +617,9 @@ body.nav-collapsed .topbar-menu{display:flex}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
         Workstreams <span class="badge" id="nb-ws2"></span>
       </div>
-      <div class="ni" data-v="tasks" onclick="go('tasks')">
+      <div class="ni" data-v="tasks" onclick="go('tasks')" id="nav-tasks">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-        Action Items <span class="badge" id="nb-tasks">0</span>
+        Action Items <span class="badge" id="nb-tasks">0</span><span class="inbox-dot" id="inbox-dot"></span>
       </div>
       <div id="sidebar-links"></div>
     </div>
@@ -1540,8 +1545,10 @@ function badges(){
   const open=(D.tasks||[]).filter(t=>t.status!=='done');
   const overdue=open.filter(t=>t.due&&t.due<today());
   const inboxCount=(D.inbox||[]).filter(x=>!x.processed).length;
-  const taskBadgeVal=inboxCount?open.length+' / '+inboxCount:open.length;
-  const te=document.getElementById('nb-tasks');te.textContent=taskBadgeVal;te.className='badge'+(inboxCount?' warn':overdue.length?' warn':open.length?' hot':'');
+  const taskBadgeVal=inboxCount||open.length;
+  const te=document.getElementById('nb-tasks');te.textContent=taskBadgeVal;te.className='badge'+(inboxCount?' inbox-alert':overdue.length?' warn':open.length?' hot':'');
+  const inboxDot=document.getElementById('inbox-dot');if(inboxDot)inboxDot.className='inbox-dot'+(inboxCount?' show':'');
+  const navTasks=document.getElementById('nav-tasks');if(navTasks)navTasks.classList.toggle('has-inbox',inboxCount>0);
   const ee=document.getElementById('nb-eng');if(ee)ee.textContent=(D.engagements||[]).length;
   const wsCount=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting').length;
   const we=document.getElementById('nb-ws');if(we)we.textContent=wsCount;
