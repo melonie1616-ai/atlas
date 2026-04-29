@@ -2752,8 +2752,7 @@ function buildGantt(){
   const totalRows=rowIdx;
 
   if(totalRows>0){
-    rowsHtml=`<div class="gantt-row" style="margin-top:8px;border-left:4px solid var(--accent)">
-      <div class="gantt-row-label phase-label">Workstreams</div>
+    rowsHtml=`<div class="gantt-row" style="margin-top:8px">
       <div class="gantt-row-bars" style="height:${Math.max(40,totalRows*rowH+12)}px;position:relative">
         ${gridLines}
         ${wsBars}
