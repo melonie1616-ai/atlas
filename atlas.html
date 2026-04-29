@@ -695,7 +695,7 @@ body.nav-collapsed .topbar-menu{display:flex}
 
 
 <script>
-let D,V=localStorage.getItem('atlas_view')||'dashboard',ME='',dbRef=null,firebaseReady=false,ganttZoom='3m',ganttShowTasks=false,ganttShowMs=false,ganttShowBU=true,ganttShowCC=false,ganttShowRoadmap=true,ganttShow90Day=true,ganttCustomStart='';
+let D,V=localStorage.getItem('atlas_view')||'dashboard',ME='',dbRef=null,firebaseReady=false,ganttZoom='3m',ganttShowMs=true,ganttCustomStart='';
 const RELEASE_VERSION='2026-03-27';
 const RELEASE_NOTES=[
   {date:'March 27, 2026',whatsNew:[
@@ -2624,13 +2624,44 @@ function renderMyWorkKanban(myTasks){
 }
 
 function setGanttZoom(z){ganttZoom=z;render()}
-function buildGantt(){
-  const phases=[
-    {label:'Discover Business Demand',start:'2026-03-16',end:'2026-04-14',color:'#15803d',txt:'#fff'},
-    {label:'Decide Enterprise Standards',start:'2026-04-15',end:'2026-05-14',color:'#22c55e',txt:'#fff'},
-    {label:'Deploy & Scale Proven Solutions',start:'2026-05-15',end:'2026-06-13',color:'#86efac',txt:'#15803d'}
-  ];
+let ganttExpanded={},ganttCategoryFilter='all';
+function toggleGanttExpand(wsId){ganttExpanded[wsId]=!ganttExpanded[wsId];render()}
+function setGanttCategory(cat){ganttCategoryFilter=cat;render()}
 
+function getWsDateRange(wsId,depth=0){
+  if(depth>10)return null;
+  const w=(D.workstreams||[]).find(x=>x.id===wsId);
+  if(!w)return null;
+  
+  if(w.targetStart&&w.targetEnd){
+    return{start:w.targetStart,end:w.targetEnd,isManual:true};
+  }
+  
+  const children=(D.workstreams||[]).filter(c=>c.parentWs===wsId);
+  const tasks=(D.tasks||[]).filter(t=>t.workstream===wsId);
+  
+  const allDates=[];
+  
+  children.forEach(c=>{
+    const r=getWsDateRange(c.id,depth+1);
+    if(r){allDates.push(r.start);allDates.push(r.end)}
+  });
+  
+  tasks.forEach(t=>{
+    if(t.startDate)allDates.push(t.startDate);
+    if(t.due)allDates.push(t.due);
+  });
+  
+  if(w.targetStart)allDates.push(w.targetStart);
+  if(w.targetEnd)allDates.push(w.targetEnd);
+  
+  if(!allDates.length)return null;
+  
+  const sorted=allDates.filter(Boolean).sort();
+  return{start:sorted[0],end:sorted[sorted.length-1],isManual:false};
+}
+
+function buildGantt(){
   const nowDate=new Date(today()+'T00:00:00');
   let tStart;
   if(ganttCustomStart){
@@ -2683,112 +2714,87 @@ function buildGantt(){
     `<div class="pill${ganttZoom===z?' pill-i':' pill-m'}" style="cursor:pointer;font-size:12px" onclick="setGanttZoom('${z}')">${z==='all'?'Full':z.toUpperCase()}</div>`
   ).join('');
 
-  const quarters=[
-    {label:'Q1 2026',start:'2026-01-01',end:'2026-03-31',color:'#0369a1',subBg:'#1e6fa8',txt:'#fff',subTxt:'#fff',items:[
-      {label:'Establish baseline of enterprise AI usage',ws:'governance'},
-      {label:'Identify priority business outcome opportunities',ws:'gtm'},
-      {label:'Stand up AI Governance Council',ws:'governance'}
-    ]},
-    {label:'Q2 2026',start:'2026-04-01',end:'2026-06-30',color:'#0284c7',subBg:'#2b8fcf',txt:'#fff',subTxt:'#fff',items:[
-      {label:'Launch priority AI use cases',ws:'gtm'},
-      {label:'Establish ROI measurement framework',ws:'data-enterprise'},
-      {label:'Enterprise Copilot rollout',ws:'copilot'},
-      {label:'Set clear expectations on data readiness',ws:'data-enterprise'}
-    ]},
-    {label:'Q3-Q4 2026',start:'2026-07-01',end:'2026-12-31',color:'#38bdf8',subBg:'#7dd3fc',txt:'#0c4a6e',subTxt:'#0c4a6e',items:[
-      {label:'Expand proven pilots across BUs',ws:'operations'},
-      {label:'Refine enterprise AI governance & standards',ws:'governance'},
-      {label:'Operationalize AI adoption and value reporting',ws:'data-enterprise'}
-    ]},
-    {label:'Q1 2027',start:'2027-01-01',end:'2027-03-31',color:'#7dd3fc',subBg:'#bae6fd',txt:'#0c4a6e',subTxt:'#0c4a6e',items:[
-      {label:'Enterprise AI platform maturity (Nexus)',ws:'nexus'},
-      {label:'Scaled horizontal AI automation (HR, Legal)',ws:'hr'},
-      {label:'Scaled vertical AI automation (GTM, Ops)',ws:'operations'}
-    ]}
-  ];
+  const catBtns=['all','BU','Cross-cutting'].map(cat=>{
+    const label=cat==='all'?'All':cat==='BU'?'Business':'Cross-cutting';
+    return `<div class="pill${ganttCategoryFilter===cat?' pill-i':' pill-m'}" style="cursor:pointer;font-size:12px" onclick="setGanttCategory('${cat}')">${label}</div>`;
+  }).join('');
 
-  let rows='';
-
-  const visPhases=phases.filter(p=>{const l=pct(p.start),r=pct(p.end);return r>0&&l<100});
-  if(ganttShow90Day&&visPhases.length){
-    let phaseBars='';
-    visPhases.forEach(p=>{
-      const l=pct(p.start),r=pct(p.end);
-      phaseBars+=`<div class="gantt-bar" style="left:${Math.max(0,l)}%;width:${Math.min(100,r)-Math.max(0,l)}%;top:4px;background:${p.color};color:${p.txt||'#fff'};font-weight:600;font-size:12.5px;height:26px" title="${p.label}">${p.label}</div>`;
-    });
-    rows+=`<div class="gantt-row" style="background:var(--green-lt);border-radius:4px;margin-top:4px;border-left:4px solid var(--green)">
-      <div class="gantt-row-label phase-label">90-Day Enterprise Plan</div>
-      <div class="gantt-row-bars" style="height:34px">
-        ${gridLines}
-        ${phaseBars}
-        ${todayMarker()}
-      </div>
-    </div>`;
-  }
-
-  const visQuarters=quarters.filter(q=>{const l=pct(q.start),r=pct(q.end);return r>0&&l<100});
-  if(ganttShowRoadmap&&visQuarters.length){
-    const rowH=24;
-    let yIdx=0;
-    let rmBars='';
-    visQuarters.forEach(q=>{
-      const ql=pct(q.start),qr=pct(q.end);
-      rmBars+=`<div class="gantt-bar" style="left:${Math.max(0,ql)}%;width:${Math.min(100,qr)-Math.max(0,ql)}%;top:${yIdx*rowH+2}px;background:${q.color};color:${q.txt||'#fff'};font-weight:700;font-size:12.5px;height:24px" title="${q.label}">${q.label}</div>`;
-      yIdx++;
-      q.items.forEach(item=>{
-        const il=Math.max(0,pct(q.start)),ir=Math.min(100,pct(q.end));
-        const wsN=WS_DEFS.find(w=>w.id===item.ws);
-        const wsC=wsN?wsN.color:'var(--muted)';
-        const wsName=wsN?wsN.name:'';
-        rmBars+=`<div class="gantt-bar" style="left:${il}%;width:${ir-il}%;top:${yIdx*rowH+2}px;background:${q.subBg||q.color};color:${q.subTxt||q.txt||'#fff'};font-size:11.5px;font-weight:500;height:22px;cursor:pointer;border-left:3px solid ${wsC}" title="${item.label} — ${wsName}" onclick="go('workstreams');setTimeout(()=>openWsDetail('${item.ws}'),100)"><span style="display:inline-flex;align-items:center;gap:5px">${item.label}</span></div>`;
-        yIdx++;
-      });
-    });
-    rows+=`<div class="gantt-row" style="background:var(--sky-lt);border-radius:4px;margin-top:6px;border-left:4px solid var(--sky)">
-      <div class="gantt-row-label phase-label">Enterprise AI Roadmap</div>
-      <div class="gantt-row-bars" style="height:${yIdx*rowH+8}px">
-        ${gridLines}
-        ${rmBars}
-        ${todayMarker()}
-      </div>
-    </div>`;
-  }
-
-  const wsWithRanges=(D.workstreams||[]).filter(w=>{
+  const l1Workstreams=(D.workstreams||[]).filter(w=>{
     if(w.parentWs)return false;
-    if(w.category==='BU')return ganttShowBU;
-    if(w.category==='Cross-cutting')return ganttShowCC;
-    return false;
-  }).map(w=>{
-    const r=wsTimelineRange(w.id);
-    return r&&r.effectiveStart&&r.effectiveEnd?{...w,effStart:r.effectiveStart,effEnd:r.effectiveEnd,isManual:r.isManual}:null;
-  }).filter(Boolean).sort((a,b)=>(a.effStart||'').localeCompare(b.effStart||''));
-  const visDatedWs=wsWithRanges.filter(w=>{const l=pct(w.effStart),r=pct(w.effEnd);return r>0&&l<100});
-  if((ganttShowBU||ganttShowCC)&&visDatedWs.length){
-    const rowH=28;
-    let wsBars='';
-    visDatedWs.forEach((w,i)=>{
-      const l=Math.max(0,pct(w.effStart)),r=Math.min(100,pct(w.effEnd));
-      const bw=Math.max(0.5,r-l);
-      const wc=w.color||'var(--muted)';
-      const src=w.isManual?'':'  (from action items)';
-      wsBars+=`<div class="gantt-bar" style="left:${l}%;width:${bw}%;top:${i*rowH+2}px;background:${wc};color:#fff;font-size:11.5px;font-weight:600;height:22px;cursor:pointer;opacity:.9;border-radius:4px" title="${esc(w.name)}: ${fmtDate(w.effStart)} — ${fmtDate(w.effEnd)} (${wsStatusLabel(w.status)})${src}" onclick="openWsDetail('${w.id}')">${esc(w.name)}</div>`;
+    if(ganttCategoryFilter==='all')return w.category==='BU'||w.category==='Cross-cutting';
+    return w.category===ganttCategoryFilter;
+  }).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+
+  let rowsHtml='';
+  let rowIdx=0;
+  const rowH=28;
+
+  function renderWsBar(w,level,yPos){
+    const range=getWsDateRange(w.id);
+    if(!range)return '';
+    
+    const l=pct(range.start),r=pct(range.end);
+    if(r<=0||l>=100)return '';
+    
+    const left=Math.max(0,l);
+    const width=Math.max(0.5,Math.min(100,r)-left);
+    const wc=w.color||'var(--accent)';
+    const indent=level*16;
+    const barHeight=level===0?24:level===1?20:18;
+    const fontSize=level===0?'12px':level===1?'11px':'10px';
+    const fontWeight=level===0?'700':level===1?'600':'500';
+    const opacity=range.isManual?'1':'.75';
+    const borderStyle=range.isManual?'':'border:1px dashed rgba(255,255,255,.4);';
+    
+    const children=(D.workstreams||[]).filter(c=>c.parentWs===w.id);
+    const hasChildren=children.length>0;
+    const isExpanded=ganttExpanded[w.id];
+    const expandIcon=hasChildren?`<span style="margin-right:4px;font-size:10px">${isExpanded?'▼':'▶'}</span>`:'';
+    const clickAction=hasChildren?`toggleGanttExpand('${w.id}')`:`openWsDetail('${w.id}')`;
+    
+    const levelBadge=`<span style="font-size:9px;background:rgba(255,255,255,.25);padding:1px 4px;border-radius:3px;margin-right:4px">L${w.level||1}</span>`;
+    const statusDot=w.status==='at-risk'||w.status==='blocked'?`<span style="color:#fbbf24;margin-left:4px">⚠</span>`:'';
+    
+    const tooltip=`${w.name}: ${fmtDate(range.start)} — ${fmtDate(range.end)} (${wsStatusLabel(w.status)})${range.isManual?'':' [calculated]'}`;
+    
+    return `<div class="gantt-bar" style="left:${left}%;width:${width}%;top:${yPos}px;background:${wc};color:#fff;font-size:${fontSize};font-weight:${fontWeight};height:${barHeight}px;cursor:pointer;opacity:${opacity};border-radius:4px;margin-left:${indent}px;${borderStyle}display:flex;align-items:center;padding:0 6px;white-space:nowrap;overflow:hidden" title="${esc(tooltip)}" onclick="${clickAction}">${expandIcon}${levelBadge}${esc(w.name)}${statusDot}</div>`;
+  }
+
+  function collectVisibleRows(wsList,level){
+    let bars='';
+    wsList.forEach(w=>{
+      bars+=renderWsBar(w,level,rowIdx*rowH+2);
+      rowIdx++;
+      
+      if(ganttExpanded[w.id]){
+        const children=(D.workstreams||[]).filter(c=>c.parentWs===w.id).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+        bars+=collectVisibleRows(children,level+1);
+      }
     });
-    rows+=`<div class="gantt-row" style="margin-top:8px;border-left:4px solid var(--accent)">
+    return bars;
+  }
+
+  const wsBars=collectVisibleRows(l1Workstreams,0);
+  const totalRows=rowIdx;
+
+  if(totalRows>0){
+    rowsHtml=`<div class="gantt-row" style="margin-top:8px;border-left:4px solid var(--accent)">
       <div class="gantt-row-label phase-label">Workstreams</div>
-      <div class="gantt-row-bars" style="height:${Math.max(32,visDatedWs.length*rowH+8)}px;position:relative">
+      <div class="gantt-row-bars" style="height:${Math.max(40,totalRows*rowH+12)}px;position:relative">
         ${gridLines}
         ${wsBars}
         ${todayMarker()}
       </div>
     </div>`;
+  }else{
+    rowsHtml=`<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">No workstreams with dates to display. Add target dates to workstreams or action items to see them here.</div>`;
   }
 
   const milestones=(D.tasks||[]).filter(t=>t.isMilestone).slice().sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
   const visMs=milestones.filter(m=>{const x=pct(m.due||today());return x>=0&&x<=100});
   if(ganttShowMs&&visMs.length){
-    rows+=`<div class="gantt-row" style="margin-top:10px">
-      <div class="gantt-row-label phase-label">&#9733; Milestones</div>
+    rowsHtml+=`<div class="gantt-row" style="margin-top:10px">
+      <div class="gantt-row-label phase-label">★ Milestones</div>
       <div class="gantt-row-bars" style="height:${Math.max(32,visMs.length*24+8)}px;position:relative">
         ${gridLines}
         ${visMs.map((m,i)=>{
@@ -2796,82 +2802,50 @@ function buildGantt(){
           const isDone=m.status==='done';
           const isOD=m.status!=='done'&&m.due&&m.due<today();
           const color=isDone?'var(--green)':isOD?'var(--red)':wsColor(m.workstream);
-          const icon=isDone?'&#10003;':isOD?'!':'&#9670;';
+          const icon=isDone?'✓':isOD?'!':'◆';
           const ownerText=m.owner?` • <span style="font-style:italic">${esc(m.owner)}</span>`:'';
           return `<div style="position:absolute;left:${x}%;top:${i*24+4}px;transform:translateX(-8px);cursor:pointer" title="${esc(m.title)} — ${fmtDate(m.due)} (${isDone?'done':isOD?'overdue':'upcoming'})" onclick="openTaskModal('${m.id}')">
             <div style="display:flex;align-items:center;gap:4px">
               <div style="width:16px;height:16px;border-radius:50%;background:${color};color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0">${icon}</div>
               <span style="font-size:12px;white-space:nowrap;color:var(--text);font-weight:500">${esc(m.title)}${ownerText}</span>
             </div>
-          </div>`
+          </div>`;
         }).join('')}
         ${todayMarker()}
       </div>
     </div>`;
   }
 
-  if(ganttShowTasks){
-    const allTasks=(D.tasks||[]).filter(t=>!t.isMilestone&&t.status!=='done').sort((a,b)=>(a.startDate||a.due||'9').localeCompare(b.startDate||b.due||'9'));
-    const visTasks=allTasks.filter(t=>{
-      const sd=t.startDate||t.due;const ed=t.due||t.startDate;
-      if(!sd&&!ed)return false;
-      const l=pct(sd||ed),r=pct(ed||sd);
-      return r>0&&l<100;
-    });
-    if(visTasks.length){
-      const rowH=24;
-      let taskBars='';
-      visTasks.forEach((t,i)=>{
-        const sd=t.startDate||t.due;const ed=t.due||t.startDate;
-        const hasRange=t.startDate&&t.due&&t.startDate!==t.due;
-        const wc=wsColor(t.workstream)||'var(--muted)';
-        const isDone=t.status==='done';
-        const isOD=t.status!=='done'&&t.due&&t.due<today();
-        const barColor=isDone?'var(--green)':isOD?'var(--red)':wc;
-        if(hasRange){
-          const l=Math.max(0,pct(sd)),r=Math.min(100,pct(ed));
-          const w=Math.max(0.3,r-l);
-          taskBars+=`<div class="gantt-bar" style="left:${l}%;width:${w}%;top:${i*rowH+2}px;background:${barColor};color:#fff;font-size:11px;font-weight:500;height:20px;cursor:pointer;opacity:.85" title="${esc(t.title)} (${fmtDate(sd)} — ${fmtDate(ed)})" onclick="openTaskModal('${t.id}')">${esc(t.title)}</div>`;
-        }else{
-          const x=pct(sd);
-          taskBars+=`<div style="position:absolute;left:${x}%;top:${i*rowH+2}px;transform:translateX(-6px);cursor:pointer;display:flex;align-items:center;gap:4px" title="${esc(t.title)} — ${fmtDate(sd)}" onclick="openTaskModal('${t.id}')">
-            <div style="width:12px;height:12px;border-radius:3px;background:${barColor};flex-shrink:0"></div>
-            <span style="font-size:11px;white-space:nowrap;color:var(--text);font-weight:500">${esc(t.title)}</span>
-          </div>`;
-        }
-      });
-      rows+=`<div class="gantt-row" style="margin-top:8px;border-left:4px solid var(--border)">
-        <div class="gantt-row-label phase-label">Action Items</div>
-        <div class="gantt-row-bars" style="height:${Math.max(28,visTasks.length*rowH+8)}px;position:relative">
-          ${gridLines}
-          ${taskBars}
-          ${todayMarker()}
-        </div>
-      </div>`;
-    }
-  }
-
-  const swimToggles=`<span style="font-size:11px;color:var(--light);margin-left:8px">Show:</span>`
-    +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShow90Day?'checked':''} onchange="ganttShow90Day=this.checked;render()" style="cursor:pointer"> 90-Day Enterprise Plan</label>`
-    +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowRoadmap?'checked':''} onchange="ganttShowRoadmap=this.checked;render()" style="cursor:pointer"> Enterprise AI Roadmap</label>`
-    +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowBU?'checked':''} onchange="ganttShowBU=this.checked;render()" style="cursor:pointer"> BU Workstreams</label>`
-    +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowCC?'checked':''} onchange="ganttShowCC=this.checked;render()" style="cursor:pointer"> Crosscutting Workstreams</label>`
-    +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowMs?'checked':''} onchange="ganttShowMs=this.checked;render()" style="cursor:pointer"> Milestones</label>`
-    +`<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);margin-left:6px;user-select:none"><input type="checkbox" ${ganttShowTasks?'checked':''} onchange="ganttShowTasks=this.checked;render()" style="cursor:pointer"> Action Items</label>`;
+  const legendHtml=`<div style="display:flex;gap:12px;margin-top:10px;padding:8px 12px;background:var(--bg-subtle);border-radius:var(--r-sm);font-size:11px;color:var(--muted);align-items:center;flex-wrap:wrap">
+    <span style="font-weight:600">Legend:</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:12px;background:var(--accent);border-radius:3px;opacity:1"></span> Manual dates</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:12px;background:var(--accent);border-radius:3px;opacity:.75;border:1px dashed rgba(0,0,0,.2)"></span> Calculated from children</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="color:#fbbf24">⚠</span> At risk/Blocked</span>
+    <span style="display:flex;align-items:center;gap:4px">▶ Click to expand</span>
+  </div>`;
 
   return `<div class="gantt">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:0 4px;flex-wrap:wrap;gap:6px">
-      <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">Starting <input type="date" value="${tStart.toISOString().slice(0,10)}" onchange="ganttCustomStart=this.value;render()" style="padding:2px 6px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--text);cursor:pointer"></div>
-      <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
-        ${swimToggles}
-        <span style="font-size:11px;color:var(--light);margin-left:10px;margin-right:2px">Zoom:</span>${zoomBtns}
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 4px;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:12px;color:var(--muted);font-weight:600">Filter:</span>
+        <div style="display:flex;gap:4px">${catBtns}</div>
       </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:12px;color:var(--muted)">Starting</span>
+        <input type="date" value="${tStart.toISOString().slice(0,10)}" onchange="ganttCustomStart=this.value;render()" style="padding:4px 8px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--text);cursor:pointer">
+        <span style="font-size:12px;color:var(--muted);margin-left:8px">Zoom:</span>
+        <div style="display:flex;gap:4px">${zoomBtns}</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;padding:4px 8px;background:var(--bg-subtle);border-radius:var(--r-sm)">
+      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;color:var(--muted);user-select:none"><input type="checkbox" ${ganttShowMs?'checked':''} onchange="ganttShowMs=this.checked;render()" style="cursor:pointer"> Show Milestones</label>
     </div>
     <div style="display:flex">
       <div class="gantt-label-col"></div>
       <div class="gantt-chart-col"><div class="gantt-months">${monthHeaders}</div></div>
     </div>
-    ${rows}
+    ${rowsHtml}
+    ${legendHtml}
   </div>`;
 }
 
