@@ -3786,7 +3786,10 @@ function openWsEdit(id){
   <div class="m-bd">
     <div class="fg"><label>Name of Workstream</label><input id="ws-name" value="${w?esc(w.name):''}" placeholder="Brief, descriptive name"></div>
     <div class="fg"><label>Parent</label><select id="ws-parentWs"><option value="">— Top Level —</option>${wsOptsHierarchy(w?.parentWs,w?.id)}</select></div>
-    <div class="fg"><label>Status</label><select id="ws-status">${WS_STATUSES.map(s=>`<option value="${s.value}"${normalizeWsStatus(w?.status)===s.value?' selected':''}>${s.label}</option>`).join('')}</select></div>
+    <div class="fg-row">
+      <div class="fg"><label>Category</label><select id="ws-category"><option value="Cross-cutting"${(w?.category||'Cross-cutting')==='Cross-cutting'?' selected':''}>Cross-cutting</option><option value="BU"${w?.category==='BU'?' selected':''}>BU (Business Unit)</option></select></div>
+      <div class="fg"><label>Status</label><select id="ws-status">${WS_STATUSES.map(s=>`<option value="${s.value}"${normalizeWsStatus(w?.status)===s.value?' selected':''}>${s.label}</option>`).join('')}</select></div>
+    </div>
     <div class="fg-row">
       <div class="fg"><label>Lead</label><select id="ws-primaryOwner">${peopleOpts(defaultOwner)}</select></div>
       <div class="fg"><label>Co-Lead</label><select id="ws-secondaryOwner"><option value="">— None —</option>${peopleOpts(w?.secondaryOwner||'').replace('<option value="">— Select —</option>','')}</select></div>
@@ -3962,7 +3965,7 @@ function saveWs(id){
   w.parentWs=(document.getElementById('ws-parentWs')?.value||'');
   if(!w.parentWs){w.level=1;}
   else{const parentW=(D.workstreams||[]).find(p=>p.id===w.parentWs);w.level=(parentW?.level||1)+1;}
-  if(w.parentWs){const parentW=(D.workstreams||[]).find(p=>p.id===w.parentWs);if(parentW?.category)w.category=parentW.category;}
+  w.category=(document.getElementById('ws-category')?.value||'Cross-cutting');
   w.priority=(document.getElementById('ws-priority')?.value||'');
   w.targetStart=(document.getElementById('ws-targetStart')?.value||'').trim();
   w.targetDate=(document.getElementById('ws-targetDate')?.value||'').trim();
