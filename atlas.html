@@ -2607,8 +2607,9 @@ function getWsDateRange(wsId,depth=0){
   const w=(D.workstreams||[]).find(x=>x.id===wsId);
   if(!w)return null;
   
-  if(w.targetStart&&w.targetEnd){
-    return{start:w.targetStart,end:w.targetEnd,isManual:true};
+  // Check for manual dates (targetStart and targetDate)
+  if(w.targetStart&&w.targetDate){
+    return{start:w.targetStart,end:w.targetDate,isManual:true};
   }
   
   const children=(D.workstreams||[]).filter(c=>c.parentWs===wsId);
@@ -2627,7 +2628,7 @@ function getWsDateRange(wsId,depth=0){
   });
   
   if(w.targetStart)allDates.push(w.targetStart);
-  if(w.targetEnd)allDates.push(w.targetEnd);
+  if(w.targetDate)allDates.push(w.targetDate);
   
   if(!allDates.length)return null;
   
