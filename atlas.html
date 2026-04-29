@@ -604,57 +604,33 @@ body.nav-collapsed .topbar-menu{display:flex}
     <span class="sub2">Corporate Data Office</span>
   </div>
   <div class="nav">
-    <div class="nav-section" id="ns-program">
-      <div class="nav-label" onclick="toggleNavSection('ns-program')">Program <span class="nav-arrow">&#9660;</span></div>
-      <div class="ni on" data-v="dashboard" onclick="go('dashboard')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        Dashboard
-      </div>
-      <span id="nb-ws" style="display:none"></span>
-      <span id="nb-eng" style="display:none"></span>
+    <div class="ni on" data-v="dashboard" onclick="go('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
     </div>
-
-    <div class="nav-section" id="ns-work">
-      <div class="nav-label" onclick="toggleNavSection('ns-work')">Work <span class="nav-arrow">&#9660;</span></div>
-      <div class="ni" data-v="workstreams" onclick="go('workstreams')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
-        Workstreams <span class="badge" id="nb-ws2"></span>
-      </div>
-      <div class="ni" data-v="actionitems" onclick="go('actionitems')" id="nav-actionitems">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-        Action Items <span class="badge" id="nb-actionitems">0</span>
-      </div>
-      <div class="ni" data-v="people" onclick="go('people')" id="nav-people">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-        People <span class="badge" id="nb-ppl"></span>
-      </div>
-      <div class="ni" data-v="stakeholders" onclick="go('stakeholders')" id="nav-stakeholders">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        Stakeholders
-      </div>
-      <div id="sidebar-links"></div>
+    <span id="nb-ws" style="display:none"></span>
+    <span id="nb-eng" style="display:none"></span>
+    <div class="ni" data-v="workstreams" onclick="go('workstreams')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+      Workstreams <span class="badge" id="nb-ws2"></span>
     </div>
-
-    <div class="nav-section" id="ns-gov">
-      <div class="nav-label" onclick="toggleNavSection('ns-gov')">Governance <span class="nav-arrow">&#9660;</span></div>
-      <div class="ni" data-v="governance" onclick="go('governance')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        Decisions & Risks
-      </div>
+    <div class="ni" data-v="actionitems" onclick="go('actionitems')" id="nav-actionitems">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      Action Items <span class="badge" id="nb-actionitems">0</span>
     </div>
-
-    <div class="nav-section" id="ns-output">
-      <div class="nav-label" onclick="toggleNavSection('ns-output')">Output <span class="nav-arrow">&#9660;</span></div>
-      <div class="ni" data-v="ado" onclick="go('ado')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-        ADO Sync
-      </div>
-      <div class="ni" data-v="aiinsights" onclick="go('aiinsights')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/></svg>
-        AI Insights
-      </div>
+    <div class="ni" data-v="people" onclick="go('people')" id="nav-people">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      People <span class="badge" id="nb-ppl"></span>
     </div>
-
+    <div class="ni" data-v="stakeholders" onclick="go('stakeholders')" id="nav-stakeholders">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      Stakeholders
+    </div>
+    <div class="ni" data-v="governance" onclick="go('governance')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Decisions & Risks
+    </div>
+    <div id="sidebar-links"></div>
   </div>
   <div class="side-ft">
     <div class="user-badge" onclick="changeName()" id="userBadge" title="Click to change your name">
@@ -1654,7 +1630,7 @@ function go(v){
   const titles={dashboard:'Dashboard',workstreams:'Workstreams',actionitems:'Action Items',engagements:'Engagements',
     tasks:'Action Items',mywork:'My Work',people:'Team Directory',stakeholders:'Stakeholders',
     report:'Report Out',ask:'Ask AI',decisions:'Decision Log',
-    risks:'Risk Register',governance:'Decisions & Risks',ado:'ADO Sync',aiinsights:'AI Insights'};
+    risks:'Risk Register',governance:'Decisions & Risks',ado:'ADO Sync'};
   document.getElementById('viewTitle').textContent=titles[v]||v;
   const ab=document.getElementById('addBtn');
   if(v==='engagements')v=V='workitems';
@@ -1691,7 +1667,7 @@ function render(){
   const c=document.getElementById('content');
   ({dashboard:rDash,workstreams:rWorkstreamsNew,actionitems:rActionItemsNew,
     tasks:rTasks,extract:rExtract,mywork:rMyWork,people:rPeople,stakeholders:rStakeholders,report:rReport,ask:rAsk,
-    decisions:rDecisions,risks:rRisks,governance:rGovernance,ado:rAdo,aiinsights:rAIInsights})[V]?.(c);
+    decisions:rDecisions,risks:rRisks,governance:rGovernance,ado:rAdo})[V]?.(c);
   badges();autoUpdateMilestones();
 }
 
