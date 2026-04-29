@@ -5093,11 +5093,22 @@ function inboxToRisk(id){
 // PEOPLE
 // ═══════════════════════════════════════════════════
 function getPplGroups(){const fromData=(D.groups||[]).slice();const fromPeople=[...new Set((D.people||[]).map(p=>p.group).filter(Boolean))];fromPeople.forEach(g=>{if(g&&!fromData.includes(g))fromData.push(g)});return fromData.filter(g=>g.toLowerCase()!=='stakeholder').sort((a,b)=>a.localeCompare(b));}
-let pplFilter='all';
+let pplFilter='all',pplSort='name',pplSortDir=1;
+
+function sortPeople(col){
+  if(pplSort===col)pplSortDir*=-1;
+  else{pplSort=col;pplSortDir=1}
+  render();
+}
 
 function rPeople(c){
-  const ppl=(D.people||[]).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  let ppl=(D.people||[]).slice();
+  if(pplSort==='name')ppl.sort((a,b)=>pplSortDir*(a.name||'').localeCompare(b.name||''));
+  else if(pplSort==='group')ppl.sort((a,b)=>pplSortDir*(a.group||'').localeCompare(b.group||''));
+  else if(pplSort==='stakeholder')ppl.sort((a,b)=>pplSortDir*((b.isStakeholder?1:0)-(a.isStakeholder?1:0)));
   const stakeholderCount=ppl.filter(p=>p.isStakeholder).length;
+  const sortArrow=(col)=>pplSort===col?(pplSortDir===1?' ▲':' ▼'):'';
+  const thStyle='cursor:pointer;user-select:none';
   c.innerHTML=`
   <div class="page-wrap">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin-bottom:16px;border-bottom:1px solid var(--border)">
@@ -5110,7 +5121,7 @@ function rPeople(c){
         <button onclick="openPersonModal()" style="padding:10px 18px;font-size:13px;font-weight:600;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);color:#fff;border:none;border-radius:var(--r-sm);cursor:pointer;box-shadow:0 2px 8px rgba(99,102,241,.3);transition:all .15s" onmouseenter="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(99,102,241,.4)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(99,102,241,.3)'">New Person</button>
       </div>
     </div>
-    ${ppl.length?`<div class="card" style="padding:18px 20px"><table class="tbl" style="width:100%"><thead><tr><th>Name</th><th>Group</th><th>Stakeholder</th><th style="width:60px"></th></tr></thead><tbody>${ppl.map(p=>`<tr onclick="openPersonModal('${p.id}')" style="cursor:pointer">
+    ${ppl.length?`<div class="card" style="padding:18px 20px"><table class="tbl" style="width:100%"><thead><tr><th style="${thStyle}" onclick="sortPeople('name')">Name${sortArrow('name')}</th><th style="${thStyle}" onclick="sortPeople('group')">Group${sortArrow('group')}</th><th style="${thStyle}" onclick="sortPeople('stakeholder')">Stakeholder${sortArrow('stakeholder')}</th><th style="width:60px"></th></tr></thead><tbody>${ppl.map(p=>`<tr onclick="openPersonModal('${p.id}')" style="cursor:pointer">
       <td style="font-weight:600">${esc(p.name)}</td>
       <td style="font-size:12.5px;color:var(--muted)">${esc(p.group||'—')}</td>
       <td style="text-align:center">${p.isStakeholder?'<span style="color:#f59e0b">★</span>':''}</td>
