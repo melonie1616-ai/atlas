@@ -1703,7 +1703,7 @@ function badges(){
   const ee=document.getElementById('nb-eng');if(ee)ee.textContent=(D.engagements||[]).length;
   const we=document.getElementById('nb-ws');if(we)we.textContent=wsCount;
   const we2=document.getElementById('nb-ws2');if(we2){we2.textContent=wsCount;we2.className='badge'+(wsCount?' hot':'');}
-  document.getElementById('nb-ppl').textContent=(D.people||[]).length;
+  const ppl=document.getElementById('nb-ppl');if(ppl)ppl.textContent=(D.people||[]).length;
   const f=getImmediateFocus();
   const focusCount=f.overdueTasks.length+f.overdueMilestones.length+(f.openRisks.filter(r=>r.impact==='critical'||r.impact==='high').length);
   const fb=document.getElementById('focusBadge');if(fb){fb.textContent=focusCount;fb.style.display=focusCount>0?'inline-flex':'none';fb.style.alignItems='center';fb.style.justifyContent='center'}
