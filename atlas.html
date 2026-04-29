@@ -2830,7 +2830,7 @@ function rWorkItems(c){
   
   function buildTree(category){
     const catWs=allWs.filter(w=>w.category===category);
-    const l1s=catWs.filter(w=>!w.parentWs||(w.level===1)).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    const l1s=catWs.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
     const tree=[];
     function addChildren(parentId,depth){
       const children=catWs.filter(w=>w.parentWs===parentId).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
@@ -3001,7 +3001,7 @@ function rWorkstreamsNew(c){
   function buildTree(category){
     const catWs=allWs.filter(w=>w.category===category);
     const catTasks=allTasks.filter(t=>{const ws=(D.workstreams||[]).find(w=>w.id===t.workstream);return ws&&ws.category===category;});
-    const l1s=catWs.filter(w=>!w.parentWs||(w.level===1)).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    const l1s=catWs.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
     const tree=[];
     function addChildren(parentId,depth){
       const children=catWs.filter(w=>w.parentWs===parentId).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
