@@ -4297,15 +4297,7 @@ function openTaskModal(id){
       <strong style="color:#1d4ed8">&#128193; Need to upload documents?</strong> Visit the <a href="https://digitalrealtyeur.sharepoint.com/sites/AITransformationProgram/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FAITransformationProgram%2FShared%20Documents%2FGeneral&viewid=be024a85%2D931b%2D4a01%2Dacac%2D217f020d89c0" target="_blank" style="color:#2563eb;text-decoration:underline;font-weight:600">AI Transformation Program SharePoint folder</a>
     </div>
     <div class="fg"><label>Title</label><input id="t-title" value="${t?esc(t.title):''}" placeholder="Brief, clear description of the action item"></div>
-    <div style="padding:10px 14px;margin:8px 0 12px;border-radius:var(--r-sm);background:${t?.isMilestone?'rgba(245,158,11,.12)':'var(--bg-subtle)'};border:1px solid ${t?.isMilestone?'#f59e0b':'var(--border)'}">
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px" onclick="const cb=document.getElementById('t-milestone');cb.checked=!cb.checked;const box=this.parentElement;if(cb.checked){box.style.background='rgba(245,158,11,.12)';box.style.borderColor='#f59e0b'}else{box.style.background='var(--bg-subtle)';box.style.borderColor='var(--border)'}">
-        <input type="checkbox" id="t-milestone" ${t?.isMilestone?'checked':''} style="accent-color:#f59e0b;width:18px;height:18px" onclick="event.stopPropagation();const box=this.closest('div');if(this.checked){box.style.background='rgba(245,158,11,.12)';box.style.borderColor='#f59e0b'}else{box.style.background='var(--bg-subtle)';box.style.borderColor='var(--border)'}">
-        <span style="font-size:20px;color:#f59e0b">&#9733;</span>
-        <strong style="font-size:14px">Mark as Milestone</strong>
-        <span style="color:var(--muted);font-size:12.5px">— shows on timeline and reports</span>
-      </label>
-    </div>
-    <div style="padding:10px 14px;margin:0 0 12px;border-radius:var(--r-sm);background:${t?.isPriority?'rgba(139,92,246,.12)':'var(--bg-subtle)'};border:1px solid ${t?.isPriority?'#8b5cf6':'var(--border)'}">
+    <div style="padding:10px 14px;margin:8px 0 12px;border-radius:var(--r-sm);background:${t?.isPriority?'rgba(139,92,246,.12)':'var(--bg-subtle)'};border:1px solid ${t?.isPriority?'#8b5cf6':'var(--border)'}">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px" onclick="const cb=document.getElementById('t-priority-flag');cb.checked=!cb.checked;const box=this.parentElement;if(cb.checked){box.style.background='rgba(139,92,246,.12)';box.style.borderColor='#8b5cf6'}else{box.style.background='var(--bg-subtle)';box.style.borderColor='var(--border)'}">
         <input type="checkbox" id="t-priority-flag" ${t?.isPriority?'checked':''} style="accent-color:#8b5cf6;width:18px;height:18px" onclick="event.stopPropagation();const box=this.closest('div');if(this.checked){box.style.background='rgba(139,92,246,.12)';box.style.borderColor='#8b5cf6'}else{box.style.background='var(--bg-subtle)';box.style.borderColor='var(--border)'}">
         <span style="font-size:20px;color:#8b5cf6">&#9670;</span>
@@ -4359,14 +4351,12 @@ function saveTask(id){
   t.due=document.getElementById('t-due').value;
   t.status=document.getElementById('t-status').value;
   t.blockedBy=document.getElementById('t-blocked-by').value.trim();
-  t.isMilestone=document.getElementById('t-milestone').checked;
   t.isPriority=document.getElementById('t-priority-flag').checked;
   t.workstream=document.getElementById('t-ws').value;
   t.notes=document.getElementById('t-notes').value;
   t.updatedBy=ME;t.updatedAt=new Date().toISOString();
-  const label=t.isMilestone?'milestone':'action item';
-  save();log((isNew?'Added':'Updated')+' '+label+': '+esc(title));
-  closeModal();render();toast(isNew?label+' added':label+' updated');
+  save();log((isNew?'Added':'Updated')+' action item: '+esc(title));
+  closeModal();render();toast(isNew?'Action item added':'Action item updated');
 }
 function addTaskComment(id){
   const el=document.getElementById('t-new-comment');
