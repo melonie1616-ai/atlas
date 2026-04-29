@@ -624,6 +624,10 @@ body.nav-collapsed .topbar-menu{display:flex}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         Action Items <span class="badge" id="nb-actionitems">0</span>
       </div>
+      <div class="ni" data-v="people" onclick="go('people')" id="nav-people">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        People <span class="badge" id="nb-ppl"></span>
+      </div>
       <div id="sidebar-links"></div>
     </div>
 
@@ -2293,13 +2297,10 @@ function rDash(c){
 
   c.innerHTML=`
   <div style="display:flex;gap:10px;margin-bottom:18px;padding:8px 12px;background:var(--bg-card);border-radius:var(--r-md);border:1px solid var(--border-lt);align-items:center">
-    <div class="pill${dashTab==='overview'?' pill-i':' pill-m'}" onclick="dashTab='overview';render()" style="cursor:pointer">Program Overview</div>
-    <div class="pill${dashTab==='mywork'?' pill-i':' pill-m'}" onclick="dashTab='mywork';render()" style="cursor:pointer">My Work${ME&&myOpenTasks.length?' <span class=\"badge hot\" style=\"margin-left:4px;font-size:10px\">'+myOpenTasks.length+'</span>':''}</div>
-    <div class="pill${dashTab==='people'?' pill-i':' pill-m'}" onclick="dashTab='people';render()" style="cursor:pointer">People</div>
     <div style="flex:1"></div>
     <button class="btn btn-p" onclick="openIntakeModal()" style="font-size:13px;padding:8px 16px">+ New Item - Intake</button>
   </div>
-  ${dashTab==='mywork'?renderMyWorkSection():dashTab==='people'?renderPeopleSection():renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,allPriorities,prioritiesDone,myOpenTasks,myWsCount)}`;
+  ${renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,allPriorities,prioritiesDone,myOpenTasks,myWsCount)}`;
 }
 
 function renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,allPriorities,prioritiesDone,myOpenTasks,myWsCount){
@@ -5110,9 +5111,24 @@ function getPplGroups(){const fromData=(D.groups||[]).slice();const fromPeople=[
 let pplFilter='all';
 
 function rPeople(c){
-  dashTab='people';
-  V='dashboard';
-  rDash(c);
+  const ppl=(D.people||[]).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  c.innerHTML=`
+  <div class="page-wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin-bottom:16px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:16px">
+        <span style="font-size:22px;font-weight:700;color:var(--fg)">People</span>
+        <span style="font-size:14px;color:var(--muted)">${ppl.length} team member${ppl.length!==1?'s':''}</span>
+      </div>
+      <button onclick="openPersonModal()" style="padding:10px 18px;font-size:13px;font-weight:600;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);color:#fff;border:none;border-radius:var(--r-sm);cursor:pointer;box-shadow:0 2px 8px rgba(99,102,241,.3);transition:all .15s" onmouseenter="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(99,102,241,.4)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(99,102,241,.3)'">New Person</button>
+    </div>
+    ${ppl.length?`<div class="card" style="padding:18px 20px"><table class="tbl" style="width:100%"><thead><tr><th>Name</th><th>Role</th><th>Group</th><th>Contact</th><th style="width:60px"></th></tr></thead><tbody>${ppl.map(p=>`<tr onclick="openPersonModal('${p.id}')" style="cursor:pointer">
+      <td style="font-weight:600">${esc(p.name)}</td>
+      <td style="font-size:12.5px;color:var(--muted)">${esc(p.role||'—')}</td>
+      <td style="font-size:12.5px;color:var(--muted)">${esc(p.group||'—')}</td>
+      <td style="font-size:12px;color:var(--muted)">${p.email?'<a href="mailto:'+esc(p.email)+'" onclick="event.stopPropagation()" style="color:var(--accent)">'+esc(p.email)+'</a>':'—'}</td>
+      <td><button class="pill pill-m" style="font-size:10px;cursor:pointer;border:none" onclick="event.stopPropagation();openPersonModal('${p.id}')">Edit</button></td>
+    </tr>`).join('')}</tbody></table></div>`:'<div class="empty"><h4>No people yet</h4><p><button class="mbtn mb-save" onclick="openPersonModal()">Add your first team member</button></p></div>'}
+  </div>`;
 }
 
 function openPersonModal(id){
