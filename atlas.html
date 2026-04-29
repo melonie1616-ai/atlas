@@ -3113,6 +3113,21 @@ function rWorkstreamsNew(c){
   WS_STATUSES.forEach(s=>statusCounts[s.value]=baseFilteredWs.filter(w=>normalizeWsStatus(w.status)===s.value).length);
   const totalAll=baseFilteredWs.length;
 
+  // Count L1, L2, L3 workstreams
+  const l1Count=baseFilteredWs.filter(w=>!w.parentWs).length;
+  const l2Count=baseFilteredWs.filter(w=>{
+    if(!w.parentWs)return false;
+    const parent=baseFilteredWs.find(p=>p.id===w.parentWs);
+    return parent&&!parent.parentWs;
+  }).length;
+  const l3Count=baseFilteredWs.filter(w=>{
+    if(!w.parentWs)return false;
+    const parent=baseFilteredWs.find(p=>p.id===w.parentWs);
+    if(!parent||!parent.parentWs)return false;
+    const grandparent=baseFilteredWs.find(g=>g.id===parent.parentWs);
+    return grandparent&&!grandparent.parentWs;
+  }).length;
+
   const allBox=`<div onclick="wsStatusFilter='';render()" style="min-width:80px;background:${!wsStatusFilter?'rgba(99,102,241,.08)':'var(--bg-card)'};border:2px solid ${!wsStatusFilter?'var(--accent)':'var(--border)'};border-radius:var(--r-md);padding:10px 14px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04);cursor:pointer;transition:all .15s" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
     <div style="font-size:20px;font-weight:700;color:var(--fg)">${totalAll}</div>
     <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">All</div>
@@ -3172,7 +3187,7 @@ function rWorkstreamsNew(c){
       ${statusBoxes}
     </div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px;padding:8px 12px;background:var(--bg-subtle);border-radius:var(--r-sm);border:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <strong>${totalWs}</strong> workstreams • <strong>${openTasks}</strong> open action items / ${totalTasks} total${wsStatusFilter?' • <span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Status: '+activeStatusLabel+'</span>':''}${wsOwnerFilter?' • <span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Owner: '+(wsOwnerFilter==='__unassigned__'?'Unassigned':wsOwnerFilter)+'</span>':''}${wsL1Filter?' • <span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">'+l1Workstreams.find(w=>w.id===wsL1Filter)?.name+'</span>':''}
+      <strong>${totalWs}</strong> workstreams <span style="color:var(--light)">(</span><span style="color:var(--accent)">${l1Count} L1</span> <span style="color:var(--light)">•</span> <span style="color:#8b5cf6">${l2Count} L2</span> <span style="color:var(--light)">•</span> <span style="color:#10b981">${l3Count} L3</span><span style="color:var(--light)">)</span> • <strong>${openTasks}</strong> open action items / ${totalTasks} total${wsStatusFilter?' • <span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Status: '+activeStatusLabel+'</span>':''}${wsOwnerFilter?' • <span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Owner: '+(wsOwnerFilter==='__unassigned__'?'Unassigned':wsOwnerFilter)+'</span>':''}${wsL1Filter?' • <span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">'+l1Workstreams.find(w=>w.id===wsL1Filter)?.name+'</span>':''}
     </div>
     ${renderCategory('Business Unit',buTree,totalBU,'BU')}
     ${renderCategory('Cross-cutting',ccTree,totalCC,'Cross-cutting')}
