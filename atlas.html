@@ -251,6 +251,9 @@ body.nav-collapsed .topbar-menu{display:flex}
 .kb-card{background:var(--bg-card);border:1px solid var(--border-lt);border-radius:var(--r-sm);padding:10px 12px;cursor:grab;transition:box-shadow .15s,transform .15s;position:relative}
 .kb-card:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
 .kb-card.dragging{opacity:.5;transform:rotate(2deg)}
+.ws-drop-target{background:rgba(99,102,241,.12)!important;outline:2px dashed var(--accent);outline-offset:-2px}
+.ws-draggable{cursor:grab}
+.ws-draggable:active{cursor:grabbing}
 .kb-card-title{font-size:12.5px;font-weight:600;margin-bottom:6px;line-height:1.35}
 .kb-card-meta{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:11px;color:var(--muted);align-items:center}
 .kb-card-ws{display:inline-flex;align-items:center;gap:4px}
@@ -617,9 +620,9 @@ body.nav-collapsed .topbar-menu{display:flex}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
         Workstreams <span class="badge" id="nb-ws2"></span>
       </div>
-      <div class="ni" data-v="tasks" onclick="go('tasks')" id="nav-tasks">
+      <div class="ni" data-v="actionitems" onclick="go('actionitems')" id="nav-actionitems">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-        Action Items <span class="badge" id="nb-tasks">0</span><span class="inbox-dot" id="inbox-dot"></span>
+        Action Items <span class="badge" id="nb-actionitems">0</span>
       </div>
       <div id="sidebar-links"></div>
     </div>
@@ -718,7 +721,7 @@ body.nav-collapsed .topbar-menu{display:flex}
 
 
 <script>
-let D,V='dashboard',ME='',dbRef=null,firebaseReady=false,ganttZoom='3m',ganttShowTasks=false,ganttShowMs=false,ganttShowBU=true,ganttShowCC=false,ganttShowRoadmap=true,ganttShow90Day=true,ganttCustomStart='';
+let D,V=localStorage.getItem('atlas_view')||'dashboard',ME='',dbRef=null,firebaseReady=false,ganttZoom='3m',ganttShowTasks=false,ganttShowMs=false,ganttShowBU=true,ganttShowCC=false,ganttShowRoadmap=true,ganttShow90Day=true,ganttCustomStart='';
 const RELEASE_VERSION='2026-03-27';
 const RELEASE_NOTES=[
   {date:'March 27, 2026',whatsNew:[
@@ -788,37 +791,186 @@ const firebaseConfig = {
   appId: "1:254677083381:web:48c7806e07aa7498d851bc"
 };
 
+// L1 Categories for the new operating model
+const WS_L1_CATEGORIES=[
+  {id:'operating-model',name:'Operating Model',color:'#6366f1'},
+  {id:'ai-for-business',name:'AI for the Business',color:'#8b5cf6'},
+  {id:'ai-platform',name:'AI Platform',color:'#0ea5e9'},
+  {id:'community-enablement',name:'Community Enablement',color:'#10b981'},
+  {id:'councils',name:'Councils',color:'#f59e0b'},
+  {id:'governance',name:'Governance',color:'#475569'},
+  {id:'reporting',name:'Reporting',color:'#ec4899'},
+  {id:'executive',name:'Executive',color:'#dc2626'}
+];
+
 const WS_DEFS=[
-  {id:'gtm',name:'GTM',color:'#6366f1',category:'BU',owner:'Alejandro Figueroa',
-   desc:'Go-to-Market AI initiatives across sales, marketing, and customer engagement.',
-   businessOutcome:'Enabled self-serve reporting and reduced manual data entry for sales and marketing teams.'},
-  {id:'legal',name:'Legal',color:'#8b5cf6',category:'BU',owner:'Alejandro Figueroa',
+  // === L1: Operating Model ===
+  {id:'op-intake',name:'Intake',color:'#6366f1',category:'Operating Model',level:2,parentL1:'operating-model',
+   primaryOwner:'Melonie Poole',secondaryOwner:'Tony Lorino',isPriority:true,targetDate:'2026-05-02',
+   desc:'How we capture and triage incoming work requests.',businessOutcome:'Structured intake process for all AI work requests.'},
+  {id:'op-execution',name:'Execution',color:'#6366f1',category:'Operating Model',level:2,parentL1:'operating-model',
+   primaryOwner:'Melonie Poole',secondaryOwner:'Tony Lorino',isPriority:true,targetDate:'2026-05-02',
+   desc:'How we manage and track work in progress.',businessOutcome:'Consistent execution tracking across the team.'},
+  {id:'op-reporting',name:'Reporting',color:'#6366f1',category:'Operating Model',level:2,parentL1:'operating-model',
+   primaryOwner:'Melonie Poole',secondaryOwner:'Tony Lorino',isPriority:true,targetDate:'2026-05-02',
+   desc:'How we communicate status and progress.',businessOutcome:'Standardized reporting for leadership visibility.'},
+
+  // === L1: AI for the Business ===
+  {id:'legal',name:'Legal',color:'#8b5cf6',category:'AI for the Business',level:2,parentL1:'ai-for-business',
+   primaryOwner:'Jeremy',secondaryOwner:'Anthony Marguccio',alignments:'Data Team',
    desc:'AI applications for Legal operations, contract analysis, and compliance.',
    businessOutcome:'Faster contract review and reduced compliance risk through AI-assisted analysis.'},
-  {id:'hr',name:'HR',color:'#0ea5e9',category:'BU',owner:'Chris Hunsaker',
-   desc:'AI initiatives for Human Resources — talent, workforce planning, and employee experience.',
-   businessOutcome:'Improved workforce planning and employee experience via AI tools and training.'},
-  {id:'operations',name:'Operations',color:'#0d9488',category:'BU',owner:'Chris Hunsaker',
-   desc:'AI applications across data center operations and facilities management.',
-   businessOutcome:'Enabled self-serve reporting and reduced manual data entry for operations.'},
-  {id:'governance',name:'Governance / Policy',color:'#475569',category:'Cross-cutting',owner:'Forrest Hook',
-   desc:'Enterprise AI governance, policy framework, standards, and compliance oversight.',
-   businessOutcome:'Faster contract review and reduced compliance risk through policy and standards.'},
-  {id:'copilot',name:'Copilot (Enterprise)',color:'#2563eb',category:'Cross-cutting',owner:'Stephen Farkouh',
-   desc:'Microsoft 365 Copilot rollout, licensing, adoption, and enterprise enablement.',
-   businessOutcome:'Increased productivity and adoption of AI-assisted work across the enterprise.'},
-  {id:'data-enterprise',name:'Data (Enterprise)',color:'#7c3aed',category:'Cross-cutting',owner:'TBD',
-   desc:'Enterprise data strategy, data infrastructure, and AI-ready data foundations.',
-   businessOutcome:'AI-ready data foundations enabling analytics and automation across BUs.'},
-  {id:'nexus',name:'Nexus / Platform Architecture',color:'#059669',category:'Cross-cutting',owner:'Alejandro Figueroa',
-   desc:'Platform architecture, Nexus integration, and AI tooling infrastructure.',
-   businessOutcome:'Unified platform and tooling for AI delivery and integration.'}
+  {id:'gtm',name:'GTM',color:'#8b5cf6',category:'AI for the Business',level:2,parentL1:'ai-for-business',
+   primaryOwner:'Brian Letort',secondaryOwner:'Chris Hunsaker',alignments:'Data Team',
+   desc:'Go-to-Market AI initiatives across sales, marketing, and customer engagement.',
+   businessOutcome:'Enabled self-serve reporting and reduced manual data entry for sales and marketing teams.'},
+  {id:'product-engineering',name:'Product & Engineering',color:'#8b5cf6',category:'AI for the Business',level:2,parentL1:'ai-for-business',
+   primaryOwner:'Brian Letort',secondaryOwner:'Chris Hunsaker',alignments:'Data Team',
+   desc:'AI initiatives for Product and Engineering teams.',businessOutcome:'Improved developer productivity and product capabilities.'},
+  {id:'roadmaps-bu',name:'Roadmaps (HR, Finance, Operations, IT & Cyber)',color:'#8b5cf6',category:'AI for the Business',level:2,parentL1:'ai-for-business',
+   primaryOwner:'Jeremy',secondaryOwner:'Anthony Marguccio',alignments:'Data Team',
+   desc:'Roadmap engagements with business units not in active projects.',businessOutcome:'Clear AI roadmaps for each business unit.'},
+
+  // === L1: AI Platform ===
+  {id:'infrastructure',name:'Infrastructure',color:'#0ea5e9',category:'AI Platform',level:2,parentL1:'ai-platform',
+   primaryOwner:'Alejandro Figueroa',secondaryOwner:'Chris Hunsaker',isPriority:true,targetDate:'2026-05-07',
+   desc:'GPU and cloud environment for AI workloads.',businessOutcome:'Scalable AI infrastructure.'},
+  {id:'gpu-environment',name:'GPU + Environment',color:'#0ea5e9',category:'AI Platform',level:3,parentL1:'ai-platform',
+   primaryOwner:'Alejandro Figueroa',secondaryOwner:'Chris Hunsaker',isPriority:true,targetDate:'2026-05-07',
+   desc:'GPU infrastructure and environment setup.',businessOutcome:'Production-ready GPU environment.'},
+  {id:'dxm-integration',name:'DXM Integration (Global SSO)',color:'#0ea5e9',category:'AI Platform',level:2,parentL1:'ai-platform',
+   primaryOwner:'Alejandro Figueroa',secondaryOwner:'Tony Lorino',
+   desc:'Integration with DXM for global SSO.',businessOutcome:'Seamless authentication across AI tools.'},
+  {id:'api-developer-portal',name:'API Developer Portal (IOC)',color:'#0ea5e9',category:'AI Platform',level:2,parentL1:'ai-platform',
+   primaryOwner:'Alejandro Figueroa',secondaryOwner:'Tony Lorino',isPriority:true,targetDate:'2026-05-13',
+   desc:'Developer portal for API key management and access.',businessOutcome:'Self-service API access for developers.'},
+  {id:'praxo',name:'Praxo',color:'#0ea5e9',category:'AI Platform',level:2,parentL1:'ai-platform',
+   primaryOwner:'Alejandro Figueroa',secondaryOwner:'Tony Lorino',
+   desc:'Enterprise AI assistant platform.',businessOutcome:'Unified AI assistant for the enterprise.'},
+  {id:'praxo-chat',name:'Chat',color:'#0ea5e9',category:'AI Platform',level:3,parentL1:'ai-platform',
+   primaryOwner:'Alejandro Figueroa',secondaryOwner:'Tony Lorino',
+   desc:'Praxo chat interface.',businessOutcome:'User-friendly AI chat experience.'},
+  {id:'praxo-data-plane',name:'Data Plane',color:'#0ea5e9',category:'AI Platform',level:3,parentL1:'ai-platform',
+   primaryOwner:'Alejandro Figueroa',secondaryOwner:'Tony Lorino',alignments:'Data Team',
+   desc:'Data integration layer for Praxo.',businessOutcome:'AI-ready data access.'},
+  {id:'praxo-control-plane',name:'Control Plane',color:'#0ea5e9',category:'AI Platform',level:3,parentL1:'ai-platform',
+   primaryOwner:'Alejandro Figueroa',secondaryOwner:'Tony Lorino',
+   desc:'Control and governance layer for Praxo.',businessOutcome:'Governed AI access and usage.'},
+  {id:'praxo-developer-plane',name:'Developer Plane (IOC)',color:'#0ea5e9',category:'AI Platform',level:3,parentL1:'ai-platform',
+   primaryOwner:'Alejandro Figueroa',secondaryOwner:'Chris Hunsaker',isPriority:true,targetDate:'2026-05-13',
+   desc:'Developer tools and APIs for Praxo.',businessOutcome:'Developer-friendly AI integration.'},
+  {id:'praxo-observability',name:'Observability Plane',color:'#0ea5e9',category:'AI Platform',level:3,parentL1:'ai-platform',
+   primaryOwner:'Alejandro Figueroa',secondaryOwner:'Tony Lorino',
+   desc:'Monitoring and observability for Praxo.',businessOutcome:'Full visibility into AI usage and performance.'},
+  {id:'cursor',name:'Cursor',color:'#0ea5e9',category:'AI Platform',level:2,parentL1:'ai-platform',
+   primaryOwner:'Alejandro Figueroa',secondaryOwner:'Tony Lorino',
+   desc:'Cursor AI coding assistant.',businessOutcome:'AI-assisted software development.'},
+  {id:'n8n',name:'N8N',color:'#0ea5e9',category:'AI Platform',level:2,parentL1:'ai-platform',
+   primaryOwner:'Alejandro Figueroa',secondaryOwner:'Tony Lorino',
+   desc:'N8N workflow automation platform.',businessOutcome:'Low-code AI workflow automation.'},
+  {id:'claude',name:'Claude',color:'#0ea5e9',category:'AI Platform',level:2,parentL1:'ai-platform',
+   primaryOwner:'Alejandro Figueroa',secondaryOwner:'Tony Lorino',
+   desc:'Claude AI assistant access.',businessOutcome:'Access to Claude AI capabilities.'},
+  {id:'chatgpt',name:'ChatGPT',color:'#0ea5e9',category:'AI Platform',level:2,parentL1:'ai-platform',
+   primaryOwner:'Alejandro Figueroa',secondaryOwner:'Tony Lorino',
+   desc:'ChatGPT enterprise access.',businessOutcome:'Access to ChatGPT capabilities.'},
+  {id:'copilot-platform',name:'Copilot Platform',color:'#0ea5e9',category:'AI Platform',level:2,parentL1:'ai-platform',
+   primaryOwner:'Brian Letort',secondaryOwner:'Tony Lorino',
+   desc:'Microsoft Copilot platform and rollout.',businessOutcome:'Enterprise Copilot adoption.'},
+
+  // === L1: Community Enablement ===
+  {id:'ai-training-praxo',name:'AI Training (Praxo)',color:'#10b981',category:'Community Enablement',level:2,parentL1:'community-enablement',
+   primaryOwner:'Alejandro Figueroa',secondaryOwner:'Tony Lorino',isPriority:true,targetDate:'2026-05-20',
+   desc:'Training materials and sessions for Praxo.',businessOutcome:'User adoption of Praxo.'},
+  {id:'superworker',name:'Super Worker',color:'#10b981',category:'Community Enablement',level:2,parentL1:'community-enablement',
+   primaryOwner:'Melonie Poole',secondaryOwner:'Asia Lewis',
+   desc:'AI Superworker community of practice.',businessOutcome:'AI-enabled workforce transformation.'},
+  {id:'standards-agentic',name:'Standards: Agentic Coding',color:'#10b981',category:'Community Enablement',level:2,parentL1:'community-enablement',
+   primaryOwner:'Alejandro Figueroa',secondaryOwner:'Chris Hunsaker',isPriority:true,
+   desc:'Standards for agentic coding practices.',businessOutcome:'Consistent and safe AI-assisted development.'},
+
+  // === L1: Councils ===
+  {id:'ai-officer-council',name:'AI Officer Council',color:'#f59e0b',category:'Councils',level:2,parentL1:'councils',
+   primaryOwner:'Brian Letort',secondaryOwner:'Chris Hunsaker',isPriority:true,alignments:'Data Team',
+   desc:'Executive AI governance council.',businessOutcome:'Executive alignment on AI strategy.'},
+  {id:'data-ai-governance-council',name:'Data & AI Governance Council',color:'#f59e0b',category:'Councils',level:2,parentL1:'councils',
+   primaryOwner:'Forrest Hook',secondaryOwner:'Sean Harrison',alignments:'Data Team',
+   desc:'Data and AI governance oversight.',businessOutcome:'Governed AI and data practices.'},
+  {id:'data-protection-workgroup',name:'Data Protection Workgroup',color:'#f59e0b',category:'Councils',level:2,parentL1:'councils',
+   primaryOwner:'Forrest Hook',secondaryOwner:'Jason Ho',alignments:'Data Team',
+   desc:'Data protection and privacy workgroup.',businessOutcome:'Protected data in AI applications.'},
+  {id:'data-governance-working-group',name:'Data Governance Working Group',color:'#f59e0b',category:'Councils',level:2,parentL1:'councils',
+   primaryOwner:'Melonie Poole',secondaryOwner:'Sean Harrison',alignments:'Data Team',
+   desc:'Data governance working group.',businessOutcome:'Well-governed data assets.'},
+
+  // === L1: Governance ===
+  {id:'pers',name:'PERs (7)',color:'#475569',category:'Governance',level:2,parentL1:'governance',
+   primaryOwner:'Anthony Marguccio',secondaryOwner:'Forrest Hook',alignments:'Data Team',
+   desc:'Policy Exception Requests management.',businessOutcome:'Compliant AI deployments.'},
+  {id:'pers-remediation',name:'Remediation Actions',color:'#475569',category:'Governance',level:3,parentL1:'governance',
+   primaryOwner:'Anthony Marguccio',secondaryOwner:'Forrest Hook',alignments:'Data Team',
+   desc:'PER remediation tracking.',businessOutcome:'Resolved policy exceptions.'},
+  {id:'pers-review',name:'6-month Review & Approvals',color:'#475569',category:'Governance',level:3,parentL1:'governance',
+   primaryOwner:'Anthony Marguccio',secondaryOwner:'Forrest Hook',alignments:'Data Team',
+   desc:'PER review and approval process.',businessOutcome:'Timely PER reviews.'},
+  {id:'trb',name:'TRB',color:'#475569',category:'Governance',level:2,parentL1:'governance',
+   primaryOwner:'Tony Lorino',secondaryOwner:'Forrest Hook',alignments:'Data Team',
+   desc:'Technical Review Board activities.',businessOutcome:'Technically sound AI implementations.'},
+  {id:'trb-weekly',name:'Weekly & Ad-hoc TRB Reviews',color:'#475569',category:'Governance',level:3,parentL1:'governance',
+   primaryOwner:'Tony Lorino',secondaryOwner:'Forrest Hook',alignments:'Data Team',
+   desc:'Regular TRB review sessions.',businessOutcome:'Timely technical reviews.'},
+  {id:'trb-process',name:'TRB Process Enhancements',color:'#475569',category:'Governance',level:3,parentL1:'governance',
+   primaryOwner:'Tony Lorino',secondaryOwner:'Forrest Hook',alignments:'Data Team',
+   desc:'TRB process improvements.',businessOutcome:'Streamlined review process.'},
+  {id:'trb-future-tools',name:'Future AI Tool Submissions',color:'#475569',category:'Governance',level:3,parentL1:'governance',
+   primaryOwner:'Forrest Hook',secondaryOwner:'Tony Lorino',alignments:'Data Team',
+   desc:'Pipeline of new AI tools for TRB.',businessOutcome:'Governed tool adoption.'},
+  {id:'ucf-mapping',name:'Unified Control Framework Mapping',color:'#475569',category:'Governance',level:2,parentL1:'governance',
+   primaryOwner:'Forrest Hook',secondaryOwner:'Aamir',alignments:'Data Team',
+   desc:'AI control framework mapping.',businessOutcome:'Mapped AI controls.'},
+  {id:'data-classification-dlp',name:'Data Classification & DLP for AI',color:'#475569',category:'Governance',level:2,parentL1:'governance',
+   primaryOwner:'Forrest Hook',secondaryOwner:'Aamir',alignments:'Data Team',
+   desc:'Data classification and DLP for AI use cases.',businessOutcome:'Protected data in AI.'},
+
+  // === L1: Reporting ===
+  {id:'rpt-governance',name:'Governance Reporting',color:'#ec4899',category:'Reporting',level:2,parentL1:'reporting',
+   primaryOwner:'Team',secondaryOwner:'',alignments:'Data Team',
+   desc:'Governance status reporting.',businessOutcome:'Visible governance status.'},
+  {id:'rpt-councils',name:'Councils Reporting',color:'#ec4899',category:'Reporting',level:2,parentL1:'reporting',
+   primaryOwner:'Team',secondaryOwner:'',
+   desc:'Council activity reporting.',businessOutcome:'Visible council activities.'},
+  {id:'rpt-community',name:'Community Enablement Reporting',color:'#ec4899',category:'Reporting',level:2,parentL1:'reporting',
+   primaryOwner:'Team',secondaryOwner:'',alignments:'Data Team',
+   desc:'Community enablement metrics.',businessOutcome:'Visible enablement progress.'},
+  {id:'rpt-platform',name:'AI Platform Reporting',color:'#ec4899',category:'Reporting',level:2,parentL1:'reporting',
+   primaryOwner:'Team',secondaryOwner:'',
+   desc:'Platform status reporting.',businessOutcome:'Visible platform health.'},
+  {id:'rpt-operating-model',name:'Operating Model Reporting',color:'#ec4899',category:'Reporting',level:2,parentL1:'reporting',
+   primaryOwner:'Team',secondaryOwner:'',
+   desc:'Operating model effectiveness.',businessOutcome:'Visible process health.'},
+  {id:'rpt-business',name:'AI for the Business Reporting',color:'#ec4899',category:'Reporting',level:2,parentL1:'reporting',
+   primaryOwner:'Team',secondaryOwner:'',
+   desc:'BU engagement reporting.',businessOutcome:'Visible BU progress.'},
+  {id:'rpt-tokenomics',name:'Tokenomics',color:'#ec4899',category:'Reporting',level:2,parentL1:'reporting',
+   primaryOwner:'Team',secondaryOwner:'',
+   desc:'Token usage and cost reporting.',businessOutcome:'Visible AI costs.'},
+
+  // === L1: Executive ===
+  {id:'executive-comms',name:'Executive Communications',color:'#dc2626',category:'Executive',level:2,parentL1:'executive',
+   primaryOwner:'Brian Letort',secondaryOwner:'Chris Hunsaker',
+   desc:'Executive-level AI communications and requests.',businessOutcome:'Informed executive leadership.'}
 ];
 
 function defaults(){
   return{
-    workstreams:WS_DEFS.map(w=>({id:w.id,name:w.name,color:w.color,desc:w.desc,
-      category:w.category||'',owner:w.owner||'',status:'not-started',notes:'',phase:'0-30',businessOutcome:w.businessOutcome||'',targetStart:'',targetEnd:''})),
+    workstreams:WS_DEFS.map(w=>({
+      id:w.id,name:w.name,color:w.color,desc:w.desc||'',
+      category:w.category||'',level:w.level||2,parentL1:w.parentL1||'',
+      primaryOwner:w.primaryOwner||'',secondaryOwner:w.secondaryOwner||'',
+      owner:w.primaryOwner||w.owner||'',
+      isPriority:w.isPriority||false,targetDate:w.targetDate||'',alignments:w.alignments||'',
+      status:'not-started',notes:'',phase:'0-30',businessOutcome:w.businessOutcome||'',
+      targetStart:'',targetEnd:''})),
     engagements:[],
     milestones:[
       {id:uid(),title:'Deliver data infrastructure / MSFT Graph connector draft',workstream:'data-infra',date:'2026-03-11',status:'done',owner:'Brian Letort',notes:'Socialize with Don, Stephen, key BU leaders'},
@@ -1360,7 +1512,7 @@ async function applyNewTeamPassword(){
 function hideConnectingAndBoot(){
   const el=document.getElementById('connecting');
   if(el)el.classList.add('hide');
-  loadLs();loadMe();renderLinks();authGate();go('dashboard');
+  loadLs();loadMe();renderLinks();authGate();go(V);
   if(ME&&SESSION_VERIFIED)setTimeout(checkReleaseNotes,600);
 }
 function isLocalOrOffline(){
@@ -1430,7 +1582,7 @@ function connectFirebase(onReady){
       else{loadLs();save()}
       firebaseReady=true;
       document.getElementById('connecting').classList.add('hide');
-      loadMe();renderLinks();authGate();go('dashboard');
+      loadMe();renderLinks();authGate();go(V);
       if(ME&&SESSION_VERIFIED)setTimeout(checkReleaseNotes,600);
       if(typeof onReady==='function')onReady();
       dbRef.on('value',snap=>{
@@ -1450,7 +1602,7 @@ function connectFirebase(onReady){
     });
   }).catch(()=>{
     document.getElementById('connecting').classList.add('hide');
-    loadLs();loadMe();renderLinks();authGate();go('dashboard');
+    loadLs();loadMe();renderLinks();authGate();go(V);
     if(ME&&SESSION_VERIFIED)setTimeout(checkReleaseNotes,600);
     if(typeof onReady==='function')onReady();
   });
@@ -1512,26 +1664,28 @@ function restoreNavSections(){
 }
 
 function go(v){
+  if(v==='tasks'||v==='workitems')v='actionitems';
   V=v;
+  try{localStorage.setItem('atlas_view',v);}catch(e){}
   document.querySelectorAll('.ni').forEach(n=>n.classList.toggle('on',n.dataset.v===v));
   document.querySelectorAll('.nav-section').forEach(sec=>{
     if(sec.querySelector('.ni.on'))sec.classList.remove('collapsed');
     const arrow=sec.querySelector('.nav-arrow');
     if(arrow)arrow.classList.toggle('collapsed',sec.classList.contains('collapsed'));
   });
-  const titles={dashboard:'Dashboard',workstreams:'Workstreams',engagements:'Engagements',
-    tasks:'Action Items',mywork:'My Work Items',people:'Team Directory',
+  const titles={dashboard:'Dashboard',workstreams:'Workstreams',actionitems:'Action Items',engagements:'Engagements',
+    tasks:'Action Items',mywork:'My Work',people:'Team Directory',
     report:'Report Out',ask:'Ask AI',decisions:'Decision Log',
     risks:'Risk Register',governance:'Decisions & Risks',ado:'ADO Sync',aiinsights:'AI Insights'};
   document.getElementById('viewTitle').textContent=titles[v]||v;
   const ab=document.getElementById('addBtn');
-  if(v==='engagements')v=V='workstreams';
-  if(v==='extract'){taskFilter='inbox';v=V='tasks'}
-  if(v==='tasks'){ab.style.display='';ab.textContent='+ Add Action Item'}
+  if(v==='engagements')v=V='workitems';
+  if(v==='extract'){taskFilter='inbox';v=V='workitems'}
+  if(v==='workitems'){ab.style.display='none'}
   else if(v==='people'){ab.style.display='';ab.textContent='+ Add Person'}
   else{ab.style.display='none'}
   const sb=document.getElementById('search');
-  const searchViews=['tasks','workstreams','people','decisions','risks'];
+  const searchViews=['workstreams','actionitems','people','decisions','risks'];
   sb.style.display=searchViews.includes(v)?'':'none';
   if(!searchViews.includes(v))sb.value='';
   render();
@@ -1544,13 +1698,9 @@ function handleAdd(){
 function badges(){
   const open=(D.tasks||[]).filter(t=>t.status!=='done');
   const overdue=open.filter(t=>t.due&&t.due<today());
-  const inboxCount=(D.inbox||[]).filter(x=>!x.processed).length;
-  const taskBadgeVal=inboxCount||open.length;
-  const te=document.getElementById('nb-tasks');te.textContent=taskBadgeVal;te.className='badge'+(inboxCount?' inbox-alert':overdue.length?' warn':open.length?' hot':'');
-  const inboxDot=document.getElementById('inbox-dot');if(inboxDot)inboxDot.className='inbox-dot'+(inboxCount?' show':'');
-  const navTasks=document.getElementById('nav-tasks');if(navTasks)navTasks.classList.toggle('has-inbox',inboxCount>0);
-  const ee=document.getElementById('nb-eng');if(ee)ee.textContent=(D.engagements||[]).length;
   const wsCount=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting').length;
+  const ai=document.getElementById('nb-actionitems');if(ai){ai.textContent=open.length;ai.className='badge'+(overdue.length?' warn':open.length?' hot':'');}
+  const ee=document.getElementById('nb-eng');if(ee)ee.textContent=(D.engagements||[]).length;
   const we=document.getElementById('nb-ws');if(we)we.textContent=wsCount;
   const we2=document.getElementById('nb-ws2');if(we2){we2.textContent=wsCount;we2.className='badge'+(wsCount?' hot':'');}
   document.getElementById('nb-ppl').textContent=(D.people||[]).length;
@@ -1561,7 +1711,7 @@ function badges(){
 
 function render(){
   const c=document.getElementById('content');
-  ({dashboard:rDash,workstreams:rWork,
+  ({dashboard:rDash,workstreams:rWorkstreamsNew,actionitems:rActionItemsNew,
     tasks:rTasks,extract:rExtract,mywork:rMyWork,people:rPeople,report:rReport,ask:rAsk,
     decisions:rDecisions,risks:rRisks,governance:rGovernance,ado:rAdo,aiinsights:rAIInsights})[V]?.(c);
   badges();autoUpdateMilestones();
@@ -2038,17 +2188,50 @@ function wsOpts(sel){
   html+=`<optgroup label="Crosscutting">${cc.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''} style="border-left:4px solid ${w.color||'var(--muted)'};padding-left:6px">&#9679; ${esc(w.name)}</option>`).join('')}</optgroup>`;
   return html;
 }
+function wsOptsHierarchy(sel,excludeId){
+  const all=[...WS_L1_CATEGORIES.map(c=>({id:c.id,name:c.name,level:1,color:c.color})),...(D.workstreams||[]).filter(w=>w.id!==excludeId).map(w=>({id:w.id,name:w.name,level:w.level||2,parentWs:w.parentWs,color:w.color}))];
+  const l1s=all.filter(w=>w.level===1||!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  let html='';
+  l1s.forEach(l1=>{
+    html+=`<option value="${l1.id}"${sel===l1.id?' selected':''}>${esc(l1.name)}</option>`;
+    const l2s=all.filter(w=>w.parentWs===l1.id).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    l2s.forEach(l2=>{
+      html+=`<option value="${l2.id}"${sel===l2.id?' selected':''}>— ${esc(l2.name)}</option>`;
+      const l3s=all.filter(w=>w.parentWs===l2.id).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+      l3s.forEach(l3=>{
+        html+=`<option value="${l3.id}"${sel===l3.id?' selected':''}>&nbsp;&nbsp;— ${esc(l3.name)}</option>`;
+      });
+    });
+  });
+  return html;
+}
 function engOpts(sel){return(D.engagements||[]).filter(e=>e.type==='Use Case').sort((a,b)=>a.title.localeCompare(b.title)).map(e=>`<option value="${e.id}"${sel===e.id?' selected':''}>${esc(e.title)}</option>`).join('')}
 function engName(id){const e=(D.engagements||[]).find(x=>x.id===id);return e?e.title:''}
 function peopleOpts(sel){
   const ppl=(D.people||[]).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   return `<option value="">— Unassigned —</option>`+ppl.map(p=>`<option value="${esc(p.name)}"${sel===p.name?' selected':''}>${esc(p.name)}</option>`).join('');
 }
-const WS_STATUSES=[{value:'not-started',label:'Not Started'},{value:'reachout-kickoff',label:'Reachout / Kickoff'},{value:'discovery-workshops',label:'Discovery & Stakeholder Alignment'},{value:'capability-mapping',label:'Capability Mapping'},{value:'prioritization-planning',label:'Prioritization & Business Case'},{value:'roadmap-integration',label:'Roadmap Integration'},{value:'resourcing',label:'Resource/Funding Gate'},{value:'delivery',label:'Delivery'},{value:'complete',label:'Complete'}];
-function wsStatusLabel(v){if(!v)return'Not Started';const s=WS_STATUSES.find(x=>x.value===v);if(s)return s.label;if(['on-track','at-risk','blocked','pilot-validate','deploy-scale'].includes(v))return'Delivery';return String(v).replace(/-/g,' ');}
-function reportStatusClass(st){if(!st)return'not-started';if(st==='complete')return'complete';if(st==='not-started')return'not-started';return'in-progress';}
-function reportStatusClassOutcomes(st){const v=!st?'not-started':['on-track','at-risk','blocked','pilot-validate','deploy-scale'].includes(st)?'delivery':st;return v;}
-function wsStatusShortLabel(v){const short={ 'not-started':'Not started','reachout-kickoff':'Kickoff','discovery-workshops':'Discovery','capability-mapping':'Capability','prioritization-planning':'Prioritization','roadmap-integration':'Roadmap','resourcing':'Resource gate','delivery':'Delivery','complete':'Complete'};const key=!v?'not-started':['on-track','at-risk','blocked','pilot-validate','deploy-scale'].includes(v)?'delivery':v;return short[key]||wsStatusLabel(v);}
+const WS_STATUSES=[
+  {value:'intake',label:'Intake'},
+  {value:'deferred-rejected',label:'Deferred or Rejected'},
+  {value:'prioritized-funded',label:'Prioritized/Funded'},
+  {value:'delivery',label:'Delivery'},
+  {value:'value-achieved',label:'Value Measured/Achieved'},
+  {value:'closed',label:'Closed'}
+];
+function normalizeWsStatus(v){
+  if(!v)return'intake';
+  if(v==='not-started'||v==='reachout-kickoff')return'intake';
+  if(v==='discovery-workshops'||v==='capability-mapping'||v==='prioritization-planning'||v==='resourcing'||v==='roadmap-integration')return'prioritized-funded';
+  if(v==='on-track'||v==='at-risk'||v==='blocked'||v==='pilot-validate'||v==='deploy-scale'||v==='delivery')return'delivery';
+  if(v==='complete')return'value-achieved';
+  if(WS_STATUSES.find(s=>s.value===v))return v;
+  return'intake';
+}
+function wsStatusLabel(v){const norm=normalizeWsStatus(v);const s=WS_STATUSES.find(x=>x.value===norm);return s?s.label:'Intake';}
+function reportStatusClass(st){const v=normalizeWsStatus(st);if(v==='closed'||v==='value-achieved')return'complete';if(v==='intake')return'not-started';return'in-progress';}
+function reportStatusClassOutcomes(st){return normalizeWsStatus(st);}
+function wsStatusShortLabel(v){const short={'intake':'Intake','deferred-rejected':'Deferred','prioritized-funded':'Prioritized','delivery':'Delivery','value-achieved':'Value Achieved','closed':'Closed'};const key=normalizeWsStatus(v);return short[key]||wsStatusLabel(v);}
 function normalizeTaskStatus(s){
   if(s==='blocked')return'blocked-dependency';
   return s||'not-started';
@@ -2070,7 +2253,15 @@ const TASK_STATUS_PILL={
 function taskStatusLabel(s){return TASK_STATUSES[normalizeTaskStatus(s)]||TASK_STATUSES['not-started']}
 function taskStatusPill(s){return TASK_STATUS_PILL[normalizeTaskStatus(s)]||'pill-m'}
 function isTaskActive(t){return t.status!=='done'}
-const statusColors={'not-started':'pill-m','reachout-kickoff':'pill-m','discovery-workshops':'pill-a','prioritization-planning':'pill-b','resourcing':'pill-v','delivery':'pill-g','pilot-validate':'pill-g','deploy-scale':'pill-t','complete':'pill-b','on-track':'pill-g','at-risk':'pill-a','blocked':'pill-r'};
+const statusColors={
+  'intake':'pill-m',
+  'deferred-rejected':'pill-r',
+  'prioritized-funded':'pill-b',
+  'delivery':'pill-g',
+  'value-achieved':'pill-t',
+  'closed':'pill-v',
+  'not-started':'pill-m','reachout-kickoff':'pill-m','discovery-workshops':'pill-a','prioritization-planning':'pill-b','resourcing':'pill-v','pilot-validate':'pill-g','deploy-scale':'pill-t','complete':'pill-t','on-track':'pill-g','at-risk':'pill-a','blocked':'pill-r','roadmap-integration':'pill-b','capability-mapping':'pill-a'
+};
 const engStatusColors={intake:'pill-m',scoping:'pill-a',active:'pill-i','on-hold':'pill-v',complete:'pill-g'};
 const engTypes=['Use Case','Question','Tool Evaluation','Licensing','Escalation','General Request'];
 const engTypeColors={'Use Case':'pill-i','Question':'pill-b','Tool Evaluation':'pill-v','Licensing':'pill-a','Escalation':'pill-r','General Request':'pill-m'};
@@ -2101,10 +2292,12 @@ function rDash(c){
   const myWsCount=ME?(D.workstreams||[]).filter(w=>{const o=w.owner||WS_DEFS.find(d=>d.id===w.id)?.owner||'';return o===ME}).length:0;
 
   c.innerHTML=`
-  <div style="display:flex;gap:10px;margin-bottom:18px;padding:8px 12px;background:var(--bg-card);border-radius:var(--r-md);border:1px solid var(--border-lt)">
+  <div style="display:flex;gap:10px;margin-bottom:18px;padding:8px 12px;background:var(--bg-card);border-radius:var(--r-md);border:1px solid var(--border-lt);align-items:center">
     <div class="pill${dashTab==='overview'?' pill-i':' pill-m'}" onclick="dashTab='overview';render()" style="cursor:pointer">Program Overview</div>
     <div class="pill${dashTab==='mywork'?' pill-i':' pill-m'}" onclick="dashTab='mywork';render()" style="cursor:pointer">My Work${ME&&myOpenTasks.length?' <span class=\"badge hot\" style=\"margin-left:4px;font-size:10px\">'+myOpenTasks.length+'</span>':''}</div>
     <div class="pill${dashTab==='people'?' pill-i':' pill-m'}" onclick="dashTab='people';render()" style="cursor:pointer">People</div>
+    <div style="flex:1"></div>
+    <button class="btn btn-p" onclick="openIntakeModal()" style="font-size:13px;padding:8px 16px">+ New Item - Intake</button>
   </div>
   ${dashTab==='mywork'?renderMyWorkSection():dashTab==='people'?renderPeopleSection():renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,allPriorities,prioritiesDone,myOpenTasks,myWsCount)}`;
 }
@@ -2261,10 +2454,130 @@ function renderPeopleSection(){
   </tr>`).join('')}</tbody></table></div>`:'<div class="empty"><h4>No people yet</h4><p><button class="mbtn mb-save" onclick="openPersonModal()">Add your first team member</button></p></div>'}`;
 }
 
+let myWorkTab='all',myWorkSort='due',myWorkSortDir=1;
 function rMyWork(c){
-  dashTab='mywork';
-  V='dashboard';
-  rDash(c);
+  const me=ME||'';
+  if(!me){
+    c.innerHTML=`<div class="page-wrap"><div style="padding:40px;text-align:center;color:var(--muted)">
+      <p style="font-size:16px;margin-bottom:12px">Please set your name to see your work items.</p>
+      <button class="btn btn-p" onclick="changeName()">Set Your Name</button>
+    </div></div>`;
+    return;
+  }
+  
+  const myWs=(D.workstreams||[]).filter(w=>
+    (w.category==='BU'||w.category==='Cross-cutting')&&
+    (w.primaryOwner===me||w.secondaryOwner===me||w.owner===me)
+  );
+  const myTasks=(D.tasks||[]).filter(t=>t.owner===me);
+  const openTasks=myTasks.filter(t=>t.status!=='done');
+  const doneTasks=myTasks.filter(t=>t.status==='done');
+  const overdueTasks=openTasks.filter(t=>t.due&&t.due<today());
+  
+  let displayWs=myWs;
+  let displayTasks=myTasks;
+  
+  if(myWorkTab==='workstreams'){displayTasks=[];}
+  else if(myWorkTab==='actions'){displayWs=[];}
+  else if(myWorkTab==='open'){displayTasks=openTasks;displayWs=myWs.filter(w=>w.status!=='closed');}
+  else if(myWorkTab==='overdue'){displayTasks=overdueTasks;displayWs=myWs.filter(w=>w.targetDate&&w.targetDate<today()&&w.status!=='closed');}
+  
+  if(myWorkSort==='name'){
+    displayWs.sort((a,b)=>myWorkSortDir*(a.name||'').localeCompare(b.name||''));
+    displayTasks.sort((a,b)=>myWorkSortDir*(a.title||'').localeCompare(b.title||''));
+  }else if(myWorkSort==='due'){
+    displayWs.sort((a,b)=>myWorkSortDir*(a.targetDate||'9999').localeCompare(b.targetDate||'9999'));
+    displayTasks.sort((a,b)=>myWorkSortDir*(a.due||'9999').localeCompare(b.due||'9999'));
+  }else if(myWorkSort==='status'){
+    displayWs.sort((a,b)=>myWorkSortDir*(a.status||'').localeCompare(b.status||''));
+    displayTasks.sort((a,b)=>myWorkSortDir*(a.status||'').localeCompare(b.status||''));
+  }
+  
+  const renderWsRow=(w)=>{
+    const sc=statusColors[w.status]||'pill-m';
+    const taskCount=(D.tasks||[]).filter(t=>t.workstream===w.id).length;
+    const openCount=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status!=='done').length;
+    const isLead=w.primaryOwner===me;
+    const levelBg=w.level===1?'#6366f1':w.level===2?'#8b5cf6':'#a855f7';
+    return `<tr onclick="openWsDetail('${w.id}')" style="cursor:pointer" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background=''">
+      <td><span style="font-size:9px;color:#fff;background:${levelBg};padding:1px 5px;border-radius:3px;margin-right:6px">L${w.level||2}</span><span style="font-weight:500">${esc(w.name)}</span></td>
+      <td><span class="pill ${isLead?'pill-i':'pill-m'}" style="font-size:10px">${isLead?'Lead':'Co-Lead'}</span></td>
+      <td><span class="pill ${sc}" style="font-size:10px">${wsStatusLabel(w.status)}</span></td>
+      <td style="font-size:12px;color:${w.targetDate&&w.targetDate<today()?'var(--red)':'var(--muted)'}">${w.targetDate?fmtDate(w.targetDate):'—'}</td>
+      <td style="font-size:12px;color:var(--muted)">${openCount} open / ${taskCount}</td>
+    </tr>`;
+  };
+  
+  const renderTaskRow=(t)=>{
+    const isDone=t.status==='done';
+    const isOD=!isDone&&t.due&&t.due<today();
+    const ws=(D.workstreams||[]).find(w=>w.id===t.workstream);
+    const statusPill=isDone?'pill-g':isOD?'pill-r':taskStatusPill(t.status);
+    const msIcon=t.isMilestone?'<span style="color:#f59e0b;margin-right:4px">★</span>':'';
+    const prIcon=t.isPriority?'<span style="color:#8b5cf6;margin-right:4px">◆</span>':'';
+    return `<tr onclick="openTaskModal('${t.id}')" style="cursor:pointer" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background=''">
+      <td>${msIcon}${prIcon}<span style="${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</span></td>
+      <td style="font-size:12px;color:var(--muted)">${ws?esc(ws.name):'—'}</td>
+      <td><span class="pill ${statusPill}" style="font-size:10px">${isDone?'Done':isOD?'Overdue':taskStatusLabel(t.status)}</span></td>
+      <td style="font-size:12px;color:${isOD?'var(--red)':'var(--muted)'}">${t.due?fmtDate(t.due):'—'}</td>
+    </tr>`;
+  };
+  
+  const sIco=(col)=>myWorkSort===col?(myWorkSortDir===1?' ▲':' ▼'):'';
+  
+  c.innerHTML=`
+  <div class="page-wrap">
+    <div class="page-toolbar">
+      <span class="page-title">My Work</span>
+      <span style="font-size:13px;color:var(--muted)">${me}</span>
+      <div class="pill-filters">
+        <div class="pill${myWorkTab==='all'?' pill-i':' pill-m'}" onclick="myWorkTab='all';render()">All (${myWs.length+myTasks.length})</div>
+        <div class="pill${myWorkTab==='open'?' pill-i':' pill-m'}" onclick="myWorkTab='open';render()">Open (${myWs.filter(w=>w.status!=='closed').length+openTasks.length})</div>
+        <div class="pill${myWorkTab==='overdue'?' pill-r':' pill-m'}" onclick="myWorkTab='overdue';render()" style="${overdueTasks.length?'':'opacity:.6'}">Overdue (${overdueTasks.length})</div>
+        <div class="pill${myWorkTab==='workstreams'?' pill-i':' pill-m'}" onclick="myWorkTab='workstreams';render()">Workstreams (${myWs.length})</div>
+        <div class="pill${myWorkTab==='actions'?' pill-i':' pill-m'}" onclick="myWorkTab='actions';render()">Action Items (${myTasks.length})</div>
+      </div>
+      <div class="toolbar-right">
+        <select onchange="myWorkSort=this.value;render()">
+          <option value="due"${myWorkSort==='due'?' selected':''}>Sort by Due Date</option>
+          <option value="name"${myWorkSort==='name'?' selected':''}>Sort by Name</option>
+          <option value="status"${myWorkSort==='status'?' selected':''}>Sort by Status</option>
+        </select>
+        <button class="btn btn-s" onclick="myWorkSortDir=myWorkSortDir===1?-1:1;render()">${myWorkSortDir===1?'↑ Asc':'↓ Desc'}</button>
+      </div>
+    </div>
+    
+    ${displayWs.length?`<div style="margin-bottom:24px">
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--text)">My Workstreams (${displayWs.length})</h3>
+      <table class="tbl" style="width:100%">
+        <thead><tr>
+          <th style="cursor:pointer" onclick="myWorkSort='name';myWorkSortDir=myWorkSort==='name'?-myWorkSortDir:1;render()">Workstream${sIco('name')}</th>
+          <th style="width:80px">Role</th>
+          <th style="width:120px;cursor:pointer" onclick="myWorkSort='status';myWorkSortDir=myWorkSort==='status'?-myWorkSortDir:1;render()">Status${sIco('status')}</th>
+          <th style="width:100px;cursor:pointer" onclick="myWorkSort='due';myWorkSortDir=myWorkSort==='due'?-myWorkSortDir:1;render()">Target${sIco('due')}</th>
+          <th style="width:100px">Items</th>
+        </tr></thead>
+        <tbody>${displayWs.map(renderWsRow).join('')}</tbody>
+      </table>
+    </div>`:''}
+    
+    ${displayTasks.length?`<div>
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--text)">My Action Items (${displayTasks.length})</h3>
+      <table class="tbl" style="width:100%">
+        <thead><tr>
+          <th style="cursor:pointer" onclick="myWorkSort='name';myWorkSortDir=myWorkSort==='name'?-myWorkSortDir:1;render()">Action Item${sIco('name')}</th>
+          <th style="width:160px">Workstream</th>
+          <th style="width:120px;cursor:pointer" onclick="myWorkSort='status';myWorkSortDir=myWorkSort==='status'?-myWorkSortDir:1;render()">Status${sIco('status')}</th>
+          <th style="width:100px;cursor:pointer" onclick="myWorkSort='due';myWorkSortDir=myWorkSort==='due'?-myWorkSortDir:1;render()">Due${sIco('due')}</th>
+        </tr></thead>
+        <tbody>${displayTasks.map(renderTaskRow).join('')}</tbody>
+      </table>
+    </div>`:''}
+    
+    ${!displayWs.length&&!displayTasks.length?`<div style="padding:40px;text-align:center;color:var(--muted)">
+      <p>No items match the current filter.</p>
+    </div>`:''}
+  </div>`;
 }
 
 function renderMyWorkKanban(myTasks){
@@ -2599,9 +2912,811 @@ async function runAIInsights(){
 }
 
 // ═══════════════════════════════════════════════════
-// WORKSTREAMS
+// WORK ITEMS (Unified View)
 // ═══════════════════════════════════════════════════
-let wsLeadFilter='',wsCatFilter='',wsGroupCollapsed={},wsStatusFilter='';
+let workItemsExpanded={},workItemsCatCollapsed={BU:false,'Cross-cutting':false};
+function rWorkItems(c){
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  const allTasks=(D.tasks||[]);
+  
+  function buildTree(category){
+    const catWs=allWs.filter(w=>w.category===category);
+    const l1s=catWs.filter(w=>!w.parentWs||(w.level===1)).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    const tree=[];
+    function addChildren(parentId,depth){
+      const children=catWs.filter(w=>w.parentWs===parentId).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+      children.forEach(ch=>{
+        tree.push({type:'ws',item:ch,depth});
+        if(workItemsExpanded[ch.id]){
+          const tasks=allTasks.filter(t=>t.workstream===ch.id);
+          tasks.forEach(t=>tree.push({type:'task',item:t,depth:depth+1,parentWs:ch.id}));
+          addChildren(ch.id,depth+1);
+        }
+      });
+    }
+    l1s.forEach(ws=>{
+      tree.push({type:'ws',item:ws,depth:0});
+      if(workItemsExpanded[ws.id]){
+        const tasks=allTasks.filter(t=>t.workstream===ws.id);
+        tasks.forEach(t=>tree.push({type:'task',item:t,depth:1,parentWs:ws.id}));
+        addChildren(ws.id,1);
+      }
+    });
+    const orphanTasks=allTasks.filter(t=>{
+      const ws=allWs.find(w=>w.id===t.workstream);
+      return ws&&ws.category===category&&!catWs.some(w=>w.id===t.workstream&&(workItemsExpanded[w.id]));
+    });
+    return tree;
+  }
+  
+  const buTree=buildTree('BU');
+  const ccTree=buildTree('Cross-cutting');
+  const totalBU=allWs.filter(w=>w.category==='BU').length;
+  const totalCC=allWs.filter(w=>w.category==='Cross-cutting').length;
+  const totalTasks=allTasks.length;
+  const openTasks=allTasks.filter(t=>t.status!=='done').length;
+  
+  function renderItem(node){
+    if(node.type==='ws'){
+      const w=node.item;
+      const depth=node.depth;
+      const isExpanded=workItemsExpanded[w.id];
+      const childCount=(D.workstreams||[]).filter(c=>c.parentWs===w.id).length;
+      const taskCount=(D.tasks||[]).filter(t=>t.workstream===w.id).length;
+      const hasChildren=childCount>0||taskCount>0;
+      const indent=depth*24;
+      const level=w.parentWs?depth+1:1;
+      const isLate=w.targetDate&&w.targetDate<today()&&w.status!=='closed';
+      const isAtRisk=w.status==='at-risk'||w.status==='blocked';
+      const rowStyle=isLate||isAtRisk?'background:rgba(239,68,68,.05)':'';
+      const expandIcon=hasChildren?`<span onclick="event.stopPropagation();workItemsExpanded['${w.id}']=!workItemsExpanded['${w.id}'];render()" style="cursor:pointer;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;margin-right:4px;font-size:10px;color:var(--muted);background:var(--bg-subtle)" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-subtle)'">${isExpanded?'▼':'▶'}</span>`:`<span style="width:22px;display:inline-block"></span>`;
+      const levelBadge=`<span style="font-size:9px;color:var(--muted);background:var(--bg-subtle);border:1px solid var(--border);padding:1px 5px;border-radius:4px;margin-right:6px">L${level}</span>`;
+      const countBadge=hasChildren?`<span style="font-size:10px;color:var(--muted);margin-left:6px">(${childCount} sub, ${taskCount} items)</span>`:'';
+      const nameStyle=isLate||isAtRisk?'color:var(--red);font-weight:'+(depth===0?'600':'500'):'font-weight:'+(depth===0?'600':'500');
+      return `<tr onclick="openWsDetail('${w.id}')" style="cursor:pointer;height:40px;${rowStyle}" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background='${rowStyle?'rgba(239,68,68,.05)':''}'">
+        <td style="padding-left:${12+indent}px;white-space:nowrap">${expandIcon}${levelBadge}${isLate?'<span style="color:var(--red);margin-right:4px">⚠</span>':''}<span style="${nameStyle}">${esc(w.name)}</span>${countBadge}</td>
+        <td style="font-size:12px;color:var(--muted)">${esc(w.primaryOwner||w.owner||'')}</td>
+        <td style="width:100px"><span class="pill pill-m" style="font-size:10px">${wsStatusLabel(w.status)}</span></td>
+        <td style="font-size:11px;color:${isLate?'var(--red)':'var(--muted)'}">${w.targetDate?fmtDate(w.targetDate):'—'}</td>
+      </tr>`;
+    }else{
+      const t=node.item;
+      const depth=node.depth;
+      const indent=depth*24;
+      const isDone=t.status==='done';
+      const isOD=!isDone&&t.due&&t.due<today();
+      const statusPill=isDone?'pill-g':isOD?'pill-r':taskStatusPill(t.status);
+      const msIcon=t.isMilestone?'<span style="color:#f59e0b;margin-right:4px">&#9733;</span>':'';
+      const prIcon=t.isPriority?'<span style="color:#8b5cf6;margin-right:4px">&#9670;</span>':'';
+      return `<tr onclick="openTaskModal('${t.id}')" style="cursor:pointer;height:36px;background:rgba(0,0,0,.02)" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background='rgba(0,0,0,.02)'">
+        <td style="padding-left:${12+indent}px;white-space:nowrap"><span style="width:22px;display:inline-block"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:8px"></span>${msIcon}${prIcon}<span style="font-size:12.5px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</span></td>
+        <td style="font-size:12px;color:var(--muted)">${esc(t.owner||'')}</td>
+        <td style="width:100px"><span class="pill ${statusPill}" style="font-size:10px">${isDone?'Done':isOD?'Overdue':taskStatusLabel(t.status)}</span></td>
+        <td style="font-size:11px;color:var(--muted)">${t.due?fmtDate(t.due):'—'}</td>
+      </tr>`;
+    }
+  }
+  
+  function renderCategory(name,tree,total,collapsed){
+    const collapseKey=name;
+    const isCollapsed=workItemsCatCollapsed[collapseKey];
+    return `<div style="margin-bottom:24px">
+      <div onclick="workItemsCatCollapsed['${collapseKey}']=!workItemsCatCollapsed['${collapseKey}'];render()" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg-subtle);border-radius:var(--r-sm);margin-bottom:8px;border:1px solid var(--border)">
+        <span style="font-size:12px;color:var(--muted)">${isCollapsed?'&#9654;':'&#9660;'}</span>
+        <span style="font-weight:700;font-size:14px">${name}</span>
+        <span style="font-size:12px;color:var(--muted)">(${total} workstreams)</span>
+      </div>
+      ${isCollapsed?'':`<table class="tbl" style="width:100%">
+        <thead><tr><th style="text-align:left">Name</th><th style="width:140px">Owner</th><th style="width:100px">Status</th><th style="width:100px">Target</th></tr></thead>
+        <tbody>${tree.map(renderItem).join('')}</tbody>
+      </table>`}
+    </div>`;
+  }
+  
+  c.innerHTML=`
+  <div class="page-wrap">
+    <div class="page-toolbar">
+      <span class="page-title">Work Items</span>
+      <div class="pill-filters">
+        <div class="pill pill-m" onclick="Object.keys(workItemsExpanded).forEach(k=>workItemsExpanded[k]=true);(D.workstreams||[]).forEach(w=>workItemsExpanded[w.id]=true);render()">&#9660; Expand All</div>
+        <div class="pill pill-m" onclick="workItemsExpanded={};render()">&#9650; Collapse All</div>
+      </div>
+      <div class="pill-actions">
+        <button class="btn btn-p" onclick="openWsEdit()">+ Workstream</button>
+        <button class="btn btn-s" onclick="openTaskModal()">+ Action Item</button>
+      </div>
+    </div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px">${totalBU+totalCC} workstreams &middot; ${openTasks} open action items / ${totalTasks} total</div>
+    ${renderCategory('Business Unit',buTree,totalBU,'BU')}
+    ${renderCategory('Cross-cutting',ccTree,totalCC,'Cross-cutting')}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// NEW WORKSTREAMS VIEW (Hierarchy + Kanban toggle, My/All filter)
+// ═══════════════════════════════════════════════════
+function getL1AndDescendants(l1Id){
+  const ids=[l1Id];
+  function addChildren(parentId){
+    (D.workstreams||[]).filter(w=>w.parentWs===parentId).forEach(ch=>{ids.push(ch.id);addChildren(ch.id);});
+  }
+  addChildren(l1Id);
+  return ids;
+}
+// ═══════════════════════════════════════════════════
+let wsViewMode='hierarchy',wsMyFilter=false,wsExpanded={},wsCatCollapsed2={BU:false,'Cross-cutting':false},wsOwnerFilter='',wsL1Filter='',wsStatusFilter='';
+function rWorkstreamsNew(c){
+  const me=ME||'';
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  let allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  let allTasks=(D.tasks||[]);
+  
+  const owners=[...new Set([...(D.workstreams||[]).map(w=>w.primaryOwner||w.owner),...(D.tasks||[]).map(t=>t.owner)].filter(Boolean))].sort();
+  const l1Workstreams=allWs.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  
+  if(wsOwnerFilter){
+    if(wsOwnerFilter==='__unassigned__'){
+      allWs=allWs.filter(w=>!w.primaryOwner&&!w.owner);
+      allTasks=allTasks.filter(t=>!t.owner);
+    }else{
+      allWs=allWs.filter(w=>w.primaryOwner===wsOwnerFilter||w.secondaryOwner===wsOwnerFilter||w.owner===wsOwnerFilter);
+      allTasks=allTasks.filter(t=>t.owner===wsOwnerFilter);
+    }
+  }
+  if(wsL1Filter){
+    const l1Ids=getL1AndDescendants(wsL1Filter);
+    allWs=allWs.filter(w=>l1Ids.includes(w.id));
+    allTasks=allTasks.filter(t=>l1Ids.includes(t.workstream));
+  }
+  if(wsStatusFilter){
+    if(wsStatusFilter==='__overdue__'){
+      allWs=allWs.filter(w=>w.targetDate&&w.targetDate<today()&&w.status!=='closed');
+    }else{
+      allWs=allWs.filter(w=>normalizeWsStatus(w.status)===wsStatusFilter);
+    }
+  }
+  if(q){
+    allWs=allWs.filter(w=>(w.name+' '+w.desc+' '+(w.primaryOwner||w.owner||'')).toLowerCase().includes(q));
+    allTasks=allTasks.filter(t=>(t.title+' '+t.owner+' '+t.notes).toLowerCase().includes(q));
+  }
+  
+  const totalWs=allWs.length;
+  const totalTasks=allTasks.length;
+  const openTasks=allTasks.filter(t=>t.status!=='done').length;
+  
+  if(wsViewMode==='kanban'){
+    renderWsKanban(c,allWs,me,owners,l1Workstreams);
+    return;
+  }
+  
+  function buildTree(category){
+    const catWs=allWs.filter(w=>w.category===category);
+    const catTasks=allTasks.filter(t=>{const ws=(D.workstreams||[]).find(w=>w.id===t.workstream);return ws&&ws.category===category;});
+    const l1s=catWs.filter(w=>!w.parentWs||(w.level===1)).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    const tree=[];
+    function addChildren(parentId,depth){
+      const children=catWs.filter(w=>w.parentWs===parentId).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+      children.forEach(ch=>{
+        tree.push({type:'ws',item:ch,depth});
+        if(wsExpanded[ch.id]){
+          const tasks=catTasks.filter(t=>t.workstream===ch.id);
+          tasks.forEach(t=>tree.push({type:'task',item:t,depth:depth+1}));
+          addChildren(ch.id,depth+1);
+        }
+      });
+    }
+    l1s.forEach(ws=>{
+      tree.push({type:'ws',item:ws,depth:0});
+      if(wsExpanded[ws.id]){
+        const tasks=catTasks.filter(t=>t.workstream===ws.id);
+        tasks.forEach(t=>tree.push({type:'task',item:t,depth:1}));
+        addChildren(ws.id,1);
+      }
+    });
+    return tree;
+  }
+  
+  const buTree=buildTree('BU');
+  const ccTree=buildTree('Cross-cutting');
+  const totalBU=allWs.filter(w=>w.category==='BU').length;
+  const totalCC=allWs.filter(w=>w.category==='Cross-cutting').length;
+  
+  function renderItem(node){
+    if(node.type==='ws'){
+      const w=node.item;
+      const depth=node.depth;
+      const isExpanded=wsExpanded[w.id];
+      const childCount=(D.workstreams||[]).filter(ch=>ch.parentWs===w.id).length;
+      const taskCount=(D.tasks||[]).filter(t=>t.workstream===w.id).length;
+      const hasChildren=childCount>0||taskCount>0;
+      const indent=depth*24;
+      const level=w.parentWs?depth+1:1;
+      const isL1=!w.parentWs;
+      const isLate=w.targetDate&&w.targetDate<today()&&w.status!=='closed';
+      const isAtRisk=w.status==='at-risk'||w.status==='blocked';
+      const rowStyle=isLate||isAtRisk?'background:rgba(239,68,68,.05)':'';
+      const expandIcon=hasChildren?`<span onclick="event.stopPropagation();wsExpanded['${w.id}']=!wsExpanded['${w.id}'];render()" style="cursor:pointer;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;margin-right:4px;font-size:10px;color:var(--muted);background:var(--bg-subtle)" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-subtle)'">${isExpanded?'▼':'▶'}</span>`:`<span style="width:22px;display:inline-block"></span>`;
+      const levelBadge=`<span style="font-size:9px;color:var(--muted);background:var(--bg-subtle);border:1px solid var(--border);padding:1px 5px;border-radius:4px;margin-right:6px">L${level}</span>`;
+      const countBadge=hasChildren?`<span style="font-size:10px;color:var(--muted);margin-left:6px">(${childCount} sub, ${taskCount} items)</span>`:'';
+      const nameStyle=isLate||isAtRisk?'color:var(--red);font-weight:'+(depth===0?'600':'500'):'font-weight:'+(depth===0?'600':'500');
+      const dragAttrs=isL1?'':`draggable="true" ondragstart="event.dataTransfer.setData('text/plain','ws:${w.id}');this.style.opacity='0.5'" ondragend="this.style.opacity='1'"`;
+      const dropAttrs=`ondragover="wsHierarchyDragOver(event,'${w.id}')" ondragleave="wsHierarchyDragLeave(event)" ondrop="wsHierarchyDrop(event,'${w.id}')"`;
+      const dragHandle=isL1?'':`<span style="cursor:grab;color:var(--light);margin-right:4px;font-size:10px" title="Drag to move">⋮⋮</span>`;
+      const rowBorder='border-bottom:1px solid var(--border-lt)';
+      return `<tr ${dragAttrs} ${dropAttrs} onclick="openWsDetail('${w.id}')" style="cursor:pointer;height:44px;${rowStyle};${rowBorder}" onmouseenter="if(!this.classList.contains('ws-drop-target'))this.style.background='var(--bg-subtle)'" onmouseleave="if(!this.classList.contains('ws-drop-target'))this.style.background='${rowStyle?'rgba(239,68,68,.05)':''}'">
+        <td style="padding:10px 14px;padding-left:${14+indent}px;white-space:nowrap">${dragHandle}${expandIcon}${levelBadge}${isLate?'<span style="color:var(--red);margin-right:4px">⚠</span>':''}<span style="${nameStyle}">${esc(w.name)}</span>${countBadge}</td>
+        <td style="padding:10px 14px;font-size:12px;color:var(--muted)">${esc(w.primaryOwner||w.owner||'')}</td>
+        <td style="padding:10px 14px;width:120px"><span class="pill pill-m" style="font-size:10px">${wsStatusLabel(w.status)}</span></td>
+        <td style="padding:10px 14px;font-size:11px;color:${isLate?'var(--red)':'var(--muted)'}">${w.targetDate?fmtDate(w.targetDate):'—'}</td>
+      </tr>`;
+    }else{
+      const t=node.item;
+      const depth=node.depth;
+      const indent=depth*24;
+      const isDone=t.status==='done';
+      const isOD=!isDone&&t.due&&t.due<today();
+      const statusPill=isDone?'pill-g':isOD?'pill-r':taskStatusPill(t.status);
+      const msIcon=t.isMilestone?'<span style="color:#f59e0b;margin-right:4px">★</span>':'';
+      const prIcon=t.isPriority?'<span style="color:#8b5cf6;margin-right:4px">◆</span>':'';
+      const parentWsId=t.workstream||'';
+      return `<tr draggable="true" ondragstart="event.dataTransfer.setData('text/plain','task:${t.id}');this.style.opacity='0.5'" ondragend="this.style.opacity='1'" onclick="openTaskModal('${t.id}')" style="cursor:pointer;height:40px;background:rgba(0,0,0,.015);border-bottom:1px solid var(--border-lt)" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background='rgba(0,0,0,.015)'">
+        <td style="padding:8px 14px;padding-left:${14+indent}px;white-space:nowrap"><span style="cursor:grab;color:var(--light);margin-right:4px;font-size:10px" title="Drag to move">⋮⋮</span><span style="width:22px;display:inline-block"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:8px"></span>${msIcon}${prIcon}<span style="font-size:12.5px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</span></td>
+        <td style="padding:8px 14px;font-size:12px;color:var(--muted)">${esc(t.owner||'')}</td>
+        <td style="padding:8px 14px;width:120px"><span class="pill ${statusPill}" style="font-size:10px">${isDone?'Done':isOD?'Overdue':taskStatusLabel(t.status)}</span></td>
+        <td style="padding:8px 14px;font-size:11px;color:var(--muted)">${t.due?fmtDate(t.due):'—'}</td>
+      </tr>`;
+    }
+  }
+  
+  function renderCategory(name,tree,total,key){
+    return `<div style="margin-bottom:28px">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:linear-gradient(135deg,var(--bg-subtle) 0%,var(--bg-card) 100%);border-radius:var(--r-md);margin-bottom:12px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04)">
+        <span style="font-weight:700;font-size:15px;color:var(--fg)">${name}</span>
+        <span style="font-size:12px;color:var(--muted);background:var(--bg-card);padding:2px 8px;border-radius:10px;border:1px solid var(--border)">${total} workstreams</span>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.03)">
+        <table class="tbl" style="width:100%;border-collapse:collapse">
+          <thead><tr style="background:var(--bg-subtle);border-bottom:2px solid var(--border)"><th style="text-align:left;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Name</th><th style="width:140px;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Owner</th><th style="width:120px;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Status</th><th style="width:100px;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Target</th></tr></thead>
+          <tbody>${tree.map(renderItem).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
+  // Calculate base filtered items (before status filter) for status box counts
+  let baseFilteredWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  if(wsOwnerFilter){
+    if(wsOwnerFilter==='__unassigned__'){
+      baseFilteredWs=baseFilteredWs.filter(w=>!w.primaryOwner&&!w.owner);
+    }else{
+      baseFilteredWs=baseFilteredWs.filter(w=>w.primaryOwner===wsOwnerFilter||w.secondaryOwner===wsOwnerFilter||w.owner===wsOwnerFilter);
+    }
+  }
+  if(wsL1Filter){
+    const l1Ids=getL1AndDescendants(wsL1Filter);
+    baseFilteredWs=baseFilteredWs.filter(w=>l1Ids.includes(w.id));
+  }
+  if(q){
+    baseFilteredWs=baseFilteredWs.filter(w=>(w.name+' '+w.desc+' '+(w.primaryOwner||w.owner||'')).toLowerCase().includes(q));
+  }
+
+  const statusCounts={};
+  WS_STATUSES.forEach(s=>statusCounts[s.value]=baseFilteredWs.filter(w=>normalizeWsStatus(w.status)===s.value).length);
+  const totalAll=baseFilteredWs.length;
+
+  const allBox=`<div onclick="wsStatusFilter='';render()" style="min-width:80px;background:${!wsStatusFilter?'rgba(99,102,241,.08)':'var(--bg-card)'};border:2px solid ${!wsStatusFilter?'var(--accent)':'var(--border)'};border-radius:var(--r-md);padding:10px 14px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04);cursor:pointer;transition:all .15s" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+    <div style="font-size:20px;font-weight:700;color:var(--fg)">${totalAll}</div>
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">All</div>
+  </div>`;
+
+  const statusBoxes=WS_STATUSES.map(s=>{
+    const count=statusCounts[s.value];
+    const isActive=count>0;
+    const isSelected=wsStatusFilter===s.value;
+    const borderColor=isSelected?'var(--accent)':'var(--border)';
+    const bgColor=isSelected?'rgba(99,102,241,.08)':'var(--bg-card)';
+    return `<div onclick="wsStatusFilter=wsStatusFilter==='${s.value}'?'':'${s.value}';render()" style="flex:1;min-width:80px;background:${bgColor};border:2px solid ${borderColor};border-radius:var(--r-md);padding:10px 14px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04);cursor:pointer;transition:all .15s;${isActive?'':'opacity:.6'}" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div style="font-size:20px;font-weight:700;color:${s.value==='closed'?'var(--green)':s.value==='at-risk'||s.value==='blocked'?'var(--red)':'var(--fg)'}">${count}</div>
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">${s.label}</div>
+    </div>`;
+  }).join('');
+
+  const activeStatusLabel=wsStatusFilter?WS_STATUSES.find(s=>s.value===wsStatusFilter)?.label:'';
+  
+  c.innerHTML=`
+  <div class="page-wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin-bottom:12px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <span style="font-size:22px;font-weight:700;color:var(--fg)">Workstreams</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">View</span>
+          <div class="pill-filters" style="display:flex;gap:3px">
+            <div class="pill${wsViewMode==='hierarchy'?' pill-i':' pill-m'}" style="padding:6px 12px;cursor:pointer;font-size:12px" onclick="wsViewMode='hierarchy';render()">☰ Hierarchy</div>
+            <div class="pill${wsViewMode==='kanban'?' pill-i':' pill-m'}" style="padding:6px 12px;cursor:pointer;font-size:12px" onclick="wsViewMode='kanban';render()">▦ Kanban</div>
+          </div>
+        </div>
+        <div style="width:1px;height:24px;background:var(--border)"></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <select style="padding:6px 10px;border-radius:var(--r-sm);${wsOwnerFilter?'border:2px solid var(--accent);background:rgba(99,102,241,.08)':'border:1px solid var(--border);background:var(--bg-subtle)'};font-size:12px;min-width:120px" onchange="wsOwnerFilter=this.value;render()">
+            <option value="">All Owners</option>
+            <option value="__unassigned__"${wsOwnerFilter==='__unassigned__'?' selected':''}>Unassigned</option>
+            ${owners.map(o=>`<option value="${esc(o)}"${wsOwnerFilter===o?' selected':''}>${esc(o)}</option>`).join('')}
+          </select>
+          <select style="padding:6px 10px;border-radius:var(--r-sm);${wsL1Filter?'border:2px solid var(--accent);background:rgba(99,102,241,.08)':'border:1px solid var(--border);background:var(--bg-subtle)'};font-size:12px;min-width:130px" onchange="wsL1Filter=this.value;render()">
+            <option value="">All Top-Level</option>
+            ${l1Workstreams.map(w=>`<option value="${w.id}"${wsL1Filter===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}
+          </select>
+          ${(wsOwnerFilter||wsL1Filter||wsStatusFilter)?'<button onclick="wsOwnerFilter=String();wsL1Filter=String();wsStatusFilter=String();render()" style="padding:6px 12px;font-size:11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;color:var(--muted);transition:all .15s" onmouseenter="this.style.background=\'var(--bg-subtle)\';this.style.color=\'var(--red)\'" onmouseleave="this.style.background=\'var(--bg-card)\';this.style.color=\'var(--muted)\'">✕ Clear Filters</button>':''}
+        </div>
+        <div style="display:flex;gap:3px">
+          <div class="pill pill-m" style="cursor:pointer;padding:4px 10px;font-size:11px" onclick="Object.keys(wsExpanded).forEach(k=>wsExpanded[k]=true);(D.workstreams||[]).forEach(w=>wsExpanded[w.id]=true);render()">▼ Expand</div>
+          <div class="pill pill-m" style="cursor:pointer;padding:4px 10px;font-size:11px" onclick="wsExpanded={};render()">▲ Collapse</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="openWsEdit()" style="padding:10px 18px;font-size:13px;font-weight:600;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);color:#fff;border:none;border-radius:var(--r-sm);cursor:pointer;box-shadow:0 2px 8px rgba(99,102,241,.3);transition:all .15s" onmouseenter="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(99,102,241,.4)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(99,102,241,.3)'">New Workstream</button>
+        <button onclick="openTaskModal()" style="padding:10px 18px;font-size:13px;font-weight:600;background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:#fff;border:none;border-radius:var(--r-sm);cursor:pointer;box-shadow:0 2px 8px rgba(16,185,129,.3);transition:all .15s" onmouseenter="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(16,185,129,.4)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(16,185,129,.3)'">New Action Item</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      ${allBox}
+      ${statusBoxes}
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;padding:8px 12px;background:var(--bg-subtle);border-radius:var(--r-sm);border:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <strong>${totalWs}</strong> workstreams • <strong>${openTasks}</strong> open action items / ${totalTasks} total${wsStatusFilter?' • <span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Status: '+activeStatusLabel+'</span>':''}${wsOwnerFilter?' • <span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Owner: '+(wsOwnerFilter==='__unassigned__'?'Unassigned':wsOwnerFilter)+'</span>':''}${wsL1Filter?' • <span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">'+l1Workstreams.find(w=>w.id===wsL1Filter)?.name+'</span>':''}
+    </div>
+    ${renderCategory('Business Unit',buTree,totalBU,'BU')}
+    ${renderCategory('Cross-cutting',ccTree,totalCC,'Cross-cutting')}
+  </div>`;
+}
+
+function renderWsKanban(c,filteredWs,me,owners,l1Workstreams){
+  const statuses=WS_STATUSES;
+
+  function getWsStatus(w){return normalizeWsStatus(w.status);}
+  function getLevel(w){return w.parentWs?((D.workstreams||[]).find(p=>p.id===w.parentWs)?.level||1)+1:1;}
+
+  function renderWsCard(w){
+    const level=getLevel(w);
+    const isLate=w.targetDate&&w.targetDate<today()&&w.status!=='closed';
+    const isAtRisk=w.status==='at-risk'||w.status==='blocked';
+    const cardStyle=isLate||isAtRisk?'border-left:3px solid var(--red);background:rgba(239,68,68,.05)':'border-left:3px solid var(--border)';
+    const taskCount=(D.tasks||[]).filter(t=>t.workstream===w.id).length;
+    const openCount=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status!=='done').length;
+    return `<div class="kb-card" draggable="true" data-id="${w.id}" style="${cardStyle};cursor:pointer"
+      onclick="openWsDetail('${w.id}')"
+      ondragstart="event.dataTransfer.setData('text/plain','ws:${w.id}');this.classList.add('dragging')"
+      ondragend="this.classList.remove('dragging')">
+      <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px">
+        <span style="font-size:9px;color:var(--muted);background:var(--bg-subtle);border:1px solid var(--border);padding:1px 5px;border-radius:3px">L${level}</span>
+        <span style="font-weight:600;font-size:12px;flex:1;${isLate||isAtRisk?'color:var(--red)':''}">${esc(w.name)}</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted)">${esc(w.primaryOwner||w.owner||'Unassigned')}</div>
+      ${taskCount?`<div style="font-size:10px;color:var(--light);margin-top:4px">${openCount} open / ${taskCount} items</div>`:''}
+      ${w.targetDate?`<div style="font-size:10px;color:${isLate?'var(--red)':'var(--light)'};margin-top:2px">${isLate?'⚠ ':''}Target: ${fmtDate(w.targetDate)}</div>`:''}
+    </div>`;
+  }
+
+  function renderColumn(status){
+    const wsInCol=filteredWs.filter(w=>getWsStatus(w)===status.value);
+    return `<div class="kb-col" data-status="${status.value}"
+      ondragover="event.preventDefault();this.classList.add('drag-over')"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="event.preventDefault();this.classList.remove('drag-over');wsKanbanDrop(event,'${status.value}')">
+      <div class="kb-col-hd">
+        <span class="kb-col-title">${status.label}</span>
+        <span class="kb-col-count">${wsInCol.length}</span>
+      </div>
+      <div class="kb-col-body">
+        ${wsInCol.map(renderWsCard).join('')}
+        ${!wsInCol.length?'<div style="padding:12px;font-size:11px;color:var(--light);text-align:center">No items</div>':''}
+      </div>
+    </div>`;
+  }
+
+  const hasFilters=wsOwnerFilter||wsL1Filter||wsStatusFilter;
+  const ownerStyle=wsOwnerFilter?'border:2px solid var(--accent);background:rgba(99,102,241,.08)':'border:1px solid var(--border);background:var(--bg-subtle)';
+  const l1Style=wsL1Filter?'border:2px solid var(--accent);background:rgba(99,102,241,.08)':'border:1px solid var(--border);background:var(--bg-subtle)';
+  const clearBtn=hasFilters?`<button onclick="wsOwnerFilter='';wsL1Filter='';wsStatusFilter='';render()" style="padding:6px 12px;font-size:11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;color:var(--muted);transition:all .15s" onmouseenter="this.style.background='var(--bg-subtle)';this.style.color='var(--red)'" onmouseleave="this.style.background='var(--bg-card)';this.style.color='var(--muted)'">✕ Clear Filters</button>`:'';
+
+  const activeFiltersText=[];
+  if(wsOwnerFilter)activeFiltersText.push('<span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Owner: '+(wsOwnerFilter==='__unassigned__'?'Unassigned':wsOwnerFilter)+'</span>');
+  if(wsL1Filter)activeFiltersText.push('<span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">'+l1Workstreams.find(w=>w.id===wsL1Filter)?.name+'</span>');
+
+  c.innerHTML=`
+  <div class="page-wrap kb-page">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin-bottom:12px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <span style="font-size:22px;font-weight:700;color:var(--fg)">Workstreams</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">View</span>
+          <div class="pill-filters" style="display:flex;gap:3px">
+            <div class="pill${wsViewMode==='hierarchy'?' pill-i':' pill-m'}" style="padding:6px 12px;cursor:pointer;font-size:12px" onclick="wsViewMode='hierarchy';render()">☰ Hierarchy</div>
+            <div class="pill${wsViewMode==='kanban'?' pill-i':' pill-m'}" style="padding:6px 12px;cursor:pointer;font-size:12px" onclick="wsViewMode='kanban';render()">▦ Kanban</div>
+          </div>
+        </div>
+        <div style="width:1px;height:24px;background:var(--border)"></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <select style="padding:6px 10px;border-radius:var(--r-sm);${ownerStyle};font-size:12px;min-width:120px" onchange="wsOwnerFilter=this.value;render()">
+            <option value="">All Owners</option>
+            <option value="__unassigned__"${wsOwnerFilter==='__unassigned__'?' selected':''}>Unassigned</option>
+            ${owners.map(o=>`<option value="${esc(o)}"${wsOwnerFilter===o?' selected':''}>${esc(o)}</option>`).join('')}
+          </select>
+          <select style="padding:6px 10px;border-radius:var(--r-sm);${l1Style};font-size:12px;min-width:130px" onchange="wsL1Filter=this.value;render()">
+            <option value="">All Top-Level</option>
+            ${l1Workstreams.map(w=>`<option value="${w.id}"${wsL1Filter===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}
+          </select>
+          ${clearBtn}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="openWsEdit()" style="padding:10px 18px;font-size:13px;font-weight:600;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);color:#fff;border:none;border-radius:var(--r-sm);cursor:pointer;box-shadow:0 2px 8px rgba(99,102,241,.3);transition:all .15s" onmouseenter="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(99,102,241,.4)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(99,102,241,.3)'">New Workstream</button>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;padding:8px 12px;background:var(--bg-subtle);border-radius:var(--r-sm);border:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <strong>${filteredWs.length}</strong> workstreams${activeFiltersText.length?' • '+activeFiltersText.join(' '):''} • Drag cards to change status
+    </div>
+    <div class="kb-board" style="display:flex;gap:12px;overflow-x:auto;padding-bottom:16px">
+      ${statuses.map(renderColumn).join('')}
+    </div>
+  </div>`;
+}
+
+function wsKanbanDrop(event,newStatus){
+  const data=event.dataTransfer.getData('text/plain');
+  if(!data.startsWith('ws:'))return;
+  const wsId=data.replace('ws:','');
+  const w=(D.workstreams||[]).find(x=>x.id===wsId);
+  if(!w)return;
+  w.status=newStatus;
+  w.updatedBy=ME;w.updatedAt=new Date().toISOString();
+  save();render();toast('Moved "'+w.name+'" to '+wsStatusLabel(newStatus));
+}
+
+function wsHierarchyDrop(event,targetWsId){
+  event.preventDefault();
+  const data=event.dataTransfer.getData('text/plain');
+  if(!data)return;
+  
+  const targetWs=(D.workstreams||[]).find(x=>x.id===targetWsId);
+  if(!targetWs)return;
+  const targetLevel=targetWs.parentWs?2:1;
+  
+  if(data.startsWith('task:')){
+    const taskId=data.replace('task:','');
+    const t=(D.tasks||[]).find(x=>x.id===taskId);
+    if(!t)return;
+    if(t.workstream===targetWsId)return;
+    const oldWs=(D.workstreams||[]).find(w=>w.id===t.workstream);
+    t.workstream=targetWsId;
+    t.updatedBy=ME;t.updatedAt=new Date().toISOString();
+    save();render();
+    toast('Moved "'+t.title+'" to '+targetWs.name);
+  }else if(data.startsWith('ws:')){
+    const wsId=data.replace('ws:','');
+    const w=(D.workstreams||[]).find(x=>x.id===wsId);
+    if(!w||w.id===targetWsId)return;
+    if(!w.parentWs)return;
+    
+    function isDescendant(parentId,childId){
+      let current=(D.workstreams||[]).find(x=>x.id===childId);
+      while(current&&current.parentWs){
+        if(current.parentWs===parentId)return true;
+        current=(D.workstreams||[]).find(x=>x.id===current.parentWs);
+      }
+      return false;
+    }
+    if(isDescendant(wsId,targetWsId)){
+      toast('Cannot move a parent under its own child');
+      return;
+    }
+    
+    const oldParent=(D.workstreams||[]).find(p=>p.id===w.parentWs);
+    w.parentWs=targetWsId;
+    w.level=targetLevel+1;
+    w.category=targetWs.category;
+    w.updatedBy=ME;w.updatedAt=new Date().toISOString();
+    
+    function updateChildLevels(parentId,parentLevel){
+      (D.workstreams||[]).filter(c=>c.parentWs===parentId).forEach(c=>{
+        c.level=parentLevel+1;
+        c.category=targetWs.category;
+        updateChildLevels(c.id,c.level);
+      });
+    }
+    updateChildLevels(w.id,w.level);
+    
+    save();render();
+    toast('Moved "'+w.name+'" under '+targetWs.name);
+  }
+}
+
+let wsDragOverId=null;
+function wsHierarchyDragOver(event,wsId){
+  event.preventDefault();
+  if(wsDragOverId!==wsId){
+    document.querySelectorAll('.ws-drop-target').forEach(el=>el.classList.remove('ws-drop-target'));
+    const row=event.currentTarget;
+    row.classList.add('ws-drop-target');
+    wsDragOverId=wsId;
+  }
+}
+function wsHierarchyDragLeave(event){
+  const row=event.currentTarget;
+  if(!row.contains(event.relatedTarget)){
+    row.classList.remove('ws-drop-target');
+    wsDragOverId=null;
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// NEW ACTION ITEMS VIEW (Kanban only, My/All filter)
+// ═══════════════════════════════════════════════════
+let aiMyFilter=false,aiStatusFilter='',aiOwnerFilter='',aiL1Filter='',aiKbStatusFilter='';
+function rActionItemsNew(c){
+  const me=ME||'';
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  let items=(D.tasks||[]);
+
+  const owners=[...new Set((D.tasks||[]).map(t=>t.owner).filter(Boolean))].sort();
+  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  const l1Workstreams=allWs.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+
+  // Apply owner and L1 filters first (these affect the counts)
+  let baseFiltered=items;
+  if(aiOwnerFilter){
+    if(aiOwnerFilter==='__unassigned__'){
+      baseFiltered=baseFiltered.filter(t=>!t.owner);
+    }else{
+      baseFiltered=baseFiltered.filter(t=>t.owner===aiOwnerFilter);
+    }
+  }
+  if(aiL1Filter){
+    const l1Ids=getL1AndDescendants(aiL1Filter);
+    baseFiltered=baseFiltered.filter(t=>l1Ids.includes(t.workstream));
+  }
+  if(q){
+    baseFiltered=baseFiltered.filter(t=>(t.title+' '+t.owner+' '+t.notes+' '+wsNamePlain(t.workstream)).toLowerCase().includes(q));
+  }
+
+  // Calculate counts based on filtered items (before status filter)
+  const totalCount=baseFiltered.length;
+  const statusCounts={};
+  KB_COLS.forEach(col=>statusCounts[col.key]=baseFiltered.filter(t=>normalizeTaskStatus(t.status)===col.key).length);
+
+  // Now apply status filter
+  items=baseFiltered;
+  if(aiKbStatusFilter){
+    items=items.filter(t=>normalizeTaskStatus(t.status)===aiKbStatusFilter);
+  }
+
+  const grouped={};
+  KB_COLS.forEach(col=>grouped[col.key]=[]);
+  items.forEach(t=>{
+    const s=normalizeTaskStatus(t.status);
+    if(grouped[s])grouped[s].push(t);
+    else grouped['not-started'].push(t);
+  });
+
+  function renderCard(t){
+    const w=(D.workstreams||[]).find(x=>x.id===t.workstream);
+    const wc=wsColor(t.workstream)||'var(--muted)';
+    const isOD=t.status!=='done'&&t.due&&t.due<today();
+    const isDone=t.status==='done';
+    const msIcon=t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">★</span>':'';
+    const prIcon=t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">◆</span>':'';
+    return `<div class="kb-card${isOD?' kb-overdue':''}" style="border-left:3px solid ${wc};cursor:pointer" onclick="openTaskModal('${t.id}')">
+      <div style="font-size:12px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${msIcon}${prIcon}${esc(t.title)}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px">${esc(t.owner||'Unassigned')}</div>
+      ${w?`<div style="font-size:9px;color:var(--light);margin-top:2px">${esc(w.name)}</div>`:''}
+      ${t.due?`<div style="font-size:10px;color:${isOD?'var(--red)':'var(--light)'};margin-top:2px">${fmtDate(t.due)}</div>`:''}
+    </div>`;
+  }
+
+  function renderColumn(col){
+    const colItems=grouped[col.key]||[];
+    return `<div class="kb-col" data-status="${col.key}">
+      <div class="kb-col-hd">
+        <span class="kb-col-title">${col.label}</span>
+        <span class="kb-col-count">${colItems.length}</span>
+      </div>
+      <div class="kb-col-body">
+        ${colItems.map(renderCard).join('')}
+        ${!colItems.length?'<div style="padding:12px;font-size:11px;color:var(--light);text-align:center">No items</div>':''}
+      </div>
+    </div>`;
+  }
+
+  const hasFilters=aiOwnerFilter||aiL1Filter||aiKbStatusFilter;
+  const ownerStyle=aiOwnerFilter?'border:2px solid var(--accent);background:rgba(99,102,241,.08)':'border:1px solid var(--border);background:var(--bg-subtle)';
+  const l1Style=aiL1Filter?'border:2px solid var(--accent);background:rgba(99,102,241,.08)':'border:1px solid var(--border);background:var(--bg-subtle)';
+
+  const allBox=`<div onclick="aiKbStatusFilter='';render()" style="min-width:70px;background:${!aiKbStatusFilter?'rgba(99,102,241,.08)':'var(--bg-card)'};border:2px solid ${!aiKbStatusFilter?'var(--accent)':'var(--border)'};border-radius:var(--r-md);padding:10px 14px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04);cursor:pointer;transition:all .15s" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+    <div style="font-size:20px;font-weight:700;color:var(--fg)">${totalCount}</div>
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">All</div>
+  </div>`;
+
+  const statusBoxes=KB_COLS.map(col=>{
+    const count=statusCounts[col.key];
+    const isActive=count>0;
+    const isSelected=aiKbStatusFilter===col.key;
+    const borderColor=isSelected?'var(--accent)':'var(--border)';
+    const bgColor=isSelected?'rgba(99,102,241,.08)':'var(--bg-card)';
+    const numColor=col.key==='done'?'var(--green)':col.key==='blocked'?'var(--red)':'var(--fg)';
+    return `<div onclick="aiKbStatusFilter=aiKbStatusFilter==='${col.key}'?'':'${col.key}';render()" style="flex:1;min-width:70px;background:${bgColor};border:2px solid ${borderColor};border-radius:var(--r-md);padding:10px 14px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04);cursor:pointer;transition:all .15s;${isActive?'':'opacity:.6'}" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div style="font-size:20px;font-weight:700;color:${numColor}">${count}</div>
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">${col.label}</div>
+    </div>`;
+  }).join('');
+
+  const clearBtn=hasFilters?`<button onclick="aiOwnerFilter='';aiL1Filter='';aiKbStatusFilter='';render()" style="padding:6px 12px;font-size:11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;color:var(--muted);transition:all .15s" onmouseenter="this.style.background='var(--bg-subtle)';this.style.color='var(--red)'" onmouseleave="this.style.background='var(--bg-card)';this.style.color='var(--muted)'">✕ Clear Filters</button>`:'';
+
+  const activeFiltersText=[];
+  if(aiOwnerFilter)activeFiltersText.push('<span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Owner: '+(aiOwnerFilter==='__unassigned__'?'Unassigned':aiOwnerFilter)+'</span>');
+  if(aiL1Filter)activeFiltersText.push('<span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">'+l1Workstreams.find(w=>w.id===aiL1Filter)?.name+'</span>');
+  if(aiKbStatusFilter)activeFiltersText.push('<span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Status: '+KB_COLS.find(c=>c.key===aiKbStatusFilter)?.label+'</span>');
+
+  c.innerHTML=`
+  <div class="page-wrap kb-page">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin-bottom:12px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <span style="font-size:22px;font-weight:700;color:var(--fg)">Action Items</span>
+        <div style="width:1px;height:24px;background:var(--border)"></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <select style="padding:6px 10px;border-radius:var(--r-sm);${ownerStyle};font-size:12px;min-width:120px" onchange="aiOwnerFilter=this.value;render()">
+            <option value="">All Owners</option>
+            <option value="__unassigned__"${aiOwnerFilter==='__unassigned__'?' selected':''}>Unassigned</option>
+            ${owners.map(o=>`<option value="${esc(o)}"${aiOwnerFilter===o?' selected':''}>${esc(o)}</option>`).join('')}
+          </select>
+          <select style="padding:6px 10px;border-radius:var(--r-sm);${l1Style};font-size:12px;min-width:130px" onchange="aiL1Filter=this.value;render()">
+            <option value="">All Top-Level</option>
+            ${l1Workstreams.map(w=>`<option value="${w.id}"${aiL1Filter===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}
+          </select>
+          ${clearBtn}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="openTaskModal()" style="padding:10px 18px;font-size:13px;font-weight:600;background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:#fff;border:none;border-radius:var(--r-sm);cursor:pointer;box-shadow:0 2px 8px rgba(16,185,129,.3);transition:all .15s" onmouseenter="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(16,185,129,.4)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(16,185,129,.3)'">New Action Item</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      ${allBox}
+      ${statusBoxes}
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;padding:8px 12px;background:var(--bg-subtle);border-radius:var(--r-sm);border:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <strong>${items.length}</strong> action items${activeFiltersText.length?' • '+activeFiltersText.join(' '):''}
+    </div>
+    <div class="kb-board" style="display:flex;gap:12px;overflow-x:auto;padding-bottom:16px">
+      ${KB_COLS.map(renderColumn).join('')}
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// WORK KANBAN (Combined Workstreams + Action Items) - LEGACY
+// ═══════════════════════════════════════════════════
+let workKanbanFilter='all',workKanbanOwner='',workKanbanCategory='';
+function rWorkKanban(c){
+  const statuses=WS_STATUSES;
+  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  const allTasks=(D.tasks||[]);
+  
+  let filteredWs=allWs;
+  let filteredTasks=allTasks;
+  
+  if(workKanbanCategory){
+    filteredWs=filteredWs.filter(w=>w.category===workKanbanCategory);
+    const wsIds=filteredWs.map(w=>w.id);
+    filteredTasks=filteredTasks.filter(t=>wsIds.includes(t.workstream));
+  }
+  if(workKanbanOwner){
+    if(workKanbanOwner==='__unassigned__'){
+      filteredWs=filteredWs.filter(w=>!w.primaryOwner&&!w.owner);
+      filteredTasks=filteredTasks.filter(t=>!t.owner);
+    }else{
+      filteredWs=filteredWs.filter(w=>w.primaryOwner===workKanbanOwner||w.secondaryOwner===workKanbanOwner||w.owner===workKanbanOwner);
+      filteredTasks=filteredTasks.filter(t=>t.owner===workKanbanOwner);
+    }
+  }
+  if(workKanbanFilter==='workstreams'){filteredTasks=[];}
+  else if(workKanbanFilter==='actions'){filteredWs=[];}
+  
+  const owners=[...new Set([...(D.workstreams||[]).map(w=>w.primaryOwner||w.owner),...(D.tasks||[]).map(t=>t.owner)].filter(Boolean))].sort();
+  
+  function getWsStatus(w){return normalizeWsStatus(w.status);}
+  function getTaskStatus(t){
+    const s=normalizeTaskStatus(t.status);
+    if(s==='not-started')return 'intake';
+    if(s==='open')return 'delivery';
+    if(s==='delayed'||s==='blocked-dependency')return 'delivery';
+    if(s==='done')return 'closed';
+    return 'delivery';
+  }
+  
+  function renderWsCard(w){
+    const priorityColors={high:'#ef4444',medium:'#f59e0b',low:'#6b7280'};
+    const pDot=w.priority?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${priorityColors[w.priority]};margin-right:4px"></span>`:'';
+    const levelBg=w.level===1?'#6366f1':w.level===2?'#8b5cf6':'#a855f7';
+    const taskCount=(D.tasks||[]).filter(t=>t.workstream===w.id).length;
+    const openCount=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status!=='done').length;
+    return `<div class="kb-card" style="border-left:3px solid ${w.color||'#6366f1'};cursor:pointer" onclick="openWsDetail('${w.id}')">
+      <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px">
+        <span style="font-size:9px;color:#fff;background:${levelBg};padding:1px 5px;border-radius:3px">L${w.level||2}</span>
+        ${pDot}<span style="font-weight:600;font-size:12px;flex:1">${esc(w.name)}</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted)">${esc(w.primaryOwner||w.owner||'Unassigned')}</div>
+      ${taskCount?`<div style="font-size:10px;color:var(--light);margin-top:4px">${openCount} open / ${taskCount} items</div>`:''}
+      ${w.targetDate?`<div style="font-size:10px;color:${w.targetDate<today()?'var(--red)':'var(--light)'};margin-top:2px">Target: ${fmtDate(w.targetDate)}</div>`:''}
+    </div>`;
+  }
+  
+  function renderTaskCard(t){
+    const isDone=t.status==='done';
+    const isOD=!isDone&&t.due&&t.due<today();
+    const ws=(D.workstreams||[]).find(w=>w.id===t.workstream);
+    const msIcon=t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">★</span>':'';
+    const prIcon=t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">◆</span>':'';
+    return `<div class="kb-card${isOD?' kb-overdue':''}" style="border-left:3px solid ${ws?.color||'var(--muted)'};cursor:pointer;background:rgba(0,0,0,.02)" onclick="openTaskModal('${t.id}')">
+      <div style="font-size:12px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${msIcon}${prIcon}${esc(t.title)}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px">${esc(t.owner||'Unassigned')}</div>
+      ${ws?`<div style="font-size:9px;color:var(--light);margin-top:2px">${esc(ws.name)}</div>`:''}
+      ${t.due?`<div style="font-size:10px;color:${isOD?'var(--red)':'var(--light)'};margin-top:2px">${fmtDate(t.due)}</div>`:''}
+    </div>`;
+  }
+  
+  function renderColumn(status){
+    const wsInCol=filteredWs.filter(w=>getWsStatus(w)===status.value);
+    const tasksInCol=filteredTasks.filter(t=>getTaskStatus(t)===status.value);
+    const total=wsInCol.length+tasksInCol.length;
+    return `<div class="kb-col" data-status="${status.value}">
+      <div class="kb-col-hd">
+        <span class="kb-col-title">${status.label}</span>
+        <span class="kb-col-count">${total}</span>
+      </div>
+      <div class="kb-col-body">
+        ${wsInCol.map(renderWsCard).join('')}
+        ${tasksInCol.map(renderTaskCard).join('')}
+        ${!total?'<div style="padding:12px;font-size:11px;color:var(--light);text-align:center">No items</div>':''}
+      </div>
+    </div>`;
+  }
+  
+  c.innerHTML=`
+  <div class="page-wrap kb-page">
+    <div class="page-toolbar">
+      <span class="page-title">Kanban Board</span>
+      <div class="pill-filters">
+        <div class="pill${workKanbanFilter==='all'?' pill-i':' pill-m'}" onclick="workKanbanFilter='all';render()">All Items</div>
+        <div class="pill${workKanbanFilter==='workstreams'?' pill-i':' pill-m'}" onclick="workKanbanFilter='workstreams';render()">Workstreams Only</div>
+        <div class="pill${workKanbanFilter==='actions'?' pill-i':' pill-m'}" onclick="workKanbanFilter='actions';render()">Action Items Only</div>
+      </div>
+      <div class="toolbar-right">
+        <select onchange="workKanbanCategory=this.value;render()">
+          <option value="">All Categories</option>
+          <option value="BU"${workKanbanCategory==='BU'?' selected':''}>Business Unit</option>
+          <option value="Cross-cutting"${workKanbanCategory==='Cross-cutting'?' selected':''}>Cross-cutting</option>
+        </select>
+        <select onchange="workKanbanOwner=this.value;render()">
+          <option value="">All Owners</option>
+          <option value="__unassigned__"${workKanbanOwner==='__unassigned__'?' selected':''}>Unassigned</option>
+          ${owners.map(o=>`<option value="${esc(o)}"${workKanbanOwner===o?' selected':''}>${esc(o)}</option>`).join('')}
+        </select>
+        <button class="btn btn-p" onclick="openWsEdit()">+ Workstream</button>
+        <button class="btn btn-s" onclick="openTaskModal()">+ Action Item</button>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${filteredWs.length} workstreams • ${filteredTasks.length} action items</div>
+    <div class="kb-board" style="display:flex;gap:12px;overflow-x:auto;padding-bottom:16px">
+      ${statuses.map(renderColumn).join('')}
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// WORKSTREAMS (Legacy)
+// ═══════════════════════════════════════════════════
+let wsLeadFilter='',wsCatFilter='',wsGroupCollapsed={};
 function wsStatusValue(w){const s=w.status;if(!s)return'not-started';if(['on-track','at-risk','blocked','pilot-validate','deploy-scale'].includes(s))return'delivery';return s;}
 function rWork(c){
   const q=(document.getElementById('search').value||'').toLowerCase();
@@ -2646,14 +3761,19 @@ function rWork(c){
     const hasOverdue=wAll.some(t=>t.status!=='done'&&t.due&&t.due<today());
     const needsAttention=w.status==='at-risk'||w.status==='blocked'||hasOverdue;
     const attDot=needsAttention?'<span title="Needs attention'+(hasOverdue?' — has overdue items':'')+(w.status==='at-risk'?' — at risk':'')+(w.status==='blocked'?' — blocked':'')+'" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:6px;vertical-align:middle;flex-shrink:0;box-shadow:0 0 0 2px rgba(239,68,68,.25)"></span>':'';
+    const priorityColors={high:'#ef4444',medium:'#f59e0b',low:'#6b7280'};
+    const priorityBadge=w.priority?`<span title="Priority: ${w.priority}" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${priorityColors[w.priority]||'#6b7280'};margin-right:4px;vertical-align:middle"></span>`:'';
+    const levelBadge=w.level===3?'<span style="font-size:9px;color:var(--muted);margin-left:4px">L3</span>':'';
     const nameHtml=isChild
-      ?`${attDot}<span style="color:var(--muted);margin-right:4px">└</span><span style="font-weight:500;font-size:12.5px;color:var(--text)">${esc(w.name)}</span>`
-      :`${attDot}<span style="font-weight:600;font-size:13.5px">${esc(w.name)}</span>${isParent?'<span style="font-size:9px;font-weight:700;color:var(--accent);background:rgba(99,102,241,.1);padding:1px 6px;border-radius:8px;margin-left:6px;vertical-align:middle">'+children.length+' sub</span>':''}`;
+      ?`${attDot}${priorityBadge}<span style="color:var(--muted);margin-right:4px">└</span><span style="font-weight:500;font-size:12.5px;color:var(--text)">${esc(w.name)}</span>${levelBadge}`
+      :`${attDot}${priorityBadge}<span style="font-weight:600;font-size:13.5px">${esc(w.name)}</span>${levelBadge}${isParent?'<span style="font-size:9px;font-weight:700;color:var(--accent);background:rgba(99,102,241,.1);padding:1px 6px;border-radius:8px;margin-left:6px;vertical-align:middle">'+children.length+' sub</span>':''}`;
+    const ownerDisplay=w.primaryOwner?(w.secondaryOwner?`${esc(w.primaryOwner)} / ${esc(w.secondaryOwner)}`:esc(w.primaryOwner)):(esc(w.owner)||'<span style="color:var(--light)">Unassigned</span>');
+    const targetDisplay=w.targetDate?`<span style="font-size:11px;color:${w.targetDate<today()?'var(--red)':'var(--muted)'}">${fmtDate(w.targetDate)}</span>`:'—';
     return `<tr onclick="openWsDetail('${w.id}')" style="cursor:pointer;height:44px${isChild?';background:rgba(99,102,241,.03)':''}" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background='${isChild?'rgba(99,102,241,.03)':''}'">
       <td style="width:6px;padding:0"><div style="width:5px;height:28px;border-radius:3px;background:${wsColor(w.id)}"></div></td>
       <td style="${isChild?'padding-left:24px':''}">${nameHtml}</td>
-      <td style="font-size:12.5px;color:var(--muted)">${esc(w.owner)||'<span style="color:var(--light)">Unassigned</span>'}</td>
-      <td style="font-size:12px;color:var(--muted)">${(w.stakeholders||[]).length?w.stakeholders.map(s=>esc(s)).join(', '):'—'}</td>
+      <td style="font-size:12.5px;color:var(--muted)">${ownerDisplay}</td>
+      <td style="font-size:12px;color:var(--muted)">${targetDisplay}</td>
       <td style="width:10%"><span class="pill ${sc}" style="font-size:10px">${wsStatusLabel(w.status)}</span></td>
       <td style="width:10%;font-size:12px;color:var(--muted)">${wOpen} open / ${wAll.length} total</td>
       <td style="width:10%;font-size:12px;${risks?'color:var(--red);font-weight:600':'color:var(--muted)'}">${risks?risks+' risk'+(risks>1?'s':''):'—'}</td>
@@ -2731,82 +3851,57 @@ function rWork(c){
   </div>`;
 }
 
+function openIntakeModal(){
+  openModal(`<div class="m-hd"><h3>New Item - Intake</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd">
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">What type of work item would you like to create?</p>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <button onclick="closeModal();openWsEdit()" style="padding:16px 20px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);cursor:pointer;text-align:left;transition:all .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.background='rgba(99,102,241,.05)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-subtle)'">
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px;color:var(--text)">Workstream</div>
+        <div style="font-size:12px;color:var(--muted)">A project, initiative, or body of work (L1, L2, or L3)</div>
+      </button>
+      <button onclick="closeModal();openTaskModal()" style="padding:16px 20px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);cursor:pointer;text-align:left;transition:all .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.background='rgba(99,102,241,.05)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-subtle)'">
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px;color:var(--text)">Action Item</div>
+        <div style="font-size:12px;color:var(--muted)">A specific task, milestone, or deliverable</div>
+      </button>
+    </div>
+  </div>
+  <div class="m-ft">
+    <button class="mbtn mb-cancel" onclick="closeModal()">Cancel</button>
+  </div>`);
+}
+
 function openWsEdit(id){
   const w=id?(D.workstreams||[]).find(x=>x.id===id):null;
-  const defaultOwner=w?w.owner:(ME||'');
-  const colors=[
-    '#6366f1','#8b5cf6','#7c3aed','#a855f7','#d946ef','#ec4899',
-    '#2563eb','#0ea5e9','#06b6d4','#0891b2','#0d9488','#14b8a6',
-    '#059669','#10b981','#22c55e','#84cc16','#65a30d','#ca8a04',
-    '#f59e0b','#f97316','#ef4444','#dc2626','#e11d48','#be123c',
-    '#475569','#64748b','#78716c','#57534e','#334155','#1e293b'
-  ];
-  const children=w?(D.workstreams||[]).filter(c=>c.parentWs===w.id).sort((a,b)=>(a.name||'').localeCompare(b.name||'')):[];
-  const parentObj=w?.parentWs?(D.workstreams||[]).find(p=>p.id===w.parentWs):null;
-  const hierarchyBanner=w&&(children.length||parentObj)?`<div style="padding:10px 14px;margin-bottom:12px;border-radius:var(--r-sm);border:1px solid ${children.length?'var(--accent)':'var(--border-lt)'};background:${children.length?'rgba(99,102,241,.06)':'var(--bg-subtle)'}">
-    ${parentObj?`<div style="font-size:12px;color:var(--muted);margin-bottom:${children.length?'6px':'0'}">Child of <strong style="color:var(--text);cursor:pointer" onclick="closeModal();setTimeout(()=>openWsDetail('${parentObj.id}'),200)">${esc(parentObj.name)}</strong></div>`:''}
-    ${children.length?`<div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:4px">Parent Workstream — ${children.length} sub-workstream${children.length!==1?'s':''}</div>
-    <div style="display:flex;flex-wrap:wrap;gap:4px">${children.map(ch=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;padding:3px 10px;border-radius:12px;border:1px solid var(--border-lt);background:var(--bg);cursor:pointer;color:var(--text)" onclick="closeModal();setTimeout(()=>openWsDetail('${ch.id}'),200)"><span style="width:7px;height:7px;border-radius:50%;background:${ch.color||'var(--muted)'}"></span>${esc(ch.name)}</span>`).join('')}</div>`:''}
-  </div>`:'';
+  const defaultOwner=w?w.primaryOwner||w.owner:(ME||'');
   openModal(`<div class="m-hd"><h3>${w?'Edit':'New'} Workstream</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
-    <div style="padding:10px 14px;margin-bottom:12px;border-radius:var(--r-sm);background:#eff6ff;border:1px solid #3b82f6;font-size:12.5px;color:#1e40af">
-      <strong style="color:#1d4ed8">&#128193; Need to upload documents?</strong> Visit the <a href="https://digitalrealtyeur.sharepoint.com/sites/AITransformationProgram/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FAITransformationProgram%2FShared%20Documents%2FGeneral&viewid=be024a85%2D931b%2D4a01%2Dacac%2D217f020d89c0" target="_blank" style="color:#2563eb;text-decoration:underline;font-weight:600">AI Transformation Program SharePoint folder</a>
+    <div class="fg"><label>Name of Workstream</label><input id="ws-name" value="${w?esc(w.name):''}" placeholder="Brief, descriptive name"></div>
+    <div class="fg"><label>Parent</label><select id="ws-parentWs"><option value="">— Top Level —</option>${wsOptsHierarchy(w?.parentWs,w?.id)}</select></div>
+    <div class="fg"><label>Status</label><select id="ws-status">${WS_STATUSES.map(s=>`<option value="${s.value}"${normalizeWsStatus(w?.status)===s.value?' selected':''}>${s.label}</option>`).join('')}</select></div>
+    <div class="fg-row">
+      <div class="fg"><label>Lead</label><select id="ws-primaryOwner">${peopleOpts(defaultOwner)}</select></div>
+      <div class="fg"><label>Co-Lead</label><select id="ws-secondaryOwner"><option value="">— None —</option>${peopleOpts(w?.secondaryOwner||'').replace('<option value="">— Select —</option>','')}</select></div>
     </div>
-    ${hierarchyBanner}
-    <div class="ws-section" id="wsSec-basics">
-      <div class="ws-section-hd" onclick="toggleWsSection('wsSec-basics')"><h4>Basics</h4><span class="ws-section-arrow">&#9660;</span></div>
-      <div class="ws-section-bd">
-        <div class="fg"><label>Name</label><input id="ws-name" value="${w?esc(w.name):''}" placeholder="Brief, descriptive name"></div>
-        <div class="fg-row">
-          <div class="fg"><label>Lead</label><select id="ws-owner">${peopleOpts(defaultOwner)}</select></div>
-          <div class="fg"><label>Category</label><select id="ws-cat" onchange="var r=document.getElementById('ws-cctype-wrap');if(r)r.style.display=this.value==='Cross-cutting'?'':'none'"><option value="BU"${w?.category==='BU'?' selected':''}>Business Unit</option><option value="Cross-cutting"${(!w||w?.category==='Cross-cutting')?' selected':''}>Crosscutting</option></select></div>
-        </div>
-        <div class="fg" id="ws-cctype-wrap" style="display:${w?.category==='Cross-cutting'?'':'none'}"><label>Subcategory</label><select id="ws-ccType"><option value="horizontal"${w?.ccType==='horizontal'?' selected':''}>Horizontal (AI for the Employee)</option><option value="platform"${w?.ccType!=='horizontal'?' selected':''}>Platform (Supporting Infrastructure)</option></select></div>
-        <div class="fg"><label>Stakeholders</label>
-          <div id="ws-stakeholders" style="display:flex;flex-wrap:wrap;gap:4px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);min-height:36px;max-height:180px;overflow-y:auto">
-            ${(()=>{const sel=w?.stakeholders||[];const ppl=(D.people||[]).slice().sort((a,b)=>{const ac=sel.includes(a.name)?0:1,bc=sel.includes(b.name)?0:1;return ac!==bc?ac-bc:(a.name||'').localeCompare(b.name||'')});return ppl.map(p=>{const checked=sel.includes(p.name);return '<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;padding:2px 8px;border-radius:12px;border:1px solid '+(checked?'var(--accent)':'var(--border)')+';background:'+(checked?'rgba(99,102,241,.12)':'var(--bg)')+';white-space:nowrap;transition:all .1s" onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="if(!this.querySelector(\'input\').checked)this.style.borderColor=\'var(--border)\'" onclick="const cb=this.querySelector(\'input\');cb.checked=!cb.checked;this.style.background=cb.checked?\'rgba(99,102,241,.12)\':\'var(--bg)\';this.style.borderColor=cb.checked?\'var(--accent)\':\'var(--border)\'"><input type="checkbox" class="ws-sth-cb" value="'+esc(p.name)+'" '+(checked?'checked':'')+' style="accent-color:var(--accent);width:14px;height:14px;pointer-events:none"> '+esc(p.name)+'</label>'}).join('')})()}
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
-            <input id="ws-new-person" placeholder="Add new person..." style="flex:1;padding:4px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);color:var(--text);font-family:inherit">
-            <button type="button" style="font-size:12px;color:#fff;background:var(--accent);border:none;cursor:pointer;padding:4px 10px;border-radius:var(--r-sm);font-family:inherit;white-space:nowrap" onclick="addPersonFromWs()">+ Add</button>
-          </div>
-        </div>
-        <div class="fg-row">
-          <div class="fg"><label>Status</label><select id="ws-status">${(()=>{const st=w?.status;const formVal=!st?'not-started':['on-track','at-risk','blocked'].includes(st)?'delivery':st;return WS_STATUSES.map(s=>`<option value="${s.value}"${formVal===s.value?' selected':''}>${s.label}</option>`).join('');})()}</select></div>
-          <div class="fg"><label>Color</label><select id="ws-color">${colors.map(cl=>`<option value="${cl}"${(w?.color||'#6366f1')===cl?' selected':''} style="background:${cl};color:#fff">${cl}</option>`).join('')}</select></div>
-        </div>
-        <div class="fg"><label>Parent Workstream</label><select id="ws-parentWs"><option value="">— None (top-level) —</option>${(D.workstreams||[]).filter(p=>p.id!==(w?.id||'')&&!p.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(p=>`<option value="${p.id}"${w?.parentWs===p.id?' selected':''}>${esc(p.name)}</option>`).join('')}</select></div>
-        <div class="fg"><label>Description</label><textarea id="ws-desc" style="min-height:60px">${w?esc(w.desc):''}</textarea></div>
-        <div class="fg">
-          <label style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-            <span>Business outcome / impact</span>
-            ${w&&OPENAI_KEY?`<button type="button" class="pill pill-i" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="aiSuggestWorkstreamBusinessOutcome('${esc(w.id)}')">&#10024; AI Suggest</button>`:''}
-          </label>
-          <textarea id="ws-businessOutcome" style="min-height:60px;font-size:12px" placeholder="1-2 sentences describing business impact (e.g. Reduced manual effort by X%; Enabled Y capability)">${w?esc(w.businessOutcome||''):''}</textarea>
-        </div>
+    <div class="fg-row">
+      <div class="fg"><label>Start Date</label><input type="date" id="ws-targetStart" value="${w?.targetStart||''}"></div>
+      <div class="fg"><label>Target Date</label><input type="date" id="ws-targetDate" value="${w?.targetDate||''}"></div>
+    </div>
+    <div class="fg-row">
+      <div class="fg"><label>Priority</label><select id="ws-priority"><option value=""${!w?.priority?' selected':''}>— None —</option><option value="high"${w?.priority==='high'?' selected':''}>High</option><option value="medium"${w?.priority==='medium'?' selected':''}>Medium</option><option value="low"${w?.priority==='low'?' selected':''}>Low</option></select></div>
+      <div class="fg"><label>Alignments / Dependencies</label><input id="ws-alignments" value="${w?esc(w.alignments||''):''}" placeholder="e.g. Data Team, IT, etc."></div>
+    </div>
+    <div class="fg"><label>Stakeholders</label>
+      <div id="ws-stakeholders" style="display:flex;flex-wrap:wrap;gap:4px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);min-height:36px;max-height:180px;overflow-y:auto">
+        ${(()=>{const sel=w?.stakeholders||[];const ppl=(D.people||[]).slice().sort((a,b)=>{const ac=sel.includes(a.name)?0:1,bc=sel.includes(b.name)?0:1;return ac!==bc?ac-bc:(a.name||'').localeCompare(b.name||'')});return ppl.map(p=>{const checked=sel.includes(p.name);return '<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;padding:2px 8px;border-radius:12px;border:1px solid '+(checked?'var(--accent)':'var(--border)')+';background:'+(checked?'rgba(99,102,241,.12)':'var(--bg)')+';white-space:nowrap;transition:all .1s" onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="if(!this.querySelector(\'input\').checked)this.style.borderColor=\'var(--border)\'" onclick="const cb=this.querySelector(\'input\');cb.checked=!cb.checked;this.style.background=cb.checked?\'rgba(99,102,241,.12)\':\'var(--bg)\';this.style.borderColor=cb.checked?\'var(--accent)\':\'var(--border)\'"><input type="checkbox" class="ws-sth-cb" value="'+esc(p.name)+'" '+(checked?'checked':'')+' style="accent-color:var(--accent);width:14px;height:14px;pointer-events:none"> '+esc(p.name)+'</label>'}).join('')})()}
       </div>
     </div>
-    <div class="ws-section collapsed" id="wsSec-timeline">
-      <div class="ws-section-hd" onclick="toggleWsSection('wsSec-timeline')"><h4>Timeline & Dates</h4><span class="ws-section-arrow">&#9660;</span></div>
-      <div class="ws-section-bd">
-        <div class="fg-row">
-          <div class="fg"><label>Target start</label><input type="date" id="ws-targetStart" value="${w?.targetStart||''}"></div>
-          <div class="fg"><label>Target end</label><input type="date" id="ws-targetEnd" value="${w?.targetEnd||''}"></div>
-        </div>
-        ${w?wsTimeline(w.id):'<div style="padding:10px 12px;border:1px dashed var(--border);border-radius:var(--r-sm);color:var(--muted);font-size:12px">Save the workstream first, then timeline data will appear here.</div>'}
-      </div>
-    </div>
-    <div class="ws-section collapsed" id="wsSec-details">
-      <div class="ws-section-hd" onclick="toggleWsSection('wsSec-details')"><h4>Documents & Linked Items</h4><span class="ws-section-arrow">&#9660;</span></div>
-      <div class="ws-section-bd">
-        <div class="fg"><label>Documents</label>
-          <div id="ws-links-list">${(w?.links||[]).map((l,i)=>`<div style="display:flex;gap:4px;margin-bottom:4px;align-items:center"><input class="ws-link-label" value="${esc(l.label)}" placeholder="Label" style="flex:1;max-width:140px"><input class="ws-link-url" value="${esc(l.url)}" placeholder="https://..." style="flex:2"><button type="button" style="color:var(--red);font-size:13px;background:none;border:none;cursor:pointer;padding:0 4px" onclick="this.parentElement.remove()">&#10005;</button></div>`).join('')}</div>
-          <button type="button" style="font-size:12px;color:var(--indigo);background:none;border:none;cursor:pointer;padding:2px 0" onclick="addWsLink()">+ Add link</button>
-        </div>
-        ${w?wsLinkedItems(w.id):''}
-      </div>
-    </div>
+    <div class="fg"><label>Description</label><textarea id="ws-desc" style="min-height:60px">${w?esc(w.desc):''}</textarea></div>
+    <div class="fg"><label>Business Outcome / Impact</label><textarea id="ws-businessOutcome" style="min-height:60px;font-size:12px" placeholder="1-2 sentences describing business impact">${w?esc(w.businessOutcome||''):''}</textarea></div>
+    ${w?`<div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px">
+      <h4 style="font-size:13px;font-weight:700;margin:0 0 10px 0">Linked Items</h4>
+      ${wsLinkedItems(w.id)}
+    </div>`:''}
   </div>
   <div class="m-ft">
     ${w?'<button class="mbtn mb-del" onclick="delWs(\''+w.id+'\');closeModal()">Delete</button>':''}
@@ -2846,33 +3941,24 @@ function addPersonFromWs(){
 }
 function wsLinkedItems(wsId){
   const tasks=(D.tasks||[]).filter(t=>t.workstream===wsId);
-  const risks=(D.risks||[]).filter(r=>r.workstream===wsId);
-  const decs=(D.decisions||[]).filter(d=>d.workstream===wsId);
-  const metrics=(D.metrics||[]).filter(m=>m.workstream===wsId);
-  const total=tasks.length+risks.length+decs.length+metrics.length;
-  if(!total)return '<div style="padding:10px 12px;border:1px dashed var(--border);border-radius:var(--r-sm);color:var(--muted);font-size:12px;margin-bottom:8px">No linked items yet — link action items, risks, decisions, or metrics to this workstream.</div><div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="pill pill-i" style="cursor:pointer;border:none;font-size:11px;padding:5px 12px" onclick="wsQuickAdd(\'task\',\''+wsId+'\')">+ Action Item</button><button type="button" class="pill pill-i" style="cursor:pointer;border:none;font-size:11px;padding:5px 12px" onclick="wsQuickAdd(\'risk\',\''+wsId+'\')">+ Risk</button><button type="button" class="pill pill-i" style="cursor:pointer;border:none;font-size:11px;padding:5px 12px" onclick="wsQuickAdd(\'decision\',\''+wsId+'\')">+ Decision</button></div>';
-  let html='<div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h4 style="font-size:13px;font-weight:700;margin:0">Linked Items ('+total+')</h4><div style="display:flex;gap:6px"><button type="button" class="pill pill-m" style="cursor:pointer;border:none;font-size:10px;padding:3px 8px" onclick="wsQuickAdd(\'task\',\''+wsId+'\')">+ Action Item</button><button type="button" class="pill pill-m" style="cursor:pointer;border:none;font-size:10px;padding:3px 8px" onclick="wsQuickAdd(\'risk\',\''+wsId+'\')">+ Risk</button><button type="button" class="pill pill-m" style="cursor:pointer;border:none;font-size:10px;padding:3px 8px" onclick="wsQuickAdd(\'decision\',\''+wsId+'\')">+ Decision</button></div></div>';
+  const childWs=(D.workstreams||[]).filter(c=>c.parentWs===wsId).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const total=tasks.length+childWs.length;
+  if(!total)return '<div style="padding:10px 12px;border:1px dashed var(--border);border-radius:var(--r-sm);color:var(--muted);font-size:12px;margin-bottom:8px">No linked items yet.</div><div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="pill pill-i" style="cursor:pointer;border:none;font-size:11px;padding:5px 12px" onclick="wsQuickAdd(\'task\',\''+wsId+'\')">+ Action Item</button></div>';
+  let html='<div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="display:flex;gap:6px"><button type="button" class="pill pill-m" style="cursor:pointer;border:none;font-size:10px;padding:3px 8px" onclick="wsQuickAdd(\'task\',\''+wsId+'\')">+ Action Item</button></div></div>';
+  if(childWs.length){
+    html+='<div style="margin-bottom:10px"><span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Child Workstreams ('+childWs.length+')</span>';
+    html+=childWs.map(c=>{
+      const lvl=c.level===2?'L2':c.level===3?'L3':'';
+      return '<div style="display:flex;align-items:center;gap:6px;padding:4px;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openWsDetail(\''+c.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(c.color||'var(--muted)')+'"></span>'+(lvl?'<span class="pill pill-m" style="font-size:9px;padding:1px 5px">'+lvl+'</span>':'')+'<span style="flex:1">'+esc(c.name)+'</span><span class="pill" style="font-size:10px">'+wsStatusShortLabel(c.status)+'</span></div>'}).join('')+'</div>';
+  }
   if(tasks.length){
-    const openT=tasks.filter(t=>t.status!=='done');const doneT=tasks.filter(t=>t.status==='done');
+    const openT=tasks.filter(t=>t.status!=='done');
     html+='<div style="margin-bottom:10px"><span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Action Items ('+tasks.length+' — '+openT.length+' open)</span>';
     html+=tasks.slice(0,12).map(t=>{
       const isDone=t.status==='done';const isOD=t.status!=='done'&&t.due&&t.due<today();
       return '<div style="display:flex;align-items:center;gap:6px;padding:4px;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openTaskModal(\''+t.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'">'+(t.isMilestone?'<span style="color:#f59e0b">&#9733;</span>':'')+'<span class="pill '+(isDone?'pill-g':isOD?'pill-r':taskStatusPill(t.status))+'" style="min-width:45px;text-align:center;font-size:10px">'+(isDone?'done':isOD?'overdue':taskStatusLabel(t.status))+'</span><span style="flex:1">'+esc(t.title)+'</span>'+(t.due?'<span style="color:var(--light);font-size:11px">'+fmtDate(t.due)+'</span>':'')+'</div>'}).join('');
     if(tasks.length>12)html+='<div style="font-size:11px;color:var(--muted);padding:4px">... and '+(tasks.length-12)+' more</div>';
     html+='</div>';
-  }
-  if(risks.length){
-    html+='<div style="margin-bottom:10px"><span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Risks ('+risks.length+')</span>';
-    html+=risks.map(r=>{const ic=r.impact==='critical'||r.impact==='high'?'pill-r':r.impact==='medium'?'pill-a':'pill-g';
-      return '<div style="display:flex;align-items:center;gap:6px;padding:4px;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openRiskModal(\''+r.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'"><span class="pill '+ic+'" style="min-width:45px;text-align:center;font-size:10px">'+esc(r.impact||'—')+'</span><span style="flex:1">'+esc(r.title)+'</span><span class="pill '+(r.status==='closed'?'pill-g':'pill-m')+'" style="font-size:10px">'+esc(r.status)+'</span></div>'}).join('')+'</div>';
-  }
-  if(decs.length){
-    html+='<div style="margin-bottom:10px"><span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Decisions ('+decs.length+')</span>';
-    html+=decs.map(d=>'<div style="display:flex;align-items:center;gap:6px;padding:4px;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openDecModal(\''+d.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'"><span class="pill pill-i" style="min-width:45px;text-align:center;font-size:10px">'+esc(d.status||'proposed')+'</span><span style="flex:1">'+esc(d.title)+'</span>'+(d.date?'<span style="color:var(--light);font-size:11px">'+fmtDate(d.date)+'</span>':'')+'</div>').join('')+'</div>';
-  }
-  if(metrics.length){
-    html+='<div style="margin-bottom:10px"><span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Metrics ('+metrics.length+')</span>';
-    html+=metrics.map(m=>'<div style="display:flex;align-items:center;gap:6px;padding:4px;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openMetricModal(\''+m.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'"><span style="flex:1">'+esc(m.name)+'</span><span style="font-weight:700">'+esc(m.value||'—')+'</span><span style="color:var(--muted);font-size:11px">target: '+esc(m.target||'—')+'</span></div>').join('')+'</div>';
   }
   return html+'</div>';
 }
@@ -2960,22 +4046,23 @@ function saveWs(id){
   if(!name){toast('Name is required');return}
   let w=id?(D.workstreams||[]).find(x=>x.id===id):null;
   const isNew=!w;
-  if(!w){w={id:uid(),phase:'0-30'};D.workstreams.push(w)}
+  if(!w){w={id:uid(),phase:'0-30',color:'#6366f1'};D.workstreams.push(w)}
   w.name=name;
-  w.owner=document.getElementById('ws-owner').value.trim();
-  w.category=document.getElementById('ws-cat').value;
-  w.ccType=(w.category==='Cross-cutting'?(document.getElementById('ws-ccType')?.value||'platform'):'');
-  w.status=document.getElementById('ws-status').value;
-  w.color=document.getElementById('ws-color').value;
+  w.primaryOwner=(document.getElementById('ws-primaryOwner')?.value||'').trim();
+  w.secondaryOwner=(document.getElementById('ws-secondaryOwner')?.value||'').trim();
+  w.owner=w.primaryOwner;
   w.parentWs=(document.getElementById('ws-parentWs')?.value||'');
+  if(!w.parentWs){w.level=1;}
+  else{const parentW=(D.workstreams||[]).find(p=>p.id===w.parentWs);w.level=(parentW?.level||1)+1;}
+  if(w.parentWs){const parentW=(D.workstreams||[]).find(p=>p.id===w.parentWs);if(parentW?.category)w.category=parentW.category;}
+  w.priority=(document.getElementById('ws-priority')?.value||'');
+  w.targetStart=(document.getElementById('ws-targetStart')?.value||'').trim();
+  w.targetDate=(document.getElementById('ws-targetDate')?.value||'').trim();
+  w.alignments=(document.getElementById('ws-alignments')?.value||'').trim();
+  w.status=document.getElementById('ws-status').value;
+  w.stakeholders=[...document.querySelectorAll('.ws-sth-cb')].filter(cb=>cb.checked).map(cb=>cb.value);
   w.desc=document.getElementById('ws-desc').value.trim();
   w.businessOutcome=(document.getElementById('ws-businessOutcome')?.value||'').trim();
-  w.targetStart=(document.getElementById('ws-targetStart')?.value||'').trim();
-  w.targetEnd=(document.getElementById('ws-targetEnd')?.value||'').trim();
-  w.stakeholders=[...document.querySelectorAll('.ws-sth-cb')].filter(cb=>cb.checked).map(cb=>cb.value);
-  const labels=[...document.querySelectorAll('.ws-link-label')];
-  const urls=[...document.querySelectorAll('.ws-link-url')];
-  w.links=labels.map((el,i)=>({label:el.value.trim(),url:urls[i]?.value.trim()||''})).filter(l=>l.url);
   w.updatedBy=ME;w.updatedAt=new Date().toISOString();
   save();log((isNew?'Added':'Updated')+' workstream: '+esc(w.name));closeModal();render();
   toast(isNew?'Workstream added':'Workstream updated');
@@ -3264,9 +4351,8 @@ function openTaskModal(id){
     </div>
     <div class="fg-row">
       <div class="fg"><label>Owner</label><select id="t-owner">${peopleOpts(defaultOwner)}</select></div>
-      <div class="fg"><label>Workstream</label><select id="t-ws"><option value="">— None —</option>${wsOpts(t?.workstream)}</select></div>
+      <div class="fg"><label>Parent</label><select id="t-ws"><option value="">— None —</option>${wsOptsHierarchy(t?.workstream)}</select></div>
     </div>
-    ${(()=>{if(!t?.workstream)return '';const pw=(D.workstreams||[]).find(x=>x.id===t.workstream);if(!pw)return '';return '<div style="font-size:12.5px;color:var(--muted);margin:-4px 0 10px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(pw.color||'var(--muted)')+'"></span><a href="#" onclick="event.preventDefault();closeModal();setTimeout(()=>openWsDetail(\''+pw.id+'\'),200)" style="color:var(--accent);text-decoration:none;font-weight:500">'+esc(pw.name)+'</a></div>'})()}
     <div class="fg-row">
       <div class="fg"><label>Start Date</label><input type="date" id="t-start" value="${t?t.startDate:''}"></div>
       <div class="fg"><label>Target Date</label><input type="date" id="t-due" value="${t?t.due:''}"></div>
