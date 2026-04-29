@@ -2143,8 +2143,8 @@ function wsOpts(sel){
   return html;
 }
 function wsOptsHierarchy(sel,excludeId){
-  const all=[...WS_L1_CATEGORIES.map(c=>({id:c.id,name:c.name,level:1,color:c.color})),...(D.workstreams||[]).filter(w=>w.id!==excludeId).map(w=>({id:w.id,name:w.name,level:w.level||2,parentWs:w.parentWs,color:w.color}))];
-  const l1s=all.filter(w=>w.level===1||!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const all=(D.workstreams||[]).filter(w=>w.id!==excludeId&&(w.category==='BU'||w.category==='Cross-cutting')).map(w=>({id:w.id,name:w.name,parentWs:w.parentWs,color:w.color}));
+  const l1s=all.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   let html='';
   l1s.forEach(l1=>{
     html+=`<option value="${l1.id}"${sel===l1.id?' selected':''}>${esc(l1.name)}</option>`;
