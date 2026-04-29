@@ -4379,6 +4379,7 @@ function openTaskModal(id){
   </div>
   <div class="m-ft">
     ${t?'<button class="mbtn mb-del" onclick="delTask(\''+t.id+'\');closeModal()">Delete</button>':''}
+    ${t?'<button class="mbtn" style="background:linear-gradient(135deg,#8b5cf6 0%,#6366f1 100%);color:#fff;border:none" onclick="openConvertToWorkstream(\''+t.id+'\')">Convert to Workstream</button>':''}
     <button class="mbtn mb-cancel" onclick="closeModal()">Cancel</button>
     <button class="mbtn mb-save" onclick="saveTask('${id||''}')">Save</button>
   </div>`);
@@ -4415,6 +4416,126 @@ function addTaskComment(id){
   openTaskModal(id);
   setTimeout(()=>{const tc=document.getElementById('t-comments');if(tc)tc.scrollIntoView({behavior:'smooth',block:'end'})},100);
   toast('Comment added');
+}
+
+function openConvertToWorkstream(taskId){
+  const t=D.tasks.find(x=>x.id===taskId);
+  if(!t){toast('Action item not found');return}
+  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  const l1Ws=allWs.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const l2Ws=allWs.filter(w=>w.level===2).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  
+  openModal(`<div class="m-hd"><h3>Convert to Workstream</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd">
+    <div style="padding:12px 14px;margin-bottom:16px;border-radius:var(--r-sm);background:rgba(139,92,246,.08);border:1px solid #8b5cf6">
+      <div style="font-size:13px;color:#6366f1;font-weight:600;margin-bottom:4px">Converting Action Item:</div>
+      <div style="font-size:14px;font-weight:600">${esc(t.title)}</div>
+    </div>
+    <div class="fg"><label>Workstream Name</label><input id="cvt-name" value="${esc(t.title)}" placeholder="Name for the new workstream"></div>
+    <div class="fg"><label>Level</label>
+      <select id="cvt-level" onchange="updateConvertParentOpts()">
+        <option value="2">L2 - Pillar</option>
+        <option value="3" selected>L3 - Workstream</option>
+      </select>
+    </div>
+    <div class="fg"><label>Parent Workstream</label>
+      <select id="cvt-parent">
+        <option value="">— Select Parent —</option>
+        ${l2Ws.map(w=>{
+          const p=l1Ws.find(x=>x.id===w.parentWs);
+          return `<option value="${w.id}" data-level="2"${t.workstream===w.id?' selected':''}>${p?esc(p.name)+' → ':''}${esc(w.name)}</option>`;
+        }).join('')}
+        ${l1Ws.map(w=>`<option value="${w.id}" data-level="1">${esc(w.name)} (L1)</option>`).join('')}
+      </select>
+    </div>
+    <div class="fg"><label>Primary Owner</label><select id="cvt-owner">${peopleOpts(t.owner||'')}</select></div>
+    <div class="fg-row">
+      <div class="fg"><label>Target Start</label><input type="date" id="cvt-start" value="${t.startDate||''}"></div>
+      <div class="fg"><label>Target End</label><input type="date" id="cvt-end" value="${t.due||''}"></div>
+    </div>
+    <div class="fg"><label>Description/Notes</label><textarea id="cvt-desc" style="min-height:70px;resize:vertical">${esc(t.notes||'')}</textarea></div>
+    <div style="padding:10px 14px;margin-top:12px;border-radius:var(--r-sm);background:var(--bg-subtle);border:1px solid var(--border)">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px">
+        <input type="checkbox" id="cvt-delete" checked style="width:16px;height:16px">
+        <span>Delete the original action item after conversion</span>
+      </label>
+    </div>
+  </div>
+  <div class="m-ft">
+    <button class="mbtn mb-cancel" onclick="closeModal()">Cancel</button>
+    <button class="mbtn mb-save" style="background:linear-gradient(135deg,#8b5cf6 0%,#6366f1 100%)" onclick="doConvertToWorkstream('${taskId}')">Convert</button>
+  </div>`);
+}
+
+function updateConvertParentOpts(){
+  const level=document.getElementById('cvt-level').value;
+  const parentSel=document.getElementById('cvt-parent');
+  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  const l1Ws=allWs.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const l2Ws=allWs.filter(w=>w.level===2).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  
+  let opts='<option value="">— Select Parent —</option>';
+  if(level==='2'){
+    opts+=l1Ws.map(w=>`<option value="${w.id}">${esc(w.name)} (L1)</option>`).join('');
+  }else{
+    opts+=l2Ws.map(w=>{
+      const p=l1Ws.find(x=>x.id===w.parentWs);
+      return `<option value="${w.id}">${p?esc(p.name)+' → ':''}${esc(w.name)}</option>`;
+    }).join('');
+    opts+=l1Ws.map(w=>`<option value="${w.id}">${esc(w.name)} (L1 - will create as L2)</option>`).join('');
+  }
+  parentSel.innerHTML=opts;
+}
+
+function doConvertToWorkstream(taskId){
+  const t=D.tasks.find(x=>x.id===taskId);
+  if(!t){toast('Action item not found');return}
+  
+  const name=document.getElementById('cvt-name').value.trim();
+  if(!name){toast('Workstream name is required');return}
+  
+  const level=parseInt(document.getElementById('cvt-level').value);
+  const parentId=document.getElementById('cvt-parent').value;
+  if(!parentId){toast('Please select a parent workstream');return}
+  
+  const parentWs=(D.workstreams||[]).find(w=>w.id===parentId);
+  if(!parentWs){toast('Parent workstream not found');return}
+  
+  const parentLevel=parentWs.level||1;
+  const actualLevel=level===2&&parentLevel===1?2:level===3?3:2;
+  
+  const newWs={
+    id:uid(),
+    name:name,
+    level:actualLevel,
+    parentWs:parentId,
+    category:parentWs.category||'BU',
+    color:parentWs.color||'#6366f1',
+    primaryOwner:document.getElementById('cvt-owner').value.trim(),
+    targetStart:document.getElementById('cvt-start').value,
+    targetEnd:document.getElementById('cvt-end').value,
+    desc:document.getElementById('cvt-desc').value,
+    status:'delivery',
+    isPriority:t.isPriority||false,
+    notes:t.notes||'',
+    updatedBy:ME,
+    updatedAt:new Date().toISOString()
+  };
+  
+  if(!D.workstreams)D.workstreams=[];
+  D.workstreams.push(newWs);
+  
+  const deleteOriginal=document.getElementById('cvt-delete').checked;
+  if(deleteOriginal){
+    const idx=D.tasks.findIndex(x=>x.id===taskId);
+    if(idx>=0)D.tasks.splice(idx,1);
+  }
+  
+  save();
+  log('Converted action item to workstream: '+esc(name));
+  closeModal();
+  render();
+  toast('Converted to workstream'+(deleteOriginal?' (action item deleted)':''));
 }
 function toggleTask(id){
   const t=D.tasks.find(x=>x.id===id);if(!t)return;
