@@ -1211,6 +1211,7 @@ async function submitLogin(){
     msg.textContent='Incorrect PIN. Try again.';return;
   }
   SESSION_VERIFIED=true;saveSession();
+  person.lastSignIn=new Date().toISOString();save();
   saveMe(person.name);closeModal();log(esc(person.name)+' signed in');startPresence();render();toast('Welcome, '+person.name.split(' ')[0]+'!');
   setTimeout(checkReleaseNotes,500);
 }
@@ -1251,6 +1252,7 @@ async function submitRegister(){
   if(preAssigned.pinHash){msg.style.display='';msg.style.background='var(--red-lt)';msg.style.color='var(--red)';msg.textContent='This account is already registered. Use Sign In instead.';return}
   const pinH=await hashPin(pin);
   preAssigned.pinHash=pinH;preAssigned.updatedBy=name;
+  preAssigned.lastSignIn=new Date().toISOString();
   save();log(esc(preAssigned.name)+' created account ('+esc(uname)+')');
   SESSION_VERIFIED=true;saveSession();
   saveMe(preAssigned.name);closeModal();startPresence();render();toast('Account created! Welcome, '+preAssigned.name.split(' ')[0]+'!');
@@ -1303,6 +1305,7 @@ async function submitReAuth(){
   const person=(D.people||[]).find(p=>p.name===ME);
   if(!person||!person.pinHash){SESSION_VERIFIED=true;saveSession();closeModal();render();return}
   if(person.pinHash!==pinH){msg.style.display='';msg.style.background='var(--red-lt)';msg.style.color='var(--red)';msg.textContent='Incorrect PIN.';return}
+  person.lastSignIn=new Date().toISOString();save();
   SESSION_VERIFIED=true;saveSession();closeModal();log(esc(ME)+' signed in');render();toast('Welcome back, '+ME.split(' ')[0]+'!');
   setTimeout(checkReleaseNotes,500);
 }
@@ -1596,7 +1599,8 @@ function startPresence(){
     renderPresence(active);
   });
 }
-function renderPresence(){}
+let activePresence=[];
+function renderPresence(active){activePresence=active||[];}
 
 // ═══════════════════════════════════════════════════
 // NAV
@@ -5101,12 +5105,22 @@ function sortPeople(col){
   render();
 }
 
+function isPersonOnline(name){
+  return activePresence.some(u=>u.name===name);
+}
+
 function rPeople(c){
   let ppl=(D.people||[]).slice();
   if(pplSort==='name')ppl.sort((a,b)=>pplSortDir*(a.name||'').localeCompare(b.name||''));
   else if(pplSort==='group')ppl.sort((a,b)=>pplSortDir*(a.group||'').localeCompare(b.group||''));
   else if(pplSort==='stakeholder')ppl.sort((a,b)=>pplSortDir*((b.isStakeholder?1:0)-(a.isStakeholder?1:0)));
+  else if(pplSort==='status')ppl.sort((a,b)=>{
+    const aOn=isPersonOnline(a.name)?1:0;
+    const bOn=isPersonOnline(b.name)?1:0;
+    return pplSortDir*(bOn-aOn);
+  });
   const stakeholderCount=ppl.filter(p=>p.isStakeholder).length;
+  const onlineCount=ppl.filter(p=>isPersonOnline(p.name)).length;
   const sortArrow=(col)=>pplSort===col?(pplSortDir===1?' ▲':' ▼'):'';
   const thStyle='cursor:pointer;user-select:none';
   c.innerHTML=`
@@ -5114,19 +5128,23 @@ function rPeople(c){
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin-bottom:16px;border-bottom:1px solid var(--border)">
       <div style="display:flex;align-items:center;gap:16px">
         <span style="font-size:22px;font-weight:700;color:var(--fg)">People</span>
-        <span style="font-size:14px;color:var(--muted)">${ppl.length} team member${ppl.length!==1?'s':''}${stakeholderCount?' · '+stakeholderCount+' stakeholder'+(stakeholderCount!==1?'s':''):''}</span>
+        <span style="font-size:14px;color:var(--muted)">${ppl.length} team member${ppl.length!==1?'s':''}${onlineCount?' · <span style="color:var(--green)">'+onlineCount+' online</span>':''}${stakeholderCount?' · '+stakeholderCount+' stakeholder'+(stakeholderCount!==1?'s':''):''}</span>
       </div>
       <div style="display:flex;gap:10px">
         <button onclick="openManageGroupsModal()" style="padding:10px 18px;font-size:13px;font-weight:600;background:var(--bg-card);color:var(--fg);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;transition:all .15s" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background='var(--bg-card)'">Manage Groups</button>
         <button onclick="openPersonModal()" style="padding:10px 18px;font-size:13px;font-weight:600;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);color:#fff;border:none;border-radius:var(--r-sm);cursor:pointer;box-shadow:0 2px 8px rgba(99,102,241,.3);transition:all .15s" onmouseenter="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(99,102,241,.4)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(99,102,241,.3)'">New Person</button>
       </div>
     </div>
-    ${ppl.length?`<div class="card" style="padding:18px 20px"><table class="tbl" style="width:100%"><thead><tr><th style="${thStyle}" onclick="sortPeople('name')">Name${sortArrow('name')}</th><th style="${thStyle}" onclick="sortPeople('group')">Group${sortArrow('group')}</th><th style="${thStyle}" onclick="sortPeople('stakeholder')">Stakeholder${sortArrow('stakeholder')}</th><th style="width:60px"></th></tr></thead><tbody>${ppl.map(p=>`<tr onclick="openPersonModal('${p.id}')" style="cursor:pointer">
-      <td style="font-weight:600">${esc(p.name)}</td>
+    ${ppl.length?`<div class="card" style="padding:18px 20px"><table class="tbl" style="width:100%"><thead><tr><th style="${thStyle}" onclick="sortPeople('status')">Status${sortArrow('status')}</th><th style="${thStyle}" onclick="sortPeople('name')">Name${sortArrow('name')}</th><th style="${thStyle}" onclick="sortPeople('group')">Group${sortArrow('group')}</th><th style="${thStyle}" onclick="sortPeople('stakeholder')">Stakeholder${sortArrow('stakeholder')}</th><th style="width:60px"></th></tr></thead><tbody>${ppl.map(p=>{
+      const online=isPersonOnline(p.name);
+      const lastSign=p.lastSignIn?timeAgo(p.lastSignIn):'Never';
+      return `<tr onclick="openPersonModal('${p.id}')" style="cursor:pointer">
+      <td style="text-align:center" title="${online?'Online now':'Last sign-in: '+lastSign}"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${online?'var(--green)':'var(--light)'};${online?'box-shadow:0 0 6px var(--green)':'opacity:0.4'}"></span></td>
+      <td style="font-weight:600">${esc(p.name)}${online?'':p.lastSignIn?'<span style="font-size:11px;color:var(--light);font-weight:400;margin-left:8px">'+lastSign+'</span>':''}</td>
       <td style="font-size:12.5px;color:var(--muted)">${esc(p.group||'—')}</td>
       <td style="text-align:center">${p.isStakeholder?'<span style="color:#f59e0b">★</span>':''}</td>
       <td><button class="pill pill-m" style="font-size:10px;cursor:pointer;border:none" onclick="event.stopPropagation();openPersonModal('${p.id}')">Edit</button></td>
-    </tr>`).join('')}</tbody></table></div>`:'<div class="empty"><h4>No people yet</h4><p><button class="mbtn mb-save" onclick="openPersonModal()">Add your first team member</button></p></div>'}
+    </tr>`}).join('')}</tbody></table></div>`:'<div class="empty"><h4>No people yet</h4><p><button class="mbtn mb-save" onclick="openPersonModal()">Add your first team member</button></p></div>'}
   </div>`;
 }
 
