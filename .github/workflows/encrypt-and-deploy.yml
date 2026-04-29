@@ -35,6 +35,8 @@ jobs:
           mkdir -p _site
           pagecrypt atlas.html _site/index.html "${{ secrets.SITE_PASSWORD }}"
           cp favicon.svg _site/favicon.svg
+          # Inject favicon link into the encrypted page's head
+          sed -i 's|<head>|<head><link rel="icon" type="image/svg+xml" href="favicon.svg">|' _site/index.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
