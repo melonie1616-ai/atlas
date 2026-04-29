@@ -2433,10 +2433,9 @@ function renderPeopleSection(){
       <button class="tb-btn" onclick="openPersonModal()">+ Add Person</button>
     </div>
   </div>
-  ${ppl.length?`<div class="card" style="padding:18px 20px"><table class="tbl" style="width:100%"><thead><tr><th>Name</th><th>Group</th><th>Contact</th><th style="width:60px"></th></tr></thead><tbody>${ppl.map(p=>`<tr onclick="openPersonModal('${p.id}')" style="cursor:pointer">
+  ${ppl.length?`<div class="card" style="padding:18px 20px"><table class="tbl" style="width:100%"><thead><tr><th>Name</th><th>Group</th><th style="width:60px"></th></tr></thead><tbody>${ppl.map(p=>`<tr onclick="openPersonModal('${p.id}')" style="cursor:pointer">
     <td style="font-weight:600">${esc(p.name)}</td>
     <td style="font-size:12.5px;color:var(--muted)">${esc(p.group||'—')}</td>
-    <td style="font-size:12px;color:var(--muted)">${p.email?'<a href="mailto:'+esc(p.email)+'" onclick="event.stopPropagation()" style="color:var(--accent)">'+esc(p.email)+'</a>':'—'}</td>
     <td><button class="pill pill-m" style="font-size:10px;cursor:pointer;border:none" onclick="event.stopPropagation();openPersonModal('${p.id}')">Edit</button></td>
   </tr>`).join('')}</tbody></table></div>`:'<div class="empty"><h4>No people yet</h4><p><button class="mbtn mb-save" onclick="openPersonModal()">Add your first team member</button></p></div>'}`;
 }
@@ -5111,11 +5110,10 @@ function rPeople(c){
         <button onclick="openPersonModal()" style="padding:10px 18px;font-size:13px;font-weight:600;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);color:#fff;border:none;border-radius:var(--r-sm);cursor:pointer;box-shadow:0 2px 8px rgba(99,102,241,.3);transition:all .15s" onmouseenter="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(99,102,241,.4)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(99,102,241,.3)'">New Person</button>
       </div>
     </div>
-    ${ppl.length?`<div class="card" style="padding:18px 20px"><table class="tbl" style="width:100%"><thead><tr><th>Name</th><th>Group</th><th>Stakeholder</th><th>Contact</th><th style="width:60px"></th></tr></thead><tbody>${ppl.map(p=>`<tr onclick="openPersonModal('${p.id}')" style="cursor:pointer">
+    ${ppl.length?`<div class="card" style="padding:18px 20px"><table class="tbl" style="width:100%"><thead><tr><th>Name</th><th>Group</th><th>Stakeholder</th><th style="width:60px"></th></tr></thead><tbody>${ppl.map(p=>`<tr onclick="openPersonModal('${p.id}')" style="cursor:pointer">
       <td style="font-weight:600">${esc(p.name)}</td>
       <td style="font-size:12.5px;color:var(--muted)">${esc(p.group||'—')}</td>
       <td style="text-align:center">${p.isStakeholder?'<span style="color:#f59e0b">★</span>':''}</td>
-      <td style="font-size:12px;color:var(--muted)">${p.email?'<a href="mailto:'+esc(p.email)+'" onclick="event.stopPropagation()" style="color:var(--accent)">'+esc(p.email)+'</a>':'—'}</td>
       <td><button class="pill pill-m" style="font-size:10px;cursor:pointer;border:none" onclick="event.stopPropagation();openPersonModal('${p.id}')">Edit</button></td>
     </tr>`).join('')}</tbody></table></div>`:'<div class="empty"><h4>No people yet</h4><p><button class="mbtn mb-save" onclick="openPersonModal()">Add your first team member</button></p></div>'}
   </div>`;
@@ -5133,9 +5131,8 @@ function rStakeholders(c){
         ${groupName||'No Group'}
         <span style="font-size:12px;font-weight:500;color:var(--muted)">(${members.length})</span>
       </h3>
-      <table class="tbl" style="width:100%"><thead><tr><th>Name</th><th>Contact</th><th style="width:60px"></th></tr></thead><tbody>${members.map(p=>`<tr onclick="openPersonModal('${p.id}')" style="cursor:pointer">
+      <table class="tbl" style="width:100%"><thead><tr><th>Name</th><th style="width:60px"></th></tr></thead><tbody>${members.map(p=>`<tr onclick="openPersonModal('${p.id}')" style="cursor:pointer">
         <td style="font-weight:600"><span style="color:#f59e0b;margin-right:6px">★</span>${esc(p.name)}</td>
-        <td style="font-size:12px;color:var(--muted)">${p.email?'<a href="mailto:'+esc(p.email)+'" onclick="event.stopPropagation()" style="color:var(--accent)">'+esc(p.email)+'</a>':'—'}</td>
         <td><button class="pill pill-m" style="font-size:10px;cursor:pointer;border:none" onclick="event.stopPropagation();openPersonModal('${p.id}')">Edit</button></td>
       </tr>`).join('')}</tbody></table>
     </div>`;
@@ -5177,10 +5174,6 @@ function openPersonModal(id){
         <span style="color:var(--muted);font-size:12.5px">— shows in Stakeholders view</span>
       </label>
     </div>
-    <div class="fg-row">
-      <div class="fg"><label>Email</label><input id="p-email" value="${p?esc(p.email):''}" placeholder="email@digitalrealty.com"></div>
-      <div class="fg"><label>Phone</label><input id="p-phone" value="${p?esc(p.phone):''}" placeholder="+1 ..."></div>
-    </div>
     <div class="fg"><label>Notes / Context</label><textarea id="p-notes" style="min-height:80px">${p?esc(p.notes):''}</textarea></div>
     ${p&&p.username&&p.pinHash?'<div style="margin-top:4px;padding:10px 14px;background:var(--bg-subtle);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:space-between"><span style="font-size:12.5px;color:var(--muted)"><span style="color:var(--green)">&#9679;</span> Account active &middot; Username: <strong>'+esc(p.username)+'</strong></span><button style="font-size:12px;color:var(--red);background:none;border:none;cursor:pointer;font-weight:600" onclick="resetPersonPin(\''+p.id+'\')">Reset PIN</button></div>':(p&&p.username&&!p.pinHash?'<div style="margin-top:4px;padding:10px 14px;background:var(--amber-lt);border-radius:var(--r-sm);font-size:12.5px;color:var(--amber)">Username set but no PIN yet — user needs to register.</div>':'')}
   </div>
@@ -5204,8 +5197,6 @@ function savePerson(id){
   if(!p){p={id:uid(),addedBy:ME};D.people.push(p)}
   p.name=name;p.username=uname||p.username||'';p.group=document.getElementById('p-group').value;
   p.isStakeholder=document.getElementById('p-stakeholder').checked;
-  p.email=document.getElementById('p-email').value.trim();
-  p.phone=document.getElementById('p-phone').value.trim();
   p.notes=document.getElementById('p-notes').value;
   p.updatedBy=ME;p.updatedAt=new Date().toISOString();
   save();log((isNew?'Added':'Updated')+' person: '+esc(name));
