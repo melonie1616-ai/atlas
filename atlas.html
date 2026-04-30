@@ -5525,8 +5525,8 @@ function rWorkMetrics(c){
     return 3;
   }
   
-  const openStatuses=['not-started','in-progress','blocked','at-risk'];
-  const openWs=allWs.filter(w=>openStatuses.includes(normalizeWsStatus(w.status)));
+  const closedStatuses=['closed','value-achieved','deferred-rejected'];
+  const openWs=allWs.filter(w=>!closedStatuses.includes(normalizeWsStatus(w.status)));
   const openTasks=allTasks.filter(t=>t.status!=='done');
   
   const people=[...new Set([
@@ -5558,6 +5558,8 @@ function rWorkMetrics(c){
   const todayDate=new Date(todayStr);
   const twoWeeksOut=new Date(todayDate.getTime()+14*24*60*60*1000);
   const twoWeeksStr=twoWeeksOut.toISOString().slice(0,10);
+  const overdueWs=openWs.filter(w=>w.endDate&&w.endDate<todayStr).sort((a,b)=>(a.endDate||'').localeCompare(b.endDate||''));
+  const overdueTasks=openTasks.filter(t=>t.due&&t.due<todayStr).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
   const dueSoonWs=openWs.filter(w=>{
     if(!w.endDate)return false;
     return w.endDate>=todayStr&&w.endDate<=twoWeeksStr;
@@ -5659,17 +5661,47 @@ function rWorkMetrics(c){
       
       <div class="card" style="padding:20px">
         <div style="display:flex;align-items:flex-start;gap:16px">
-          <div style="width:64px;height:64px;background:rgba(245,158,11,.1);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-direction:column">
-            <span style="font-size:20px;font-weight:800;color:#f59e0b">${dueSoonWs.length+dueSoonTasks.length}</span>
-            <span style="font-size:9px;color:#f59e0b;font-weight:600">DUE</span>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            ${(overdueWs.length+overdueTasks.length)?`<div style="width:64px;height:48px;background:rgba(239,68,68,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-direction:column">
+              <span style="font-size:18px;font-weight:800;color:#ef4444">${overdueWs.length+overdueTasks.length}</span>
+              <span style="font-size:8px;color:#ef4444;font-weight:600">OVERDUE</span>
+            </div>`:''}
+            <div style="width:64px;height:48px;background:rgba(245,158,11,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-direction:column">
+              <span style="font-size:18px;font-weight:800;color:#f59e0b">${dueSoonWs.length+dueSoonTasks.length}</span>
+              <span style="font-size:8px;color:#f59e0b;font-weight:600">DUE SOON</span>
+            </div>
           </div>
           <div style="flex:1">
-            <h3 style="font-size:15px;font-weight:700;color:var(--fg);margin:0 0 4px">Due Next 2 Weeks</h3>
+            <h3 style="font-size:15px;font-weight:700;color:var(--fg);margin:0 0 4px">Past Due & Due Next 2 Weeks</h3>
             <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
-              <span style="font-weight:600;color:var(--fg)">${dueSoonWs.length}</span> workstreams · 
-              <span style="font-weight:600;color:var(--fg)">${dueSoonTasks.length}</span> action items
+              ${(overdueWs.length+overdueTasks.length)?`<span style="font-weight:600;color:var(--red)">${overdueWs.length+overdueTasks.length}</span> overdue · `:''}
+              <span style="font-weight:600;color:var(--fg)">${dueSoonWs.length+dueSoonTasks.length}</span> due soon
             </div>
-            ${(dueSoonWs.length||dueSoonTasks.length)?`<div style="max-height:300px;overflow-y:auto">
+            ${(overdueWs.length||overdueTasks.length||dueSoonWs.length||dueSoonTasks.length)?`<div style="max-height:300px;overflow-y:auto">
+              ${(overdueWs.length||overdueTasks.length)?`<div style="font-size:10px;font-weight:600;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;padding-top:4px">Overdue</div>`:''}
+              ${[...overdueWs.map(w=>({type:'ws',item:w,date:w.endDate,overdue:true})),...overdueTasks.map(t=>({type:'task',item:t,date:t.due,overdue:true}))].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(x=>{
+                const d=new Date(x.date);
+                const dStr=d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+                if(x.type==='ws'){
+                  return `<div style="padding:8px;margin-bottom:4px;border-radius:6px;background:rgba(239,68,68,.08);font-size:12px;cursor:pointer;transition:background .15s" onclick="openWsEdit('${x.item.id}')" onmouseenter="this.style.background='rgba(239,68,68,.15)'" onmouseleave="this.style.background='rgba(239,68,68,.08)'">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                      <span style="font-weight:500;color:var(--fg)">${esc(x.item.name)}</span>
+                      <span style="font-size:10px;background:rgba(239,68,68,.15);color:#ef4444;padding:2px 6px;border-radius:4px">${dStr}</span>
+                    </div>
+                    <div style="color:var(--muted);font-size:11px;margin-top:2px">Workstream${x.item.primaryOwner||x.item.owner?' · '+esc(x.item.primaryOwner||x.item.owner):''}</div>
+                  </div>`;
+                }else{
+                  const ws=wsMap.get(x.item.workstream);
+                  return `<div style="padding:8px;margin-bottom:4px;border-radius:6px;background:rgba(239,68,68,.08);font-size:12px;cursor:pointer;transition:background .15s" onclick="openTaskModal('${x.item.id}')" onmouseenter="this.style.background='rgba(239,68,68,.15)'" onmouseleave="this.style.background='rgba(239,68,68,.08)'">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                      <span style="font-weight:500;color:var(--fg)">${esc(x.item.title)}</span>
+                      <span style="font-size:10px;background:rgba(239,68,68,.15);color:#ef4444;padding:2px 6px;border-radius:4px">${dStr}</span>
+                    </div>
+                    <div style="color:var(--muted);font-size:11px;margin-top:2px">Action Item${x.item.owner?' · '+esc(x.item.owner):''}</div>
+                  </div>`;
+                }
+              }).join('')}
+              ${(dueSoonWs.length||dueSoonTasks.length)?`<div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px;padding-top:4px;border-top:1px solid var(--border-lt)">Due Soon</div>`:''}
               ${[...dueSoonWs.map(w=>({type:'ws',item:w,date:w.endDate})),...dueSoonTasks.map(t=>({type:'task',item:t,date:t.due}))].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(x=>{
                 const d=new Date(x.date);
                 const dStr=d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
@@ -5692,7 +5724,7 @@ function rWorkMetrics(c){
                   </div>`;
                 }
               }).join('')}
-            </div>`:'<div style="color:var(--green);font-size:13px;font-weight:500">✓ Nothing due soon</div>'}
+            </div>`:'<div style="color:var(--green);font-size:13px;font-weight:500">✓ Nothing due or overdue</div>'}
           </div>
         </div>
       </div>
