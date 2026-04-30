@@ -2937,9 +2937,12 @@ function buildGantt(){
     tStart=new Date(nowDate.getFullYear(),nowDate.getMonth(),nowDate.getDate());
   }
   let tEnd;
-  const zoomMonths={'1m':1,'3m':3,'6m':6,'12m':12,'all':0}[ganttZoom]||6;
+  const zoomMonths={'1m':1,'3m':3,'6m':6,'12m':12,'all':0}[ganttZoom]||0;
   if(ganttZoom==='all'){
     tEnd=new Date('2027-07-01');
+  }else if(zoomMonths===0){
+    // Default: current date through end of 2026
+    tEnd=new Date('2026-12-31');
   }else{
     tEnd=new Date(nowDate);tEnd.setMonth(tEnd.getMonth()+zoomMonths);
   }
@@ -3006,8 +3009,10 @@ function buildGantt(){
     
     const left=Math.max(0,l);
     const width=Math.max(2,Math.min(100,r)-left);
-    const wc=level===0?'#2563eb':level===1?'#3b82f6':'#60a5fa';
-    const barHeight=level===0?22:level===1?18:16;
+    // L1: dark blue, tall | L2: medium blue, medium | L3: light blue, thin
+    const wc=level===0?'#1e40af':level===1?'#3b82f6':'#93c5fd';
+    const barHeight=level===0?20:level===1?12:6;
+    const borderRadius=level===0?'4px':level===1?'3px':'2px';
     const isManual=range.isManual;
     
     const children=(D.workstreams||[]).filter(c=>c.parentWs===w.id);
@@ -3017,7 +3022,8 @@ function buildGantt(){
     
     const indent=level*20;
     const levelLabel=level===0?'L1':level===1?'L2':'L3';
-    const levelColor=level===0?'#2563eb':level===1?'#3b82f6':'#60a5fa';
+    const levelColor=level===0?'#1e40af':level===1?'#3b82f6':'#93c5fd';
+    const levelTextColor=level===2?'#1e40af':'#fff';
     const statusIcon=w.status==='at-risk'||w.status==='blocked'?'<span style="color:#f59e0b;margin-left:4px">⚠</span>':'';
     const rowBg=idx%2===0?'var(--bg-card)':'var(--bg-subtle)';
     
@@ -3026,11 +3032,11 @@ function buildGantt(){
     return `<div style="display:flex;height:${rowH}px;align-items:center;background:${rowBg};border-bottom:1px solid var(--border-lt)">
       <div style="width:240px;min-width:240px;padding:0 12px;display:flex;align-items:center;gap:4px;font-size:12px;border-right:1px solid var(--border)">
         <span style="margin-left:${indent}px">${expandIcon}</span>
-        <span style="font-size:9px;background:${levelColor};color:#fff;padding:2px 5px;border-radius:3px;font-weight:600">${levelLabel}</span>
+        <span style="font-size:9px;background:${levelColor};color:${levelTextColor};padding:2px 5px;border-radius:3px;font-weight:600">${levelLabel}</span>
         <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:${level===0?'600':'500'};color:var(--fg);cursor:pointer" onclick="openWsDetail('${w.id}')" title="${esc(w.name)}">${esc(w.name)}${statusIcon}</span>
       </div>
       <div style="flex:1;position:relative;height:100%;display:flex;align-items:center">
-        <div class="gantt-bar" style="position:absolute;left:${left}%;width:${width}%;height:${barHeight}px;background:${wc};border-radius:4px;cursor:pointer;${isManual?'':'opacity:.7;border:1px dashed rgba(255,255,255,.5);'}" title="${esc(tooltip)}" onclick="openWsDetail('${w.id}')"></div>
+        <div class="gantt-bar" style="position:absolute;left:${left}%;width:${width}%;height:${barHeight}px;background:${wc};border-radius:${borderRadius};cursor:pointer;${isManual?'':'opacity:.8;'}" title="${esc(tooltip)}" onclick="openWsDetail('${w.id}')"></div>
       </div>
     </div>`;
   }
@@ -3063,10 +3069,9 @@ function buildGantt(){
   }
 
   const legendHtml=`<div style="display:flex;gap:16px;margin-top:12px;font-size:11px;color:var(--muted);align-items:center;flex-wrap:wrap">
-    <span style="display:flex;align-items:center;gap:4px"><span style="width:16px;height:10px;background:#2563eb;border-radius:2px"></span> L1</span>
-    <span style="display:flex;align-items:center;gap:4px"><span style="width:16px;height:10px;background:#3b82f6;border-radius:2px"></span> L2</span>
-    <span style="display:flex;align-items:center;gap:4px"><span style="width:16px;height:10px;background:#60a5fa;border-radius:2px"></span> L3</span>
-    <span style="display:flex;align-items:center;gap:4px"><span style="width:16px;height:10px;background:#3b82f6;border-radius:2px;opacity:.7;border:1px dashed rgba(0,0,0,.3)"></span> Calculated</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:12px;background:#1e40af;border-radius:3px"></span> L1</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:8px;background:#3b82f6;border-radius:2px"></span> L2</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:4px;background:#93c5fd;border-radius:2px"></span> L3</span>
     <span style="display:flex;align-items:center;gap:4px"><span style="color:#f59e0b">⚠</span> At risk</span>
   </div>`;
 
