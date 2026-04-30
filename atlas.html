@@ -2150,10 +2150,10 @@ function wsOptsHierarchy(sel,excludeId){
     html+=`<option value="${l1.id}"${sel===l1.id?' selected':''}>${esc(l1.name)}</option>`;
     const l2s=all.filter(w=>w.parentWs===l1.id).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
     l2s.forEach(l2=>{
-      html+=`<option value="${l2.id}"${sel===l2.id?' selected':''}>— ${esc(l2.name)}</option>`;
+      html+=`<option value="${l2.id}"${sel===l2.id?' selected':''}>⁠      ↳ ${esc(l2.name)}</option>`;
       const l3s=all.filter(w=>w.parentWs===l2.id).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
       l3s.forEach(l3=>{
-        html+=`<option value="${l3.id}"${sel===l3.id?' selected':''}>&nbsp;&nbsp;— ${esc(l3.name)}</option>`;
+        html+=`<option value="${l3.id}"${sel===l3.id?' selected':''}>⁠            ↳ ${esc(l3.name)}</option>`;
       });
     });
   });
