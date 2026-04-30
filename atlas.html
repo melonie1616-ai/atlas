@@ -2989,11 +2989,15 @@ function rWorkstreamsNew(c){
     allWs=allWs.filter(w=>w.priority===wsPriorityFilter);
   }
   if(wsCoLeadFilter){
-    if(wsCoLeadFilter==='__unassigned__'){
-      allWs=allWs.filter(w=>!w.secondaryOwner);
-    }else{
-      allWs=allWs.filter(w=>w.secondaryOwner===wsCoLeadFilter);
+    const matchingIds=new Set();
+    const allWsMap=new Map((D.workstreams||[]).map(w=>[w.id,w]));
+    function addWithAncestors(w){
+      if(!w||matchingIds.has(w.id))return;
+      matchingIds.add(w.id);
+      if(w.parentWs)addWithAncestors(allWsMap.get(w.parentWs));
     }
+    allWs.filter(w=>w.secondaryOwner===wsCoLeadFilter).forEach(addWithAncestors);
+    allWs=allWs.filter(w=>matchingIds.has(w.id));
   }
   if(q){
     allWs=allWs.filter(w=>(w.name+' '+w.desc+' '+(w.primaryOwner||w.owner||'')).toLowerCase().includes(q));
