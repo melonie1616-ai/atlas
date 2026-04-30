@@ -2490,19 +2490,18 @@ function reportStatusClassOutcomes(st){return normalizeWsStatus(st);}
 function wsStatusShortLabel(v){const short={'intake':'Intake','deferred-rejected':'Deferred','prioritized-funded':'Prioritized','delivery':'Delivery','value-achieved':'Value Achieved','closed':'Closed'};const key=normalizeWsStatus(v);return short[key]||wsStatusLabel(v);}
 function normalizeTaskStatus(s){
   if(s==='blocked')return'blocked-dependency';
+  if(s==='delayed')return'open';
   return s||'not-started';
 }
 const TASK_STATUSES={
   'not-started':'Not Started',
   'open':'Open',
-  'delayed':'Delayed',
   'blocked-dependency':'Blocked/Dependency',
   'done':'Done'
 };
 const TASK_STATUS_PILL={
   'not-started':'pill-m',
   'open':'pill-a',
-  'delayed':'pill-v',
   'blocked-dependency':'pill-r',
   'done':'pill-g'
 };
@@ -2621,7 +2620,7 @@ function renderMyWorkSection(){
     return owner===ME;
   }).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const myTasks=(D.tasks||[]).filter(t=>t.owner===ME).sort((a,b)=>{
-    const so={'not-started':0,'open':1,'delayed':2,'blocked-dependency':3,'done':4,'blocked':3};
+    const so={'not-started':0,'open':1,'blocked-dependency':2,'done':3,'blocked':2};
     if(normalizeTaskStatus(a.status)!==normalizeTaskStatus(b.status))return (so[normalizeTaskStatus(a.status)]??1)-(so[normalizeTaskStatus(b.status)]??1);
     if(a.status!=='done'&&a.due&&b.due)return (a.due||'9').localeCompare(b.due||'9');
     return (a.title||'').localeCompare(b.title||'');
@@ -3949,7 +3948,7 @@ function rWorkKanban(c){
     const s=normalizeTaskStatus(t.status);
     if(s==='not-started')return 'intake';
     if(s==='open')return 'delivery';
-    if(s==='delayed'||s==='blocked-dependency')return 'delivery';
+    if(s==='delayed')return 'open';if(s==='blocked-dependency')return 'blocked-dependency';
     if(s==='done')return 'closed';
     return 'delivery';
   }
@@ -4535,7 +4534,7 @@ function rTasks(c){
   else if(taskSort==='due')items.sort((a,b)=>taskSortDir*(a.due||'9').localeCompare(b.due||'9'));
   else if(taskSort==='priority')items.sort((a,b)=>taskSortDir*((pv[a.priority]??1)-(pv[b.priority]??1)));
   else if(taskSort==='workstream')items.sort((a,b)=>taskSortDir*wsNamePlain(a.workstream).localeCompare(wsNamePlain(b.workstream)));
-  else{const so={'not-started':0,'open':1,'delayed':2,'blocked-dependency':3,'done':4,'blocked':3};items.sort((a,b)=>{if(normalizeTaskStatus(a.status)!==normalizeTaskStatus(b.status))return(so[normalizeTaskStatus(a.status)]??1)-(so[normalizeTaskStatus(b.status)]??1);if((pv[a.priority]??1)!==(pv[b.priority]??1))return(pv[a.priority]??1)-(pv[b.priority]??1);return(a.due||'9').localeCompare(b.due||'9')})}
+  else{const so={'not-started':0,'open':1,'blocked-dependency':2,'done':3,'blocked':2};items.sort((a,b)=>{if(normalizeTaskStatus(a.status)!==normalizeTaskStatus(b.status))return(so[normalizeTaskStatus(a.status)]??1)-(so[normalizeTaskStatus(b.status)]??1);if((pv[a.priority]??1)!==(pv[b.priority]??1))return(pv[a.priority]??1)-(pv[b.priority]??1);return(a.due||'9').localeCompare(b.due||'9')})}
   const open=D.tasks.filter(t=>t.status!=='done').length,done=D.tasks.filter(t=>t.status==='done').length,msCount=D.tasks.filter(t=>t.isMilestone).length;
   const priorityCount=D.tasks.filter(t=>t.isPriority).length;
   const overdueCount=D.tasks.filter(t=>t.status!=='done'&&t.due&&t.due<today()).length;
@@ -4668,7 +4667,7 @@ function openTaskModal(id){
       <div class="fg"><label>Start Date</label><input type="date" id="t-start" value="${t?t.startDate:''}"></div>
       <div class="fg"><label>Target Date</label><input type="date" id="t-due" value="${t?t.due:''}"></div>
     </div>
-    <div class="fg"><label>Status</label><select id="t-status"><option value="not-started"${(!t||defaultStatus==='not-started'||!t.status)?' selected':''}>Not Started</option><option value="open"${defaultStatus==='open'?' selected':''}>Open</option><option value="delayed"${defaultStatus==='delayed'?' selected':''}>Delayed</option><option value="blocked-dependency"${defaultStatus==='blocked-dependency'?' selected':''}>Blocked/Dependency</option><option value="done"${defaultStatus==='done'?' selected':''}>Done</option></select></div>
+    <div class="fg"><label>Status</label><select id="t-status"><option value="not-started"${(!t||defaultStatus==='not-started'||!t.status)?' selected':''}>Not Started</option><option value="open"${defaultStatus==='open'?' selected':''}>Open</option><option value="blocked-dependency"${defaultStatus==='blocked-dependency'?' selected':''}>Blocked/Dependency</option><option value="done"${defaultStatus==='done'?' selected':''}>Done</option></select></div>
     <div class="fg"><label>Blocked By</label><input id="t-blocked-by" value="${t?esc(t.blockedBy||''):''}" placeholder="Optional: group or person blocking progress"></div>
     <div class="fg"><label>Notes</label><textarea id="t-notes" style="min-height:90px;resize:vertical" placeholder="Optional details, context, or next steps">${t?esc(t.notes):''}</textarea></div>
     ${t?`<div class="fg" style="margin-top:4px">
@@ -4848,7 +4847,7 @@ function doConvertToWorkstream(taskId){
 }
 function toggleTask(id){
   const t=D.tasks.find(x=>x.id===id);if(!t)return;
-  const cycle=['not-started','open','delayed','blocked-dependency','done'];
+  const cycle=['not-started','open','blocked-dependency','done'];
   const ci=cycle.indexOf(normalizeTaskStatus(t.status));
   t.status=ci>=0&&ci<cycle.length-1?cycle[ci+1]:'done';
   t.updatedBy=ME;t.updatedAt=new Date().toISOString();
@@ -5047,7 +5046,6 @@ function rTasksInbox(c){
 const KB_COLS=[
   {key:'not-started',label:'Not Started',accent:'var(--muted)'},
   {key:'open',label:'Open',accent:'var(--accent)'},
-  {key:'delayed',label:'Delayed',accent:'#a855f7'},
   {key:'blocked-dependency',label:'Blocked/Dependency',accent:'var(--red)'},
   {key:'done',label:'Done',accent:'var(--green)'}
 ];
@@ -5119,7 +5117,7 @@ function rKanban(c){
         <span style="font-size:11px;color:var(--light)">${t.owner?esc(t.owner):'Unassigned'}</span>
         ${t.due?'<span style="font-size:11px;color:'+(isOD?'var(--red)':'var(--muted)')+';font-weight:'+(isOD||isDueToday?'600':'400')+'">'+(isOD?'&#9888; ':'')+(isDueToday?'&#9200; ':'')+fmtDate(t.due)+'</span>':''}
       </div>
-      ${t.blockedBy&&['delayed','blocked-dependency'].includes(normalizeTaskStatus(t.status))?`<div style="margin-top:6px;font-size:11px;color:var(--muted)">Blocked by: ${esc(t.blockedBy)}</div>`:''}
+      ${t.blockedBy&&normalizeTaskStatus(t.status)==='blocked-dependency'?`<div style="margin-top:6px;font-size:11px;color:var(--muted)">Blocked by: ${esc(t.blockedBy)}</div>`:''}
       ${canAdvance?`<div style="margin-top:8px;display:flex;justify-content:flex-end"><button type="button" style="font-size:10.5px;border:1px solid var(--border);border-radius:var(--r-xs);padding:3px 8px;background:var(--bg-subtle);color:var(--muted);cursor:pointer" onclick="event.stopPropagation();advanceTaskStatus('${t.id}')">Next &#8594;</button></div>`:''}
     </div>`;
   };
@@ -5198,7 +5196,7 @@ function kbDrop(event,newStatus){
 function advanceTaskStatus(id){
   const t=(D.tasks||[]).find(x=>x.id===id);
   if(!t)return;
-  const flow=['not-started','open','delayed','blocked-dependency','done'];
+  const flow=['not-started','open','blocked-dependency','done'];
   const current=normalizeTaskStatus(t.status);
   const idx=flow.indexOf(current);
   if(idx<0||idx>=flow.length-1)return;
