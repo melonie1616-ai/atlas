@@ -3236,8 +3236,8 @@ function rWorkstreamsNew(c){
   let allWs=(D.workstreams||[]).slice();
   let allTasks=(D.tasks||[]);
   
-  // Only include people actually assigned as leads (have at least one item)
-  const leads=[...new Set((D.workstreams||[]).map(w=>w.primaryOwner||w.owner).filter(Boolean))].sort();
+  // Only include people actually assigned as leads (have at least one item, no slashes - those are co-lead pairs)
+  const leads=[...new Set((D.workstreams||[]).map(w=>w.primaryOwner||w.owner).filter(n=>n&&!n.includes('/')))].sort();
   // Only include people actually assigned as co-leads (have at least one item, no slashes)
   const coLeads=[...new Set((D.workstreams||[]).map(w=>w.secondaryOwner).filter(n=>n&&!n.includes('/')))].sort();
   const l1Workstreams=allWs.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
@@ -3704,8 +3704,8 @@ function rActionItemsNew(c){
   const q=(document.getElementById('search').value||'').toLowerCase();
   let items=(D.tasks||[]);
 
-  // Only include people actually assigned as owners on action items
-  const owners=[...new Set((D.tasks||[]).map(t=>t.owner).filter(Boolean))].sort();
+  // Only include people actually assigned as owners on action items (no slashes - those are pairs)
+  const owners=[...new Set((D.tasks||[]).map(t=>t.owner).filter(n=>n&&!n.includes('/')))].sort();
   // Get L1 workstreams that have at least one action item assigned
   const wsWithTasks=new Set((D.tasks||[]).map(t=>t.workstream).filter(Boolean));
   const allWsMap=new Map((D.workstreams||[]).map(w=>[w.id,w]));
