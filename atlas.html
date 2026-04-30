@@ -2437,23 +2437,21 @@ function wsOpts(sel){
 function wsOptsHierarchy(sel,excludeId){
   const all=(D.workstreams||[]).filter(w=>w.id!==excludeId).map(w=>({id:w.id,name:w.name,parentWs:w.parentWs,color:w.color}));
   const allMap=new Map(all.map(w=>[w.id,w]));
-  function getLevel(w){
-    let lvl=1,cur=w;
-    while(cur&&cur.parentWs&&allMap.has(cur.parentWs)){cur=allMap.get(cur.parentWs);lvl++;}
-    return lvl;
-  }
   const l1s=all.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   let html='';
   l1s.forEach(l1=>{
-    html+=`<option value="${l1.id}"${sel===l1.id?' selected':''}>${esc(l1.name)}</option>`;
+    // L1 as optgroup header
     const l2s=all.filter(w=>w.parentWs===l1.id).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    html+=`<optgroup label="▸ ${esc(l1.name)}">`;
+    html+=`<option value="${l1.id}"${sel===l1.id?' selected':''}>📁 ${esc(l1.name)} (select this L1)</option>`;
     l2s.forEach(l2=>{
-      html+=`<option value="${l2.id}"${sel===l2.id?' selected':''}>....↳ ${esc(l2.name)}</option>`;
+      html+=`<option value="${l2.id}"${sel===l2.id?' selected':''}>    └ ${esc(l2.name)}</option>`;
       const l3s=all.filter(w=>w.parentWs===l2.id).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
       l3s.forEach(l3=>{
-        html+=`<option value="${l3.id}"${sel===l3.id?' selected':''}>.........↳ ${esc(l3.name)}</option>`;
+        html+=`<option value="${l3.id}"${sel===l3.id?' selected':''}>        └ ${esc(l3.name)}</option>`;
       });
     });
+    html+=`</optgroup>`;
   });
   return html;
 }
@@ -3521,8 +3519,7 @@ function rWorkstreamsNew(c){
         ${filterChips.length?`<span style="color:var(--light);margin:0 4px">|</span>${filterChips.join('')}<button onclick="wsOwnerFilter='';wsCoLeadFilter='';wsL1Filter='';wsPriorityFilter='';render()" style="padding:4px 8px;font-size:11px;background:none;border:none;color:var(--red);cursor:pointer;font-weight:500">Clear all</button>`:''}
       </div>
       <div style="display:flex;gap:6px;align-items:center">
-        <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);cursor:pointer;padding:4px 8px;background:${wsHideDoneItems?'var(--bg-card)':'rgba(16,185,129,.1)'};border:1px solid ${wsHideDoneItems?'var(--border)':'#10b981'};border-radius:6px;white-space:nowrap" onclick="wsHideDoneItems=!wsHideDoneItems;render()"><span style="width:12px;height:12px;border:2px solid ${wsHideDoneItems?'var(--muted)':'#10b981'};border-radius:3px;display:flex;align-items:center;justify-content:center;background:${wsHideDoneItems?'transparent':'#10b981'};flex-shrink:0">${wsHideDoneItems?'':'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" style="width:8px;height:8px"><path d="M5 12l5 5L20 7"/></svg>'}</span>Show Closed</label>
-        <span style="font-size:12px;color:var(--muted)">${totalWs} items</span>
+        <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);cursor:pointer;padding:4px 8px;background:${wsHideDoneItems?'var(--bg-card)':'rgba(16,185,129,.1)'};border:1px solid ${wsHideDoneItems?'var(--border)':'#10b981'};border-radius:6px;white-space:nowrap" onclick="wsHideDoneItems=!wsHideDoneItems;render()"><span style="width:12px;height:12px;border:2px solid ${wsHideDoneItems?'var(--muted)':'#10b981'};border-radius:3px;display:flex;align-items:center;justify-content:center;background:${wsHideDoneItems?'transparent':'#10b981'};flex-shrink:0">${wsHideDoneItems?'':'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" style="width:8px;height:8px"><path d="M5 12l5 5L20 7"/></svg>'}</span>Show Closed Action Items</label>
         <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden">
           <button onclick="Object.keys(wsExpanded).forEach(k=>wsExpanded[k]=true);(D.workstreams||[]).forEach(w=>wsExpanded[w.id]=true);render()" style="padding:6px 10px;font-size:11px;background:var(--bg-card);border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:4px;border-right:1px solid var(--border)" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background='var(--bg-card)'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M7 10l5 5 5-5"/></svg>Expand</button>
           <button onclick="wsExpanded={};render()" style="padding:6px 10px;font-size:11px;background:var(--bg-card);border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:4px" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background='var(--bg-card)'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M7 14l5-5 5 5"/></svg>Collapse</button>
