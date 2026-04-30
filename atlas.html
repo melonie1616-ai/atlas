@@ -2982,79 +2982,92 @@ function buildGantt(){
 
   const l1Workstreams=(D.workstreams||[]).filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
 
-  let rowsHtml='';
-  let rowIdx=0;
-  const rowH=28;
+  const rowH=32;
+  const rows=[];
 
-  function renderWsBar(w,level,yPos){
-    const range=getWsDateRange(w.id);
-    if(!range)return ''; // Safety check, but caller should have already verified
-    
+  function collectRows(wsList,level){
+    wsList.forEach(w=>{
+      const range=getWsDateRange(w.id);
+      if(range){
+        rows.push({w,level,range});
+      }
+      if(ganttExpanded[w.id]){
+        const children=(D.workstreams||[]).filter(c=>c.parentWs===w.id).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+        collectRows(children,level+1);
+      }
+    });
+  }
+  collectRows(l1Workstreams,0);
+
+  function renderRow(row,idx){
+    const {w,level,range}=row;
     const l=pct(range.start),r=pct(range.end);
     if(r<=0||l>=100)return '';
     
     const left=Math.max(0,l);
-    const width=Math.max(0.5,Math.min(100,r)-left);
+    const width=Math.max(2,Math.min(100,r)-left);
     const wc=level===0?'#2563eb':level===1?'#3b82f6':'#60a5fa';
-    const indent=level*16;
-    const barHeight=level===0?24:level===1?20:18;
-    const fontSize=level===0?'12px':level===1?'11px':'10px';
-    const fontWeight=level===0?'700':level===1?'600':'500';
-    const opacity=range.isManual?'1':'.75';
-    const borderStyle=range.isManual?'':'border:1px dashed rgba(255,255,255,.4);';
+    const barHeight=level===0?22:level===1?18:16;
+    const isManual=range.isManual;
     
     const children=(D.workstreams||[]).filter(c=>c.parentWs===w.id);
     const hasChildren=children.length>0;
     const isExpanded=ganttExpanded[w.id];
-    const expandIcon=hasChildren?`<span onclick="event.stopPropagation();toggleGanttExpand('${w.id}')" style="margin-right:4px;font-size:10px;cursor:pointer">${isExpanded?'▼':'▶'}</span>`:'';
+    const expandIcon=hasChildren?`<span onclick="event.stopPropagation();toggleGanttExpand('${w.id}')" style="cursor:pointer;width:16px;display:inline-block;text-align:center">${isExpanded?'▼':'▶'}</span>`:'<span style="width:16px;display:inline-block"></span>';
     
-    const levelBadge=`<span style="font-size:9px;background:rgba(255,255,255,.25);padding:1px 4px;border-radius:3px;margin-right:4px">L${w.level||1}</span>`;
-    const statusDot=w.status==='at-risk'||w.status==='blocked'?`<span style="color:#fbbf24;margin-left:4px">⚠</span>`:'';
+    const indent=level*20;
+    const levelLabel=level===0?'L1':level===1?'L2':'L3';
+    const levelColor=level===0?'#2563eb':level===1?'#3b82f6':'#60a5fa';
+    const statusIcon=w.status==='at-risk'||w.status==='blocked'?'<span style="color:#f59e0b;margin-left:4px">⚠</span>':'';
+    const rowBg=idx%2===0?'var(--bg-card)':'var(--bg-subtle)';
     
-    const tooltip=`${w.name}: ${fmtDate(range.start)} — ${fmtDate(range.end)} (${wsStatusLabel(w.status)})${range.isManual?'':' [calculated]'}`;
+    const tooltip=`${w.name}: ${fmtDate(range.start)} — ${fmtDate(range.end)}`;
     
-    return `<div class="gantt-bar" style="left:${left}%;width:${width}%;top:${yPos}px;background:${wc};color:#fff;font-size:${fontSize};font-weight:${fontWeight};height:${barHeight}px;cursor:pointer;opacity:${opacity};border-radius:4px;margin-left:${indent}px;${borderStyle}display:flex;align-items:center;padding:0 6px;white-space:nowrap;overflow:hidden" title="${esc(tooltip)}" onclick="openWsDetail('${w.id}')">${expandIcon}${levelBadge}${esc(w.name)}${statusDot}</div>`;
-  }
-
-  function collectVisibleRows(wsList,level){
-    let bars='';
-    wsList.forEach(w=>{
-      // Only render and count row if workstream has dates
-      const range=getWsDateRange(w.id);
-      if(range){
-        bars+=renderWsBar(w,level,rowIdx*rowH+2);
-        rowIdx++;
-      }
-      
-      if(ganttExpanded[w.id]){
-        const children=(D.workstreams||[]).filter(c=>c.parentWs===w.id).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-        bars+=collectVisibleRows(children,level+1);
-      }
-    });
-    return bars;
-  }
-
-  const wsBars=collectVisibleRows(l1Workstreams,0);
-  const totalRows=rowIdx;
-
-  if(totalRows>0){
-    rowsHtml=`<div class="gantt-row" style="margin-top:8px">
-      <div class="gantt-row-bars" style="height:${Math.max(40,totalRows*rowH+12)}px;position:relative">
-        ${gridLines}
-        ${wsBars}
-        ${todayMarker()}
+    return `<div style="display:flex;height:${rowH}px;align-items:center;background:${rowBg};border-bottom:1px solid var(--border-lt)">
+      <div style="width:240px;min-width:240px;padding:0 12px;display:flex;align-items:center;gap:4px;font-size:12px;border-right:1px solid var(--border)">
+        <span style="margin-left:${indent}px">${expandIcon}</span>
+        <span style="font-size:9px;background:${levelColor};color:#fff;padding:2px 5px;border-radius:3px;font-weight:600">${levelLabel}</span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:${level===0?'600':'500'};color:var(--fg);cursor:pointer" onclick="openWsDetail('${w.id}')" title="${esc(w.name)}">${esc(w.name)}${statusIcon}</span>
+      </div>
+      <div style="flex:1;position:relative;height:100%;display:flex;align-items:center">
+        <div class="gantt-bar" style="position:absolute;left:${left}%;width:${width}%;height:${barHeight}px;background:${wc};border-radius:4px;cursor:pointer;${isManual?'':'opacity:.7;border:1px dashed rgba(255,255,255,.5);'}" title="${esc(tooltip)}" onclick="openWsDetail('${w.id}')"></div>
       </div>
     </div>`;
-  }else{
-    rowsHtml=`<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">No workstreams with dates to display. Add target dates to workstreams or action items to see them here.</div>`;
   }
 
-  const legendHtml=`<div style="display:flex;gap:12px;margin-top:10px;padding:8px 12px;background:var(--bg-subtle);border-radius:var(--r-sm);font-size:11px;color:var(--muted);align-items:center;flex-wrap:wrap">
-    <span style="font-weight:600">Legend:</span>
-    <span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:12px;background:var(--accent);border-radius:3px;opacity:1"></span> Manual dates</span>
-    <span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:12px;background:var(--accent);border-radius:3px;opacity:.75;border:1px dashed rgba(0,0,0,.2)"></span> Calculated from children</span>
-    <span style="display:flex;align-items:center;gap:4px"><span style="color:#fbbf24">⚠</span> At risk/Blocked</span>
-    <span style="display:flex;align-items:center;gap:4px">▶ Click to expand</span>
+  let rowsHtml='';
+  if(rows.length>0){
+    const headerRow=`<div style="display:flex;height:28px;align-items:center;background:var(--bg-subtle);border-bottom:2px solid var(--border);font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">
+      <div style="width:240px;min-width:240px;padding:0 12px;border-right:1px solid var(--border)">Workstream</div>
+      <div style="flex:1;position:relative;display:flex">${months.map(m=>{
+        const lbl=mNames[m.getMonth()]+(showYear?' '+(m.getFullYear()%100):'');
+        return `<div style="flex:1;text-align:center;font-size:10px">${lbl}</div>`;
+      }).join('')}</div>
+    </div>`;
+    
+    const todayLine=todayPct>=0&&todayPct<=100?`<div style="position:absolute;left:calc(240px + ${todayPct}% * (100% - 240px) / 100);top:0;bottom:0;width:2px;background:#ef4444;z-index:10"><div style="position:absolute;top:-18px;left:-20px;font-size:9px;color:#ef4444;font-weight:600;background:var(--bg-card);padding:2px 4px;border-radius:3px">Today</div></div>`:'';
+    
+    rowsHtml=`<div style="border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;position:relative">
+      ${headerRow}
+      <div style="max-height:400px;overflow-y:auto">
+        ${rows.map((r,i)=>renderRow(r,i)).join('')}
+      </div>
+      ${todayLine}
+    </div>`;
+  }else{
+    rowsHtml=`<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md)">
+      <div style="font-size:32px;margin-bottom:12px">📅</div>
+      <div style="font-weight:600;margin-bottom:4px">No timeline data</div>
+      <div>Add target dates to workstreams to see them here.</div>
+    </div>`;
+  }
+
+  const legendHtml=`<div style="display:flex;gap:16px;margin-top:12px;font-size:11px;color:var(--muted);align-items:center;flex-wrap:wrap">
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:16px;height:10px;background:#2563eb;border-radius:2px"></span> L1</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:16px;height:10px;background:#3b82f6;border-radius:2px"></span> L2</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:16px;height:10px;background:#60a5fa;border-radius:2px"></span> L3</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:16px;height:10px;background:#3b82f6;border-radius:2px;opacity:.7;border:1px dashed rgba(0,0,0,.3)"></span> Calculated</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="color:#f59e0b">⚠</span> At risk</span>
   </div>`;
 
   return `<div class="gantt">
@@ -3065,10 +3078,6 @@ function buildGantt(){
         <span style="font-size:12px;color:var(--muted);margin-left:8px">Zoom:</span>
         <div style="display:flex;gap:4px">${zoomBtns}</div>
       </div>
-    </div>
-    <div style="display:flex">
-      <div class="gantt-label-col"></div>
-      <div class="gantt-chart-col"><div class="gantt-months">${monthHeaders}</div></div>
     </div>
     ${rowsHtml}
     ${legendHtml}
