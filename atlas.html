@@ -3440,7 +3440,16 @@ function rWorkstreamsNew(c){
     baseFilteredWs=baseFilteredWs.filter(w=>l1Ids.includes(w.id));
   }
   if(q){
-    baseFilteredWs=baseFilteredWs.filter(w=>(w.name+' '+w.desc+' '+(w.primaryOwner||w.owner||'')).toLowerCase().includes(q));
+    // Include matching items AND their ancestors for proper counts
+    const matchingIds=new Set();
+    const allWsMap=new Map((D.workstreams||[]).map(w=>[w.id,w]));
+    function addWithAncestors(w){
+      if(!w||matchingIds.has(w.id))return;
+      matchingIds.add(w.id);
+      if(w.parentWs)addWithAncestors(allWsMap.get(w.parentWs));
+    }
+    baseFilteredWs.filter(w=>(w.name+' '+w.desc+' '+(w.primaryOwner||w.owner||'')).toLowerCase().includes(q)).forEach(addWithAncestors);
+    baseFilteredWs=baseFilteredWs.filter(w=>matchingIds.has(w.id));
   }
 
   const statusCounts={};
