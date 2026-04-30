@@ -143,7 +143,8 @@ body.nav-collapsed .topbar-menu{display:flex}
 #content{padding:28px 40px 40px;flex:1;min-width:0}
 
 /* CARDS */
-.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:0 1px 2px rgba(0,0,0,.04);overflow:hidden}
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:0 1px 2px rgba(0,0,0,.04);overflow:hidden;transition:box-shadow .2s,transform .2s}
+.card:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
 .card+.card{margin-top:14px}
 
 /* KPI ROW */
@@ -184,7 +185,7 @@ body.nav-collapsed .topbar-menu{display:flex}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tbody tr:nth-child(even) td{background:var(--tbl-stripe)}
 .tbl tbody tr:hover td{background:var(--tbl-hover)}
-.tbl tr{cursor:pointer;transition:background .1s}
+.tbl tr{cursor:pointer;transition:background .15s ease-out}
 
 /* DASH SECTIONS */
 .dash-hd{padding:18px 22px 10px;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:space-between}
@@ -251,9 +252,12 @@ body.nav-collapsed .topbar-menu{display:flex}
 .kb-card{background:var(--bg-card);border:1px solid var(--border-lt);border-radius:var(--r-sm);padding:10px 12px;cursor:grab;transition:box-shadow .15s,transform .15s;position:relative}
 .kb-card:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
 .kb-card.dragging{opacity:.5;transform:rotate(2deg)}
-.ws-drop-target{background:rgba(99,102,241,.12)!important;outline:2px dashed var(--accent);outline-offset:-2px}
+.ws-drop-target{background:rgba(99,102,241,.15)!important;outline:2px dashed var(--accent);outline-offset:-2px;transition:all .15s}
+.ws-drop-target td:first-child::before{content:'↳ Drop here';position:absolute;left:40px;color:var(--accent);font-size:10px;font-weight:600;opacity:.8}
 .ws-draggable{cursor:grab}
 .ws-draggable:active{cursor:grabbing}
+.dragging-row{opacity:.4;background:var(--accent-lt)!important}
+.drag-ghost{position:fixed;pointer-events:none;z-index:1000;background:var(--bg-card);border:2px solid var(--accent);border-radius:6px;padding:8px 12px;font-size:12px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.15);transform:rotate(2deg)}
 .kb-card-title{font-size:12.5px;font-weight:600;margin-bottom:6px;line-height:1.35}
 .kb-card-meta{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:11px;color:var(--muted);align-items:center}
 .kb-card-ws{display:inline-flex;align-items:center;gap:4px}
@@ -320,9 +324,10 @@ body.nav-collapsed .topbar-menu{display:flex}
 [data-theme="dark"] .ws-pipeline-stage-complete{background:#cbd5e1;color:#0f172a;border-color:#94a3b8}
 
 /* MODAL */
-.overlay{position:fixed;inset:0;background:var(--overlay-bg);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay{position:fixed;inset:0;background:var(--overlay-bg);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s ease-out}
 .overlay.open{opacity:1;pointer-events:all}
-.modal{background:var(--bg-card);border-radius:var(--r-lg);width:720px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.modal{background:var(--bg-card);border-radius:var(--r-lg);width:720px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.15);transform:scale(.95) translateY(-10px);opacity:0;transition:all .25s cubic-bezier(.4,0,.2,1)}
+.overlay.open .modal{transform:scale(1) translateY(0);opacity:1}
 .m-hd{padding:22px 24px 12px;display:flex;align-items:center;justify-content:space-between}
 .m-hd h3{font-size:19px;font-weight:800;letter-spacing:-.01em}
 .m-close{font-size:22px;color:var(--light);cursor:pointer;background:none;border:none;line-height:1;transition:color .15s;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-xs)}
@@ -335,7 +340,7 @@ body.nav-collapsed .topbar-menu{display:flex}
 .ws-section-hd h4{font-size:13px;font-weight:700;margin:0;letter-spacing:.01em}
 .ws-section-arrow{font-size:10px;color:var(--muted);transition:transform .2s}
 .ws-section.collapsed .ws-section-arrow{transform:rotate(-90deg)}
-.ws-section-bd{padding:14px}
+.ws-section-bd{padding:14px;animation:slideDown .2s ease-out}
 .ws-section.collapsed .ws-section-bd{display:none}
 .fg{margin-bottom:12px}
 .fg label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
@@ -349,8 +354,39 @@ body.nav-collapsed .topbar-menu{display:flex}
 .mb-del{background:var(--red-lt);color:var(--red)}.mb-del:hover{background:rgba(220,38,38,.15)}
 
 /* TOAST */
-.toast{position:fixed;bottom:28px;right:28px;background:#1a1a2e;color:#e8e8f0;padding:14px 28px;border-radius:var(--r-md);font-size:14px;font-weight:500;box-shadow:0 8px 30px rgba(0,0,0,.2);z-index:300;opacity:0;transform:translateY(10px);transition:all .3s;border:1px solid rgba(255,255,255,.08)}
+.toast{position:fixed;bottom:28px;right:28px;background:#1a1a2e;color:#e8e8f0;padding:14px 20px;border-radius:var(--r-md);font-size:14px;font-weight:500;box-shadow:0 8px 30px rgba(0,0,0,.2);z-index:300;opacity:0;transform:translateY(10px);transition:all .3s;border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:12px}
 .toast.show{opacity:1;transform:translateY(0)}
+.toast-msg{flex:1}
+.toast-undo{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.toast-undo:hover{background:rgba(255,255,255,.25)}
+.toast-progress{position:absolute;bottom:0;left:0;height:3px;background:var(--accent);border-radius:0 0 var(--r-md) var(--r-md);transition:width linear}
+
+/* ANIMATIONS */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeOut{from{opacity:1}to{opacity:0}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+@keyframes highlightRow{0%{background:rgba(99,102,241,.15)}100%{background:transparent}}
+.anim-fade-in{animation:fadeIn .2s ease-out}
+.anim-slide-down{animation:slideDown .2s ease-out}
+.anim-slide-up{animation:slideUp .2s ease-out}
+.anim-scale-in{animation:scaleIn .2s ease-out}
+.anim-highlight{animation:highlightRow 1.5s ease-out}
+
+/* DARK MODE POLISH */
+[data-theme="dark"] .toast{background:#2a2a3a;border-color:rgba(255,255,255,.1)}
+[data-theme="dark"] .drag-ghost{background:#2a2a3a;border-color:var(--accent)}
+[data-theme="dark"] .ws-drop-target{background:rgba(129,140,248,.15)!important}
+[data-theme="dark"] .card:hover{box-shadow:0 4px 16px rgba(0,0,0,.3)}
+[data-theme="dark"] input,[data-theme="dark"] select,[data-theme="dark"] textarea{background:var(--bg-subtle);border-color:var(--border);color:var(--text)}
+[data-theme="dark"] input:focus,[data-theme="dark"] select:focus,[data-theme="dark"] textarea:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(129,140,248,.15)}
+[data-theme="dark"] .pill{background:var(--bg-subtle);border-color:var(--border)}
+[data-theme="dark"] .pill-i{background:var(--accent);border-color:var(--accent);color:#fff}
+[data-theme="dark"] .gantt-bar{box-shadow:0 2px 8px rgba(0,0,0,.3)}
+[data-theme="dark"] .kb-card{background:var(--bg-card);border-color:var(--border)}
+[data-theme="dark"] .kb-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.4)}
+[data-theme="dark"] #export-menu{background:var(--bg-card);border-color:var(--border)}
 
 /* TASK CHECKMARKS */
 .task-chk{width:20px;height:20px;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;color:transparent;cursor:pointer;transition:all .15s;font-size:11px;flex-shrink:0}
@@ -1755,7 +1791,156 @@ function checkReleaseNotes(){
     localStorage.setItem('atlas_release_seen',RELEASE_VERSION);
   }catch(e){}
 }
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
+let toastTimeout=null,toastUndoFn=null;
+function toast(msg,undoFn=null,duration=3500){
+  const t=document.getElementById('toast');
+  if(toastTimeout)clearTimeout(toastTimeout);
+  toastUndoFn=undoFn;
+  if(undoFn){
+    t.innerHTML=`<span class="toast-msg">${msg}</span><button class="toast-undo" onclick="event.stopPropagation();executeToastUndo()">Undo</button><div class="toast-progress" style="width:100%"></div>`;
+    setTimeout(()=>{const p=t.querySelector('.toast-progress');if(p)p.style.width='0%';if(p)p.style.transitionDuration=duration+'ms'},10);
+  }else{
+    t.innerHTML=`<span class="toast-msg">${msg}</span>`;
+  }
+  t.classList.add('show');
+  toastTimeout=setTimeout(()=>{t.classList.remove('show');toastUndoFn=null},duration);
+}
+function executeToastUndo(){
+  if(toastUndoFn){toastUndoFn();toastUndoFn=null}
+  if(toastTimeout)clearTimeout(toastTimeout);
+  document.getElementById('toast').classList.remove('show');
+  toast('Action undone');
+}
+
+// Inline editing
+let inlineEditActive=false;
+function inlineEditWsName(wsId,el,e){
+  e.stopPropagation();
+  if(inlineEditActive)return;
+  inlineEditActive=true;
+  const w=(D.workstreams||[]).find(x=>x.id===wsId);
+  if(!w)return;
+  const oldName=w.name;
+  const span=el;
+  const rect=span.getBoundingClientRect();
+  const input=document.createElement('input');
+  input.type='text';
+  input.value=oldName;
+  input.style.cssText=`font-size:inherit;font-weight:inherit;color:inherit;background:var(--bg-card);border:2px solid var(--accent);border-radius:4px;padding:2px 6px;width:${Math.max(200,rect.width+20)}px;outline:none`;
+  input.onblur=()=>{finishInlineEdit(wsId,input.value,oldName,span,input)};
+  input.onkeydown=(ev)=>{
+    if(ev.key==='Enter'){ev.preventDefault();input.blur()}
+    if(ev.key==='Escape'){input.value=oldName;input.blur()}
+  };
+  span.style.display='none';
+  span.parentNode.insertBefore(input,span.nextSibling);
+  input.focus();
+  input.select();
+}
+function finishInlineEdit(wsId,newName,oldName,span,input){
+  inlineEditActive=false;
+  input.remove();
+  span.style.display='';
+  newName=newName.trim();
+  if(!newName||newName===oldName)return;
+  const w=(D.workstreams||[]).find(x=>x.id===wsId);
+  if(!w)return;
+  w.name=newName;
+  w.updatedAt=new Date().toISOString();
+  w.updatedBy=ME||'Unknown';
+  save();
+  toast('Renamed to "'+newName+'"',()=>{w.name=oldName;save();render()});
+  render();
+}
+function inlineEditWsDate(wsId,field,el,e){
+  e.stopPropagation();
+  if(inlineEditActive)return;
+  inlineEditActive=true;
+  const w=(D.workstreams||[]).find(x=>x.id===wsId);
+  if(!w)return;
+  const oldVal=w[field]||'';
+  const span=el;
+  const input=document.createElement('input');
+  input.type='date';
+  input.value=oldVal;
+  input.style.cssText=`font-size:11px;background:var(--bg-card);border:2px solid var(--accent);border-radius:4px;padding:2px 4px;outline:none`;
+  input.onblur=()=>{finishInlineDateEdit(wsId,field,input.value,oldVal,span,input)};
+  input.onkeydown=(ev)=>{
+    if(ev.key==='Enter'){ev.preventDefault();input.blur()}
+    if(ev.key==='Escape'){input.value=oldVal;input.blur()}
+  };
+  span.style.display='none';
+  span.parentNode.insertBefore(input,span.nextSibling);
+  input.focus();
+}
+function finishInlineDateEdit(wsId,field,newVal,oldVal,span,input){
+  inlineEditActive=false;
+  input.remove();
+  span.style.display='';
+  if(newVal===oldVal)return;
+  const w=(D.workstreams||[]).find(x=>x.id===wsId);
+  if(!w)return;
+  w[field]=newVal;
+  w.updatedAt=new Date().toISOString();
+  w.updatedBy=ME||'Unknown';
+  save();
+  toast('Date updated',()=>{w[field]=oldVal;save();render()});
+  render();
+}
+
+// Export functions
+function exportWorkstreamsCSV(){
+  const ws=(D.workstreams||[]).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const headers=['Name','Level','Parent','Lead','Co-Lead','Status','Target Date','Start Date','Priority','Description'];
+  const rows=ws.map(w=>{
+    const parent=w.parentWs?(D.workstreams||[]).find(p=>p.id===w.parentWs)?.name||'':'';
+    const level=w.parentWs?((D.workstreams||[]).find(p=>p.id===w.parentWs)?.parentWs?3:2):1;
+    return [w.name||'',level,parent,w.primaryOwner||w.owner||'',w.secondaryOwner||'',wsStatusLabel(w.status),w.targetDate||'',w.targetStart||'',w.priority||'',w.desc||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',');
+  });
+  const csv=headers.join(',')+'\n'+rows.join('\n');
+  downloadFile(csv,'workstreams-'+today()+'.csv','text/csv');
+  toast('Exported '+ws.length+' workstreams to CSV');
+}
+function exportActionItemsCSV(){
+  const tasks=(D.tasks||[]).sort((a,b)=>(a.title||'').localeCompare(b.title||''));
+  const headers=['Title','Owner','Workstream','Status','Due Date','Start Date','Priority','Notes'];
+  const rows=tasks.map(t=>{
+    const wsName=t.workstream?(D.workstreams||[]).find(w=>w.id===t.workstream)?.name||'':'';
+    return [t.title||'',t.owner||'',wsName,taskStatusLabel(t.status),t.due||'',t.startDate||'',t.isPriority?'High':'',t.notes||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',');
+  });
+  const csv=headers.join(',')+'\n'+rows.join('\n');
+  downloadFile(csv,'action-items-'+today()+'.csv','text/csv');
+  toast('Exported '+tasks.length+' action items to CSV');
+}
+function downloadFile(content,filename,mimeType){
+  const blob=new Blob([content],{type:mimeType});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function copyWorkstreamsForEmail(){
+  const ws=(D.workstreams||[]).filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  let text='WORKSTREAMS SUMMARY ('+today()+')\n\n';
+  ws.forEach(l1=>{
+    text+=l1.name+' — '+(l1.primaryOwner||l1.owner||'Unassigned')+' — '+wsStatusLabel(l1.status)+'\n';
+    const l2s=(D.workstreams||[]).filter(w=>w.parentWs===l1.id).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    l2s.forEach(l2=>{
+      text+='  • '+l2.name+' — '+(l2.primaryOwner||l2.owner||'Unassigned')+' — '+wsStatusLabel(l2.status)+'\n';
+    });
+    text+='\n';
+  });
+  navigator.clipboard.writeText(text).then(()=>toast('Copied to clipboard'));
+}
+let exportMenuOpen=false;
+function toggleExportMenu(){
+  exportMenuOpen=!exportMenuOpen;
+  const menu=document.getElementById('export-menu');
+  if(menu)menu.style.display=exportMenuOpen?'block':'none';
+}
+function closeExportMenu(){exportMenuOpen=false;const m=document.getElementById('export-menu');if(m)m.style.display='none'}
 let qcVoiceActive=false,qcRecognition=null;
 function toggleQC(){document.getElementById('qcPanel').classList.toggle('open');document.getElementById('focusPopover').classList.remove('open');if(qcVoiceActive)toggleQCVoice()}
 function toggleAIPanel(){go('aiinsights')}
@@ -2304,8 +2489,8 @@ function rDash(c){
 function renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,allPriorities,prioritiesDone,myOpenTasks,myWsCount){
   return `
   <div class="ws-section" id="dashSec-timeline" style="margin-bottom:16px">
-    <div class="ws-section-hd" onclick="toggleWsSection('dashSec-timeline')" style="background:#fff;padding:14px 18px;border-radius:var(--r-sm) var(--r-sm) 0 0;border:1px solid var(--border)"><h4 style="font-size:16px;font-weight:800;color:var(--text)">Program Timeline</h4><span class="ws-section-arrow">&#9660;</span></div>
-    <div class="ws-section-bd" style="padding:10px 14px;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r-sm) var(--r-sm);background:#fff">
+    <div class="ws-section-hd" onclick="toggleWsSection('dashSec-timeline')" style="background:var(--bg-card);padding:14px 18px;border-radius:var(--r-sm) var(--r-sm) 0 0;border:1px solid var(--border)"><h4 style="font-size:16px;font-weight:800;color:var(--text)">Program Timeline</h4><span class="ws-section-arrow">&#9660;</span></div>
+    <div class="ws-section-bd" style="padding:10px 14px;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r-sm) var(--r-sm);background:var(--bg-card)">
       ${buildGantt()}
     </div>
   </div>
@@ -3043,16 +3228,16 @@ function rWorkstreamsNew(c){
       const levelBadge=`<span style="font-size:9px;color:var(--muted);background:var(--bg-subtle);border:1px solid var(--border);padding:1px 5px;border-radius:4px;margin-right:6px">L${level}</span>`;
       const countBadge=hasChildren?`<span style="font-size:10px;color:var(--muted);margin-left:6px">(${childCount} sub, ${taskCount} items)</span>`:'';
       const nameStyle=isLate||isAtRisk?'color:var(--red);font-weight:'+(depth===0?'600':'500'):'font-weight:'+(depth===0?'600':'500');
-      const dragAttrs=isL1?'':`draggable="true" ondragstart="event.dataTransfer.setData('text/plain','ws:${w.id}');this.style.opacity='0.5'" ondragend="this.style.opacity='1'"`;
+      const dragAttrs=isL1?'':`draggable="true" ondragstart="event.dataTransfer.setData('text/plain','ws:${w.id}');this.classList.add('dragging-row');createDragGhost('${esc(w.name).replace(/'/g,"\\'")}');document.addEventListener('dragover',moveDragGhost)" ondragend="this.classList.remove('dragging-row');removeDragGhost();document.removeEventListener('dragover',moveDragGhost)"`;
       const dropAttrs=`ondragover="wsHierarchyDragOver(event,'${w.id}')" ondragleave="wsHierarchyDragLeave(event)" ondrop="wsHierarchyDrop(event,'${w.id}')"`;
       const dragHandle=isL1?'':`<span style="cursor:grab;color:var(--light);margin-right:4px;font-size:10px" title="Drag to move">⋮⋮</span>`;
       const rowBorder='border-bottom:1px solid var(--border-lt)';
       return `<tr ${dragAttrs} ${dropAttrs} onclick="openWsDetail('${w.id}')" style="cursor:pointer;height:36px;${rowStyle};${rowBorder}" onmouseenter="if(!this.classList.contains('ws-drop-target'))this.style.background='var(--bg-subtle)'" onmouseleave="if(!this.classList.contains('ws-drop-target'))this.style.background='${rowStyle?'rgba(239,68,68,.05)':''}'">
-        <td style="padding:6px 14px;padding-left:${14+indent}px;white-space:nowrap">${dragHandle}${expandIcon}${levelBadge}${isLate?'<span style="color:var(--red);margin-right:4px">⚠</span>':''}<span style="${nameStyle}">${esc(w.name)}</span>${countBadge}</td>
+        <td style="padding:6px 14px;padding-left:${14+indent}px;white-space:nowrap">${dragHandle}${expandIcon}${levelBadge}${isLate?'<span style="color:var(--red);margin-right:4px">⚠</span>':''}<span style="${nameStyle}" ondblclick="inlineEditWsName('${w.id}',this,event)" title="Double-click to edit">${esc(w.name)}</span>${countBadge}</td>
         <td style="padding:6px 14px;font-size:12px;color:var(--muted);white-space:nowrap">${esc(w.primaryOwner||w.owner||'')}</td>
         <td style="padding:6px 14px;font-size:12px;color:var(--muted);white-space:nowrap">${esc(w.secondaryOwner||'')}</td>
         <td style="padding:6px 14px;width:120px"><span class="pill pill-m" style="font-size:10px">${wsStatusLabel(w.status)}</span></td>
-        <td style="padding:6px 14px;font-size:11px;color:${isLate?'var(--red)':'var(--muted)'}">${w.targetDate?fmtDate(w.targetDate):'—'}</td>
+        <td style="padding:6px 14px;font-size:11px;color:${isLate?'var(--red)':'var(--muted)'}" ondblclick="inlineEditWsDate('${w.id}','targetDate',this,event)" title="Double-click to edit"><span>${w.targetDate?fmtDate(w.targetDate):'—'}</span></td>
       </tr>`;
     }else{
       const t=node.item;
@@ -3181,6 +3366,15 @@ function rWorkstreamsNew(c){
       <div style="display:flex;gap:8px">
         <button onclick="openWsEdit()" style="padding:10px 18px;font-size:13px;font-weight:600;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);color:#fff;border:none;border-radius:var(--r-sm);cursor:pointer;box-shadow:0 2px 8px rgba(99,102,241,.3);transition:all .15s" onmouseenter="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(99,102,241,.4)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(99,102,241,.3)'">New Workstream</button>
         <button onclick="openTaskModal()" style="padding:10px 18px;font-size:13px;font-weight:600;background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:#fff;border:none;border-radius:var(--r-sm);cursor:pointer;box-shadow:0 2px 8px rgba(16,185,129,.3);transition:all .15s" onmouseenter="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(16,185,129,.4)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(16,185,129,.3)'">New Action Item</button>
+        <div style="position:relative">
+          <button onclick="toggleExportMenu()" style="padding:10px 14px;font-size:13px;font-weight:500;background:var(--bg-card);color:var(--muted);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background='var(--bg-card)'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
+          <div id="export-menu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--shadow-lg);z-index:100;min-width:180px;padding:6px 0">
+            <div onclick="exportWorkstreamsCSV();closeExportMenu()" style="padding:10px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background=''"><span style="width:20px;text-align:center">📄</span>Workstreams CSV</div>
+            <div onclick="exportActionItemsCSV();closeExportMenu()" style="padding:10px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background=''"><span style="width:20px;text-align:center">📋</span>Action Items CSV</div>
+            <div style="height:1px;background:var(--border);margin:6px 0"></div>
+            <div onclick="copyWorkstreamsForEmail();closeExportMenu()" style="padding:10px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background=''"><span style="width:20px;text-align:center">📧</span>Copy for Email</div>
+          </div>
+        </div>
       </div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:16px">
@@ -3355,9 +3549,10 @@ function wsHierarchyDrop(event,targetWsId){
   }
 }
 
-let wsDragOverId=null;
+let wsDragOverId=null,dragGhost=null;
 function wsHierarchyDragOver(event,wsId){
   event.preventDefault();
+  event.dataTransfer.dropEffect='move';
   if(wsDragOverId!==wsId){
     document.querySelectorAll('.ws-drop-target').forEach(el=>el.classList.remove('ws-drop-target'));
     const row=event.currentTarget;
@@ -3371,6 +3566,22 @@ function wsHierarchyDragLeave(event){
     row.classList.remove('ws-drop-target');
     wsDragOverId=null;
   }
+}
+function createDragGhost(text){
+  if(dragGhost)dragGhost.remove();
+  dragGhost=document.createElement('div');
+  dragGhost.className='drag-ghost';
+  dragGhost.textContent=text;
+  document.body.appendChild(dragGhost);
+  return dragGhost;
+}
+function moveDragGhost(e){
+  if(dragGhost){dragGhost.style.left=(e.clientX+15)+'px';dragGhost.style.top=(e.clientY+15)+'px'}
+}
+function removeDragGhost(){
+  if(dragGhost){dragGhost.remove();dragGhost=null}
+  document.querySelectorAll('.ws-drop-target').forEach(el=>el.classList.remove('ws-drop-target'));
+  wsDragOverId=null;
 }
 
 // ═══════════════════════════════════════════════════
