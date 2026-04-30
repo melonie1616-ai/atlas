@@ -1866,9 +1866,10 @@ function getDailyUpdateStats(){
   return {updated,waiting,total,updatedCount,topStreak,personStats};
 }
 
-function renderDailyUpdatesWidget(){
+function renderDashboardWidgets(){
   const stats=getDailyUpdateStats();
-  if(stats.total===0)return '';
+  const highPriorityWs=(D.workstreams||[]).filter(w=>w.priority==='high');
+  const highPriorityCount=highPriorityWs.length;
   
   const pct=stats.total?Math.round(stats.updatedCount/stats.total*100):0;
   const barColor=pct>=80?'#10b981':pct>=50?'#f59e0b':'#ef4444';
@@ -1880,12 +1881,21 @@ function renderDailyUpdatesWidget(){
   const waitingNames=stats.waiting.slice(0,5).map(([name])=>name.split(' ')[0]).join(', ');
   const moreWaiting=stats.waiting.length>5?`, +${stats.waiting.length-5} more`:'';
   
-  return `
-  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:16px 20px;margin-bottom:20px">
+  const highPriorityWidget=`
+  <div onclick="wsPriorityFilter='high';Object.keys(wsExpanded).forEach(k=>wsExpanded[k]=true);(D.workstreams||[]).forEach(w=>wsExpanded[w.id]=true);go('workstreams')" style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:16px 20px;cursor:pointer;transition:all .15s" onmouseenter="this.style.borderColor='#ef4444';this.style.boxShadow='0 4px 12px rgba(239,68,68,.15)'" onmouseleave="this.style.borderColor='var(--border)';this.style.boxShadow=''">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <span style="font-size:15px;font-weight:600;color:var(--fg)">High Priority Workstreams</span>
+      <span style="font-size:20px;font-weight:700;color:#ef4444">${highPriorityCount}</span>
+    </div>
+    <div style="font-size:12px;color:var(--muted)">Click to view all high priority items expanded</div>
+  </div>`;
+  
+  const dailyUpdatesWidget=stats.total>0?`
+  <div style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:16px 20px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:10px">
         <span style="font-size:15px;font-weight:600;color:var(--fg)">Daily Updates</span>
-        <span style="font-size:12px;color:var(--muted)">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})}</span>
+        <span style="font-size:12px;color:var(--muted)">${new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</span>
       </div>
       <span style="font-size:14px;font-weight:700;color:${barColor}">${stats.updatedCount}/${stats.total} today</span>
     </div>
@@ -1896,7 +1906,9 @@ function renderDailyUpdatesWidget(){
       ${topStreaks?`<div style="display:flex;align-items:center;gap:6px"><span style="color:#f59e0b">🔥</span><span style="color:var(--fg);font-weight:500">Top:</span><span style="color:var(--muted)">${topStreaks}</span></div>`:''}
       ${stats.waiting.length?`<div style="display:flex;align-items:center;gap:6px;margin-left:auto"><span style="color:#ef4444">⚠️</span><span style="color:var(--muted)">Waiting: ${waitingNames}${moreWaiting}</span></div>`:`<div style="margin-left:auto;color:#10b981;font-weight:500">✓ Everyone updated!</div>`}
     </div>
-  </div>`;
+  </div>`:'';
+  
+  return `<div style="display:flex;gap:16px;margin-bottom:20px">${highPriorityWidget}${dailyUpdatesWidget}</div>`;
 }
 
 function toast(msg,undoFn=null,duration=3500){
@@ -2582,7 +2594,7 @@ function rDash(c){
       </div>
     </div>
   </div>
-  ${renderDailyUpdatesWidget()}
+  ${renderDashboardWidgets()}
   ${renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,allPriorities,prioritiesDone,myOpenTasks,myWsCount)}`;
 }
 
