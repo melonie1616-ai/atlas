@@ -3253,7 +3253,16 @@ function rWorkstreamsNew(c){
       allWs=allWs.filter(w=>!w.primaryOwner&&!w.owner);
       allTasks=allTasks.filter(t=>!t.owner);
     }else{
-      allWs=allWs.filter(w=>w.primaryOwner===wsOwnerFilter||w.secondaryOwner===wsOwnerFilter||w.owner===wsOwnerFilter);
+      // Include matching items AND their ancestors for hierarchy display
+      const matchingIds=new Set();
+      const allWsMap=new Map((D.workstreams||[]).map(w=>[w.id,w]));
+      function addWithAncestors(w){
+        if(!w||matchingIds.has(w.id))return;
+        matchingIds.add(w.id);
+        if(w.parentWs)addWithAncestors(allWsMap.get(w.parentWs));
+      }
+      allWs.filter(w=>w.primaryOwner===wsOwnerFilter||w.owner===wsOwnerFilter).forEach(addWithAncestors);
+      allWs=allWs.filter(w=>matchingIds.has(w.id));
       allTasks=allTasks.filter(t=>t.owner===wsOwnerFilter);
     }
   }
