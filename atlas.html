@@ -3286,14 +3286,32 @@ function rWorkstreamsNew(c){
     allTasks=allTasks.filter(t=>l1Ids.includes(t.workstream));
   }
   if(wsStatusFilter){
-    if(wsStatusFilter==='__overdue__'){
-      allWs=allWs.filter(w=>w.targetDate&&w.targetDate<today()&&w.status!=='closed');
-    }else{
-      allWs=allWs.filter(w=>normalizeWsStatus(w.status)===wsStatusFilter);
+    // Include matching items AND their ancestors for hierarchy display
+    const matchingIds=new Set();
+    const allWsMap=new Map((D.workstreams||[]).map(w=>[w.id,w]));
+    function addWithAncestors(w){
+      if(!w||matchingIds.has(w.id))return;
+      matchingIds.add(w.id);
+      if(w.parentWs)addWithAncestors(allWsMap.get(w.parentWs));
     }
+    if(wsStatusFilter==='__overdue__'){
+      allWs.filter(w=>w.targetDate&&w.targetDate<today()&&w.status!=='closed').forEach(addWithAncestors);
+    }else{
+      allWs.filter(w=>normalizeWsStatus(w.status)===wsStatusFilter).forEach(addWithAncestors);
+    }
+    allWs=allWs.filter(w=>matchingIds.has(w.id));
   }
   if(wsPriorityFilter){
-    allWs=allWs.filter(w=>w.priority===wsPriorityFilter);
+    // Include matching items AND their ancestors for hierarchy display
+    const matchingIds=new Set();
+    const allWsMap=new Map((D.workstreams||[]).map(w=>[w.id,w]));
+    function addWithAncestors(w){
+      if(!w||matchingIds.has(w.id))return;
+      matchingIds.add(w.id);
+      if(w.parentWs)addWithAncestors(allWsMap.get(w.parentWs));
+    }
+    allWs.filter(w=>w.priority===wsPriorityFilter).forEach(addWithAncestors);
+    allWs=allWs.filter(w=>matchingIds.has(w.id));
   }
   if(wsCoLeadFilter){
     const matchingIds=new Set();
