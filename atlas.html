@@ -2143,7 +2143,7 @@ function wsOpts(sel){
   return html;
 }
 function wsOptsHierarchy(sel,excludeId){
-  const all=(D.workstreams||[]).filter(w=>w.id!==excludeId&&(w.category==='BU'||w.category==='Cross-cutting')).map(w=>({id:w.id,name:w.name,parentWs:w.parentWs,color:w.color,category:w.category}));
+  const all=(D.workstreams||[]).filter(w=>w.id!==excludeId).map(w=>({id:w.id,name:w.name,parentWs:w.parentWs,color:w.color}));
   const allMap=new Map(all.map(w=>[w.id,w]));
   function getLevel(w){
     let lvl=1,cur=w;
@@ -2959,14 +2959,14 @@ function getL1AndDescendants(l1Id){
   return ids;
 }
 // ═══════════════════════════════════════════════════
-let wsViewMode='hierarchy',wsMyFilter=false,wsExpanded={},wsCatCollapsed2={BU:false,'Cross-cutting':false},wsOwnerFilter='',wsCoLeadFilter='',wsL1Filter='',wsStatusFilter='',wsPriorityFilter='';
+let wsViewMode='hierarchy',wsMyFilter=false,wsExpanded={},wsOwnerFilter='',wsCoLeadFilter='',wsL1Filter='',wsStatusFilter='',wsPriorityFilter='';
 function rWorkstreamsNew(c){
   const me=ME||'';
   const q=(document.getElementById('search').value||'').toLowerCase();
-  let allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  let allWs=(D.workstreams||[]).slice();
   let allTasks=(D.tasks||[]);
   
-  const owners=[...new Set([...(D.workstreams||[]).map(w=>w.primaryOwner||w.owner),...(D.tasks||[]).map(t=>t.owner)].filter(Boolean))].sort();
+  const leads=[...new Set((D.workstreams||[]).map(w=>w.primaryOwner||w.owner).filter(Boolean))].sort();
   const coLeads=[...new Set((D.workstreams||[]).map(w=>w.secondaryOwner).filter(n=>n&&!n.includes('/')))].sort();
   const l1Workstreams=allWs.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   
@@ -3019,17 +3019,15 @@ function rWorkstreamsNew(c){
     return;
   }
   
-  function buildTree(category){
-    const catWs=allWs.filter(w=>w.category===category);
-    const catTasks=allTasks.filter(t=>{const ws=(D.workstreams||[]).find(w=>w.id===t.workstream);return ws&&ws.category===category;});
-    const l1s=catWs.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  function buildTree(){
+    const l1s=allWs.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
     const tree=[];
     function addChildren(parentId,depth){
-      const children=catWs.filter(w=>w.parentWs===parentId).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+      const children=allWs.filter(w=>w.parentWs===parentId).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
       children.forEach(ch=>{
         tree.push({type:'ws',item:ch,depth});
         if(wsExpanded[ch.id]){
-          const tasks=catTasks.filter(t=>t.workstream===ch.id);
+          const tasks=allTasks.filter(t=>t.workstream===ch.id);
           tasks.forEach(t=>tree.push({type:'task',item:t,depth:depth+1}));
           addChildren(ch.id,depth+1);
         }
@@ -3038,7 +3036,7 @@ function rWorkstreamsNew(c){
     l1s.forEach(ws=>{
       tree.push({type:'ws',item:ws,depth:0});
       if(wsExpanded[ws.id]){
-        const tasks=catTasks.filter(t=>t.workstream===ws.id);
+        const tasks=allTasks.filter(t=>t.workstream===ws.id);
         tasks.forEach(t=>tree.push({type:'task',item:t,depth:1}));
         addChildren(ws.id,1);
       }
@@ -3046,10 +3044,7 @@ function rWorkstreamsNew(c){
     return tree;
   }
   
-  const buTree=buildTree('BU');
-  const ccTree=buildTree('Cross-cutting');
-  const totalBU=allWs.filter(w=>w.category==='BU').length;
-  const totalCC=allWs.filter(w=>w.category==='Cross-cutting').length;
+  const wsTree=buildTree();
   
   function renderItem(node){
     if(node.type==='ws'){
@@ -3073,12 +3068,12 @@ function rWorkstreamsNew(c){
       const dropAttrs=`ondragover="wsHierarchyDragOver(event,'${w.id}')" ondragleave="wsHierarchyDragLeave(event)" ondrop="wsHierarchyDrop(event,'${w.id}')"`;
       const dragHandle=isL1?'':`<span style="cursor:grab;color:var(--light);margin-right:4px;font-size:10px" title="Drag to move">⋮⋮</span>`;
       const rowBorder='border-bottom:1px solid var(--border-lt)';
-      return `<tr ${dragAttrs} ${dropAttrs} onclick="openWsDetail('${w.id}')" style="cursor:pointer;height:44px;${rowStyle};${rowBorder}" onmouseenter="if(!this.classList.contains('ws-drop-target'))this.style.background='var(--bg-subtle)'" onmouseleave="if(!this.classList.contains('ws-drop-target'))this.style.background='${rowStyle?'rgba(239,68,68,.05)':''}'">
-        <td style="padding:10px 14px;padding-left:${14+indent}px;white-space:nowrap">${dragHandle}${expandIcon}${levelBadge}${isLate?'<span style="color:var(--red);margin-right:4px">⚠</span>':''}<span style="${nameStyle}">${esc(w.name)}</span>${countBadge}</td>
-        <td style="padding:10px 14px;font-size:12px;color:var(--muted)">${esc(w.primaryOwner||w.owner||'')}</td>
-        <td style="padding:10px 14px;font-size:12px;color:var(--muted)">${esc(w.secondaryOwner||'')}</td>
-        <td style="padding:10px 14px;width:120px"><span class="pill pill-m" style="font-size:10px">${wsStatusLabel(w.status)}</span></td>
-        <td style="padding:10px 14px;font-size:11px;color:${isLate?'var(--red)':'var(--muted)'}">${w.targetDate?fmtDate(w.targetDate):'—'}</td>
+      return `<tr ${dragAttrs} ${dropAttrs} onclick="openWsDetail('${w.id}')" style="cursor:pointer;height:36px;${rowStyle};${rowBorder}" onmouseenter="if(!this.classList.contains('ws-drop-target'))this.style.background='var(--bg-subtle)'" onmouseleave="if(!this.classList.contains('ws-drop-target'))this.style.background='${rowStyle?'rgba(239,68,68,.05)':''}'">
+        <td style="padding:6px 14px;padding-left:${14+indent}px;white-space:nowrap">${dragHandle}${expandIcon}${levelBadge}${isLate?'<span style="color:var(--red);margin-right:4px">⚠</span>':''}<span style="${nameStyle}">${esc(w.name)}</span>${countBadge}</td>
+        <td style="padding:6px 14px;font-size:12px;color:var(--muted);white-space:nowrap">${esc(w.primaryOwner||w.owner||'')}</td>
+        <td style="padding:6px 14px;font-size:12px;color:var(--muted);white-space:nowrap">${esc(w.secondaryOwner||'')}</td>
+        <td style="padding:6px 14px;width:120px"><span class="pill pill-m" style="font-size:10px">${wsStatusLabel(w.status)}</span></td>
+        <td style="padding:6px 14px;font-size:11px;color:${isLate?'var(--red)':'var(--muted)'}">${w.targetDate?fmtDate(w.targetDate):'—'}</td>
       </tr>`;
     }else{
       const t=node.item;
@@ -3090,33 +3085,27 @@ function rWorkstreamsNew(c){
       const msIcon=t.isMilestone?'<span style="color:#f59e0b;margin-right:4px">★</span>':'';
       const prIcon=t.isPriority?'<span style="color:#8b5cf6;margin-right:4px">◆</span>':'';
       const parentWsId=t.workstream||'';
-      return `<tr draggable="true" ondragstart="event.dataTransfer.setData('text/plain','task:${t.id}');this.style.opacity='0.5'" ondragend="this.style.opacity='1'" onclick="openTaskModal('${t.id}')" style="cursor:pointer;height:40px;background:rgba(0,0,0,.015);border-bottom:1px solid var(--border-lt)" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background='rgba(0,0,0,.015)'">
-        <td style="padding:8px 14px;padding-left:${14+indent}px;white-space:nowrap"><span style="cursor:grab;color:var(--light);margin-right:4px;font-size:10px" title="Drag to move">⋮⋮</span><span style="width:22px;display:inline-block"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:8px"></span>${msIcon}${prIcon}<span style="font-size:12.5px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</span></td>
-        <td style="padding:8px 14px;font-size:12px;color:var(--muted)">${esc(t.owner||'')}</td>
-        <td style="padding:8px 14px;font-size:12px;color:var(--muted)"></td>
-        <td style="padding:8px 14px;width:120px"><span class="pill ${statusPill}" style="font-size:10px">${isDone?'Done':isOD?'Overdue':taskStatusLabel(t.status)}</span></td>
-        <td style="padding:8px 14px;font-size:11px;color:var(--muted)">${t.due?fmtDate(t.due):'—'}</td>
+      return `<tr draggable="true" ondragstart="event.dataTransfer.setData('text/plain','task:${t.id}');this.style.opacity='0.5'" ondragend="this.style.opacity='1'" onclick="openTaskModal('${t.id}')" style="cursor:pointer;height:32px;background:rgba(0,0,0,.015);border-bottom:1px solid var(--border-lt)" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background='rgba(0,0,0,.015)'">
+        <td style="padding:5px 14px;padding-left:${14+indent}px;white-space:nowrap"><span style="cursor:grab;color:var(--light);margin-right:4px;font-size:10px" title="Drag to move">⋮⋮</span><span style="width:22px;display:inline-block"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:8px"></span>${msIcon}${prIcon}<span style="font-size:12px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</span></td>
+        <td style="padding:5px 14px;font-size:12px;color:var(--muted);white-space:nowrap">${esc(t.owner||'')}</td>
+        <td style="padding:5px 14px;font-size:12px;color:var(--muted)"></td>
+        <td style="padding:5px 14px;width:120px"><span class="pill ${statusPill}" style="font-size:10px">${isDone?'Done':isOD?'Overdue':taskStatusLabel(t.status)}</span></td>
+        <td style="padding:5px 14px;font-size:11px;color:var(--muted)">${t.due?fmtDate(t.due):'—'}</td>
       </tr>`;
     }
   }
   
-  function renderCategory(name,tree,total,key){
-    return `<div style="margin-bottom:28px">
-      <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:linear-gradient(135deg,var(--bg-subtle) 0%,var(--bg-card) 100%);border-radius:var(--r-md);margin-bottom:12px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04)">
-        <span style="font-weight:700;font-size:15px;color:var(--fg)">${name}</span>
-        <span style="font-size:12px;color:var(--muted);background:var(--bg-card);padding:2px 8px;border-radius:10px;border:1px solid var(--border)">${total} workstreams</span>
-      </div>
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.03)">
-        <table class="tbl" style="width:100%;border-collapse:collapse">
-          <thead><tr style="background:var(--bg-subtle);border-bottom:2px solid var(--border)"><th style="text-align:left;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Name</th><th style="width:120px;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Lead</th><th style="width:120px;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Co-Lead</th><th style="width:120px;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Status</th><th style="width:100px;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Target</th></tr></thead>
-          <tbody>${tree.map(renderItem).join('')}</tbody>
-        </table>
-      </div>
+  function renderTable(tree){
+    return `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.03)">
+      <table class="tbl" style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:var(--bg-subtle);border-bottom:2px solid var(--border)"><th style="text-align:left;padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Name</th><th style="width:120px;padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Lead</th><th style="width:120px;padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Co-Lead</th><th style="width:120px;padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Status</th><th style="width:100px;padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Target</th></tr></thead>
+        <tbody>${tree.map(renderItem).join('')}</tbody>
+      </table>
     </div>`;
   }
 
   // Calculate base filtered items (before status filter) for status box counts
-  let baseFilteredWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  let baseFilteredWs=(D.workstreams||[]).slice();
   if(wsOwnerFilter){
     if(wsOwnerFilter==='__unassigned__'){
       baseFilteredWs=baseFilteredWs.filter(w=>!w.primaryOwner&&!w.owner);
@@ -3187,7 +3176,7 @@ function rWorkstreamsNew(c){
           <select style="padding:6px 10px;border-radius:var(--r-sm);${wsOwnerFilter?'border:2px solid var(--accent);background:rgba(99,102,241,.08)':'border:1px solid var(--border);background:var(--bg-subtle)'};font-size:12px;min-width:100px" onchange="wsOwnerFilter=this.value;render()">
             <option value="">All Leads</option>
             <option value="__unassigned__"${wsOwnerFilter==='__unassigned__'?' selected':''}>Unassigned</option>
-            ${owners.map(o=>`<option value="${esc(o)}"${wsOwnerFilter===o?' selected':''}>${esc(o)}</option>`).join('')}
+            ${leads.map(o=>`<option value="${esc(o)}"${wsOwnerFilter===o?' selected':''}>${esc(o)}</option>`).join('')}
           </select>
           <select style="padding:6px 10px;border-radius:var(--r-sm);${wsCoLeadFilter?'border:2px solid var(--accent);background:rgba(99,102,241,.08)':'border:1px solid var(--border);background:var(--bg-subtle)'};font-size:12px;min-width:100px" onchange="wsCoLeadFilter=this.value;render()">
             <option value="">All Co-Leads</option>
@@ -3222,8 +3211,7 @@ function rWorkstreamsNew(c){
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px;padding:8px 12px;background:var(--bg-subtle);border-radius:var(--r-sm);border:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <strong>${totalWs}</strong> workstreams <span style="color:var(--light)">(</span><span style="color:var(--accent)">${l1Count} L1</span> <span style="color:var(--light)">•</span> <span style="color:#8b5cf6">${l2Count} L2</span> <span style="color:var(--light)">•</span> <span style="color:#10b981">${l3Count} L3</span><span style="color:var(--light)">)</span> • <strong>${openTasks}</strong> open action items / ${totalTasks} total${wsStatusFilter?' • <span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Status: '+activeStatusLabel+'</span>':''}${wsOwnerFilter?' • <span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Lead: '+(wsOwnerFilter==='__unassigned__'?'Unassigned':wsOwnerFilter)+'</span>':''}${wsCoLeadFilter?' • <span style="background:#8b5cf6;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Co-Lead: '+(wsCoLeadFilter==='__unassigned__'?'Unassigned':wsCoLeadFilter)+'</span>':''}${wsL1Filter?' • <span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">'+l1Workstreams.find(w=>w.id===wsL1Filter)?.name+'</span>':''}${wsPriorityFilter?' • <span style="background:#ef4444;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Priority: '+wsPriorityFilter.charAt(0).toUpperCase()+wsPriorityFilter.slice(1)+'</span>':''}
     </div>
-    ${renderCategory('Business Unit',buTree,totalBU,'BU')}
-    ${renderCategory('Cross-cutting',ccTree,totalCC,'Cross-cutting')}
+    ${renderTable(wsTree)}
   </div>`;
 }
 
@@ -3834,10 +3822,7 @@ function openWsEdit(id){
   <div class="m-bd">
     <div class="fg"><label>Name of Workstream</label><input id="ws-name" value="${w?esc(w.name):''}" placeholder="Brief, descriptive name"></div>
     <div class="fg"><label>Parent</label><select id="ws-parentWs"><option value="">— Top Level —</option>${wsOptsHierarchy(w?.parentWs,w?.id)}</select></div>
-    <div class="fg-row">
-      <div class="fg"><label>Category</label><select id="ws-category"><option value="Cross-cutting"${(w?.category||'Cross-cutting')==='Cross-cutting'?' selected':''}>Cross-cutting</option><option value="BU"${w?.category==='BU'?' selected':''}>BU (Business Unit)</option></select></div>
-      <div class="fg"><label>Status</label><select id="ws-status">${WS_STATUSES.map(s=>`<option value="${s.value}"${normalizeWsStatus(w?.status)===s.value?' selected':''}>${s.label}</option>`).join('')}</select></div>
-    </div>
+    <div class="fg"><label>Status</label><select id="ws-status">${WS_STATUSES.map(s=>`<option value="${s.value}"${normalizeWsStatus(w?.status)===s.value?' selected':''}>${s.label}</option>`).join('')}</select></div>
     <div class="fg-row">
       <div class="fg"><label>Lead</label><select id="ws-primaryOwner">${peopleOpts(defaultOwner)}</select></div>
       <div class="fg"><label>Co-Lead</label><select id="ws-secondaryOwner"><option value="">— None —</option>${peopleOpts(w?.secondaryOwner||'').replace('<option value="">— Select —</option>','')}</select></div>
@@ -4013,7 +3998,6 @@ function saveWs(id){
   w.parentWs=(document.getElementById('ws-parentWs')?.value||'');
   if(!w.parentWs){w.level=1;}
   else{const parentW=(D.workstreams||[]).find(p=>p.id===w.parentWs);w.level=(parentW?.level||1)+1;}
-  w.category=(document.getElementById('ws-category')?.value||'Cross-cutting');
   w.priority=(document.getElementById('ws-priority')?.value||'');
   w.targetStart=(document.getElementById('ws-targetStart')?.value||'').trim();
   w.targetDate=(document.getElementById('ws-targetDate')?.value||'').trim();
