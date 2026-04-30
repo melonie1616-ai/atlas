@@ -3453,8 +3453,8 @@ function rWorkstreamsNew(c){
   
   if(wsOwnerFilter){
     if(wsOwnerFilter==='__unassigned__'){
-      allWs=allWs.filter(w=>!(w.primaryOwner||w.owner));
-      allTasks=allTasks.filter(t=>!t.owner);
+      allWs=allWs.filter(w=>!((w.primaryOwner||'').trim()||(w.owner||'').trim()));
+      allTasks=allTasks.filter(t=>!(t.owner||'').trim());
     }else{
       // Include matching items AND their ancestors for hierarchy display
       const matchingIds=new Set();
@@ -3636,7 +3636,7 @@ function rWorkstreamsNew(c){
   let baseFilteredWs=(D.workstreams||[]).slice();
   if(wsOwnerFilter){
     if(wsOwnerFilter==='__unassigned__'){
-      baseFilteredWs=baseFilteredWs.filter(w=>!(w.primaryOwner||w.owner));
+      baseFilteredWs=baseFilteredWs.filter(w=>!((w.primaryOwner||'').trim()||(w.owner||'').trim()));
     }else{
       baseFilteredWs=baseFilteredWs.filter(w=>w.primaryOwner===wsOwnerFilter||w.secondaryOwner===wsOwnerFilter||w.owner===wsOwnerFilter);
     }
@@ -4125,8 +4125,8 @@ function rWorkKanban(c){
   }
   if(workKanbanOwner){
     if(workKanbanOwner==='__unassigned__'){
-      filteredWs=filteredWs.filter(w=>!(w.primaryOwner||w.owner));
-      filteredTasks=filteredTasks.filter(t=>!t.owner);
+      filteredWs=filteredWs.filter(w=>!((w.primaryOwner||'').trim()||(w.owner||'').trim()));
+      filteredTasks=filteredTasks.filter(t=>!(t.owner||'').trim());
     }else{
       filteredWs=filteredWs.filter(w=>w.primaryOwner===workKanbanOwner||w.secondaryOwner===workKanbanOwner||w.owner===workKanbanOwner);
       filteredTasks=filteredTasks.filter(t=>t.owner===workKanbanOwner);
