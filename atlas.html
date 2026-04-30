@@ -2604,9 +2604,8 @@ function renderMyWorkKanban(myTasks){
 }
 
 function setGanttZoom(z){ganttZoom=z;render()}
-let ganttExpanded={},ganttCategoryFilter='all';
+let ganttExpanded={};
 function toggleGanttExpand(wsId){ganttExpanded[wsId]=!ganttExpanded[wsId];render()}
-function setGanttCategory(cat){ganttCategoryFilter=cat;render()}
 
 function getWsDateRange(wsId,depth=0){
   if(depth>10)return null;
@@ -2694,16 +2693,7 @@ function buildGantt(){
     `<div class="pill${ganttZoom===z?' pill-i':' pill-m'}" style="cursor:pointer;font-size:12px" onclick="setGanttZoom('${z}')">${z==='all'?'Full':z.toUpperCase()}</div>`
   ).join('');
 
-  const catBtns=['all','BU','Cross-cutting'].map(cat=>{
-    const label=cat==='all'?'All':cat==='BU'?'Business':'Cross-cutting';
-    return `<div class="pill${ganttCategoryFilter===cat?' pill-i':' pill-m'}" style="cursor:pointer;font-size:12px" onclick="setGanttCategory('${cat}')">${label}</div>`;
-  }).join('');
-
-  const l1Workstreams=(D.workstreams||[]).filter(w=>{
-    if(w.parentWs)return false;
-    if(ganttCategoryFilter==='all')return w.category==='BU'||w.category==='Cross-cutting';
-    return w.category===ganttCategoryFilter;
-  }).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const l1Workstreams=(D.workstreams||[]).filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
 
   let rowsHtml='';
   let rowIdx=0;
@@ -2778,11 +2768,7 @@ function buildGantt(){
   </div>`;
 
   return `<div class="gantt">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 4px;flex-wrap:wrap;gap:8px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:12px;color:var(--muted);font-weight:600">Filter:</span>
-        <div style="display:flex;gap:4px">${catBtns}</div>
-      </div>
+    <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:10px;padding:0 4px;flex-wrap:wrap;gap:8px">
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:12px;color:var(--muted)">Starting</span>
         <input type="date" value="${tStart.toISOString().slice(0,10)}" onchange="ganttCustomStart=this.value;render()" style="padding:4px 8px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12px;font-family:inherit;background:var(--bg);color:var(--text);cursor:pointer">
