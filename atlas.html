@@ -2961,6 +2961,7 @@ function rWorkstreamsNew(c){
   let allTasks=(D.tasks||[]);
   
   const owners=[...new Set([...(D.workstreams||[]).map(w=>w.primaryOwner||w.owner),...(D.tasks||[]).map(t=>t.owner)].filter(Boolean))].sort();
+  const coLeads=[...new Set((D.workstreams||[]).map(w=>w.secondaryOwner).filter(n=>n&&!n.includes('/')))].sort();
   const l1Workstreams=allWs.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   
   if(wsOwnerFilter){
@@ -3180,8 +3181,7 @@ function rWorkstreamsNew(c){
           </select>
           <select style="padding:6px 10px;border-radius:var(--r-sm);${wsCoLeadFilter?'border:2px solid var(--accent);background:rgba(99,102,241,.08)':'border:1px solid var(--border);background:var(--bg-subtle)'};font-size:12px;min-width:100px" onchange="wsCoLeadFilter=this.value;render()">
             <option value="">All Co-Leads</option>
-            <option value="__unassigned__"${wsCoLeadFilter==='__unassigned__'?' selected':''}>Unassigned</option>
-            ${owners.map(o=>`<option value="${esc(o)}"${wsCoLeadFilter===o?' selected':''}>${esc(o)}</option>`).join('')}
+            ${coLeads.map(o=>`<option value="${esc(o)}"${wsCoLeadFilter===o?' selected':''}>${esc(o)}</option>`).join('')}
           </select>
           <select style="padding:6px 10px;border-radius:var(--r-sm);${wsL1Filter?'border:2px solid var(--accent);background:rgba(99,102,241,.08)':'border:1px solid var(--border);background:var(--bg-subtle)'};font-size:12px;min-width:130px" onchange="wsL1Filter=this.value;render()">
             <option value="">All Top-Level</option>
