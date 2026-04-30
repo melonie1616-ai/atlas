@@ -3325,9 +3325,18 @@ function rWorkstreamsNew(c){
       matchingIds.add(w.id);
       if(w.parentWs)addWithAncestors(allWsMap.get(w.parentWs));
     }
+    // Match workstreams by name/desc/owner
     allWs.filter(w=>(w.name+' '+w.desc+' '+(w.primaryOwner||w.owner||'')).toLowerCase().includes(q)).forEach(addWithAncestors);
+    // Also include workstreams that have matching action items
+    const matchingTasks=allTasks.filter(t=>(t.title+' '+t.owner+' '+t.notes).toLowerCase().includes(q));
+    matchingTasks.forEach(t=>{
+      if(t.workstream){
+        const ws=allWsMap.get(t.workstream);
+        if(ws)addWithAncestors(ws);
+      }
+    });
     allWs=allWs.filter(w=>matchingIds.has(w.id));
-    allTasks=allTasks.filter(t=>(t.title+' '+t.owner+' '+t.notes).toLowerCase().includes(q));
+    allTasks=matchingTasks;
   }
   
   const totalWs=allWs.length;
@@ -3449,6 +3458,13 @@ function rWorkstreamsNew(c){
       if(w.parentWs)addWithAncestors(allWsMap.get(w.parentWs));
     }
     baseFilteredWs.filter(w=>(w.name+' '+w.desc+' '+(w.primaryOwner||w.owner||'')).toLowerCase().includes(q)).forEach(addWithAncestors);
+    // Also include workstreams that have matching action items
+    (D.tasks||[]).filter(t=>(t.title+' '+t.owner+' '+t.notes).toLowerCase().includes(q)).forEach(t=>{
+      if(t.workstream){
+        const ws=allWsMap.get(t.workstream);
+        if(ws)addWithAncestors(ws);
+      }
+    });
     baseFilteredWs=baseFilteredWs.filter(w=>matchingIds.has(w.id));
   }
 
