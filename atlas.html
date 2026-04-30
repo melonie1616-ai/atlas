@@ -2436,22 +2436,20 @@ function wsOpts(sel){
 }
 function wsOptsHierarchy(sel,excludeId){
   const all=(D.workstreams||[]).filter(w=>w.id!==excludeId).map(w=>({id:w.id,name:w.name,parentWs:w.parentWs,color:w.color}));
-  const allMap=new Map(all.map(w=>[w.id,w]));
   const l1s=all.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   let html='';
   l1s.forEach(l1=>{
-    // L1 as optgroup header
     const l2s=all.filter(w=>w.parentWs===l1.id).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-    html+=`<optgroup label="▸ ${esc(l1.name)}">`;
-    html+=`<option value="${l1.id}"${sel===l1.id?' selected':''}>📁 ${esc(l1.name)} (select this L1)</option>`;
+    // L1 as selectable option with folder icon
+    html+=`<option value="${l1.id}"${sel===l1.id?' selected':''}>📁 ${esc(l1.name)}</option>`;
+    // L2s indented under their L1
     l2s.forEach(l2=>{
-      html+=`<option value="${l2.id}"${sel===l2.id?' selected':''}>    └ ${esc(l2.name)}</option>`;
+      html+=`<option value="${l2.id}"${sel===l2.id?' selected':''}>      └ ${esc(l2.name)}</option>`;
       const l3s=all.filter(w=>w.parentWs===l2.id).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
       l3s.forEach(l3=>{
-        html+=`<option value="${l3.id}"${sel===l3.id?' selected':''}>        └ ${esc(l3.name)}</option>`;
+        html+=`<option value="${l3.id}"${sel===l3.id?' selected':''}>            └ ${esc(l3.name)}</option>`;
       });
     });
-    html+=`</optgroup>`;
   });
   return html;
 }
