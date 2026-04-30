@@ -5904,6 +5904,46 @@ function rWorkMetrics(c){
         </div>
       </div>
     </div>
+    
+    ${(()=>{
+      const orphanedTasks=allTasks.filter(t=>!t.workstream);
+      if(!orphanedTasks.length)return '';
+      return `
+    <div style="margin-top:24px">
+      <div class="card" style="padding:20px;border:1px solid var(--red);background:rgba(239,68,68,.03)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:40px;height:40px;background:rgba(239,68,68,.1);border-radius:10px;display:flex;align-items:center;justify-content:center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" style="width:20px;height:20px"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <div>
+              <h3 style="font-size:15px;font-weight:700;color:var(--fg);margin:0">Data Cleanup: Orphaned Action Items</h3>
+              <div style="font-size:12px;color:var(--muted)">Action items without a parent workstream</div>
+            </div>
+          </div>
+          <span style="background:var(--red);color:#fff;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600">${orphanedTasks.length}</span>
+        </div>
+        <div style="max-height:250px;overflow-y:auto">
+          ${orphanedTasks.map(t=>`
+          <div style="padding:10px 12px;margin-bottom:6px;border-radius:6px;background:var(--bg-card);border:1px solid var(--border);cursor:pointer;transition:all .15s" onclick="openTaskModal('${t.id}')" onmouseenter="this.style.borderColor='var(--accent)';this.style.background='var(--accent-lt)'" onmouseleave="this.style.borderColor='var(--border)';this.style.background='var(--bg-card)'">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-weight:600;font-size:13px;color:var(--fg)">${esc(t.title)}</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">${t.owner||'Unassigned'}${t.due?' · Due '+fmtDate(t.due):''}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="pill ${taskStatusPill(t.status)}" style="font-size:10px">${taskStatusLabel(t.status)}</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="width:14px;height:14px"><path d="M9 18l6-6-6-6"/></svg>
+              </div>
+            </div>
+          </div>`).join('')}
+        </div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)">
+          Click each item to open and assign a parent workstream.
+        </div>
+      </div>
+    </div>`;
+    })()}
   </div>`;
 }
 
