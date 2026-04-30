@@ -2708,7 +2708,7 @@ function buildGantt(){
     
     const left=Math.max(0,l);
     const width=Math.max(0.5,Math.min(100,r)-left);
-    const wc=w.color||'var(--accent)';
+    const wc=level===0?'#6366f1':level===1?'#818cf8':'#a5b4fc';
     const indent=level*16;
     const barHeight=level===0?24:level===1?20:18;
     const fontSize=level===0?'12px':level===1?'11px':'10px';
@@ -2719,15 +2719,14 @@ function buildGantt(){
     const children=(D.workstreams||[]).filter(c=>c.parentWs===w.id);
     const hasChildren=children.length>0;
     const isExpanded=ganttExpanded[w.id];
-    const expandIcon=hasChildren?`<span style="margin-right:4px;font-size:10px">${isExpanded?'▼':'▶'}</span>`:'';
-    const clickAction=hasChildren?`toggleGanttExpand('${w.id}')`:`openWsDetail('${w.id}')`;
+    const expandIcon=hasChildren?`<span onclick="event.stopPropagation();toggleGanttExpand('${w.id}')" style="margin-right:4px;font-size:10px;cursor:pointer">${isExpanded?'▼':'▶'}</span>`:'';
     
     const levelBadge=`<span style="font-size:9px;background:rgba(255,255,255,.25);padding:1px 4px;border-radius:3px;margin-right:4px">L${w.level||1}</span>`;
     const statusDot=w.status==='at-risk'||w.status==='blocked'?`<span style="color:#fbbf24;margin-left:4px">⚠</span>`:'';
     
     const tooltip=`${w.name}: ${fmtDate(range.start)} — ${fmtDate(range.end)} (${wsStatusLabel(w.status)})${range.isManual?'':' [calculated]'}`;
     
-    return `<div class="gantt-bar" style="left:${left}%;width:${width}%;top:${yPos}px;background:${wc};color:#fff;font-size:${fontSize};font-weight:${fontWeight};height:${barHeight}px;cursor:pointer;opacity:${opacity};border-radius:4px;margin-left:${indent}px;${borderStyle}display:flex;align-items:center;padding:0 6px;white-space:nowrap;overflow:hidden" title="${esc(tooltip)}" onclick="${clickAction}">${expandIcon}${levelBadge}${esc(w.name)}${statusDot}</div>`;
+    return `<div class="gantt-bar" style="left:${left}%;width:${width}%;top:${yPos}px;background:${wc};color:#fff;font-size:${fontSize};font-weight:${fontWeight};height:${barHeight}px;cursor:pointer;opacity:${opacity};border-radius:4px;margin-left:${indent}px;${borderStyle}display:flex;align-items:center;padding:0 6px;white-space:nowrap;overflow:hidden" title="${esc(tooltip)}" onclick="openWsDetail('${w.id}')">${expandIcon}${levelBadge}${esc(w.name)}${statusDot}</div>`;
   }
 
   function collectVisibleRows(wsList,level){
