@@ -3451,10 +3451,11 @@ function rWorkstreamsNew(c){
   const coLeads=[...new Set((D.workstreams||[]).map(w=>w.secondaryOwner).filter(n=>n&&!n.includes('/')))].sort();
   const l1Workstreams=allWs.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   
+  const isBlank=v=>!v||!String(v).trim()||v==='""';
   if(wsOwnerFilter){
     if(wsOwnerFilter==='__unassigned__'){
-      allWs=allWs.filter(w=>!((w.primaryOwner||'').trim()||(w.owner||'').trim()));
-      allTasks=allTasks.filter(t=>!(t.owner||'').trim());
+      allWs=allWs.filter(w=>isBlank(w.primaryOwner)&&isBlank(w.owner));
+      allTasks=allTasks.filter(t=>isBlank(t.owner));
     }else{
       // Include matching items AND their ancestors for hierarchy display
       const matchingIds=new Set();
@@ -3634,9 +3635,10 @@ function rWorkstreamsNew(c){
 
   // Calculate base filtered items (before status filter) for status box counts
   let baseFilteredWs=(D.workstreams||[]).slice();
+  const isBlank2=v=>!v||!String(v).trim()||v==='""';
   if(wsOwnerFilter){
     if(wsOwnerFilter==='__unassigned__'){
-      baseFilteredWs=baseFilteredWs.filter(w=>!((w.primaryOwner||'').trim()||(w.owner||'').trim()));
+      baseFilteredWs=baseFilteredWs.filter(w=>isBlank2(w.primaryOwner)&&isBlank2(w.owner));
     }else{
       baseFilteredWs=baseFilteredWs.filter(w=>w.primaryOwner===wsOwnerFilter||w.secondaryOwner===wsOwnerFilter||w.owner===wsOwnerFilter);
     }
@@ -4123,10 +4125,11 @@ function rWorkKanban(c){
     const wsIds=filteredWs.map(w=>w.id);
     filteredTasks=filteredTasks.filter(t=>wsIds.includes(t.workstream));
   }
+  const isBlank3=v=>!v||!String(v).trim()||v==='""';
   if(workKanbanOwner){
     if(workKanbanOwner==='__unassigned__'){
-      filteredWs=filteredWs.filter(w=>!((w.primaryOwner||'').trim()||(w.owner||'').trim()));
-      filteredTasks=filteredTasks.filter(t=>!(t.owner||'').trim());
+      filteredWs=filteredWs.filter(w=>isBlank3(w.primaryOwner)&&isBlank3(w.owner));
+      filteredTasks=filteredTasks.filter(t=>isBlank3(t.owner));
     }else{
       filteredWs=filteredWs.filter(w=>w.primaryOwner===workKanbanOwner||w.secondaryOwner===workKanbanOwner||w.owner===workKanbanOwner);
       filteredTasks=filteredTasks.filter(t=>t.owner===workKanbanOwner);
