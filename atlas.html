@@ -5546,20 +5546,20 @@ function rWorkMetrics(c){
     return {name,count};
   }).filter(p=>p.count>0).sort((a,b)=>b.count-a.count);
   
-  const blockedTasks=openTasks.filter(t=>t.status==='blocked-dependency');
+  const blockedTasks=openTasks.filter(t=>normalizeTaskStatus(t.status)==='blocked-dependency');
   
-  const today=new Date();
-  const twoWeeksOut=new Date(today.getTime()+14*24*60*60*1000);
+  const todayStr=today();
+  const todayDate=new Date(todayStr);
+  const twoWeeksOut=new Date(todayDate.getTime()+14*24*60*60*1000);
+  const twoWeeksStr=twoWeeksOut.toISOString().slice(0,10);
   const dueSoonWs=openWs.filter(w=>{
     if(!w.endDate)return false;
-    const d=new Date(w.endDate);
-    return d>=today&&d<=twoWeeksOut;
-  });
+    return w.endDate>=todayStr&&w.endDate<=twoWeeksStr;
+  }).sort((a,b)=>(a.endDate||'').localeCompare(b.endDate||''));
   const dueSoonTasks=openTasks.filter(t=>{
-    if(!t.dueDate)return false;
-    const d=new Date(t.dueDate);
-    return d>=today&&d<=twoWeeksOut;
-  });
+    if(!t.due)return false;
+    return t.due>=todayStr&&t.due<=twoWeeksStr;
+  }).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
   
   const maxWs=Math.max(...wsPerPerson.map(p=>p.total),1);
   const maxTasks=Math.max(...tasksPerPerson.map(p=>p.count),1);
@@ -5632,15 +5632,14 @@ function rWorkMetrics(c){
           <div style="flex:1">
             <h3 style="font-size:15px;font-weight:700;color:var(--fg);margin:0 0 4px">Blocked by Other Teams</h3>
             <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Action items waiting on dependencies</div>
-            ${blockedTasks.length?`<div style="max-height:150px;overflow-y:auto">
-              ${blockedTasks.slice(0,5).map(t=>{
+            ${blockedTasks.length?`<div style="max-height:300px;overflow-y:auto">
+              ${blockedTasks.map(t=>{
                 const ws=wsMap.get(t.workstream);
-                return `<div style="padding:6px 0;border-bottom:1px solid var(--border-lt);font-size:12px">
+                return `<div style="padding:8px;margin-bottom:4px;border-radius:6px;background:var(--bg-subtle);font-size:12px;cursor:pointer;transition:background .15s" onclick="openTaskModal('${t.id}')" onmouseenter="this.style.background='var(--accent-lt)'" onmouseleave="this.style.background='var(--bg-subtle)'">
                   <div style="font-weight:500;color:var(--fg)">${esc(t.title)}</div>
-                  <div style="color:var(--muted);font-size:11px">${ws?esc(ws.name):''}${t.owner?' · '+esc(t.owner):''}</div>
+                  <div style="color:var(--muted);font-size:11px;margin-top:2px">${ws?esc(ws.name):''}${t.owner?' · '+esc(t.owner):''}${t.blockedBy?' · <span style="color:var(--red)">Blocked by: '+esc(t.blockedBy)+'</span>':''}</div>
                 </div>`;
               }).join('')}
-              ${blockedTasks.length>5?`<div style="padding:8px 0;font-size:11px;color:var(--muted)">+${blockedTasks.length-5} more</div>`:''}
             </div>`:'<div style="color:var(--green);font-size:13px;font-weight:500">✓ No blocked items</div>'}
           </div>
         </div>
@@ -5658,30 +5657,29 @@ function rWorkMetrics(c){
               <span style="font-weight:600;color:var(--fg)">${dueSoonWs.length}</span> workstreams · 
               <span style="font-weight:600;color:var(--fg)">${dueSoonTasks.length}</span> action items
             </div>
-            ${(dueSoonWs.length||dueSoonTasks.length)?`<div style="max-height:150px;overflow-y:auto">
-              ${[...dueSoonWs.map(w=>({type:'ws',item:w,date:w.endDate})),...dueSoonTasks.map(t=>({type:'task',item:t,date:t.dueDate}))].sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,5).map(x=>{
+            ${(dueSoonWs.length||dueSoonTasks.length)?`<div style="max-height:300px;overflow-y:auto">
+              ${[...dueSoonWs.map(w=>({type:'ws',item:w,date:w.endDate})),...dueSoonTasks.map(t=>({type:'task',item:t,date:t.due}))].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(x=>{
                 const d=new Date(x.date);
                 const dStr=d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
                 if(x.type==='ws'){
-                  return `<div style="padding:6px 0;border-bottom:1px solid var(--border-lt);font-size:12px">
+                  return `<div style="padding:8px;margin-bottom:4px;border-radius:6px;background:var(--bg-subtle);font-size:12px;cursor:pointer;transition:background .15s" onclick="openWsEdit('${x.item.id}')" onmouseenter="this.style.background='var(--accent-lt)'" onmouseleave="this.style.background='var(--bg-subtle)'">
                     <div style="display:flex;justify-content:space-between;align-items:center">
                       <span style="font-weight:500;color:var(--fg)">${esc(x.item.name)}</span>
                       <span style="font-size:10px;background:rgba(59,130,246,.1);color:#3b82f6;padding:2px 6px;border-radius:4px">${dStr}</span>
                     </div>
-                    <div style="color:var(--muted);font-size:11px">Workstream${x.item.primaryOwner||x.item.owner?' · '+esc(x.item.primaryOwner||x.item.owner):''}</div>
+                    <div style="color:var(--muted);font-size:11px;margin-top:2px">Workstream${x.item.primaryOwner||x.item.owner?' · '+esc(x.item.primaryOwner||x.item.owner):''}</div>
                   </div>`;
                 }else{
                   const ws=wsMap.get(x.item.workstream);
-                  return `<div style="padding:6px 0;border-bottom:1px solid var(--border-lt);font-size:12px">
+                  return `<div style="padding:8px;margin-bottom:4px;border-radius:6px;background:var(--bg-subtle);font-size:12px;cursor:pointer;transition:background .15s" onclick="openTaskModal('${x.item.id}')" onmouseenter="this.style.background='var(--accent-lt)'" onmouseleave="this.style.background='var(--bg-subtle)'">
                     <div style="display:flex;justify-content:space-between;align-items:center">
                       <span style="font-weight:500;color:var(--fg)">${esc(x.item.title)}</span>
                       <span style="font-size:10px;background:rgba(245,158,11,.1);color:#f59e0b;padding:2px 6px;border-radius:4px">${dStr}</span>
                     </div>
-                    <div style="color:var(--muted);font-size:11px">Action Item${x.item.owner?' · '+esc(x.item.owner):''}</div>
+                    <div style="color:var(--muted);font-size:11px;margin-top:2px">Action Item${x.item.owner?' · '+esc(x.item.owner):''}</div>
                   </div>`;
                 }
               }).join('')}
-              ${(dueSoonWs.length+dueSoonTasks.length)>5?`<div style="padding:8px 0;font-size:11px;color:var(--muted)">+${dueSoonWs.length+dueSoonTasks.length-5} more</div>`:''}
             </div>`:'<div style="color:var(--green);font-size:13px;font-weight:500">✓ Nothing due soon</div>'}
           </div>
         </div>
