@@ -2303,15 +2303,9 @@ function rDash(c){
 
 function renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,allPriorities,prioritiesDone,myOpenTasks,myWsCount){
   return `
-  <div class="kpi-row">
-    <div class="card kpi" style="cursor:pointer;background:linear-gradient(135deg,#1e3a8a,#3730a3)" onclick="taskStatusFilter='open';taskFilter='priorities';go('tasks')"><div class="acc" style="background:#818cf8"></div><div class="lbl" style="color:#e0e7ff">Priority Initiatives</div><div class="val" style="color:#fff">${allPriorities.length}</div><div class="note" style="color:#c7d2fe">${prioritiesDone.length} complete &middot; ${allPriorities.length-prioritiesDone.length} active</div></div>
-    <div class="card kpi" style="cursor:pointer" onclick="go('workstreams')"><div class="acc" style="background:var(--violet)"></div><div class="lbl">Workstreams</div><div class="val" style="color:var(--violet)">${activeWs.length}<span style="font-size:18px;color:var(--light);font-weight:500">/${allWs.length}</span></div><div class="note">${atRiskWs.length?'<span style="color:var(--red);font-weight:600">'+atRiskWs.length+' need attention</span>':'<span style="color:var(--green)">All on track</span>'}${completeWs.length?' &middot; '+completeWs.length+' complete':''}</div></div>
-    <div class="card kpi" style="cursor:pointer" onclick="taskStatusFilter='open';taskFilter='all';go('tasks')"><div class="acc" style="background:var(--indigo)"></div><div class="lbl">Open Action Items</div><div class="val" style="color:var(--indigo)">${open.length}</div><div class="note">${overdue.length?'<span style="color:var(--red);font-weight:600">'+overdue.length+' overdue</span>':'<span style="color:var(--green)">All on track</span>'}${dueThisWeek.length?' &middot; <span style="color:var(--indigo);font-weight:600">'+dueThisWeek.length+' due this week</span>':''}</div></div>
-  </div>
-
   <div class="ws-section" id="dashSec-timeline" style="margin-bottom:16px">
-    <div class="ws-section-hd" onclick="toggleWsSection('dashSec-timeline')" style="background:var(--bg-card);padding:14px 18px;border-radius:var(--r-sm) var(--r-sm) 0 0;border:1px solid var(--border)"><h4 style="font-size:16px;font-weight:800;color:var(--text)">Program Timeline</h4><span class="ws-section-arrow">&#9660;</span></div>
-    <div class="ws-section-bd" style="padding:10px 14px;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r-sm) var(--r-sm)">
+    <div class="ws-section-hd" onclick="toggleWsSection('dashSec-timeline')" style="background:#fff;padding:14px 18px;border-radius:var(--r-sm) var(--r-sm) 0 0;border:1px solid var(--border)"><h4 style="font-size:16px;font-weight:800;color:var(--text)">Program Timeline</h4><span class="ws-section-arrow">&#9660;</span></div>
+    <div class="ws-section-bd" style="padding:10px 14px;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r-sm) var(--r-sm);background:#fff">
       ${buildGantt()}
     </div>
   </div>
