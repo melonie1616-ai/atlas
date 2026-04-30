@@ -1792,6 +1792,111 @@ function checkReleaseNotes(){
   }catch(e){}
 }
 let toastTimeout=null,toastUndoFn=null;
+
+function getDailyUpdateStats(){
+  const todayStr=today();
+  const allItems=[...(D.workstreams||[]),...(D.tasks||[])];
+  
+  // Get all people who are assigned to items (leads, co-leads, owners)
+  const assignedPeople=new Set();
+  (D.workstreams||[]).forEach(w=>{
+    if(w.primaryOwner||w.owner)assignedPeople.add(w.primaryOwner||w.owner);
+    if(w.secondaryOwner)assignedPeople.add(w.secondaryOwner);
+  });
+  (D.tasks||[]).forEach(t=>{
+    if(t.owner)assignedPeople.add(t.owner);
+  });
+  
+  // Calculate who updated today
+  const updatedToday=new Set();
+  allItems.forEach(item=>{
+    if(item.updatedBy && item.updatedAt && item.updatedAt.slice(0,10)===todayStr){
+      updatedToday.add(item.updatedBy);
+    }
+  });
+  
+  // Calculate streaks for each person (weekdays only)
+  function isWeekday(dateStr){
+    const d=new Date(dateStr);
+    const day=d.getDay();
+    return day!==0&&day!==6;
+  }
+  function getPrevWeekday(dateStr){
+    let d=new Date(dateStr);
+    do{d.setDate(d.getDate()-1)}while(!isWeekday(d.toISOString().slice(0,10)));
+    return d.toISOString().slice(0,10);
+  }
+  
+  const personStats={};
+  assignedPeople.forEach(name=>{
+    if(!name)return;
+    const myItems=allItems.filter(i=>i.updatedBy===name);
+    const updateDates=[...new Set(myItems.map(i=>i.updatedAt?.slice(0,10)).filter(Boolean))].sort().reverse();
+    
+    let streak=0;
+    let checkDate=todayStr;
+    
+    // Only count streak if today is a weekday or check from last weekday
+    if(!isWeekday(todayStr))checkDate=getPrevWeekday(todayStr);
+    
+    while(updateDates.includes(checkDate)){
+      streak++;
+      checkDate=getPrevWeekday(checkDate);
+    }
+    
+    personStats[name]={
+      updatedToday:updatedToday.has(name),
+      streak:streak
+    };
+  });
+  
+  // Sort by streak descending
+  const sorted=Object.entries(personStats)
+    .filter(([name])=>assignedPeople.has(name))
+    .sort((a,b)=>b[1].streak-a[1].streak);
+  
+  const updated=sorted.filter(([,s])=>s.updatedToday);
+  const waiting=sorted.filter(([,s])=>!s.updatedToday);
+  const total=sorted.length;
+  const updatedCount=updated.length;
+  const topStreak=sorted.length?sorted[0]:null;
+  
+  return {updated,waiting,total,updatedCount,topStreak,personStats};
+}
+
+function renderDailyUpdatesWidget(){
+  const stats=getDailyUpdateStats();
+  if(stats.total===0)return '';
+  
+  const pct=stats.total?Math.round(stats.updatedCount/stats.total*100):0;
+  const barColor=pct>=80?'#10b981':pct>=50?'#f59e0b':'#ef4444';
+  
+  // Top 3 streaks
+  const topStreaks=stats.updated.slice(0,3).map(([name,s])=>`${name.split(' ')[0]} (${s.streak})`).join(' · ');
+  
+  // Waiting names (first names only)
+  const waitingNames=stats.waiting.slice(0,5).map(([name])=>name.split(' ')[0]).join(', ');
+  const moreWaiting=stats.waiting.length>5?`, +${stats.waiting.length-5} more`:'';
+  
+  return `
+  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:16px 20px;margin-bottom:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:15px;font-weight:600;color:var(--fg)">Daily Updates</span>
+        <span style="font-size:12px;color:var(--muted)">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})}</span>
+      </div>
+      <span style="font-size:14px;font-weight:700;color:${barColor}">${stats.updatedCount}/${stats.total} today</span>
+    </div>
+    <div style="height:8px;background:var(--bg-subtle);border-radius:4px;overflow:hidden;margin-bottom:12px">
+      <div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px;transition:width .5s ease"></div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px">
+      ${topStreaks?`<div style="display:flex;align-items:center;gap:6px"><span style="color:#f59e0b">🔥</span><span style="color:var(--fg);font-weight:500">Top:</span><span style="color:var(--muted)">${topStreaks}</span></div>`:''}
+      ${stats.waiting.length?`<div style="display:flex;align-items:center;gap:6px;margin-left:auto"><span style="color:#ef4444">⚠️</span><span style="color:var(--muted)">Waiting: ${waitingNames}${moreWaiting}</span></div>`:`<div style="margin-left:auto;color:#10b981;font-weight:500">✓ Everyone updated!</div>`}
+    </div>
+  </div>`;
+}
+
 function toast(msg,undoFn=null,duration=3500){
   const t=document.getElementById('toast');
   if(toastTimeout)clearTimeout(toastTimeout);
@@ -2483,6 +2588,7 @@ function rDash(c){
       </div>
     </div>
   </div>
+  ${renderDailyUpdatesWidget()}
   ${renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,allPriorities,prioritiesDone,myOpenTasks,myWsCount)}`;
 }
 
@@ -3307,19 +3413,20 @@ function rWorkstreamsNew(c){
   const activeStatusLabel=wsStatusFilter?WS_STATUSES.find(s=>s.value===wsStatusFilter)?.label:'';
   const hasFilters=wsOwnerFilter||wsCoLeadFilter||wsL1Filter||wsPriorityFilter;
   
+  // Build active filter chips
+  const filterChips=[];
+  if(wsOwnerFilter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--accent-lt);color:var(--accent);border-radius:20px;font-size:11px;font-weight:500">Lead: ${wsOwnerFilter==='__unassigned__'?'Unassigned':wsOwnerFilter}<span onclick="wsOwnerFilter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
+  if(wsCoLeadFilter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(139,92,246,.1);color:#8b5cf6;border-radius:20px;font-size:11px;font-weight:500">Co-Lead: ${wsCoLeadFilter}<span onclick="wsCoLeadFilter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
+  if(wsL1Filter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(16,185,129,.1);color:#10b981;border-radius:20px;font-size:11px;font-weight:500">${l1Workstreams.find(w=>w.id===wsL1Filter)?.name||'Parent'}<span onclick="wsL1Filter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
+  if(wsPriorityFilter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(239,68,68,.1);color:#ef4444;border-radius:20px;font-size:11px;font-weight:500">Priority: ${wsPriorityFilter.charAt(0).toUpperCase()+wsPriorityFilter.slice(1)}<span onclick="wsPriorityFilter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
+  
   c.innerHTML=`
   <div class="page-wrap">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
-      <div style="display:flex;align-items:center;gap:16px">
-        <h1 style="font-size:24px;font-weight:600;color:var(--fg);margin:0">Workstreams</h1>
-        <div style="display:flex;background:var(--bg-subtle);border-radius:6px;padding:2px">
-          <button onclick="wsViewMode='hierarchy';render()" style="padding:6px 12px;font-size:12px;font-weight:500;background:${wsViewMode==='hierarchy'?'var(--bg-card)':'transparent'};color:${wsViewMode==='hierarchy'?'var(--fg)':'var(--muted)'};border:none;border-radius:4px;cursor:pointer;transition:all .15s">List</button>
-          <button onclick="wsViewMode='kanban';render()" style="padding:6px 12px;font-size:12px;font-weight:500;background:${wsViewMode==='kanban'?'var(--bg-card)':'transparent'};color:${wsViewMode==='kanban'?'var(--fg)':'var(--muted)'};border:none;border-radius:4px;cursor:pointer;transition:all .15s">Board</button>
-        </div>
-      </div>
+      <h1 style="font-size:24px;font-weight:600;color:var(--fg);margin:0">Workstreams</h1>
       <div style="display:flex;gap:8px;align-items:center">
         <button onclick="openWsEdit()" style="padding:8px 14px;font-size:13px;font-weight:500;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;transition:opacity .15s" onmouseenter="this.style.opacity='.85'" onmouseleave="this.style.opacity='1'">+ Workstream</button>
-        <button onclick="openTaskModal()" style="padding:8px 14px;font-size:13px;font-weight:500;background:var(--bg-card);color:var(--fg);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all .15s" onmouseenter="this.style.borderColor='var(--muted)'" onmouseleave="this.style.borderColor='var(--border)'">+ Action</button>
+        <button onclick="openTaskModal()" style="padding:8px 14px;font-size:13px;font-weight:500;background:#10b981;color:#fff;border:none;border-radius:6px;cursor:pointer;transition:opacity .15s" onmouseenter="this.style.opacity='.85'" onmouseleave="this.style.opacity='1'">+ Action Item</button>
         <div style="position:relative">
           <button onclick="toggleExportMenu()" style="padding:8px;background:var(--bg-card);color:var(--muted);border:1px solid var(--border);border-radius:6px;cursor:pointer;display:flex" onmouseenter="this.style.borderColor='var(--muted)'" onmouseleave="this.style.borderColor='var(--border)'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
           <div id="export-menu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:100;min-width:160px;padding:4px 0">
@@ -3330,38 +3437,44 @@ function rWorkstreamsNew(c){
       </div>
     </div>
 
-    <div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px;overflow-x:auto">
-      <button onclick="wsStatusFilter='';render()" style="padding:6px 14px;font-size:13px;font-weight:${!wsStatusFilter?'500':'400'};color:${!wsStatusFilter?'var(--accent)':'var(--muted)'};background:none;border:none;border-bottom:2px solid ${!wsStatusFilter?'var(--accent)':'transparent'};cursor:pointer;white-space:nowrap;margin-bottom:-13px;padding-bottom:11px">All ${totalAll}</button>
-      ${WS_STATUSES.map(s=>`<button onclick="wsStatusFilter=wsStatusFilter==='${s.value}'?'':'${s.value}';render()" style="padding:6px 14px;font-size:13px;font-weight:${wsStatusFilter===s.value?'500':'400'};color:${wsStatusFilter===s.value?'var(--accent)':'var(--muted)'};background:none;border:none;border-bottom:2px solid ${wsStatusFilter===s.value?'var(--accent)':'transparent'};cursor:pointer;white-space:nowrap;margin-bottom:-13px;padding-bottom:11px">${s.label} ${statusCounts[s.value]}</button>`).join('')}
+    <div style="display:flex;gap:6px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px">
+      <button onclick="wsStatusFilter='';render()" style="padding:10px 18px;font-size:14px;font-weight:${!wsStatusFilter?'600':'400'};color:${!wsStatusFilter?'#fff':'var(--muted)'};background:${!wsStatusFilter?'var(--accent)':'var(--bg-card)'};border:1px solid ${!wsStatusFilter?'var(--accent)':'var(--border)'};border-radius:8px;cursor:pointer;white-space:nowrap;transition:all .15s" onmouseenter="if(${!!wsStatusFilter})this.style.borderColor='var(--muted)'" onmouseleave="if(${!!wsStatusFilter})this.style.borderColor='var(--border)'">All <span style="font-weight:700">${totalAll}</span></button>
+      ${WS_STATUSES.map(s=>{
+        const isSelected=wsStatusFilter===s.value;
+        const count=statusCounts[s.value];
+        return `<button onclick="wsStatusFilter=wsStatusFilter==='${s.value}'?'':'${s.value}';render()" style="padding:10px 18px;font-size:14px;font-weight:${isSelected?'600':'400'};color:${isSelected?'#fff':'var(--muted)'};background:${isSelected?'var(--accent)':'var(--bg-card)'};border:1px solid ${isSelected?'var(--accent)':'var(--border)'};border-radius:8px;cursor:pointer;white-space:nowrap;transition:all .15s" onmouseenter="if(!${isSelected})this.style.borderColor='var(--muted)'" onmouseleave="if(!${isSelected})this.style.borderColor='var(--border)'">${s.label} <span style="font-weight:700">${count}</span></button>`;
+      }).join('')}
     </div>
 
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <select style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);font-size:12px;color:var(--fg)" onchange="wsOwnerFilter=this.value;render()">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <select style="padding:6px 10px;border-radius:6px;border:1px solid ${wsOwnerFilter?'var(--accent)':'var(--border)'};background:${wsOwnerFilter?'var(--accent-lt)':'var(--bg-card)'};font-size:12px;color:var(--fg)" onchange="wsOwnerFilter=this.value;render()">
           <option value="">Lead</option>
           <option value="__unassigned__"${wsOwnerFilter==='__unassigned__'?' selected':''}>Unassigned</option>
           ${leads.map(o=>`<option value="${esc(o)}"${wsOwnerFilter===o?' selected':''}>${esc(o)}</option>`).join('')}
         </select>
-        <select style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);font-size:12px;color:var(--fg)" onchange="wsCoLeadFilter=this.value;render()">
+        <select style="padding:6px 10px;border-radius:6px;border:1px solid ${wsCoLeadFilter?'#8b5cf6':'var(--border)'};background:${wsCoLeadFilter?'rgba(139,92,246,.1)':'var(--bg-card)'};font-size:12px;color:var(--fg)" onchange="wsCoLeadFilter=this.value;render()">
           <option value="">Co-Lead</option>
           ${coLeads.map(o=>`<option value="${esc(o)}"${wsCoLeadFilter===o?' selected':''}>${esc(o)}</option>`).join('')}
         </select>
-        <select style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);font-size:12px;color:var(--fg)" onchange="wsL1Filter=this.value;render()">
+        <select style="padding:6px 10px;border-radius:6px;border:1px solid ${wsL1Filter?'#10b981':'var(--border)'};background:${wsL1Filter?'rgba(16,185,129,.1)':'var(--bg-card)'};font-size:12px;color:var(--fg)" onchange="wsL1Filter=this.value;render()">
           <option value="">Parent</option>
           ${l1Workstreams.map(w=>`<option value="${w.id}"${wsL1Filter===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}
         </select>
-        <select style="padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);font-size:12px;color:var(--fg)" onchange="wsPriorityFilter=this.value;render()">
+        <select style="padding:6px 10px;border-radius:6px;border:1px solid ${wsPriorityFilter?'#ef4444':'var(--border)'};background:${wsPriorityFilter?'rgba(239,68,68,.1)':'var(--bg-card)'};font-size:12px;color:var(--fg)" onchange="wsPriorityFilter=this.value;render()">
           <option value="">Priority</option>
           <option value="high"${wsPriorityFilter==='high'?' selected':''}>High</option>
           <option value="medium"${wsPriorityFilter==='medium'?' selected':''}>Medium</option>
           <option value="low"${wsPriorityFilter==='low'?' selected':''}>Low</option>
         </select>
-        ${hasFilters?`<button onclick="wsOwnerFilter='';wsCoLeadFilter='';wsL1Filter='';wsPriorityFilter='';render()" style="padding:6px 10px;font-size:12px;background:none;border:none;color:var(--accent);cursor:pointer">Clear</button>`:''}
+        ${filterChips.length?`<span style="color:var(--light);margin:0 4px">|</span>${filterChips.join('')}<button onclick="wsOwnerFilter='';wsCoLeadFilter='';wsL1Filter='';wsPriorityFilter='';render()" style="padding:4px 8px;font-size:11px;background:none;border:none;color:var(--red);cursor:pointer;font-weight:500">Clear all</button>`:''}
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
+      <div style="display:flex;gap:6px;align-items:center">
         <span style="font-size:12px;color:var(--muted)">${totalWs} items</span>
-        <button onclick="Object.keys(wsExpanded).forEach(k=>wsExpanded[k]=true);(D.workstreams||[]).forEach(w=>wsExpanded[w.id]=true);render()" style="padding:4px 8px;font-size:11px;background:none;border:1px solid var(--border);border-radius:4px;color:var(--muted);cursor:pointer" onmouseenter="this.style.borderColor='var(--muted)'" onmouseleave="this.style.borderColor='var(--border)'">Expand</button>
-        <button onclick="wsExpanded={};render()" style="padding:4px 8px;font-size:11px;background:none;border:1px solid var(--border);border-radius:4px;color:var(--muted);cursor:pointer" onmouseenter="this.style.borderColor='var(--muted)'" onmouseleave="this.style.borderColor='var(--border)'">Collapse</button>
+        <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden">
+          <button onclick="Object.keys(wsExpanded).forEach(k=>wsExpanded[k]=true);(D.workstreams||[]).forEach(w=>wsExpanded[w.id]=true);render()" style="padding:6px 10px;font-size:11px;background:var(--bg-card);border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:4px;border-right:1px solid var(--border)" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background='var(--bg-card)'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M7 10l5 5 5-5"/></svg>Expand</button>
+          <button onclick="wsExpanded={};render()" style="padding:6px 10px;font-size:11px;background:var(--bg-card);border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:4px" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background='var(--bg-card)'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M7 14l5-5 5 5"/></svg>Collapse</button>
+        </div>
       </div>
     </div>
 
@@ -3658,65 +3771,45 @@ function rActionItemsNew(c){
     </div>`;
   }
 
-  const hasFilters=aiOwnerFilter||aiL1Filter||aiKbStatusFilter;
-  const ownerStyle=aiOwnerFilter?'border:2px solid var(--accent);background:rgba(99,102,241,.08)':'border:1px solid var(--border);background:var(--bg-subtle)';
-  const l1Style=aiL1Filter?'border:2px solid var(--accent);background:rgba(99,102,241,.08)':'border:1px solid var(--border);background:var(--bg-subtle)';
-
-  const allBox=`<div onclick="aiKbStatusFilter='';render()" style="min-width:70px;background:${!aiKbStatusFilter?'rgba(99,102,241,.08)':'var(--bg-card)'};border:2px solid ${!aiKbStatusFilter?'var(--accent)':'var(--border)'};border-radius:var(--r-md);padding:10px 14px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04);cursor:pointer;transition:all .15s" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
-    <div style="font-size:20px;font-weight:700;color:var(--fg)">${totalCount}</div>
-    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">All</div>
-  </div>`;
-
-  const statusBoxes=KB_COLS.map(col=>{
-    const count=statusCounts[col.key];
-    const isActive=count>0;
-    const isSelected=aiKbStatusFilter===col.key;
-    const borderColor=isSelected?'var(--accent)':'var(--border)';
-    const bgColor=isSelected?'rgba(99,102,241,.08)':'var(--bg-card)';
-    const numColor=col.key==='done'?'var(--green)':col.key==='blocked'?'var(--red)':'var(--fg)';
-    return `<div onclick="aiKbStatusFilter=aiKbStatusFilter==='${col.key}'?'':'${col.key}';render()" style="flex:1;min-width:70px;background:${bgColor};border:2px solid ${borderColor};border-radius:var(--r-md);padding:10px 14px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04);cursor:pointer;transition:all .15s;${isActive?'':'opacity:.6'}" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
-      <div style="font-size:20px;font-weight:700;color:${numColor}">${count}</div>
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:2px">${col.label}</div>
-    </div>`;
-  }).join('');
-
-  const clearBtn=hasFilters?`<button onclick="aiOwnerFilter='';aiL1Filter='';aiKbStatusFilter='';render()" style="padding:6px 12px;font-size:11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;color:var(--muted);transition:all .15s" onmouseenter="this.style.background='var(--bg-subtle)';this.style.color='var(--red)'" onmouseleave="this.style.background='var(--bg-card)';this.style.color='var(--muted)'">✕ Clear Filters</button>`:'';
-
-  const activeFiltersText=[];
-  if(aiOwnerFilter)activeFiltersText.push('<span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Owner: '+(aiOwnerFilter==='__unassigned__'?'Unassigned':aiOwnerFilter)+'</span>');
-  if(aiL1Filter)activeFiltersText.push('<span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">'+l1Workstreams.find(w=>w.id===aiL1Filter)?.name+'</span>');
-  if(aiKbStatusFilter)activeFiltersText.push('<span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Status: '+KB_COLS.find(c=>c.key===aiKbStatusFilter)?.label+'</span>');
+  const hasFilters=aiOwnerFilter||aiL1Filter;
+  
+  // Build active filter chips (like Workstreams page)
+  const filterChips=[];
+  if(aiOwnerFilter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--accent-lt);color:var(--accent);border-radius:20px;font-size:11px;font-weight:500">Owner: ${aiOwnerFilter==='__unassigned__'?'Unassigned':aiOwnerFilter}<span onclick="aiOwnerFilter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
+  if(aiL1Filter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(16,185,129,.1);color:#10b981;border-radius:20px;font-size:11px;font-weight:500">${l1Workstreams.find(w=>w.id===aiL1Filter)?.name||'Workstream'}<span onclick="aiL1Filter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
 
   c.innerHTML=`
   <div class="page-wrap kb-page">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin-bottom:12px;border-bottom:1px solid var(--border)">
-      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-        <span style="font-size:22px;font-weight:700;color:var(--fg)">Action Items</span>
-        <div style="width:1px;height:24px;background:var(--border)"></div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <select style="padding:6px 10px;border-radius:var(--r-sm);${ownerStyle};font-size:12px;min-width:120px" onchange="aiOwnerFilter=this.value;render()">
-            <option value="">All Owners</option>
-            <option value="__unassigned__"${aiOwnerFilter==='__unassigned__'?' selected':''}>Unassigned</option>
-            ${owners.map(o=>`<option value="${esc(o)}"${aiOwnerFilter===o?' selected':''}>${esc(o)}</option>`).join('')}
-          </select>
-          <select style="padding:6px 10px;border-radius:var(--r-sm);${l1Style};font-size:12px;min-width:130px" onchange="aiL1Filter=this.value;render()">
-            <option value="">All Top-Level</option>
-            ${l1Workstreams.map(w=>`<option value="${w.id}"${aiL1Filter===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}
-          </select>
-          ${clearBtn}
-        </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+      <h1 style="font-size:24px;font-weight:600;color:var(--fg);margin:0">Action Items</h1>
+      <button onclick="openTaskModal()" style="padding:8px 14px;font-size:13px;font-weight:500;background:#10b981;color:#fff;border:none;border-radius:6px;cursor:pointer;transition:opacity .15s" onmouseenter="this.style.opacity='.85'" onmouseleave="this.style.opacity='1'">+ Action Item</button>
+    </div>
+
+    <div style="display:flex;gap:6px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px">
+      <button onclick="aiKbStatusFilter='';render()" style="padding:10px 18px;font-size:14px;font-weight:${!aiKbStatusFilter?'600':'400'};color:${!aiKbStatusFilter?'#fff':'var(--muted)'};background:${!aiKbStatusFilter?'var(--accent)':'var(--bg-card)'};border:1px solid ${!aiKbStatusFilter?'var(--accent)':'var(--border)'};border-radius:8px;cursor:pointer;white-space:nowrap;transition:all .15s" onmouseenter="if(${!!aiKbStatusFilter})this.style.borderColor='var(--muted)'" onmouseleave="if(${!!aiKbStatusFilter})this.style.borderColor='var(--border)'">All <span style="font-weight:700">${totalCount}</span></button>
+      ${KB_COLS.map(col=>{
+        const count=statusCounts[col.key];
+        const isSelected=aiKbStatusFilter===col.key;
+        return `<button onclick="aiKbStatusFilter=aiKbStatusFilter==='${col.key}'?'':'${col.key}';render()" style="padding:10px 18px;font-size:14px;font-weight:${isSelected?'600':'400'};color:${isSelected?'#fff':'var(--muted)'};background:${isSelected?'var(--accent)':'var(--bg-card)'};border:1px solid ${isSelected?'var(--accent)':'var(--border)'};border-radius:8px;cursor:pointer;white-space:nowrap;transition:all .15s" onmouseenter="if(!${isSelected})this.style.borderColor='var(--muted)'" onmouseleave="if(!${isSelected})this.style.borderColor='var(--border)'">${col.label} <span style="font-weight:700">${count}</span></button>`;
+      }).join('')}
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <select style="padding:6px 10px;border-radius:6px;border:1px solid ${aiOwnerFilter?'var(--accent)':'var(--border)'};background:${aiOwnerFilter?'var(--accent-lt)':'var(--bg-card)'};font-size:12px;color:var(--fg)" onchange="aiOwnerFilter=this.value;render()">
+          <option value="">Owner</option>
+          <option value="__unassigned__"${aiOwnerFilter==='__unassigned__'?' selected':''}>Unassigned</option>
+          ${owners.map(o=>`<option value="${esc(o)}"${aiOwnerFilter===o?' selected':''}>${esc(o)}</option>`).join('')}
+        </select>
+        <select style="padding:6px 10px;border-radius:6px;border:1px solid ${aiL1Filter?'#10b981':'var(--border)'};background:${aiL1Filter?'rgba(16,185,129,.1)':'var(--bg-card)'};font-size:12px;color:var(--fg)" onchange="aiL1Filter=this.value;render()">
+          <option value="">Workstream</option>
+          ${l1Workstreams.map(w=>`<option value="${w.id}"${aiL1Filter===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}
+        </select>
+        ${filterChips.length?`<span style="color:var(--light);margin:0 4px">|</span>${filterChips.join('')}<button onclick="aiOwnerFilter='';aiL1Filter='';render()" style="padding:4px 8px;font-size:11px;background:none;border:none;color:var(--red);cursor:pointer;font-weight:500">Clear all</button>`:''}
       </div>
-      <div style="display:flex;gap:8px">
-        <button onclick="openTaskModal()" style="padding:10px 18px;font-size:13px;font-weight:600;background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:#fff;border:none;border-radius:var(--r-sm);cursor:pointer;box-shadow:0 2px 8px rgba(16,185,129,.3);transition:all .15s" onmouseenter="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(16,185,129,.4)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(16,185,129,.3)'">New Action Item</button>
-      </div>
+      <span style="font-size:12px;color:var(--muted)">${items.length} items</span>
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:16px">
-      ${allBox}
-      ${statusBoxes}
-    </div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;padding:8px 12px;background:var(--bg-subtle);border-radius:var(--r-sm);border:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <strong>${items.length}</strong> action items${activeFiltersText.length?' • '+activeFiltersText.join(' '):''}
-    </div>
+
     <div class="kb-board" style="display:flex;gap:12px;overflow-x:auto;padding-bottom:16px">
       ${KB_COLS.map(renderColumn).join('')}
     </div>
