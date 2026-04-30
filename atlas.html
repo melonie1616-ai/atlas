@@ -2953,7 +2953,7 @@ function getL1AndDescendants(l1Id){
   return ids;
 }
 // ═══════════════════════════════════════════════════
-let wsViewMode='hierarchy',wsMyFilter=false,wsExpanded={},wsCatCollapsed2={BU:false,'Cross-cutting':false},wsOwnerFilter='',wsL1Filter='',wsStatusFilter='',wsPriorityFilter='';
+let wsViewMode='hierarchy',wsMyFilter=false,wsExpanded={},wsCatCollapsed2={BU:false,'Cross-cutting':false},wsOwnerFilter='',wsCoLeadFilter='',wsL1Filter='',wsStatusFilter='',wsPriorityFilter='';
 function rWorkstreamsNew(c){
   const me=ME||'';
   const q=(document.getElementById('search').value||'').toLowerCase();
@@ -2986,6 +2986,13 @@ function rWorkstreamsNew(c){
   }
   if(wsPriorityFilter){
     allWs=allWs.filter(w=>w.priority===wsPriorityFilter);
+  }
+  if(wsCoLeadFilter){
+    if(wsCoLeadFilter==='__unassigned__'){
+      allWs=allWs.filter(w=>!w.secondaryOwner);
+    }else{
+      allWs=allWs.filter(w=>w.secondaryOwner===wsCoLeadFilter);
+    }
   }
   if(q){
     allWs=allWs.filter(w=>(w.name+' '+w.desc+' '+(w.primaryOwner||w.owner||'')).toLowerCase().includes(q));
@@ -3058,6 +3065,7 @@ function rWorkstreamsNew(c){
       return `<tr ${dragAttrs} ${dropAttrs} onclick="openWsDetail('${w.id}')" style="cursor:pointer;height:44px;${rowStyle};${rowBorder}" onmouseenter="if(!this.classList.contains('ws-drop-target'))this.style.background='var(--bg-subtle)'" onmouseleave="if(!this.classList.contains('ws-drop-target'))this.style.background='${rowStyle?'rgba(239,68,68,.05)':''}'">
         <td style="padding:10px 14px;padding-left:${14+indent}px;white-space:nowrap">${dragHandle}${expandIcon}${levelBadge}${isLate?'<span style="color:var(--red);margin-right:4px">⚠</span>':''}<span style="${nameStyle}">${esc(w.name)}</span>${countBadge}</td>
         <td style="padding:10px 14px;font-size:12px;color:var(--muted)">${esc(w.primaryOwner||w.owner||'')}</td>
+        <td style="padding:10px 14px;font-size:12px;color:var(--muted)">${esc(w.secondaryOwner||'')}</td>
         <td style="padding:10px 14px;width:120px"><span class="pill pill-m" style="font-size:10px">${wsStatusLabel(w.status)}</span></td>
         <td style="padding:10px 14px;font-size:11px;color:${isLate?'var(--red)':'var(--muted)'}">${w.targetDate?fmtDate(w.targetDate):'—'}</td>
       </tr>`;
@@ -3074,6 +3082,7 @@ function rWorkstreamsNew(c){
       return `<tr draggable="true" ondragstart="event.dataTransfer.setData('text/plain','task:${t.id}');this.style.opacity='0.5'" ondragend="this.style.opacity='1'" onclick="openTaskModal('${t.id}')" style="cursor:pointer;height:40px;background:rgba(0,0,0,.015);border-bottom:1px solid var(--border-lt)" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background='rgba(0,0,0,.015)'">
         <td style="padding:8px 14px;padding-left:${14+indent}px;white-space:nowrap"><span style="cursor:grab;color:var(--light);margin-right:4px;font-size:10px" title="Drag to move">⋮⋮</span><span style="width:22px;display:inline-block"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:8px"></span>${msIcon}${prIcon}<span style="font-size:12.5px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</span></td>
         <td style="padding:8px 14px;font-size:12px;color:var(--muted)">${esc(t.owner||'')}</td>
+        <td style="padding:8px 14px;font-size:12px;color:var(--muted)"></td>
         <td style="padding:8px 14px;width:120px"><span class="pill ${statusPill}" style="font-size:10px">${isDone?'Done':isOD?'Overdue':taskStatusLabel(t.status)}</span></td>
         <td style="padding:8px 14px;font-size:11px;color:var(--muted)">${t.due?fmtDate(t.due):'—'}</td>
       </tr>`;
@@ -3088,7 +3097,7 @@ function rWorkstreamsNew(c){
       </div>
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.03)">
         <table class="tbl" style="width:100%;border-collapse:collapse">
-          <thead><tr style="background:var(--bg-subtle);border-bottom:2px solid var(--border)"><th style="text-align:left;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Name</th><th style="width:140px;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Owner</th><th style="width:120px;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Status</th><th style="width:100px;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Target</th></tr></thead>
+          <thead><tr style="background:var(--bg-subtle);border-bottom:2px solid var(--border)"><th style="text-align:left;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Name</th><th style="width:120px;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Lead</th><th style="width:120px;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Co-Lead</th><th style="width:120px;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Status</th><th style="width:100px;padding:12px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Target</th></tr></thead>
           <tbody>${tree.map(renderItem).join('')}</tbody>
         </table>
       </div>
@@ -3164,10 +3173,15 @@ function rWorkstreamsNew(c){
         </div>
         <div style="width:1px;height:24px;background:var(--border)"></div>
         <div style="display:flex;align-items:center;gap:8px">
-          <select style="padding:6px 10px;border-radius:var(--r-sm);${wsOwnerFilter?'border:2px solid var(--accent);background:rgba(99,102,241,.08)':'border:1px solid var(--border);background:var(--bg-subtle)'};font-size:12px;min-width:120px" onchange="wsOwnerFilter=this.value;render()">
-            <option value="">All Owners</option>
+          <select style="padding:6px 10px;border-radius:var(--r-sm);${wsOwnerFilter?'border:2px solid var(--accent);background:rgba(99,102,241,.08)':'border:1px solid var(--border);background:var(--bg-subtle)'};font-size:12px;min-width:100px" onchange="wsOwnerFilter=this.value;render()">
+            <option value="">All Leads</option>
             <option value="__unassigned__"${wsOwnerFilter==='__unassigned__'?' selected':''}>Unassigned</option>
             ${owners.map(o=>`<option value="${esc(o)}"${wsOwnerFilter===o?' selected':''}>${esc(o)}</option>`).join('')}
+          </select>
+          <select style="padding:6px 10px;border-radius:var(--r-sm);${wsCoLeadFilter?'border:2px solid var(--accent);background:rgba(99,102,241,.08)':'border:1px solid var(--border);background:var(--bg-subtle)'};font-size:12px;min-width:100px" onchange="wsCoLeadFilter=this.value;render()">
+            <option value="">All Co-Leads</option>
+            <option value="__unassigned__"${wsCoLeadFilter==='__unassigned__'?' selected':''}>Unassigned</option>
+            ${owners.map(o=>`<option value="${esc(o)}"${wsCoLeadFilter===o?' selected':''}>${esc(o)}</option>`).join('')}
           </select>
           <select style="padding:6px 10px;border-radius:var(--r-sm);${wsL1Filter?'border:2px solid var(--accent);background:rgba(99,102,241,.08)':'border:1px solid var(--border);background:var(--bg-subtle)'};font-size:12px;min-width:130px" onchange="wsL1Filter=this.value;render()">
             <option value="">All Top-Level</option>
@@ -3179,7 +3193,7 @@ function rWorkstreamsNew(c){
             <option value="medium"${wsPriorityFilter==='medium'?' selected':''}>Medium</option>
             <option value="low"${wsPriorityFilter==='low'?' selected':''}>Low</option>
           </select>
-          ${(wsOwnerFilter||wsL1Filter||wsStatusFilter||wsPriorityFilter)?'<button onclick="wsOwnerFilter=String();wsL1Filter=String();wsStatusFilter=String();wsPriorityFilter=String();render()" style="padding:6px 12px;font-size:11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;color:var(--muted);transition:all .15s" onmouseenter="this.style.background=\'var(--bg-subtle)\';this.style.color=\'var(--red)\'" onmouseleave="this.style.background=\'var(--bg-card)\';this.style.color=\'var(--muted)\'">✕ Clear Filters</button>':''}
+          ${(wsOwnerFilter||wsCoLeadFilter||wsL1Filter||wsStatusFilter||wsPriorityFilter)?'<button onclick="wsOwnerFilter=String();wsCoLeadFilter=String();wsL1Filter=String();wsStatusFilter=String();wsPriorityFilter=String();render()" style="padding:6px 12px;font-size:11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;color:var(--muted);transition:all .15s" onmouseenter="this.style.background=\'var(--bg-subtle)\';this.style.color=\'var(--red)\'" onmouseleave="this.style.background=\'var(--bg-card)\';this.style.color=\'var(--muted)\'">✕ Clear Filters</button>':''}
         </div>
         <div style="display:flex;gap:3px">
           <div class="pill pill-m" style="cursor:pointer;padding:4px 10px;font-size:11px" onclick="Object.keys(wsExpanded).forEach(k=>wsExpanded[k]=true);(D.workstreams||[]).forEach(w=>wsExpanded[w.id]=true);render()">▼ Expand</div>
@@ -3196,7 +3210,7 @@ function rWorkstreamsNew(c){
       ${statusBoxes}
     </div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px;padding:8px 12px;background:var(--bg-subtle);border-radius:var(--r-sm);border:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <strong>${totalWs}</strong> workstreams <span style="color:var(--light)">(</span><span style="color:var(--accent)">${l1Count} L1</span> <span style="color:var(--light)">•</span> <span style="color:#8b5cf6">${l2Count} L2</span> <span style="color:var(--light)">•</span> <span style="color:#10b981">${l3Count} L3</span><span style="color:var(--light)">)</span> • <strong>${openTasks}</strong> open action items / ${totalTasks} total${wsStatusFilter?' • <span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Status: '+activeStatusLabel+'</span>':''}${wsOwnerFilter?' • <span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Owner: '+(wsOwnerFilter==='__unassigned__'?'Unassigned':wsOwnerFilter)+'</span>':''}${wsL1Filter?' • <span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">'+l1Workstreams.find(w=>w.id===wsL1Filter)?.name+'</span>':''}${wsPriorityFilter?' • <span style="background:#ef4444;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Priority: '+wsPriorityFilter.charAt(0).toUpperCase()+wsPriorityFilter.slice(1)+'</span>':''}
+      <strong>${totalWs}</strong> workstreams <span style="color:var(--light)">(</span><span style="color:var(--accent)">${l1Count} L1</span> <span style="color:var(--light)">•</span> <span style="color:#8b5cf6">${l2Count} L2</span> <span style="color:var(--light)">•</span> <span style="color:#10b981">${l3Count} L3</span><span style="color:var(--light)">)</span> • <strong>${openTasks}</strong> open action items / ${totalTasks} total${wsStatusFilter?' • <span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Status: '+activeStatusLabel+'</span>':''}${wsOwnerFilter?' • <span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Lead: '+(wsOwnerFilter==='__unassigned__'?'Unassigned':wsOwnerFilter)+'</span>':''}${wsCoLeadFilter?' • <span style="background:#8b5cf6;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Co-Lead: '+(wsCoLeadFilter==='__unassigned__'?'Unassigned':wsCoLeadFilter)+'</span>':''}${wsL1Filter?' • <span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">'+l1Workstreams.find(w=>w.id===wsL1Filter)?.name+'</span>':''}${wsPriorityFilter?' • <span style="background:#ef4444;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Priority: '+wsPriorityFilter.charAt(0).toUpperCase()+wsPriorityFilter.slice(1)+'</span>':''}
     </div>
     ${renderCategory('Business Unit',buTree,totalBU,'BU')}
     ${renderCategory('Cross-cutting',ccTree,totalCC,'Cross-cutting')}
