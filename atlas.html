@@ -3525,13 +3525,21 @@ function rWorkstreamsNew(c){
       </div>
     </div>
 
-    <div style="display:flex;gap:6px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px">
+    <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px">
       <button onclick="wsStatusFilter='';render()" style="padding:10px 18px;font-size:14px;font-weight:${!wsStatusFilter?'600':'400'};color:${!wsStatusFilter?'#fff':'var(--muted)'};background:${!wsStatusFilter?'var(--accent)':'var(--bg-card)'};border:1px solid ${!wsStatusFilter?'var(--accent)':'var(--border)'};border-radius:8px;cursor:pointer;white-space:nowrap;transition:all .15s" onmouseenter="if(${!!wsStatusFilter})this.style.borderColor='var(--muted)'" onmouseleave="if(${!!wsStatusFilter})this.style.borderColor='var(--border)'">All <span style="font-weight:700">${totalAll}</span></button>
       ${WS_STATUSES.map(s=>{
         const isSelected=wsStatusFilter===s.value;
         const count=statusCounts[s.value];
         return `<button onclick="wsStatusFilter=wsStatusFilter==='${s.value}'?'':'${s.value}';render()" style="padding:10px 18px;font-size:14px;font-weight:${isSelected?'600':'400'};color:${isSelected?'#fff':'var(--muted)'};background:${isSelected?'var(--accent)':'var(--bg-card)'};border:1px solid ${isSelected?'var(--accent)':'var(--border)'};border-radius:8px;cursor:pointer;white-space:nowrap;transition:all .15s" onmouseenter="if(!${isSelected})this.style.borderColor='var(--muted)'" onmouseleave="if(!${isSelected})this.style.borderColor='var(--border)'">${s.label} <span style="font-weight:700">${count}</span></button>`;
       }).join('')}
+    </div>
+
+    <div style="display:flex;gap:16px;padding:10px 16px;margin-bottom:16px;background:var(--bg-subtle);border-radius:8px;font-size:13px;color:var(--fg)">
+      <span><strong style="color:var(--accent)">${l1Count}</strong> L1 Workstreams</span>
+      <span style="color:var(--border)">•</span>
+      <span><strong style="color:#3b82f6">${l2Count}</strong> L2 Workstreams</span>
+      <span style="color:var(--border)">•</span>
+      <span><strong style="color:#60a5fa">${l3Count}</strong> L3 Items</span>
     </div>
 
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
