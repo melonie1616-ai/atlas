@@ -2582,13 +2582,17 @@ function generateDailyDigest(){
     .stat-num{font-size:20px;font-weight:700}
     .stat-label{font-size:10px;opacity:.8}
     .section{margin-bottom:16px}
-    .item{padding:6px 10px;margin-bottom:3px;background:#f9fafb;border-radius:4px;border-left:3px solid #6366f1;font-size:13px;display:flex;justify-content:space-between;align-items:center}
-    .item-overdue{border-left-color:#ef4444;background:#fef2f2}
-    .item-blocked{border-left-color:#f59e0b;background:#fffbeb}
-    .item-left{flex:1}
-    .item-title{font-weight:600}
-    .item-owner{color:#6b7280;font-size:12px}
-    .item-date{font-size:11px;color:#6b7280;white-space:nowrap;margin-left:8px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th{text-align:left;padding:6px 8px;background:#f3f4f6;font-weight:600;font-size:11px;text-transform:uppercase;color:#6b7280;border-bottom:1px solid #e5e7eb}
+    td{padding:6px 8px;border-bottom:1px solid #f3f4f6}
+    tr:hover{background:#f9fafb}
+    .tbl-overdue{border-left:3px solid #ef4444}
+    .tbl-overdue td{background:#fef2f2}
+    .tbl-blocked{border-left:3px solid #f59e0b}
+    .tbl-blocked td{background:#fffbeb}
+    .tbl-normal{border-left:3px solid #6366f1}
+    .owner{color:#6b7280;font-size:12px}
+    .date{white-space:nowrap;color:#6b7280;font-size:12px}
     .cta{background:#f0fdf4;border:1px solid #10b981;border-radius:8px;padding:14px 16px;margin-bottom:16px}
     .cta h3{margin:0 0 8px;color:#059669;font-size:14px}
     .cta ul{margin:0;padding-left:18px}
@@ -2619,35 +2623,38 @@ function generateDailyDigest(){
   </div>`;
 
   if(overdueWs.length||overdueTasks.length){
-    html+=`<div class="section"><h2>⚠️ Past Due (${overdueWs.length+overdueTasks.length})</h2>`;
+    html+=`<div class="section"><h2>⚠️ Past Due (${overdueWs.length+overdueTasks.length})</h2>
+    <table><thead><tr><th>Item</th><th>Owner</th><th>Due</th></tr></thead><tbody>`;
     overdueWs.forEach(w=>{
-      html+=`<div class="item item-overdue"><div class="item-left"><span class="item-title">${esc(w.name)}</span> <span class="item-owner">· ${w.primaryOwner||w.owner||'Unassigned'}</span></div><div class="item-date">${fmtDateShort(w.endDate)}</div></div>`;
+      html+=`<tr class="tbl-overdue"><td><strong>${esc(w.name)}</strong></td><td class="owner">${w.primaryOwner||w.owner||'Unassigned'}</td><td class="date">${fmtDateShort(w.endDate)}</td></tr>`;
     });
     overdueTasks.forEach(t=>{
-      html+=`<div class="item item-overdue"><div class="item-left"><span class="item-title">${esc(t.title)}</span> <span class="item-owner">· ${t.owner||'Unassigned'}</span></div><div class="item-date">${fmtDateShort(t.due)}</div></div>`;
+      html+=`<tr class="tbl-overdue"><td>${esc(t.title)}</td><td class="owner">${t.owner||'Unassigned'}</td><td class="date">${fmtDateShort(t.due)}</td></tr>`;
     });
-    html+=`</div>`;
+    html+=`</tbody></table></div>`;
   }
   
   if(dueSoonWs.length||dueSoonTasks.length){
-    html+=`<div class="section"><h2>📅 Due Next 7 Days (${dueSoonWs.length+dueSoonTasks.length})</h2>`;
+    html+=`<div class="section"><h2>📅 Due Next 7 Days (${dueSoonWs.length+dueSoonTasks.length})</h2>
+    <table><thead><tr><th>Item</th><th>Owner</th><th>Due</th></tr></thead><tbody>`;
     const combined=[...dueSoonWs.map(w=>({type:'ws',item:w,date:w.endDate})),...dueSoonTasks.map(t=>({type:'task',item:t,date:t.due}))].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
     combined.forEach(x=>{
       if(x.type==='ws'){
-        html+=`<div class="item"><div class="item-left"><span class="item-title">${esc(x.item.name)}</span> <span class="item-owner">· ${x.item.primaryOwner||x.item.owner||'Unassigned'}</span></div><div class="item-date">${fmtDateShort(x.date)}</div></div>`;
+        html+=`<tr class="tbl-normal"><td><strong>${esc(x.item.name)}</strong></td><td class="owner">${x.item.primaryOwner||x.item.owner||'Unassigned'}</td><td class="date">${fmtDateShort(x.date)}</td></tr>`;
       }else{
-        html+=`<div class="item"><div class="item-left"><span class="item-title">${esc(x.item.title)}</span> <span class="item-owner">· ${x.item.owner||'Unassigned'}</span></div><div class="item-date">${fmtDateShort(x.date)}</div></div>`;
+        html+=`<tr><td>${esc(x.item.title)}</td><td class="owner">${x.item.owner||'Unassigned'}</td><td class="date">${fmtDateShort(x.date)}</td></tr>`;
       }
     });
-    html+=`</div>`;
+    html+=`</tbody></table></div>`;
   }
   
   if(blockedTasks.length){
-    html+=`<div class="section"><h2>🚫 Blocked (${blockedTasks.length})</h2>`;
+    html+=`<div class="section"><h2>🚫 Blocked (${blockedTasks.length})</h2>
+    <table><thead><tr><th>Item</th><th>Owner</th><th>Blocked By</th></tr></thead><tbody>`;
     blockedTasks.forEach(t=>{
-      html+=`<div class="item item-blocked"><div class="item-left"><span class="item-title">${esc(t.title)}</span> <span class="item-owner">· ${t.owner||'Unassigned'}${t.blockedBy?' · Blocked by: '+esc(t.blockedBy):''}</span></div></div>`;
+      html+=`<tr class="tbl-blocked"><td>${esc(t.title)}</td><td class="owner">${t.owner||'Unassigned'}</td><td class="owner">${t.blockedBy?esc(t.blockedBy):'—'}</td></tr>`;
     });
-    html+=`</div>`;
+    html+=`</tbody></table></div>`;
   }
   
   if(!overdueWs.length&&!overdueTasks.length&&!dueSoonWs.length&&!dueSoonTasks.length&&!blockedTasks.length){
