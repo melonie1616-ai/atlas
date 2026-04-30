@@ -2571,28 +2571,30 @@ function generateDailyDigest(){
 <head>
   <meta charset="utf-8">
   <style>
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.5;color:#1a1a2e;max-width:700px;margin:0 auto;padding:20px}
-    h1{font-size:20px;margin:0 0 4px}
-    h2{font-size:15px;margin:20px 0 10px;padding-bottom:6px;border-bottom:2px solid #e5e7eb}
-    .header{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:20px;border-radius:8px;margin-bottom:20px}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.4;color:#1a1a2e;max-width:700px;margin:0 auto;padding:16px}
+    h1{font-size:18px;margin:0 0 4px}
+    h2{font-size:13px;margin:16px 0 8px;padding-bottom:4px;border-bottom:1px solid #e5e7eb;text-transform:uppercase;letter-spacing:.5px}
+    .header{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:16px;border-radius:8px;margin-bottom:16px}
     .header h1{color:#fff}
-    .header p{margin:4px 0 0;opacity:.9;font-size:14px}
-    .stats{display:flex;gap:16px;margin-top:16px}
-    .stat{background:rgba(255,255,255,.2);padding:10px 16px;border-radius:6px;text-align:center}
-    .stat-num{font-size:24px;font-weight:700}
-    .stat-label{font-size:11px;opacity:.8}
-    .section{margin-bottom:24px}
-    .item{padding:10px 12px;margin-bottom:6px;background:#f9fafb;border-radius:6px;border-left:3px solid #6366f1}
+    .header p{margin:4px 0 0;opacity:.9;font-size:13px}
+    .stats{display:flex;gap:12px;margin-top:12px}
+    .stat{background:rgba(255,255,255,.2);padding:8px 14px;border-radius:6px;text-align:center}
+    .stat-num{font-size:20px;font-weight:700}
+    .stat-label{font-size:10px;opacity:.8}
+    .section{margin-bottom:16px}
+    .item{padding:6px 10px;margin-bottom:3px;background:#f9fafb;border-radius:4px;border-left:3px solid #6366f1;font-size:13px;display:flex;justify-content:space-between;align-items:center}
     .item-overdue{border-left-color:#ef4444;background:#fef2f2}
     .item-blocked{border-left-color:#f59e0b;background:#fffbeb}
-    .item-title{font-weight:600;font-size:14px}
-    .item-meta{font-size:12px;color:#6b7280;margin-top:2px}
-    .cta{background:#f0fdf4;border:1px solid #10b981;border-radius:8px;padding:20px;margin-top:24px}
-    .cta h3{margin:0 0 12px;color:#059669;font-size:16px}
-    .cta ul{margin:0;padding-left:20px}
-    .cta li{margin-bottom:8px;font-size:14px}
+    .item-left{flex:1}
+    .item-title{font-weight:600}
+    .item-owner{color:#6b7280;font-size:12px}
+    .item-date{font-size:11px;color:#6b7280;white-space:nowrap;margin-left:8px}
+    .cta{background:#f0fdf4;border:1px solid #10b981;border-radius:8px;padding:14px 16px;margin-bottom:16px}
+    .cta h3{margin:0 0 8px;color:#059669;font-size:14px}
+    .cta ul{margin:0;padding-left:18px}
+    .cta li{margin-bottom:4px;font-size:13px}
     .cta a{color:#2563eb;font-weight:600}
-    .footer{margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:13px;color:#6b7280}
+    .footer{margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280}
     .empty{color:#6b7280;font-style:italic;font-size:13px}
   </style>
 </head>
@@ -2605,39 +2607,45 @@ function generateDailyDigest(){
       <div class="stat"><div class="stat-num">${dueSoonWs.length+dueSoonTasks.length}</div><div class="stat-label">DUE THIS WEEK</div></div>
       <div class="stat"><div class="stat-num">${blockedTasks.length}</div><div class="stat-label">BLOCKED</div></div>
     </div>
+  </div>
+  
+  <div class="cta">
+    <h3>✅ Action Required</h3>
+    <ul>
+      <li><strong>Update your items:</strong> Review and update Workstreams and Action Items you own. <a href="${atlasUrl}" target="_blank">Open ATLAS →</a></li>
+      <li><strong>Add missing work:</strong> If you're working on something NOT documented in ATLAS, please add it now.</li>
+      <li><strong>Upload documents:</strong> Move all AI Program documents to our Teams site. <a href="${teamsUrl}" target="_blank">Open AI Program Files →</a></li>
+    </ul>
   </div>`;
 
   if(overdueWs.length||overdueTasks.length){
-    html+=`<div class="section"><h2>⚠️ Past Due (${overdueWs.length+overdueTasks.length} items)</h2>`;
+    html+=`<div class="section"><h2>⚠️ Past Due (${overdueWs.length+overdueTasks.length})</h2>`;
     overdueWs.forEach(w=>{
-      html+=`<div class="item item-overdue"><div class="item-title">${esc(w.name)}</div><div class="item-meta">Workstream · ${w.primaryOwner||w.owner||'Unassigned'} · Due ${fmtDateShort(w.endDate)}</div></div>`;
+      html+=`<div class="item item-overdue"><div class="item-left"><span class="item-title">${esc(w.name)}</span> <span class="item-owner">· ${w.primaryOwner||w.owner||'Unassigned'}</span></div><div class="item-date">${fmtDateShort(w.endDate)}</div></div>`;
     });
     overdueTasks.forEach(t=>{
-      const ws=wsMap.get(t.workstream);
-      html+=`<div class="item item-overdue"><div class="item-title">${esc(t.title)}</div><div class="item-meta">Action Item · ${t.owner||'Unassigned'}${ws?' · '+esc(ws.name):''} · Due ${fmtDateShort(t.due)}</div></div>`;
+      html+=`<div class="item item-overdue"><div class="item-left"><span class="item-title">${esc(t.title)}</span> <span class="item-owner">· ${t.owner||'Unassigned'}</span></div><div class="item-date">${fmtDateShort(t.due)}</div></div>`;
     });
     html+=`</div>`;
   }
   
   if(dueSoonWs.length||dueSoonTasks.length){
-    html+=`<div class="section"><h2>📅 Due Next 7 Days (${dueSoonWs.length+dueSoonTasks.length} items)</h2>`;
+    html+=`<div class="section"><h2>📅 Due Next 7 Days (${dueSoonWs.length+dueSoonTasks.length})</h2>`;
     const combined=[...dueSoonWs.map(w=>({type:'ws',item:w,date:w.endDate})),...dueSoonTasks.map(t=>({type:'task',item:t,date:t.due}))].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
     combined.forEach(x=>{
       if(x.type==='ws'){
-        html+=`<div class="item"><div class="item-title">${esc(x.item.name)}</div><div class="item-meta">Workstream · ${x.item.primaryOwner||x.item.owner||'Unassigned'} · Due ${fmtDateShort(x.date)}</div></div>`;
+        html+=`<div class="item"><div class="item-left"><span class="item-title">${esc(x.item.name)}</span> <span class="item-owner">· ${x.item.primaryOwner||x.item.owner||'Unassigned'}</span></div><div class="item-date">${fmtDateShort(x.date)}</div></div>`;
       }else{
-        const ws=wsMap.get(x.item.workstream);
-        html+=`<div class="item"><div class="item-title">${esc(x.item.title)}</div><div class="item-meta">Action Item · ${x.item.owner||'Unassigned'}${ws?' · '+esc(ws.name):''} · Due ${fmtDateShort(x.date)}</div></div>`;
+        html+=`<div class="item"><div class="item-left"><span class="item-title">${esc(x.item.title)}</span> <span class="item-owner">· ${x.item.owner||'Unassigned'}</span></div><div class="item-date">${fmtDateShort(x.date)}</div></div>`;
       }
     });
     html+=`</div>`;
   }
   
   if(blockedTasks.length){
-    html+=`<div class="section"><h2>🚫 Blocked Items (${blockedTasks.length})</h2>`;
+    html+=`<div class="section"><h2>🚫 Blocked (${blockedTasks.length})</h2>`;
     blockedTasks.forEach(t=>{
-      const ws=wsMap.get(t.workstream);
-      html+=`<div class="item item-blocked"><div class="item-title">${esc(t.title)}</div><div class="item-meta">${t.owner||'Unassigned'}${ws?' · '+esc(ws.name):''}${t.blockedBy?' · Blocked by: '+esc(t.blockedBy):''}</div></div>`;
+      html+=`<div class="item item-blocked"><div class="item-left"><span class="item-title">${esc(t.title)}</span> <span class="item-owner">· ${t.owner||'Unassigned'}${t.blockedBy?' · Blocked by: '+esc(t.blockedBy):''}</span></div></div>`;
     });
     html+=`</div>`;
   }
@@ -2647,15 +2655,6 @@ function generateDailyDigest(){
   }
   
   html+=`
-  <div class="cta">
-    <h3>✅ Action Required</h3>
-    <ul>
-      <li><strong>Update your items:</strong> Review and update Workstreams and Action Items you own. <a href="${atlasUrl}" target="_blank">Open ATLAS →</a></li>
-      <li><strong>Add missing work:</strong> If you're working on something NOT documented in ATLAS, please add it now.</li>
-      <li><strong>Upload documents:</strong> Move all AI Program documents to our Teams site. <a href="${teamsUrl}" target="_blank">Open AI Program Files →</a></li>
-    </ul>
-  </div>
-  
   <div class="footer">
     Questions? Reach out to Melonie.
   </div>
