@@ -1798,13 +1798,15 @@ function getDailyUpdateStats(){
   const allItems=[...(D.workstreams||[]),...(D.tasks||[])];
   
   // Get all people who are assigned to items (leads, co-leads, owners)
+  // Filter out slash-separated names (those are co-lead pairs, not individuals)
   const assignedPeople=new Set();
   (D.workstreams||[]).forEach(w=>{
-    if(w.primaryOwner||w.owner)assignedPeople.add(w.primaryOwner||w.owner);
-    if(w.secondaryOwner)assignedPeople.add(w.secondaryOwner);
+    const lead=w.primaryOwner||w.owner;
+    if(lead&&!lead.includes('/'))assignedPeople.add(lead);
+    if(w.secondaryOwner&&!w.secondaryOwner.includes('/'))assignedPeople.add(w.secondaryOwner);
   });
   (D.tasks||[]).forEach(t=>{
-    if(t.owner)assignedPeople.add(t.owner);
+    if(t.owner&&!t.owner.includes('/'))assignedPeople.add(t.owner);
   });
   
   // Calculate who updated today
@@ -2986,14 +2988,14 @@ function buildGantt(){
 
   function renderWsBar(w,level,yPos){
     const range=getWsDateRange(w.id);
-    if(!range)return '';
+    if(!range)return ''; // Safety check, but caller should have already verified
     
     const l=pct(range.start),r=pct(range.end);
     if(r<=0||l>=100)return '';
     
     const left=Math.max(0,l);
     const width=Math.max(0.5,Math.min(100,r)-left);
-    const wc=level===0?'#6366f1':level===1?'#818cf8':'#a5b4fc';
+    const wc=level===0?'#2563eb':level===1?'#3b82f6':'#60a5fa';
     const indent=level*16;
     const barHeight=level===0?24:level===1?20:18;
     const fontSize=level===0?'12px':level===1?'11px':'10px';
@@ -3017,8 +3019,12 @@ function buildGantt(){
   function collectVisibleRows(wsList,level){
     let bars='';
     wsList.forEach(w=>{
-      bars+=renderWsBar(w,level,rowIdx*rowH+2);
-      rowIdx++;
+      // Only render and count row if workstream has dates
+      const range=getWsDateRange(w.id);
+      if(range){
+        bars+=renderWsBar(w,level,rowIdx*rowH+2);
+        rowIdx++;
+      }
       
       if(ganttExpanded[w.id]){
         const children=(D.workstreams||[]).filter(c=>c.parentWs===w.id).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
