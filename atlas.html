@@ -3236,7 +3236,9 @@ function rWorkstreamsNew(c){
   let allWs=(D.workstreams||[]).slice();
   let allTasks=(D.tasks||[]);
   
+  // Only include people actually assigned as leads (have at least one item)
   const leads=[...new Set((D.workstreams||[]).map(w=>w.primaryOwner||w.owner).filter(Boolean))].sort();
+  // Only include people actually assigned as co-leads (have at least one item, no slashes)
   const coLeads=[...new Set((D.workstreams||[]).map(w=>w.secondaryOwner).filter(n=>n&&!n.includes('/')))].sort();
   const l1Workstreams=allWs.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   
@@ -3702,9 +3704,17 @@ function rActionItemsNew(c){
   const q=(document.getElementById('search').value||'').toLowerCase();
   let items=(D.tasks||[]);
 
+  // Only include people actually assigned as owners on action items
   const owners=[...new Set((D.tasks||[]).map(t=>t.owner).filter(Boolean))].sort();
-  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
-  const l1Workstreams=allWs.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  // Get L1 workstreams that have at least one action item assigned
+  const wsWithTasks=new Set((D.tasks||[]).map(t=>t.workstream).filter(Boolean));
+  const allWsMap=new Map((D.workstreams||[]).map(w=>[w.id,w]));
+  // Include L1s that have tasks or have children with tasks
+  const l1Workstreams=(D.workstreams||[]).filter(w=>{
+    if(w.parentWs)return false;
+    const descendants=getL1AndDescendants(w.id);
+    return descendants.some(id=>wsWithTasks.has(id)||(D.tasks||[]).some(t=>t.workstream===id));
+  }).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
 
   // Apply owner and L1 filters first (these affect the counts)
   let baseFiltered=items;
