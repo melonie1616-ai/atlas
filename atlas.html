@@ -3673,23 +3673,13 @@ function getL1AndDescendants(l1Id){
   addChildren(l1Id);
   return ids;
 }
-// ═══════════════════════════════════════════════════
-let wsViewMode='hierarchy',wsMyFilter=false,wsExpanded={},wsOwnerFilter='',wsCoLeadFilter='',wsL1Filter='',wsStatusFilter='',wsPriorityFilter='',wsHideDoneItems=true;
-function rWorkstreamsNew(c){
-  const me=ME||'';
-  const q=(document.getElementById('search').value||'').toLowerCase();
+/** Same filtering as the Workstreams hierarchy/kanban view (search + toolbar filters). Used for bulk update scope. */
+function getFilteredWsAndTasksForWorkstreamView(){
+  const q=(document.getElementById('search')?.value||'').toLowerCase();
   let allWs=(D.workstreams||[]).slice();
   let allTasks=(D.tasks||[]);
-  
-  // Only include people actually assigned as leads (have at least one item, no slashes - those are co-lead pairs)
-  const leads=[...new Set((D.workstreams||[]).map(w=>w.primaryOwner||w.owner).filter(n=>n&&!n.includes('/')))].sort();
-  // Only include people actually assigned as co-leads (have at least one item, no slashes)
-  const coLeads=[...new Set((D.workstreams||[]).map(w=>w.secondaryOwner).filter(n=>n&&!n.includes('/')))].sort();
-  const l1Workstreams=allWs.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-  
   const isBlank=v=>!v||!String(v).trim()||v==='""';
   if(wsOwnerFilter){
-    // Include matching items AND their ancestors for hierarchy display
     const matchingIds=new Set();
     const allWsMap=new Map((D.workstreams||[]).map(w=>[w.id,w]));
     function addWithAncestors(w){
@@ -3713,7 +3703,6 @@ function rWorkstreamsNew(c){
     allTasks=allTasks.filter(t=>l1Ids.includes(t.workstream));
   }
   if(wsStatusFilter){
-    // Include matching items AND their ancestors for hierarchy display
     const matchingIds=new Set();
     const allWsMap=new Map((D.workstreams||[]).map(w=>[w.id,w]));
     function addWithAncestors(w){
@@ -3729,7 +3718,6 @@ function rWorkstreamsNew(c){
     allWs=allWs.filter(w=>matchingIds.has(w.id));
   }
   if(wsPriorityFilter){
-    // Include matching items AND their ancestors for hierarchy display
     const matchingIds=new Set();
     const allWsMap=new Map((D.workstreams||[]).map(w=>[w.id,w]));
     function addWithAncestors(w){
@@ -3752,7 +3740,6 @@ function rWorkstreamsNew(c){
     allWs=allWs.filter(w=>matchingIds.has(w.id));
   }
   if(q){
-    // Include matching items AND their ancestors for hierarchy display
     const matchingIds=new Set();
     const allWsMap=new Map((D.workstreams||[]).map(w=>[w.id,w]));
     function addWithAncestors(w){
@@ -3760,9 +3747,7 @@ function rWorkstreamsNew(c){
       matchingIds.add(w.id);
       if(w.parentWs)addWithAncestors(allWsMap.get(w.parentWs));
     }
-    // Match workstreams by name/desc/owner
     allWs.filter(w=>(w.name+' '+w.desc+' '+(w.primaryOwner||w.owner||'')).toLowerCase().includes(q)).forEach(addWithAncestors);
-    // Also include workstreams that have matching action items
     const matchingTasks=allTasks.filter(t=>(t.title+' '+t.owner+' '+t.notes).toLowerCase().includes(q));
     matchingTasks.forEach(t=>{
       if(t.workstream){
@@ -3773,6 +3758,20 @@ function rWorkstreamsNew(c){
     allWs=allWs.filter(w=>matchingIds.has(w.id));
     allTasks=matchingTasks;
   }
+  return{allWs,allTasks};
+}
+// ═══════════════════════════════════════════════════
+let wsViewMode='hierarchy',wsMyFilter=false,wsExpanded={},wsOwnerFilter='',wsCoLeadFilter='',wsL1Filter='',wsStatusFilter='',wsPriorityFilter='',wsHideDoneItems=true;
+function rWorkstreamsNew(c){
+  const me=ME||'';
+  const {allWs,allTasks}=getFilteredWsAndTasksForWorkstreamView();
+  
+  // Only include people actually assigned as leads (have at least one item, no slashes - those are co-lead pairs)
+  const leads=[...new Set((D.workstreams||[]).map(w=>w.primaryOwner||w.owner).filter(n=>n&&!n.includes('/')))].sort();
+  // Only include people actually assigned as co-leads (have at least one item, no slashes)
+  const coLeads=[...new Set((D.workstreams||[]).map(w=>w.secondaryOwner).filter(n=>n&&!n.includes('/')))].sort();
+  const l1Workstreams=(D.workstreams||[]).filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const owners=[...new Set([...(D.workstreams||[]).map(w=>w.primaryOwner||w.owner),...(D.tasks||[]).map(t=>t.owner)].filter(Boolean))].sort();
   
   const totalWs=allWs.length;
   const totalTasks=allTasks.length;
@@ -3943,6 +3942,7 @@ function rWorkstreamsNew(c){
       <div style="display:flex;gap:8px;align-items:center">
         <button onclick="openWsEdit()" style="padding:8px 14px;font-size:13px;font-weight:500;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;transition:opacity .15s" onmouseenter="this.style.opacity='.85'" onmouseleave="this.style.opacity='1'">+ Workstream</button>
         <button onclick="openTaskModal()" style="padding:8px 14px;font-size:13px;font-weight:500;background:#10b981;color:#fff;border:none;border-radius:6px;cursor:pointer;transition:opacity .15s" onmouseenter="this.style.opacity='.85'" onmouseleave="this.style.opacity='1'">+ Action Item</button>
+        <button onclick="openBulkWorkstreamUpdateModal()" style="padding:8px 14px;font-size:13px;font-weight:500;background:var(--bg-card);color:var(--fg);border:1px solid var(--border);border-radius:6px;cursor:pointer" title="Bulk update filtered or all workstreams">Bulk update…</button>
         <div style="position:relative">
           <button onclick="toggleExportMenu()" style="padding:8px;background:var(--bg-card);color:var(--muted);border:1px solid var(--border);border-radius:6px;cursor:pointer;display:flex" onmouseenter="this.style.borderColor='var(--muted)'" onmouseleave="this.style.borderColor='var(--border)'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
           <div id="export-menu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:100;min-width:160px;padding:4px 0">
@@ -7068,6 +7068,110 @@ function saveBulkCcType(wsId,val){
   if(!w)return;
   w.ccType=val;save();
   toast(esc(w.name)+' \u2192 '+val);render();
+}
+function openBulkWorkstreamUpdateModal(){
+  const filtered=getFilteredWsAndTasksForWorkstreamView().allWs;
+  const nf=filtered.length,na=(D.workstreams||[]).length;
+  const ppl=(D.people||[]).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const nameOpts='<option value="">— Leave unchanged —</option>'+ppl.map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('');
+  const wsParents='<option value="">— Leave unchanged —</option><option value="__top__">Top level (clear parent)</option>'+(D.workstreams||[]).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(w=>`<option value="${w.id}">${esc(w.name)}</option>`).join('');
+  const stOpts=WS_STATUSES.map(s=>`<option value="${s.value}">${esc(s.label)}</option>`).join('');
+  openModal(`<div class="m-hd"><h3>Bulk update workstreams</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd" style="max-height:70vh;overflow:auto">
+    <p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.45">Check each field you want to change, then set the value. Unchecked fields are left as-is on every selected workstream.</p>
+    <div style="margin-bottom:14px;padding:10px 12px;background:var(--bg-subtle);border-radius:var(--r-sm);border:1px solid var(--border-lt)">
+      <div style="font-size:12px;font-weight:600;margin-bottom:8px">Scope</div>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;margin-bottom:6px;cursor:pointer"><input type="radio" name="bulk-ws-scope" value="filtered" checked style="margin-top:3px"/> <span><strong>Current filters + search</strong> — ${nf} workstream${nf===1?'':'s'} (what you see in the list)</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer"><input type="radio" name="bulk-ws-scope" value="all" style="margin-top:3px"/> <span><strong>All workstreams</strong> — ${na} total</span></label>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;border:1px solid var(--border-lt);border-radius:var(--r-sm);padding:10px">
+        <input type="checkbox" id="bulk-ws-do-status" style="margin-top:3px"/>
+        <span style="flex:1"><strong>Status</strong><br/><select id="bulk-ws-status" class="fg" style="width:100%;margin-top:6px;padding:6px">${stOpts}</select></span>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;border:1px solid var(--border-lt);border-radius:var(--r-sm);padding:10px">
+        <input type="checkbox" id="bulk-ws-do-lead" style="margin-top:3px"/>
+        <span style="flex:1"><strong>Lead (primary owner)</strong><br/><select id="bulk-ws-lead" style="width:100%;margin-top:6px;padding:6px">${nameOpts}</select></span>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;border:1px solid var(--border-lt);border-radius:var(--r-sm);padding:10px">
+        <input type="checkbox" id="bulk-ws-do-colead" style="margin-top:3px"/>
+        <span style="flex:1"><strong>Co-Lead</strong><br/><select id="bulk-ws-colead" style="width:100%;margin-top:6px;padding:6px">${nameOpts}</select></span>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;border:1px solid var(--border-lt);border-radius:var(--r-sm);padding:10px">
+        <input type="checkbox" id="bulk-ws-do-target" style="margin-top:3px"/>
+        <span style="flex:1"><strong>Target date</strong><br/><input id="bulk-ws-target" type="date" style="width:100%;margin-top:6px;padding:6px"/></span>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;border:1px solid var(--border-lt);border-radius:var(--r-sm);padding:10px">
+        <input type="checkbox" id="bulk-ws-do-start" style="margin-top:3px"/>
+        <span style="flex:1"><strong>Start date</strong> <span style="color:var(--muted);font-size:11px">(targetStart)</span><br/><input id="bulk-ws-start" type="date" style="width:100%;margin-top:6px;padding:6px"/></span>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;border:1px solid var(--border-lt);border-radius:var(--r-sm);padding:10px">
+        <input type="checkbox" id="bulk-ws-do-pri" style="margin-top:3px"/>
+        <span style="flex:1"><strong>Priority flag</strong><br/><select id="bulk-ws-pri" style="width:100%;margin-top:6px;padding:6px"><option value="">Not prioritized</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></span>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;border:1px solid var(--border-lt);border-radius:var(--r-sm);padding:10px">
+        <input type="checkbox" id="bulk-ws-do-parent" style="margin-top:3px"/>
+        <span style="flex:1"><strong>Parent workstream</strong> <span style="color:var(--muted);font-size:11px">(re-parent; avoid cycles)</span><br/><select id="bulk-ws-parent" style="width:100%;margin-top:6px;padding:6px;max-height:180px">${wsParents}</select></span>
+      </label>
+    </div>
+  </div>
+  <div class="m-ft">
+    <button class="mbtn mb-cancel" onclick="closeModal()">Cancel</button>
+    <button class="mbtn mb-save" onclick="applyBulkWorkstreamUpdates()">Apply</button>
+  </div>`);
+}
+function applyBulkWorkstreamUpdates(){
+  const scope=(document.querySelector('input[name="bulk-ws-scope"]:checked')||{}).value||'filtered';
+  const targets=scope==='all'?(D.workstreams||[]).slice():getFilteredWsAndTasksForWorkstreamView().allWs;
+  if(!targets.length){toast('No workstreams in scope');return}
+  const doSt=document.getElementById('bulk-ws-do-status')?.checked;
+  const doLead=document.getElementById('bulk-ws-do-lead')?.checked;
+  const doCo=document.getElementById('bulk-ws-do-colead')?.checked;
+  const doTg=document.getElementById('bulk-ws-do-target')?.checked;
+  const doStDt=document.getElementById('bulk-ws-do-start')?.checked;
+  const doPri=document.getElementById('bulk-ws-do-pri')?.checked;
+  const doPar=document.getElementById('bulk-ws-do-parent')?.checked;
+  if(!doSt&&!doLead&&!doCo&&!doTg&&!doStDt&&!doPri&&!doPar){toast('Check at least one field to update');return}
+  if(!confirm('Update '+targets.length+' workstream'+(targets.length===1?'':'s')+'? This cannot be undone automatically.'))return;
+  const stVal=document.getElementById('bulk-ws-status')?.value;
+  const leadVal=(document.getElementById('bulk-ws-lead')?.value||'').trim();
+  const coVal=(document.getElementById('bulk-ws-colead')?.value||'').trim();
+  const tgVal=(document.getElementById('bulk-ws-target')?.value||'').trim();
+  const startVal=(document.getElementById('bulk-ws-start')?.value||'').trim();
+  const priVal=(document.getElementById('bulk-ws-pri')?.value||'').trim();
+  const parVal=document.getElementById('bulk-ws-parent')?.value||'';
+  function wouldCycle(wsId,parentId){
+    let x=(D.workstreams||[]).find(y=>y.id===parentId),c=0;
+    while(x&&c++<64){
+      if(x.id===wsId)return true;
+      x=(D.workstreams||[]).find(y=>y.id===x.parentWs);
+    }
+    return false;
+  }
+  for(let i=0;i<targets.length;i++){
+    const ref=targets[i];
+    const ws=(D.workstreams||[]).find(x=>x.id===ref.id);
+    if(!ws)continue;
+    if(doSt&&stVal)ws.status=stVal;
+    if(doLead){ws.primaryOwner=leadVal;ws.owner=leadVal}
+    if(doCo)ws.secondaryOwner=coVal;
+    if(doTg)ws.targetDate=tgVal;
+    if(doStDt)ws.targetStart=startVal;
+    if(doPri)ws.priority=priVal;
+    if(doPar){
+      if(parVal==='__top__'){ws.parentWs='';ws.level=1}
+      else if(parVal&&parVal!==ws.id){
+        if(wouldCycle(ws.id,parVal))continue;
+        const p=(D.workstreams||[]).find(x=>x.id===parVal);
+        if(p){ws.parentWs=p.id;ws.level=(typeof p.level==='number'?p.level:1)+1}
+      }
+    }
+    ws.updatedBy=ME||'bulk';
+    ws.updatedAt=new Date().toISOString();
+  }
+  ensureWorkstreamReportingFields();
+  save();closeModal();render();
+  toast('Bulk update applied to '+targets.length+' workstreams');
 }
 function toggleFeaturedWs(wsId){
   const er=getExecReport();
