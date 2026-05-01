@@ -3595,7 +3595,8 @@ function rWorkstreamsNew(c){
       const isLate=w.targetDate&&w.targetDate<today()&&w.status!=='closed';
       const isAtRisk=w.status==='at-risk'||w.status==='blocked';
       const riskBg=isLate||isAtRisk?'rgba(239,68,68,.05)':'';
-      const highPriBg=!riskBg&&w.priority==='high'?'rgba(239,68,68,.04)':'';
+      // Amber/orange wash — clearly distinct from late/at-risk red
+      const highPriBg=!riskBg&&w.priority==='high'?'linear-gradient(90deg,#ea580c 0,#ea580c 4px,rgba(245,158,11,.26) 4px,rgba(253,230,138,.2) 100%)':'';
       const defaultRowBg=riskBg||highPriBg;
       const rowStyle=defaultRowBg?'background:'+defaultRowBg:'';
       const expandIcon=hasChildren?`<span onclick="event.stopPropagation();wsExpanded['${w.id}']=!wsExpanded['${w.id}'];render()" style="cursor:pointer;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;margin-right:4px;font-size:10px;color:var(--muted);background:var(--bg-subtle)" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-subtle)'">${isExpanded?'▼':'▶'}</span>`:`<span style="width:22px;display:inline-block"></span>`;
@@ -3786,7 +3787,7 @@ function renderWsKanban(c,filteredWs,me,owners,l1Workstreams){
     const isAtRisk=w.status==='at-risk'||w.status==='blocked';
     const riskCard=isLate||isAtRisk;
     let cardStyle=riskCard?'border-left:3px solid var(--red);background:rgba(239,68,68,.05)':'border-left:3px solid var(--border)';
-    if(!riskCard&&w.priority==='high')cardStyle='border-left:3px solid rgba(239,68,68,.28);background:rgba(239,68,68,.035)';
+    if(!riskCard&&w.priority==='high')cardStyle='border-left:5px solid #ea580c;background:linear-gradient(135deg,rgba(254,215,170,.55) 0%,rgba(245,158,11,.22) 100%);box-shadow:inset 0 0 0 1px rgba(234,88,12,.12)';
     const taskCount=(D.tasks||[]).filter(t=>t.workstream===w.id).length;
     const openCount=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status!=='done').length;
     return `<div class="kb-card" draggable="true" data-id="${w.id}" style="${cardStyle};cursor:pointer"
