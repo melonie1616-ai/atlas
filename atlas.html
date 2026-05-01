@@ -644,6 +644,10 @@ body.nav-collapsed .topbar-menu{display:flex}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       Dashboard
     </div>
+    <div class="ni" data-v="mywork" onclick="go('mywork')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6"/><path d="M9 16h4"/></svg>
+      My Work
+    </div>
     <span id="nb-ws" style="display:none"></span>
     <span id="nb-eng" style="display:none"></span>
     <div class="ni" data-v="workstreams" onclick="go('workstreams')">
@@ -2930,20 +2934,22 @@ function rMyWork(c){
   let displayWs=myWs;
   let displayTasks=myTasks;
   
-  if(myWorkTab==='workstreams'){displayTasks=[];}
-  else if(myWorkTab==='actions'){displayWs=[];}
-  else if(myWorkTab==='open'){displayTasks=openTasks;displayWs=myWs.filter(w=>w.status!=='closed');}
-  else if(myWorkTab==='overdue'){displayTasks=overdueTasks;displayWs=myWs.filter(w=>w.targetDate&&w.targetDate<today()&&w.status!=='closed');}
-  
-  if(myWorkSort==='name'){
-    displayWs.sort((a,b)=>myWorkSortDir*(a.name||'').localeCompare(b.name||''));
-    displayTasks.sort((a,b)=>myWorkSortDir*(a.title||'').localeCompare(b.title||''));
-  }else if(myWorkSort==='due'){
-    displayWs.sort((a,b)=>myWorkSortDir*(a.targetDate||'9999').localeCompare(b.targetDate||'9999'));
-    displayTasks.sort((a,b)=>myWorkSortDir*(a.due||'9999').localeCompare(b.due||'9999'));
-  }else if(myWorkSort==='status'){
-    displayWs.sort((a,b)=>myWorkSortDir*(a.status||'').localeCompare(b.status||''));
-    displayTasks.sort((a,b)=>myWorkSortDir*(a.status||'').localeCompare(b.status||''));
+  if(myWorkTab!=='week'){
+    if(myWorkTab==='workstreams'){displayTasks=[];}
+    else if(myWorkTab==='actions'){displayWs=[];}
+    else if(myWorkTab==='open'){displayTasks=openTasks;displayWs=myWs.filter(w=>w.status!=='closed');}
+    else if(myWorkTab==='overdue'){displayTasks=overdueTasks;displayWs=myWs.filter(w=>w.targetDate&&w.targetDate<today()&&w.status!=='closed');}
+    
+    if(myWorkSort==='name'){
+      displayWs.sort((a,b)=>myWorkSortDir*(a.name||'').localeCompare(b.name||''));
+      displayTasks.sort((a,b)=>myWorkSortDir*(a.title||'').localeCompare(b.title||''));
+    }else if(myWorkSort==='due'){
+      displayWs.sort((a,b)=>myWorkSortDir*(a.targetDate||'9999').localeCompare(b.targetDate||'9999'));
+      displayTasks.sort((a,b)=>myWorkSortDir*(a.due||'9999').localeCompare(b.due||'9999'));
+    }else if(myWorkSort==='status'){
+      displayWs.sort((a,b)=>myWorkSortDir*(a.status||'').localeCompare(b.status||''));
+      displayTasks.sort((a,b)=>myWorkSortDir*(a.status||'').localeCompare(b.status||''));
+    }
   }
   
   const renderWsRow=(w)=>{
@@ -2976,30 +2982,49 @@ function rMyWork(c){
   };
   
   const sIco=(col)=>myWorkSort===col?(myWorkSortDir===1?' ▲':' ▼'):'';
-  
-  c.innerHTML=`
-  <div class="page-wrap">
-    <div class="page-toolbar">
-      <span class="page-title">My Work</span>
-      <span style="font-size:13px;color:var(--muted)">${me}</span>
-      <div class="pill-filters">
-        <div class="pill${myWorkTab==='all'?' pill-i':' pill-m'}" onclick="myWorkTab='all';render()">All (${myWs.length+myTasks.length})</div>
-        <div class="pill${myWorkTab==='open'?' pill-i':' pill-m'}" onclick="myWorkTab='open';render()">Open (${myWs.filter(w=>w.status!=='closed').length+openTasks.length})</div>
-        <div class="pill${myWorkTab==='overdue'?' pill-r':' pill-m'}" onclick="myWorkTab='overdue';render()" style="${overdueTasks.length?'':'opacity:.6'}">Overdue (${overdueTasks.length})</div>
-        <div class="pill${myWorkTab==='workstreams'?' pill-i':' pill-m'}" onclick="myWorkTab='workstreams';render()">Workstreams (${myWs.length})</div>
-        <div class="pill${myWorkTab==='actions'?' pill-i':' pill-m'}" onclick="myWorkTab='actions';render()">Action Items (${myTasks.length})</div>
-      </div>
-      <div class="toolbar-right">
-        <select onchange="myWorkSort=this.value;render()">
-          <option value="due"${myWorkSort==='due'?' selected':''}>Sort by Due Date</option>
-          <option value="name"${myWorkSort==='name'?' selected':''}>Sort by Name</option>
-          <option value="status"${myWorkSort==='status'?' selected':''}>Sort by Status</option>
-        </select>
-        <button class="btn btn-s" onclick="myWorkSortDir=myWorkSortDir===1?-1:1;render()">${myWorkSortDir===1?'↑ Asc':'↓ Desc'}</button>
-      </div>
+
+  const secCardMw=(title,subtitle,inner)=>`<div style="margin-bottom:20px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--bg-card);box-shadow:0 1px 2px rgba(0,0,0,.04)">
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg-subtle)">
+      <div style="font-size:15px;font-weight:700;color:var(--fg)">${title}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4">${subtitle}</div>
     </div>
-    
-    ${displayWs.length?`<div style="margin-bottom:24px">
+    <div style="padding:0">${inner}</div>
+  </div>`;
+
+  let mainBlock='';
+  if(myWorkTab==='week'){
+    const cmp=today();
+    const now=new Date();
+    const mon=new Date(now.getFullYear(),now.getMonth(),now.getDate()-(now.getDay()===0?6:now.getDay()-1));
+    const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+    const pad=n=>String(n).padStart(2,'0');
+    const weekStart=mon.getFullYear()+'-'+pad(mon.getMonth()+1)+'-'+pad(mon.getDate());
+    const weekEnd=sun.getFullYear()+'-'+pad(sun.getMonth()+1)+'-'+pad(sun.getDate());
+    const wsOverdue=myWs.filter(w=>w.targetDate&&w.targetDate<cmp&&w.status!=='closed').sort((a,b)=>(a.targetDate||'').localeCompare(b.targetDate||''));
+    const taskUpcoming=openTasks.filter(t=>t.due&&t.due>=cmp&&t.due<=weekEnd).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
+    const wsUpcoming=myWs.filter(w=>w.targetDate&&w.targetDate>=cmp&&w.targetDate<=weekEnd&&w.status!=='closed').sort((a,b)=>(a.targetDate||'').localeCompare(b.targetDate||''));
+    const doneThisWeek=myTasks.filter(t=>{
+      if(t.status!=='done')return false;
+      const u=(t.updatedAt||t.created||'').slice(0,10);
+      return u>=weekStart&&u<=weekEnd;
+    }).sort((a,b)=>(b.updatedAt||b.created||'').localeCompare(a.updatedAt||a.created||''));
+    const tblWsMw=(rows)=>rows.length?`<table class="tbl" style="width:100%"><thead><tr><th>Workstream</th><th style="width:80px">Role</th><th style="width:120px">Status</th><th style="width:100px">Target</th><th style="width:100px">Items</th></tr></thead><tbody>${rows.map(renderWsRow).join('')}</tbody></table>`:'';
+    const tblTaskMw=(rows)=>rows.length?`<table class="tbl" style="width:100%"><thead><tr><th>Action Item</th><th style="width:160px">Workstream</th><th style="width:120px">Status</th><th style="width:100px">Due</th></tr></thead><tbody>${rows.map(renderTaskRow).join('')}</tbody></table>`:'';
+    const overdueInner=(wsOverdue.length||overdueTasks.length)
+      ?`${wsOverdue.length?`<div style="padding:10px 14px 0;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Workstreams</div>${tblWsMw(wsOverdue)}`:''}${overdueTasks.length?`<div style="padding:10px 14px 0;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Action items</div>${tblTaskMw(overdueTasks)}`:''}`
+      :`<div style="padding:20px 16px;font-size:13px;color:var(--muted)">Nothing overdue.</div>`;
+    const upInner=(taskUpcoming.length||wsUpcoming.length)
+      ?`${wsUpcoming.length?`<div style="padding:10px 14px 0;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Workstreams</div>${tblWsMw(wsUpcoming)}`:''}${taskUpcoming.length?`<div style="padding:10px 14px 0;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Action items</div>${tblTaskMw(taskUpcoming)}`:''}`
+      :`<div style="padding:20px 16px;font-size:13px;color:var(--muted)">Nothing due for the rest of this calendar week.</div>`;
+    const doneInner=doneThisWeek.length
+      ?tblTaskMw(doneThisWeek)
+      :`<div style="padding:20px 16px;font-size:13px;color:var(--muted)">No action items marked done this week yet.</div>`;
+    mainBlock=`<p style="font-size:13px;color:var(--muted);margin:0 0 16px"><strong style="color:var(--fg)">This week:</strong> ${fmtDate(weekStart)} – ${fmtDate(weekEnd)} · Click a row to open and edit.</p>
+    ${secCardMw('Overdue','Workstreams with a target date before today, or open action items with a due date before today.',overdueInner)}
+    ${secCardMw('Coming up this week','Open action items due by end of week, and open workstreams with a target date through Sunday (calendar week).',upInner)}
+    ${secCardMw('Done this week','Action items you marked done (based on last saved update in this calendar week).',doneInner)}`;
+  }else{
+    mainBlock=`${displayWs.length?`<div style="margin-bottom:24px">
       <h3 style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--text)">My Workstreams (${displayWs.length})</h3>
       <table class="tbl" style="width:100%">
         <thead><tr>
@@ -3028,7 +3053,33 @@ function rMyWork(c){
     
     ${!displayWs.length&&!displayTasks.length?`<div style="padding:40px;text-align:center;color:var(--muted)">
       <p>No items match the current filter.</p>
-    </div>`:''}
+    </div>`:''}`;
+  }
+  
+  c.innerHTML=`
+  <div class="page-wrap">
+    <div class="page-toolbar">
+      <span class="page-title">My Work</span>
+      <span style="font-size:13px;color:var(--muted)">${me}</span>
+      <div class="pill-filters">
+        <div class="pill${myWorkTab==='all'?' pill-i':' pill-m'}" onclick="myWorkTab='all';render()">All (${myWs.length+myTasks.length})</div>
+        <div class="pill${myWorkTab==='week'?' pill-i':' pill-m'}" onclick="myWorkTab='week';render()">Week view</div>
+        <div class="pill${myWorkTab==='open'?' pill-i':' pill-m'}" onclick="myWorkTab='open';render()">Open (${myWs.filter(w=>w.status!=='closed').length+openTasks.length})</div>
+        <div class="pill${myWorkTab==='overdue'?' pill-r':' pill-m'}" onclick="myWorkTab='overdue';render()" style="${overdueTasks.length?'':'opacity:.6'}">Overdue (${overdueTasks.length})</div>
+        <div class="pill${myWorkTab==='workstreams'?' pill-i':' pill-m'}" onclick="myWorkTab='workstreams';render()">Workstreams (${myWs.length})</div>
+        <div class="pill${myWorkTab==='actions'?' pill-i':' pill-m'}" onclick="myWorkTab='actions';render()">Action Items (${myTasks.length})</div>
+      </div>
+      <div class="toolbar-right" style="${myWorkTab==='week'?'display:none':''}">
+        <select onchange="myWorkSort=this.value;render()">
+          <option value="due"${myWorkSort==='due'?' selected':''}>Sort by Due Date</option>
+          <option value="name"${myWorkSort==='name'?' selected':''}>Sort by Name</option>
+          <option value="status"${myWorkSort==='status'?' selected':''}>Sort by Status</option>
+        </select>
+        <button class="btn btn-s" onclick="myWorkSortDir=myWorkSortDir===1?-1:1;render()">${myWorkSortDir===1?'↑ Asc':'↓ Desc'}</button>
+      </div>
+    </div>
+    
+    ${mainBlock}
   </div>`;
 }
 
