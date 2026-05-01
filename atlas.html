@@ -100,8 +100,17 @@ body.nav-collapsed .topbar-menu{display:flex}
 .ni{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:1px 0;border-radius:var(--r-sm);font-size:15px;color:#d8d8ea;cursor:pointer;transition:all .15s;position:relative;border-left:2px solid transparent}
 .ni:hover{background:rgba(255,255,255,.07);color:#f4f4ff}
 .ni.on{background:rgba(99,102,241,.12);color:#f0f0ff;font-weight:600;border-left-color:var(--accent)}
+.ni.nav-mw-week-pending{border-left:4px solid #f59e0b!important;background:linear-gradient(90deg,rgba(245,158,11,.26) 0%,rgba(245,158,11,.07) 65%)!important;box-shadow:inset 0 0 0 1px rgba(245,158,11,.4)}
+.ni.nav-mw-week-pending.on{background:linear-gradient(90deg,rgba(245,158,11,.32) 0%,rgba(245,158,11,.12) 65%)!important;border-left-color:#f59e0b!important}
+.ni.nav-mw-week-ok{border-left:4px solid #22c55e!important;background:linear-gradient(90deg,rgba(34,197,94,.18) 0%,rgba(34,197,94,.05) 65%)!important;box-shadow:inset 0 0 0 1px rgba(34,197,94,.28)}
+.ni.nav-mw-week-ok.on{background:linear-gradient(90deg,rgba(34,197,94,.24) 0%,rgba(34,197,94,.08) 65%)!important;border-left-color:#22c55e!important}
+.nav-mw-week-ic{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;flex-shrink:0;transition:background .15s,color .15s}
+.ni.nav-mw-week-pending .nav-mw-week-ic{background:rgba(245,158,11,.42);color:#fffbeb;box-shadow:0 0 0 1px rgba(245,158,11,.5)}
+.ni.nav-mw-week-ok .nav-mw-week-ic{background:rgba(34,197,94,.4);color:#ecfdf5;box-shadow:0 0 0 1px rgba(34,197,94,.45)}
+.ni .nav-mw-week-ic svg{width:15px;height:15px;opacity:1!important;color:inherit}
 .ni svg{width:17px;height:17px;flex-shrink:0;opacity:.5}
 .ni.on svg{opacity:.9;color:var(--accent)}
+.ni.on .nav-mw-week-ic svg{color:inherit!important;opacity:1!important}
 .badge{font-size:10px;font-weight:600;min-width:16px;text-align:center;padding:1px 5px;border-radius:999px;background:rgba(255,255,255,.06);color:#7070a0;margin-left:auto}
 .badge.hot{background:rgba(99,102,241,.3);color:#b4b4ff}
 .badge.warn{background:rgba(239,68,68,.3);color:#fca5a5}
@@ -213,6 +222,21 @@ body.nav-collapsed .topbar-menu{display:flex}
 .page-toolbar .pill-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-left:auto;padding-left:16px;border-left:1px solid var(--border-lt)}
 .page-toolbar .pill-actions select{padding:6px 10px 6px 12px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:12.5px;font-family:inherit;background:var(--bg-card);color:var(--text);cursor:pointer;outline:none;min-width:0}
 .page-toolbar .pill-actions .mbtn{padding:6px 12px;font-size:12.5px}
+.page-toolbar.my-work-toolbar{align-items:center;gap:12px}
+.my-work-panel{border:1px solid var(--border-lt);border-radius:var(--r-md);overflow:hidden;background:var(--bg-card)}
+.my-work-tbl{width:100%}
+.my-work-tbl thead th{background:rgba(0,0,0,.04);font-size:11px;text-transform:uppercase;letter-spacing:.04em;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border-lt)}
+.my-work-tbl tbody td{border-bottom:1px solid var(--border-lt)}
+.my-work-tbl tbody tr:last-child td{border-bottom:none}
+[data-theme="dark"] .my-work-tbl thead th{background:rgba(255,255,255,.06)}
+.my-work-week-pill{background:linear-gradient(135deg,#0f766e,#14b8a6)!important;border:1px solid rgba(20,184,166,.5)!important;color:#fff!important;padding:9px 22px!important;font-size:15px!important;font-weight:700!important;border-radius:999px!important;min-height:42px;display:inline-flex!important;align-items:center!important;cursor:pointer!important}
+.my-work-week-pill:hover{filter:brightness(1.06);cursor:pointer!important}
+.my-work-week-pill.pill-i{box-shadow:0 3px 10px rgba(20,184,166,.45)!important}
+.mw-section-icon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;flex-shrink:0}
+.mw-section-icon--ok{background:rgba(34,197,94,.18);color:#16a34a}
+.mw-section-icon--pending{background:rgba(245,158,11,.16);color:#c2410c}
+[data-theme="dark"] .mw-section-icon--ok{background:rgba(34,197,94,.22);color:#4ade80}
+[data-theme="dark"] .mw-section-icon--pending{background:rgba(245,158,11,.2);color:#fbbf24}
 .page-section{margin-bottom:20px}
 .page-section .section-header{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;padding:10px 16px;background:var(--bg-subtle);border:1px solid var(--border-lt);border-bottom-color:var(--border);transition:background .12s,border-color .12s;margin-bottom:0;border-radius:var(--r-md) var(--r-md) 0 0}
 .page-section .section-header:hover{background:var(--border-lt);border-color:var(--border)}
@@ -644,8 +668,9 @@ body.nav-collapsed .topbar-menu{display:flex}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       Dashboard
     </div>
-    <div class="ni" data-v="mywork" onclick="go('mywork')">
+    <div class="ni" id="nav-mywork" data-v="mywork" onclick="go('mywork')" title="">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6"/><path d="M9 16h4"/></svg>
+      <span class="nav-mw-week-ic" aria-hidden="true"></span>
       My Work
     </div>
     <span id="nb-ws" style="display:none"></span>
@@ -765,6 +790,8 @@ const RELEASE_NOTES=[
 const uid=()=>Math.random().toString(36).slice(2,10);
 const today=()=>new Date().toISOString().slice(0,10);
 const esc=s=>s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):'';
+/** My Work → This Week: AI Transformation Program site (SharePoint folder / program resources). */
+const ATLAS_AI_PROG_TEAMS_URL='https://digitalrealtyeur.sharepoint.com/:f:/s/AITransformationProgram/IgB_K6UzRpTJSardB8PtqQ5oAZ-JMWyqNSsRuyHACrl_1N0?e=YUjQng';
 const fmtDate=d=>d?new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
 function timeAgo(iso){
   if(!iso)return '';
@@ -1057,12 +1084,19 @@ function ensureGroups(){
 function ensureWorkstreamsV3AndBusinessOutcomes(){
   if(!D.workstreams)D.workstreams=[];
   if(!D._wsV3){
-    const newWs=defaults().workstreams;
+    const template=defaults().workstreams;
     const oldIds=new Set(['standards','data-infra','ai-program','adr-council','superworker']);
-    const hasOnlyOld=D.workstreams.every(w=>oldIds.has(w.id));
-    const missingNew=!D.workstreams.find(w=>w.category);
-    if(hasOnlyOld||missingNew){
-      D.workstreams=newWs;
+    const hasOnlyLegacyFive=D.workstreams.length>0&&D.workstreams.every(w=>oldIds.has(w.id));
+    if(hasOnlyLegacyFive){
+      D.workstreams=template.map(t=>JSON.parse(JSON.stringify(t)));
+    }else{
+      const seen=new Set((D.workstreams||[]).map(w=>w.id));
+      template.forEach(t=>{
+        if(!seen.has(t.id)){
+          D.workstreams.push(JSON.parse(JSON.stringify(t)));
+          seen.add(t.id);
+        }
+      });
     }
     D._wsV3=true;
   }
@@ -1127,6 +1161,7 @@ function loadLs(){
   if(!D.log)D.log=[];
   if(!D.reportNotes)D.reportNotes={accomplishments:'',blockers:'',nextPeriod:'',asOf:'',executiveSummary:'',businessOutcomes:''};
   if(D.reportNotes.businessOutcomes===undefined)D.reportNotes.businessOutcomes='• Time savings from automation across BUs\n• Reduced manual effort in key processes\n• Stronger governance and risk control';
+  if(!D.pptxExportLabels)D.pptxExportLabels={execGate:'Exec Committee Gate',aboveLine:'',belowLine:''};
   if(!D.links)D.links=[];
   if(!D.decisions)D.decisions=[];
   if(!D.risks)D.risks=[];
@@ -1134,21 +1169,8 @@ function loadLs(){
   if(!D.usecases)D.usecases=[];
   if(!D.cadences)D.cadences=[];
   if(!D.lessons)D.lessons=[];
-  if(!D._wsV3){
-    const newWs=defaults().workstreams;
-    const oldIds=new Set(['standards','data-infra','ai-program','adr-council','superworker']);
-    const hasOnlyOld=D.workstreams.every(w=>oldIds.has(w.id));
-    const missingNew=!D.workstreams.find(w=>w.category);
-    if(hasOnlyOld||missingNew){
-      D.workstreams=newWs;
-    }
-    D._wsV3=true;
-  }
-  (D.workstreams||[]).forEach(w=>{
-    const def=WS_DEFS.find(d=>d.id===w.id);
-    if(!w.category&&def){w.category=def.category;if(!w.owner)w.owner=def.owner||''}
-    if(def&&def.businessOutcome&&!(w.businessOutcome||'').trim())w.businessOutcome=def.businessOutcome;
-  });
+  ensureWorkstreamsV3AndBusinessOutcomes();
+  ensureWorkstreamReportingFields();
 }
 
 function log(t){
@@ -1184,6 +1206,7 @@ const SESSION_TTL=24*60*60*1000;
 let SESSION_VERIFIED=false;
 function loadMe(){ME=localStorage.getItem('ai-tracker-name')||'';updateUserBadge()}
 function saveMe(n){ME=n;try{localStorage.setItem('ai-tracker-name',n)}catch(e){}updateUserBadge()}
+function setMwDocsRepoAck(checked){try{localStorage.setItem('atlas-mw-docs-repo-ack',checked?'1':'0');}catch(e){}render()}
 function saveSession(){try{localStorage.setItem('atlas-session-ts',Date.now().toString())}catch(e){}}
 function isSessionValid(){
   const ts=parseInt(localStorage.getItem('atlas-session-ts')||'0',10);
@@ -1580,7 +1603,23 @@ function connectFirebase(onReady){
         ensureReportNotesBusinessOutcomesDefaults();
         saveLs()
       }
-      else{loadLs();save()}
+      else if(val==null){
+        loadLs();
+        save();
+      }else{
+        D=val;
+        delete D._presence;
+        if(!Array.isArray(D.workstreams))D.workstreams=[];
+        if(!Array.isArray(D.tasks))D.tasks=[];
+        if(!Array.isArray(D.people))D.people=[];
+        if(!Array.isArray(D.engagements))D.engagements=[];
+        if(!D.reportNotes)D.reportNotes={accomplishments:'',blockers:'',nextPeriod:'',asOf:'',executiveSummary:'',businessOutcomes:''};
+        ensureGroups();
+        ensureWorkstreamsV3AndBusinessOutcomes();
+        ensureReportNotesBusinessOutcomesDefaults();
+        saveLs();
+        toast('Cloud snapshot was missing workstreams. Server fields were kept; catalog rows were merged. If anything looks like an older copy, check another browser before saving, and ask an admin about Firebase backups.',8000);
+      }
       firebaseReady=true;
       document.getElementById('connecting').classList.add('hide');
       loadMe();renderLinks();authGate();go(V);
@@ -1668,6 +1707,7 @@ function restoreNavSections(){
 function go(v){
   if(v==='tasks'||v==='workitems')v='actionitems';
   V=v;
+  if(v==='mywork')myWorkTab='week';
   try{localStorage.setItem('atlas_view',v);}catch(e){}
   document.querySelectorAll('.ni').forEach(n=>n.classList.toggle('on',n.dataset.v===v));
   document.querySelectorAll('.nav-section').forEach(sec=>{
@@ -1679,7 +1719,8 @@ function go(v){
     tasks:'Action Items',mywork:'My Work',people:'Team Directory',stakeholders:'Stakeholders',
     report:'Report Out',ask:'Ask AI',decisions:'Decision Log',
     risks:'Risk Register',governance:'Decisions & Risks',ado:'ADO Sync'};
-  document.getElementById('viewTitle').textContent=titles[v]||v;
+  if(v==='mywork'&&ME){document.getElementById('viewTitle').textContent=ME;}
+  else{document.getElementById('viewTitle').textContent=titles[v]||v;}
   const ab=document.getElementById('addBtn');
   if(v==='engagements')v=V='workitems';
   if(v==='extract'){taskFilter='inbox';v=V='workitems'}
@@ -1695,6 +1736,52 @@ function go(v){
 function handleAdd(){
   if(V==='tasks')openTaskModal();
   else if(V==='people')openPersonModal();
+}
+
+function myWorkWeekNavNeedsAttention(){
+  if(!ME)return false;
+  let docsRepoAck=false;
+  try{docsRepoAck=localStorage.getItem('atlas-mw-docs-repo-ack')==='1';}catch(e){}
+  if(!docsRepoAck)return true;
+  const myWs=(D.workstreams||[]).filter(w=>
+    (w.category==='BU'||w.category==='Cross-cutting')&&
+    (w.primaryOwner===ME||w.secondaryOwner===ME||w.owner===ME)
+  );
+  const myTasks=(D.tasks||[]).filter(t=>t.owner===ME);
+  const openTasks=myTasks.filter(t=>t.status!=='done');
+  const overdueTasks=openTasks.filter(t=>t.due&&t.due<today());
+  const cmp=today();
+  const now=new Date();
+  const mon=new Date(now.getFullYear(),now.getMonth(),now.getDate()-(now.getDay()===0?6:now.getDay()-1));
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  const pad=n=>String(n).padStart(2,'0');
+  const weekEnd=sun.getFullYear()+'-'+pad(sun.getMonth()+1)+'-'+pad(sun.getDate());
+  const wsOverdue=myWs.filter(w=>w.targetDate&&w.targetDate<cmp&&w.status!=='closed');
+  const taskUpcoming=openTasks.filter(t=>t.due&&t.due>=cmp&&t.due<=weekEnd);
+  const wsUpcoming=myWs.filter(w=>w.targetDate&&w.targetDate>=cmp&&w.targetDate<=weekEnd&&w.status!=='closed');
+  if(wsOverdue.length||overdueTasks.length)return true;
+  if(taskUpcoming.length||wsUpcoming.length)return true;
+  return false;
+}
+const NAV_MW_IC_ALERT='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+const NAV_MW_IC_OK='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+function updateMyWorkNavHighlight(){
+  const el=document.getElementById('nav-mywork');
+  if(!el)return;
+  const ic=el.querySelector('.nav-mw-week-ic');
+  if(!ME){
+    el.classList.remove('nav-mw-week-pending','nav-mw-week-ok');
+    if(ic)ic.innerHTML='';
+    el.title='';
+    return;
+  }
+  const need=myWorkWeekNavNeedsAttention();
+  el.classList.toggle('nav-mw-week-pending',need);
+  el.classList.toggle('nav-mw-week-ok',!need);
+  if(ic)ic.innerHTML=need?NAV_MW_IC_ALERT:NAV_MW_IC_OK;
+  el.title=need
+    ?'This Week needs attention: confirm documentation, or resolve overdue / upcoming items'
+    :'This week is clear: documentation confirmed, no overdue items, nothing due later this week';
 }
 
 function badges(){
@@ -1716,7 +1803,7 @@ function render(){
   ({dashboard:rDash,workstreams:rWorkstreamsNew,actionitems:rActionItemsNew,
     tasks:rTasks,extract:rExtract,mywork:rMyWork,people:rPeople,stakeholders:rStakeholders,report:rReport,ask:rAsk,
     decisions:rDecisions,risks:rRisks,governance:rGovernance,ado:rAdo,metrics:rMetrics,workmetrics:rWorkMetrics})[V]?.(c);
-  badges();autoUpdateMilestones();
+  badges();updateMyWorkNavHighlight();autoUpdateMilestones();
 }
 
 function autoUpdateMilestones(){
@@ -2494,6 +2581,57 @@ const WS_STATUSES=[
   {value:'value-achieved',label:'Value Measured/Achieved'},
   {value:'closed',label:'Closed'}
 ];
+const VERTICAL_LIFECYCLE_STAGES=[
+  {value:'not-started',label:'Not Started'},
+  {value:'needs-input',label:'Needs Input'},
+  {value:'discovery',label:'Discovery'},
+  {value:'roadmapping',label:'Roadmapping'},
+  {value:'executing',label:'Executing'}
+];
+const HEARTBEAT_LENS_OPTS=[
+  {value:'ai-employee',label:'AI for the Employee'},
+  {value:'ai-business',label:'AI for the Business'},
+  {value:'grassroots',label:'Grassroots / Superworkers'},
+  {value:'praxo-tech',label:'Praxo & Technical Controls'}
+];
+function getWorkstreamLevel(w){
+  if(!w)return 1;
+  if(typeof w.level==='number')return w.level;
+  const def=WS_DEFS.find(d=>d.id===w.id);
+  if(typeof def?.level==='number')return def.level;
+  if(!w.parentWs)return 1;
+  const parent=(D.workstreams||[]).find(x=>x.id===w.parentWs);
+  return parent?getWorkstreamLevel(parent)+1:1;
+}
+function getWorkstreamParentL1(w){
+  if(!w)return '';
+  const def=WS_DEFS.find(d=>d.id===w.id);
+  if(def?.parentL1)return def.parentL1;
+  if(w.parentL1)return w.parentL1;
+  if(!w.parentWs)return '';
+  const parent=(D.workstreams||[]).find(x=>x.id===w.parentWs);
+  return parent?getWorkstreamParentL1(parent):'';
+}
+function isVerticalAiPipelineWs(w){
+  return getWorkstreamParentL1(w)==='ai-for-business'&&getWorkstreamLevel(w)===2;
+}
+function verticalLifecycleIndex(v){
+  const i=VERTICAL_LIFECYCLE_STAGES.findIndex(s=>s.value===v);
+  return i>=0?i:0;
+}
+function ensureWorkstreamReportingFields(){
+  (D.workstreams||[]).forEach(w=>{
+    const def=WS_DEFS.find(d=>d.id===w.id);
+    if(def?.parentL1)w.parentL1=def.parentL1;
+    if(typeof def?.level==='number')w.level=def.level;
+  });
+  (D.workstreams||[]).forEach(w=>{
+    if(isVerticalAiPipelineWs(w)){
+      if(!w.verticalLifecycleStage)w.verticalLifecycleStage='not-started';
+      if(!w.heartbeatLens)w.heartbeatLens='ai-business';
+    }
+  });
+}
 function normalizeWsStatus(v){
   if(!v)return'intake';
   if(v==='not-started'||v==='reachout-kickoff')return'intake';
@@ -2911,7 +3049,7 @@ function renderPeopleSection(){
   </tr>`).join('')}</tbody></table></div>`:'<div class="empty"><h4>No people yet</h4><p><button class="mbtn mb-save" onclick="openPersonModal()">Add your first team member</button></p></div>'}`;
 }
 
-let myWorkTab='all',myWorkSort='due',myWorkSortDir=1;
+let myWorkTab='week',myWorkSort='due',myWorkSortDir=1,myWorkHideCompleted=false;
 function rMyWork(c){
   const me=ME||'';
   if(!me){
@@ -2921,6 +3059,9 @@ function rMyWork(c){
     </div></div>`;
     return;
   }
+  const vt=document.getElementById('viewTitle');
+  if(vt)vt.textContent=me;
+  if(['open','workstreams','actions'].includes(myWorkTab))myWorkTab='all';
   
   const myWs=(D.workstreams||[]).filter(w=>
     (w.category==='BU'||w.category==='Cross-cutting')&&
@@ -2928,17 +3069,28 @@ function rMyWork(c){
   );
   const myTasks=(D.tasks||[]).filter(t=>t.owner===me);
   const openTasks=myTasks.filter(t=>t.status!=='done');
-  const doneTasks=myTasks.filter(t=>t.status==='done');
   const overdueTasks=openTasks.filter(t=>t.due&&t.due<today());
+  const closedStatusesMw=['closed','value-achieved','deferred-rejected'];
+  const wsComplete=w=>closedStatusesMw.includes(normalizeWsStatus(w.status));
   
-  let displayWs=myWs;
-  let displayTasks=myTasks;
+  let baseWs=myWs;
+  let baseTasks=myTasks;
+  if(myWorkHideCompleted){
+    baseTasks=myTasks.filter(t=>t.status!=='done');
+    baseWs=myWs.filter(w=>!wsComplete(w));
+  }
+  const allCount=baseWs.length+baseTasks.length;
+  const overdueCountFiltered=baseTasks.filter(t=>t.status!=='done'&&t.due&&t.due<today()).length
+    +baseWs.filter(w=>w.targetDate&&w.targetDate<today()&&!wsComplete(w)).length;
+  
+  let displayWs=baseWs;
+  let displayTasks=baseTasks;
   
   if(myWorkTab!=='week'){
-    if(myWorkTab==='workstreams'){displayTasks=[];}
-    else if(myWorkTab==='actions'){displayWs=[];}
-    else if(myWorkTab==='open'){displayTasks=openTasks;displayWs=myWs.filter(w=>w.status!=='closed');}
-    else if(myWorkTab==='overdue'){displayTasks=overdueTasks;displayWs=myWs.filter(w=>w.targetDate&&w.targetDate<today()&&w.status!=='closed');}
+    if(myWorkTab==='overdue'){
+      displayTasks=baseTasks.filter(t=>t.status!=='done'&&t.due&&t.due<today());
+      displayWs=baseWs.filter(w=>w.targetDate&&w.targetDate<today()&&!wsComplete(w));
+    }
     
     if(myWorkSort==='name'){
       displayWs.sort((a,b)=>myWorkSortDir*(a.name||'').localeCompare(b.name||''));
@@ -2983,10 +3135,15 @@ function rMyWork(c){
   
   const sIco=(col)=>myWorkSort===col?(myWorkSortDir===1?' ▲':' ▼'):'';
 
-  const secCardMw=(title,subtitle,inner)=>`<div style="margin-bottom:20px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--bg-card);box-shadow:0 1px 2px rgba(0,0,0,.04)">
-    <div style="padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg-subtle)">
-      <div style="font-size:15px;font-weight:700;color:var(--fg)">${title}</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4">${subtitle}</div>
+  const secCardMw=(title,subtitle,inner,redHead,statusIconHtml='')=>`<div style="margin-bottom:20px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--bg-card);box-shadow:0 1px 2px rgba(0,0,0,.04)">
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);background:${redHead?'rgba(239,68,68,.14)':'var(--bg-subtle)'}">
+      <div style="display:flex;align-items:flex-start;justify-content:flex-start;gap:14px">
+        ${statusIconHtml}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:700;color:var(--fg)">${title}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4">${subtitle}</div>
+        </div>
+      </div>
     </div>
     <div style="padding:0">${inner}</div>
   </div>`;
@@ -3019,14 +3176,43 @@ function rMyWork(c){
     const doneInner=doneThisWeek.length
       ?tblTaskMw(doneThisWeek)
       :`<div style="padding:20px 16px;font-size:13px;color:var(--muted)">No action items marked done this week yet.</div>`;
-    mainBlock=`<p style="font-size:13px;color:var(--muted);margin:0 0 16px"><strong style="color:var(--fg)">This week:</strong> ${fmtDate(weekStart)} – ${fmtDate(weekEnd)} · Click a row to open and edit.</p>
-    ${secCardMw('Overdue','Workstreams with a target date before today, or open action items with a due date before today.',overdueInner)}
-    ${secCardMw('Coming up this week','Open action items due by end of week, and open workstreams with a target date through Sunday (calendar week).',upInner)}
-    ${secCardMw('Done this week','Action items you marked done (based on last saved update in this calendar week).',doneInner)}`;
+    let docsRepoAck=false;
+    try{docsRepoAck=localStorage.getItem('atlas-mw-docs-repo-ack')==='1';}catch(e){}
+    const overdueClear=!wsOverdue.length&&!overdueTasks.length;
+    const upcomingClear=!taskUpcoming.length&&!wsUpcoming.length;
+    const mwIconOk='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+    const mwIconPending='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+    const mwIcon=(ok,tipOk,tipBad)=>{
+      const t=ok?tipOk:tipBad;
+      const cls=ok?'mw-section-icon mw-section-icon--ok':'mw-section-icon mw-section-icon--pending';
+      const svg=ok?mwIconOk:mwIconPending;
+      return `<span class="${cls}" title="${esc(t)}" role="img" aria-label="${esc(t)}">${svg}</span>`;
+    };
+    const mwDoneIcon=`<span class="mw-section-icon mw-section-icon--ok" title="${esc('Done this week — items you completed in this calendar week (empty until you mark items done).')}" role="img" aria-label="${esc('Done this week')}">${mwIconOk}</span>`;
+    const docsRepoBanner=`<div style="margin-bottom:18px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--bg-card);box-shadow:0 1px 2px rgba(0,0,0,.04)">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);background:var(--bg-subtle)">
+      <div style="display:flex;align-items:flex-start;justify-content:flex-start;gap:14px">
+        ${mwIcon(docsRepoAck,'Documentation added — acknowledgment saved','Not acknowledged yet — check the box when repository documentation is complete')}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:700;color:var(--fg)">AI Transformation Program repository</div>
+          <p style="margin:8px 0 0;font-size:13px;color:var(--muted);line-height:1.5">All documentation added to AI Transformation Program repository.</p>
+          <p style="margin:8px 0 0;font-size:13px"><a href="${esc(ATLAS_AI_PROG_TEAMS_URL)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);font-weight:600;text-decoration:underline">Open AI Transformation Program site</a></p>
+          <label style="display:inline-flex;align-items:center;gap:10px;margin-top:12px;cursor:pointer;font-size:13px;color:var(--text);user-select:none">
+            <input type="checkbox" ${docsRepoAck?'checked ':''}onchange="setMwDocsRepoAck(this.checked);event.stopPropagation();"/>
+            I acknowledge all documentation is in the repository
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>`;
+    mainBlock=`${docsRepoBanner}<p style="font-size:13px;color:var(--muted);margin:0 0 16px"><strong style="color:var(--fg)">This week:</strong> ${fmtDate(weekStart)} – ${fmtDate(weekEnd)} · Click a row to open and edit.</p>
+    ${secCardMw('Overdue','Workstreams with a target date before today, or open action items with a due date before today.',overdueInner,true,mwIcon(overdueClear,'Nothing overdue — all clear','You have overdue workstreams or action items'))}
+    ${secCardMw('Coming up this week','Open action items due by end of week, and open workstreams with a target date through Sunday (calendar week).',upInner,false,mwIcon(upcomingClear,'Nothing else due this week','You have work due later this week'))}
+    ${secCardMw('Done this week','Action items you marked done (based on last saved update in this calendar week).',doneInner,false,mwDoneIcon)}`;
   }else{
     mainBlock=`${displayWs.length?`<div style="margin-bottom:24px">
       <h3 style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--text)">My Workstreams (${displayWs.length})</h3>
-      <table class="tbl" style="width:100%">
+      <div class="my-work-panel"><table class="tbl my-work-tbl" style="width:100%">
         <thead><tr>
           <th style="cursor:pointer" onclick="myWorkSort='name';myWorkSortDir=myWorkSort==='name'?-myWorkSortDir:1;render()">Workstream${sIco('name')}</th>
           <th style="width:80px">Role</th>
@@ -3035,12 +3221,12 @@ function rMyWork(c){
           <th style="width:100px">Items</th>
         </tr></thead>
         <tbody>${displayWs.map(renderWsRow).join('')}</tbody>
-      </table>
+      </table></div>
     </div>`:''}
     
     ${displayTasks.length?`<div>
       <h3 style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--text)">My Action Items (${displayTasks.length})</h3>
-      <table class="tbl" style="width:100%">
+      <div class="my-work-panel"><table class="tbl my-work-tbl" style="width:100%">
         <thead><tr>
           <th style="cursor:pointer" onclick="myWorkSort='name';myWorkSortDir=myWorkSort==='name'?-myWorkSortDir:1;render()">Action Item${sIco('name')}</th>
           <th style="width:160px">Workstream</th>
@@ -3048,7 +3234,7 @@ function rMyWork(c){
           <th style="width:100px;cursor:pointer" onclick="myWorkSort='due';myWorkSortDir=myWorkSort==='due'?-myWorkSortDir:1;render()">Due${sIco('due')}</th>
         </tr></thead>
         <tbody>${displayTasks.map(renderTaskRow).join('')}</tbody>
-      </table>
+      </table></div>
     </div>`:''}
     
     ${!displayWs.length&&!displayTasks.length?`<div style="padding:40px;text-align:center;color:var(--muted)">
@@ -3058,24 +3244,17 @@ function rMyWork(c){
   
   c.innerHTML=`
   <div class="page-wrap">
-    <div class="page-toolbar">
-      <span class="page-title">My Work</span>
-      <span style="font-size:13px;color:var(--muted)">${me}</span>
-      <div class="pill-filters">
-        <div class="pill${myWorkTab==='all'?' pill-i':' pill-m'}" onclick="myWorkTab='all';render()">All (${myWs.length+myTasks.length})</div>
-        <div class="pill${myWorkTab==='week'?' pill-i':' pill-m'}" onclick="myWorkTab='week';render()">Week view</div>
-        <div class="pill${myWorkTab==='open'?' pill-i':' pill-m'}" onclick="myWorkTab='open';render()">Open (${myWs.filter(w=>w.status!=='closed').length+openTasks.length})</div>
-        <div class="pill${myWorkTab==='overdue'?' pill-r':' pill-m'}" onclick="myWorkTab='overdue';render()" style="${overdueTasks.length?'':'opacity:.6'}">Overdue (${overdueTasks.length})</div>
-        <div class="pill${myWorkTab==='workstreams'?' pill-i':' pill-m'}" onclick="myWorkTab='workstreams';render()">Workstreams (${myWs.length})</div>
-        <div class="pill${myWorkTab==='actions'?' pill-i':' pill-m'}" onclick="myWorkTab='actions';render()">Action Items (${myTasks.length})</div>
-      </div>
-      <div class="toolbar-right" style="${myWorkTab==='week'?'display:none':''}">
-        <select onchange="myWorkSort=this.value;render()">
-          <option value="due"${myWorkSort==='due'?' selected':''}>Sort by Due Date</option>
-          <option value="name"${myWorkSort==='name'?' selected':''}>Sort by Name</option>
-          <option value="status"${myWorkSort==='status'?' selected':''}>Sort by Status</option>
-        </select>
-        <button class="btn btn-s" onclick="myWorkSortDir=myWorkSortDir===1?-1:1;render()">${myWorkSortDir===1?'↑ Asc':'↓ Desc'}</button>
+    <div class="page-toolbar my-work-toolbar">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px">
+        <div class="pill${myWorkTab==='week'?' pill-i my-work-week-pill':' pill-m my-work-week-pill'}" onclick="myWorkTab='week';render()">This Week</div>
+        <div class="pill-filters">
+          <div class="pill${myWorkTab==='all'?' pill-i':' pill-m'}" onclick="myWorkTab='all';render()">All (${allCount})</div>
+          <div class="pill${myWorkTab==='overdue'?' pill-r':' pill-m'}" onclick="myWorkTab='overdue';render()" style="${overdueCountFiltered?'':'opacity:.6'}">Overdue (${overdueCountFiltered})</div>
+        </div>
+        <label style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;user-select:none;margin:0">
+          <input type="checkbox" ${myWorkHideCompleted?'checked ':''}onchange="myWorkHideCompleted=this.checked;render();event.stopPropagation();"/>
+          Hide completed items
+        </label>
       </div>
     </div>
     
@@ -4474,6 +4653,14 @@ function openWsEdit(id){
     </div>
     <div class="fg"><label>Description</label><textarea id="ws-desc" style="min-height:60px">${w?esc(w.desc):''}</textarea></div>
     <div class="fg"><label>Business Outcome / Impact</label><textarea id="ws-businessOutcome" style="min-height:60px;font-size:12px" placeholder="1-2 sentences describing business impact">${w?esc(w.businessOutcome||''):''}</textarea></div>
+    ${w&&isVerticalAiPipelineWs(w)?`<div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)">
+      <h4 style="font-size:13px;font-weight:700;margin:0 0 8px">Vertical AI pipeline (required)</h4>
+      <p style="font-size:12px;color:var(--muted);margin:0 0 12px">L2 workstreams under AI for the Business — used for program PowerPoint export.</p>
+      <div class="fg-row">
+        <div class="fg"><label>Vertical lifecycle stage</label><select id="ws-verticalLifecycleStage">${VERTICAL_LIFECYCLE_STAGES.map(s=>`<option value="${s.value}"${(w.verticalLifecycleStage||'not-started')===s.value?' selected':''}>${esc(s.label)}</option>`).join('')}</select></div>
+        <div class="fg"><label>Heartbeat lens</label><select id="ws-heartbeatLens">${HEARTBEAT_LENS_OPTS.map(s=>`<option value="${s.value}"${(w.heartbeatLens||'ai-business')===s.value?' selected':''}>${esc(s.label)}</option>`).join('')}</select></div>
+      </div>
+    </div>`:''}
     ${w?`<div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px">
       <h4 style="font-size:13px;font-weight:700;margin:0 0 10px 0">Linked Items</h4>
       ${wsLinkedItems(w.id)}
@@ -4637,6 +4824,16 @@ function saveWs(id){
   w.stakeholders=[...document.querySelectorAll('.ws-sth-cb')].filter(cb=>cb.checked).map(cb=>cb.value);
   w.desc=document.getElementById('ws-desc').value.trim();
   w.businessOutcome=(document.getElementById('ws-businessOutcome')?.value||'').trim();
+  const defSelf=WS_DEFS.find(d=>d.id===w.id);
+  if(defSelf?.parentL1)w.parentL1=defSelf.parentL1;
+  const vert=isVerticalAiPipelineWs(w);
+  if(vert){
+    const vls=document.getElementById('ws-verticalLifecycleStage')?.value||'';
+    const hl=document.getElementById('ws-heartbeatLens')?.value||'';
+    if(!vls||!hl){toast('Vertical lifecycle stage and heartbeat lens are required for AI for the Business vertical workstreams');return}
+    w.verticalLifecycleStage=vls;
+    w.heartbeatLens=hl;
+  }
   w.updatedBy=ME;w.updatedAt=new Date().toISOString();
   save();log((isNew?'Added':'Updated')+' workstream: '+esc(w.name));closeModal();render();
   toast(isNew?'Workstream added':'Workstream updated');
@@ -6537,7 +6734,8 @@ function rReport(c){
         <h2 style="margin:0;font-size:1em">${reportViewMode==='exec'?'Executive Report Builder':reportViewMode==='full'?'AI Program Status — Full View':'Business Outcomes & Impact'}</h2>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           ${reportViewMode!=='exec'?`<label style="font-size:14px;color:var(--muted);display:flex;align-items:center;gap:4px">Report as of <input type="date" id="rpt-asof" value="${reportAsOf}" style="padding:4px 8px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:14px;font-family:inherit" onchange="saveReportAsOf();render()"></label>`:`<input type="hidden" id="rpt-asof" value="${reportAsOf}">`}
-          <div style="display:flex;gap:2px"><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='exec'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='exec'?'#fff':'var(--text)'}" onclick="localStorage.setItem('atlas_report_view','exec');render()">Executive</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='full'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='full'?'#fff':'var(--text)'}" onclick="localStorage.setItem('atlas_report_view','full');render()">Full</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='outcomes'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='outcomes'?'#fff':'var(--text)'}" onclick="localStorage.setItem('atlas_report_view','outcomes');render()">Outcomes</button></div>
+          <div style="display:flex;gap:2px;align-items:center;flex-wrap:wrap"><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='exec'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='exec'?'#fff':'var(--text)'}" onclick="localStorage.setItem('atlas_report_view','exec');render()">Executive</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='full'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='full'?'#fff':'var(--text)'}" onclick="localStorage.setItem('atlas_report_view','full');render()">Full</button><button class="mbtn" style="font-size:10px;padding:4px 8px;border-radius:var(--r-xs);border:1px solid var(--border);background:${reportViewMode==='outcomes'?'var(--accent);color:#fff;border-color:var(--accent)':'var(--bg-subtle)'};color:${reportViewMode==='outcomes'?'#fff':'var(--text)'}" onclick="localStorage.setItem('atlas_report_view','outcomes');render()">Outcomes</button>
+          <button type="button" class="mbtn" style="font-size:10px;padding:4px 10px;border-radius:var(--r-xs);border:1px solid var(--border);background:var(--bg-card);color:var(--text)" onclick="openAtlasProgramPptxModal()" title="White slides, Arial — optional AI heartbeat draft">📊 Program PowerPoint…</button></div>
         </div>
       </div>
     </div>
@@ -6878,6 +7076,211 @@ function toggleFeaturedWs(wsId){
   else if(er.featuredWs.length<2)er.featuredWs.push(wsId);
   else{toast('Maximum 2 featured workstreams');return}
   save();render();
+}
+
+// ── ATLAS program PowerPoint (white / Arial / optional AI heartbeat) ──
+function openAtlasProgramPptxModal(){
+  const lb=D.pptxExportLabels||{};
+  const eg=lb.execGate!=null?lb.execGate:'Exec Committee Gate';
+  const ab=lb.aboveLine||'';
+  const bl=lb.belowLine||'';
+  openModal(`<div class="m-hd"><h3>Export program PowerPoint</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd">
+    <p style="font-size:13px;color:var(--muted);margin:0 0 14px;line-height:1.5">Select slides to include (16:9, white background, Arial). Weekly Heartbeat uses OpenAI for a first draft when your API key is set; refine text in PowerPoint after download.</p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-pipeline" checked style="margin-top:3px"/> <span><strong>Vertical AI Pipeline</strong> — L2 “AI for the Business” workstreams and lifecycle bar</span></label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-heartbeat" checked style="margin-top:3px"/> <span><strong>Weekly Heartbeat (four lenses)</strong></span></label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-resource" checked style="margin-top:3px"/> <span><strong>Resourcing summary</strong> — leads/co-leads and workstream counts</span></label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-health" checked style="margin-top:3px"/> <span><strong>Health / target date</strong> — red if past target date (not closed), else green</span></label>
+    </div>
+    <p style="font-size:12px;font-weight:700;margin:0 0 8px">Pipeline slide labels (editable on slide after export)</p>
+    <div class="fg" style="margin-bottom:8px"><label>Exec Committee gate</label><input id="pptx-exec-gate" value="${esc(eg)}" placeholder="e.g. Exec Committee Gate"></div>
+    <div class="fg-row">
+      <div class="fg"><label>Above the line (optional)</label><input id="pptx-above-line" value="${esc(ab)}" placeholder="Section caption"></div>
+      <div class="fg"><label>Below the line (optional)</label><input id="pptx-below-line" value="${esc(bl)}" placeholder="Section caption"></div>
+    </div>
+  </div>
+  <div class="m-ft">
+    <button class="mbtn mb-cancel" onclick="closeModal()">Cancel</button>
+    <button class="mbtn mb-save" onclick="runAtlasProgramPptxFromModal()">Generate &amp; download</button>
+  </div>`);
+}
+async function runAtlasProgramPptxFromModal(){
+  const opts={
+    pipeline:document.getElementById('pptx-sl-pipeline')?.checked,
+    heartbeat:document.getElementById('pptx-sl-heartbeat')?.checked,
+    resourcing:document.getElementById('pptx-sl-resource')?.checked,
+    health:document.getElementById('pptx-sl-health')?.checked,
+    execGate:(document.getElementById('pptx-exec-gate')?.value||'').trim(),
+    aboveLine:(document.getElementById('pptx-above-line')?.value||'').trim(),
+    belowLine:(document.getElementById('pptx-below-line')?.value||'').trim()
+  };
+  if(!opts.pipeline&&!opts.heartbeat&&!opts.resourcing&&!opts.health){toast('Select at least one slide');return}
+  D.pptxExportLabels={execGate:opts.execGate,aboveLine:opts.aboveLine,belowLine:opts.belowLine};
+  save();
+  closeModal();
+  await generateAtlasProgramPptx(opts);
+}
+function isWsHealthPastDue(w){
+  const st=normalizeWsStatus(w.status);
+  if(st==='closed'||st==='value-achieved'||st==='deferred-rejected')return false;
+  if(!w.targetDate)return false;
+  return w.targetDate<today();
+}
+function fallbackHeartbeatBullets(){
+  const out={aiEmployee:[],aiBusiness:[],grassroots:[],praxoTech:[]};
+  const map={'ai-employee':'aiEmployee','ai-business':'aiBusiness','grassroots':'grassroots','praxo-tech':'praxoTech'};
+  (D.workstreams||[]).filter(isVerticalAiPipelineWs).forEach(w=>{
+    const k=map[w.heartbeatLens]||'aiBusiness';
+    const bit=`${w.name}: ${((w.desc||'').trim().slice(0,140))||wsStatusLabel(w.status)}${w.targetDate?' · Target '+fmtDate(w.targetDate):''}`;
+    out[k].push(bit);
+  });
+  ['aiEmployee','aiBusiness','grassroots','praxoTech'].forEach(k=>{
+    if(!out[k].length)out[k]=['No vertical workstreams tagged for this lens yet.'];
+  });
+  return out;
+}
+async function draftHeartbeatWithAi(){
+  const verticals=(D.workstreams||[]).filter(isVerticalAiPipelineWs);
+  if(!verticals.length)return fallbackHeartbeatBullets();
+  const ctx=verticals.map(w=>`- ${w.name} | lens:${w.heartbeatLens} | lifecycle:${w.verticalLifecycleStage} | lead:${w.primaryOwner||'—'} | target:${w.targetDate||'—'} | status:${wsStatusLabel(w.status)}\n  ${(w.desc||'').trim().slice(0,320)}`).join('\n');
+  const sys=`You draft concise executive bullets for Digital Realty's AI Transformation Program. Output ONLY valid JSON (no markdown fences) with keys: aiEmployee, aiBusiness, grassroots, praxoTech. Each value is an array of 2-4 short bullet strings (plain text). Use program data; say TBD only when nothing exists.`;
+  const raw=await callAI(sys,'Weekly heartbeat context:\n'+ctx+'\nToday: '+today(),{temperature:0.35});
+  if(!raw)return null;
+  let s=raw.trim();
+  if(s.startsWith('```'))s=s.replace(/^```[a-z]*\n?/i,'').replace(/\n?```$/,'');
+  try{
+    const j=JSON.parse(s);
+    return{
+      aiEmployee:Array.isArray(j.aiEmployee)?j.aiEmployee:[],
+      aiBusiness:Array.isArray(j.aiBusiness)?j.aiBusiness:[],
+      grassroots:Array.isArray(j.grassroots)?j.grassroots:[],
+      praxoTech:Array.isArray(j.praxoTech)?j.praxoTech:[]
+    };
+  }catch(e){return null}
+}
+function atlasPptxFooter(slide,n){
+  slide.addText(String(n),{x:12.35,y:7.06,w:0.55,h:0.18,fontSize:9,color:'666666',fontFace:'Arial',align:'right'});
+}
+async function generateAtlasProgramPptx(opts){
+  if(typeof PptxGenJS==='undefined'){toast('PptxGenJS library not loaded');return}
+  const noneSelected=!opts.pipeline&&!opts.heartbeat&&!opts.resourcing&&!opts.health;
+  if(noneSelected){toast('No slides selected');return}
+  toast('Building presentation…');
+  const pptx=new PptxGenJS();
+  pptx.defineLayout({name:'ATLAS16',width:13.333,height:7.5});
+  pptx.layout='ATLAS16';
+  const BLACK='000000',GRAY='333333',RED='CC0000',GREEN='1A5632';
+  const dateStr=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  let page=0;
+  const verticalRows=(D.workstreams||[]).filter(isVerticalAiPipelineWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  if(opts.pipeline){
+    page++;
+    const s=pptx.addSlide();
+    s.background={fill:'FFFFFF'};
+    s.addText('Vertical AI | Pipeline',{x:0.5,y:0.35,w:12,h:0.45,fontSize:20,bold:true,color:BLACK,fontFace:'Arial'});
+    s.addText(dateStr,{x:0.5,y:0.78,w:6,h:0.22,fontSize:11,color:'666666',fontFace:'Arial'});
+    if(opts.aboveLine)s.addText(opts.aboveLine,{x:0.5,y:1.0,w:12,h:0.2,fontSize:10,color:GRAY,fontFace:'Arial'});
+    const labelW=2.85,trackL=0.5+labelW,trackW=9.5,stageN=5,segW=trackW/stageN,barTop=opts.aboveLine?1.28:1.12;
+    VERTICAL_LIFECYCLE_STAGES.forEach((st,i)=>{
+      s.addText(st.label,{x:trackL+i*segW,y:barTop,w:segW,h:0.2,fontSize:8,color:BLACK,fontFace:'Arial',align:'center'});
+    });
+    const gateTxt=opts.execGate||'▼ Exec Committee Gate';
+    s.addText(gateTxt,{x:trackL+3.5*segW-0.1,y:barTop-0.12,w:segW*1.2,h:0.28,fontSize:7,color:RED,fontFace:'Arial',align:'center',bold:true});
+    if(opts.belowLine)s.addText(opts.belowLine,{x:0.5,y:barTop+0.35,w:12,h:0.18,fontSize:10,color:GRAY,fontFace:'Arial'});
+    let rowY=barTop+0.42+(opts.belowLine?0.2:0);
+    const rowMax=12;
+    const slice=verticalRows.slice(0,rowMax);
+    const rowH=slice.length>8?0.32:0.38;
+    slice.forEach(w=>{
+      const vi=verticalLifecycleIndex(w.verticalLifecycleStage);
+      const fillW=trackW*((vi+1)/stageN);
+      s.addText(w.name,{x:0.5,y:rowY,w:labelW-0.15,h:rowH,fontSize:slice.length>8?9:10,color:BLACK,fontFace:'Arial',bold:true,valign:'middle'});
+      s.addShape(pptx.ShapeType.rect,{x:trackL,y:rowY+0.06,w:fillW,h:0.2,fill:{color:'4472C4'},line:{color:'CCCCCC',width:0.5}});
+      const one=(w.desc||'').trim().slice(0,100)||wsStatusLabel(w.status);
+      s.addText(one,{x:trackL+trackW+0.08,y:rowY,w:13.2-trackL-trackW-0.5,h:rowH,fontSize:8,color:GRAY,fontFace:'Arial',valign:'middle'});
+      rowY+=rowH+0.06;
+    });
+    if(!slice.length)s.addText('No L2 workstreams under AI for the Business — add lifecycle & lens on each vertical workstream.',{x:0.5,y:rowY,w:12,h:0.5,fontSize:11,color:'666666',fontFace:'Arial'});
+    else if(verticalRows.length>rowMax)s.addText('('+verticalRows.length+' verticals — showing first '+rowMax+')',{x:0.5,y:6.85,w:12,h:0.2,fontSize:9,color:'666666',fontFace:'Arial'});
+    atlasPptxFooter(s,page);
+  }
+  let hb=null;
+  if(opts.heartbeat){
+    if(OPENAI_KEY){
+      hb=await draftHeartbeatWithAi();
+      if(!hb)hb=fallbackHeartbeatBullets();
+    }else hb=fallbackHeartbeatBullets();
+    page++;
+    const s=pptx.addSlide();
+    s.background={fill:'FFFFFF'};
+    s.addText('AI Program Update | Weekly Heartbeat',{x:0.5,y:0.35,w:12,h:0.42,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
+    s.addText(dateStr,{x:0.5,y:0.78,w:6,h:0.2,fontSize:10,color:'666666',fontFace:'Arial'});
+    const rows=[
+      {title:'AI for the Employee',key:'aiEmployee'},
+      {title:'AI for the Business',key:'aiBusiness'},
+      {title:'Grassroots / Superworkers',key:'grassroots'},
+      {title:'Praxo & Technical Controls',key:'praxoTech'}
+    ];
+    let y=1.12;
+    rows.forEach(r=>{
+      s.addText(r.title,{x:0.5,y:y,w:3.1,h:0.22,fontSize:12,bold:true,color:BLACK,fontFace:'Arial'});
+      const rawLines=hb[r.key]||[];
+      const bullets=rawLines.length
+        ?rawLines.map(t=>({text:t,options:{fontSize:10,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'},paraSpaceAfter:3}}))
+        :[{text:'—',options:{fontSize:10,color:BLACK,fontFace:'Arial'}}];
+      s.addText(bullets,{x:3.65,y:y,w:9.0,h:1.05,valign:'top',fontFace:'Arial'});
+      y+=1.18;
+    });
+    atlasPptxFooter(s,page);
+  }
+  const allProgWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  if(opts.resourcing){
+    page++;
+    const s=pptx.addSlide();
+    s.background={fill:'FFFFFF'};
+    s.addText('Resourcing — leads & workstreams',{x:0.5,y:0.35,w:12,h:0.42,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
+    s.addText(dateStr,{x:0.5,y:0.78,w:6,h:0.2,fontSize:10,color:'666666',fontFace:'Arial'});
+    const by={};
+    const un=[];
+    allProgWs.forEach(w=>{
+      const leads=[w.primaryOwner,w.secondaryOwner].filter(Boolean);
+      if(!leads.length){un.push(w.name);return}
+      leads.forEach(nm=>{
+        if(!by[nm])by[nm]=[];
+        by[nm].push(w.name);
+      });
+    });
+    const names=Object.keys(by).sort((a,b)=>a.localeCompare(b));
+    const head=[{text:'Resource',options:{bold:true,fontFace:'Arial',fontSize:11,color:BLACK}},{text:'# WS',options:{bold:true,fontFace:'Arial',fontSize:11,color:BLACK}},{text:'Workstreams',options:{bold:true,fontFace:'Arial',fontSize:11,color:BLACK}}];
+    const body=names.map(nm=>[{text:nm,options:{fontFace:'Arial',fontSize:10,color:BLACK}},{text:String(by[nm].length),options:{fontFace:'Arial',fontSize:10,color:BLACK}},{text:by[nm].join(', '),options:{fontFace:'Arial',fontSize:10,color:BLACK}}]);
+    const unRow=un.length?[[{text:'Unassigned',options:{bold:true,fontFace:'Arial',fontSize:10,color:RED}},{text:String(un.length),options:{fontFace:'Arial',fontSize:10,color:BLACK}},{text:un.join(', '),options:{fontFace:'Arial',fontSize:10,color:BLACK}}]]:[];
+    s.addTable([head,...body,...unRow],{x:0.5,y:1.15,w:12.3,fontFace:'Arial',border:{type:'solid',color:'CCCCCC',pt:0.5}});
+    atlasPptxFooter(s,page);
+  }
+  if(opts.health){
+    page++;
+    const s=pptx.addSlide();
+    s.background={fill:'FFFFFF'};
+    s.addText('Health / target date',{x:0.5,y:0.35,w:12,h:0.42,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
+    s.addText('Red = past target date and not closed. Green = on track.'+dateStr,{x:0.5,y:0.75,w:12,h:0.35,fontSize:10,color:'666666',fontFace:'Arial'});
+    const head=[{text:'Workstream',options:{bold:true,fontFace:'Arial',fontSize:11,color:BLACK}},{text:'Target',options:{bold:true,fontFace:'Arial',fontSize:11,color:BLACK}},{text:'Health',options:{bold:true,fontFace:'Arial',fontSize:11,color:BLACK}}];
+    const body=allProgWs.map(w=>{
+      const bad=isWsHealthPastDue(w);
+      return[
+        {text:w.name,options:{fontFace:'Arial',fontSize:10,color:BLACK}},
+        {text:w.targetDate?fmtDate(w.targetDate):'—',options:{fontFace:'Arial',fontSize:10,color:BLACK}},
+        {text:bad?'Past due':'OK',options:{fontFace:'Arial',fontSize:10,bold:true,color:bad?RED:GREEN}}
+      ];
+    });
+    if(body.length)s.addTable([head,...body],{x:0.5,y:1.2,w:12.3,fontFace:'Arial',border:{type:'solid',color:'CCCCCC',pt:0.5}});
+    else s.addText('No workstreams.',{x:0.5,y:1.4,w:10,h:0.4,fontSize:11,color:'666666',fontFace:'Arial'});
+    atlasPptxFooter(s,page);
+  }
+  try{
+    await pptx.writeFile({fileName:'ATLAS-Program-Update-'+today()+'.pptx'});
+    toast('Presentation downloaded');
+  }catch(e){toast('Export failed: '+e.message)}
 }
 
 // PPTX EXPORT
