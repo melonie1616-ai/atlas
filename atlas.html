@@ -718,7 +718,8 @@ body.nav-collapsed .topbar-menu{display:flex}
     <button onclick="openReleaseNotesModal()" style="display:flex;align-items:center;gap:7px" title="Release notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;opacity:.45"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>What's new</button>
     <div style="display:flex;gap:2px;padding:2px 0">
       <button onclick="exportJSON()" style="flex:1" title="Export backup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;opacity:.4;display:inline;vertical-align:-2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export</button>
-      <label style="flex:1;text-align:left;padding:7px 12px;border-radius:var(--r-sm);font-size:12px;color:#555570;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(255,255,255,.05)';this.style.color='#b0b0c8'" onmouseout="this.style.background='';this.style.color='#555570'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;opacity:.4;display:inline;vertical-align:-2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import<input type="file" accept=".json" onchange="importJSON(event)" hidden></label>
+      <label style="flex:1;text-align:left;padding:7px 12px;border-radius:var(--r-sm);font-size:12px;color:#555570;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(255,255,255,.05)';this.style.color='#b0b0c8'" onmouseout="this.style.background='';this.style.color='#555570'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;opacity:.4;display:inline;vertical-align:-2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import JSON<input type="file" accept=".json,application/json" onchange="importJSON(event)" hidden></label>
+      <label style="flex:1;text-align:left;padding:7px 12px;border-radius:var(--r-sm);font-size:12px;color:#555570;cursor:pointer;transition:all .15s" title="Merge ATLAS workstream export CSV by name" onmouseover="this.style.background='rgba(255,255,255,.05)';this.style.color='#b0b0c8'" onmouseout="this.style.background='';this.style.color='#555570'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;opacity:.4;display:inline;vertical-align:-2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import CSV<input type="file" accept=".csv,text/csv" onchange="importWorkstreamsCSV(event)" hidden></label>
     </div>
   </div>
 </nav>
@@ -8229,6 +8230,118 @@ function rStrategy(c){
 // ═══════════════════════════════════════════════════
 function exportJSON(){const b=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=`atlas-backup-${today()}.json`;a.click();URL.revokeObjectURL(u);toast('Exported')}
 function importJSON(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=function(ev){try{const d=JSON.parse(ev.target.result);if(d.workstreams||d.tasks){D=d;save();render();toast('Imported')}}catch(err){toast('Invalid JSON')}};r.readAsText(f);e.target.value=''}
+
+/** RFC-style CSV with quoted fields and embedded newlines (matches exportWorkstreamsCSV). */
+function parseCsvAtlas(text){
+  const rows=[];
+  let row=[];
+  let field='';
+  let i=0,inQuotes=false;
+  while(i<text.length){
+    const c=text[i];
+    if(inQuotes){
+      if(c==='"'){
+        if(text[i+1]==='"'){field+='"';i+=2;continue}
+        inQuotes=false;i++;continue;
+      }
+      field+=c;i++;continue;
+    }
+    if(c==='"'){inQuotes=true;i++;continue}
+    if(c===','){row.push(field);field='';i++;continue}
+    if(c==='\r'){i++;continue}
+    if(c==='\n'){row.push(field);rows.push(row);row=[];field='';i++;continue}
+    field+=c;i++;
+  }
+  row.push(field);
+  if(row.length&&(row.length>1||row[0]!==''))rows.push(row);
+  return rows;
+}
+function parseUsDateToIso(s){
+  const t=String(s||'').trim();
+  if(!t)return'';
+  const m=t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(!m)return'';
+  const mo=String(m[1]).padStart(2,'0'),da=String(m[2]).padStart(2,'0');
+  return `${m[3]}-${mo}-${da}`;
+}
+function importWorkstreamsCSV(ev){
+  const f=ev.target.files&&ev.target.files[0];
+  if(ev.target)ev.target.value='';
+  if(!f)return;
+  const r=new FileReader();
+  r.onload=function(e){
+    try{
+      const text=String(e.target.result||'').replace(/^\uFEFF/,'');
+      const rows=parseCsvAtlas(text);
+      if(rows.length<2){toast('CSV has no data rows');return}
+      const hdr=rows[0].map(h=>String(h||'').trim().toLowerCase());
+      const col=n=>{const i=hdr.indexOf(n.toLowerCase());return i};
+      const nameIdx=col('name'),lvlIdx=col('level'),parIdx=col('parent'),leadIdx=col('lead'),coIdx=col('co-lead'),stIdx=col('status'),tdIdx=col('target date'),tsIdx=col('start date'),prIdx=col('priority'),dsIdx=col('description');
+      if(nameIdx<0){toast('CSV must have a Name column');return}
+      const labelToStatus={};
+      WS_STATUSES.forEach(s=>{labelToStatus[s.label]=s.value});
+      const findWs=n=>{
+        const k=String(n||'').trim().toLowerCase();
+        if(!k)return null;
+        return(D.workstreams||[]).find(w=>String(w.name||'').trim().toLowerCase()===k)||null;
+      };
+      const dataRows=rows.slice(1).filter(r=>r.some(c=>String(c||'').trim()!==''));
+      const records=dataRows.map(cells=>{
+        const get=i=>i>=0&&i<cells.length?String(cells[i]??'').trim():'';
+        return{
+          name:get(nameIdx),
+          level:parseInt(get(lvlIdx),10)||1,
+          parent:get(parIdx),
+          lead:get(leadIdx),
+          coLead:get(coIdx),
+          statusRaw:get(stIdx),
+          targetDate:parseUsDateToIso(get(tdIdx)),
+          targetStart:parseUsDateToIso(get(tsIdx)),
+          priority:String(get(prIdx)).toLowerCase(),
+          desc:get(dsIdx)
+        };
+      }).filter(rec=>rec.name);
+      if(!records.length){toast('No workstream rows to import');return}
+      let created=0,updated=0,parentMiss=0;
+      records.forEach(rec=>{
+        let w=findWs(rec.name);
+        const isNew=!w;
+        if(!w){
+          w={id:uid(),name:rec.name,color:'#6366f1',phase:'0-30',category:'',notes:'',status:'intake',desc:'',primaryOwner:'',secondaryOwner:'',owner:'',parentWs:'',level:1};
+          D.workstreams.push(w);
+          created++;
+        }else updated++;
+        w.primaryOwner=rec.lead;
+        w.secondaryOwner=rec.coLead;
+        w.owner=rec.lead||w.owner;
+        const mapped=labelToStatus[rec.statusRaw];
+        if(mapped)w.status=mapped;
+        else if(rec.statusRaw)w.status=normalizeWsStatus(rec.statusRaw);
+        w.targetDate=rec.targetDate||'';
+        w.targetStart=rec.targetStart||'';
+        w.priority=rec.priority==='high'?'high':'';
+        w.desc=rec.desc;
+        w.updatedBy=ME||'csv-import';
+        w.updatedAt=new Date().toISOString();
+      });
+      records.forEach(rec=>{
+        const w=findWs(rec.name);
+        if(!w)return;
+        const pnm=String(rec.parent||'').trim();
+        if(!pnm){w.parentWs='';w.level=1;return}
+        const par=findWs(pnm);
+        if(par){
+          w.parentWs=par.id;
+          w.level=(typeof par.level==='number'?par.level:1)+1;
+        }else parentMiss++;
+      });
+      ensureWorkstreamReportingFields();
+      save();render();
+      toast(`Workstreams CSV: ${updated} updated, ${created} created.${parentMiss?' '+parentMiss+' parent name(s) not matched (parent link unchanged).':''}`);
+    }catch(err){console.error(err);toast('CSV import failed: '+(err.message||'error'))}
+  };
+  r.readAsText(f);
+}
 
 // ═══════════════════════════════════════════════════
 // INIT
