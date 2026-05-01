@@ -3594,7 +3594,10 @@ function rWorkstreamsNew(c){
       const isL1=!w.parentWs;
       const isLate=w.targetDate&&w.targetDate<today()&&w.status!=='closed';
       const isAtRisk=w.status==='at-risk'||w.status==='blocked';
-      const rowStyle=isLate||isAtRisk?'background:rgba(239,68,68,.05)':'';
+      const riskBg=isLate||isAtRisk?'rgba(239,68,68,.05)':'';
+      const highPriBg=!riskBg&&w.priority==='high'?'rgba(239,68,68,.04)':'';
+      const defaultRowBg=riskBg||highPriBg;
+      const rowStyle=defaultRowBg?'background:'+defaultRowBg:'';
       const expandIcon=hasChildren?`<span onclick="event.stopPropagation();wsExpanded['${w.id}']=!wsExpanded['${w.id}'];render()" style="cursor:pointer;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;margin-right:4px;font-size:10px;color:var(--muted);background:var(--bg-subtle)" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-subtle)'">${isExpanded?'▼':'▶'}</span>`:`<span style="width:22px;display:inline-block"></span>`;
       const levelBadge=`<span style="font-size:9px;color:var(--muted);background:var(--bg-subtle);border:1px solid var(--border);padding:1px 5px;border-radius:4px;margin-right:6px">L${level}</span>`;
       const countBadge=hasChildren?`<span style="font-size:10px;color:var(--muted);margin-left:6px">(${childCount} sub, ${taskCount} items)</span>`:'';
@@ -3603,7 +3606,7 @@ function rWorkstreamsNew(c){
       const dropAttrs=`ondragover="wsHierarchyDragOver(event,'${w.id}')" ondragleave="wsHierarchyDragLeave(event)" ondrop="wsHierarchyDrop(event,'${w.id}')"`;
       const dragHandle=isL1?'':`<span style="cursor:grab;color:var(--light);margin-right:4px;font-size:10px" title="Drag to move">⋮⋮</span>`;
       const rowBorder='border-bottom:1px solid var(--border-lt)';
-      return `<tr ${dragAttrs} ${dropAttrs} onclick="openWsDetail('${w.id}')" style="cursor:pointer;height:36px;${rowStyle};${rowBorder}" onmouseenter="if(!this.classList.contains('ws-drop-target'))this.style.background='var(--bg-subtle)'" onmouseleave="if(!this.classList.contains('ws-drop-target'))this.style.background='${rowStyle?'rgba(239,68,68,.05)':''}'">
+      return `<tr ${dragAttrs} ${dropAttrs} onclick="openWsDetail('${w.id}')" style="cursor:pointer;height:36px;${rowStyle};${rowBorder}" onmouseenter="if(!this.classList.contains('ws-drop-target'))this.style.background='var(--bg-subtle)'" onmouseleave="if(!this.classList.contains('ws-drop-target'))this.style.background='${defaultRowBg}'">
         <td style="padding:6px 14px;padding-left:${14+indent}px;white-space:nowrap">${dragHandle}${expandIcon}${levelBadge}${isLate?'<span style="color:var(--red);margin-right:4px">⚠</span>':''}<span style="${nameStyle}" ondblclick="inlineEditWsName('${w.id}',this,event)" title="Double-click to edit">${esc(w.name)}</span>${countBadge}</td>
         <td style="padding:6px 14px;font-size:12px;color:var(--muted);white-space:nowrap">${esc(w.primaryOwner||w.owner||'')}</td>
         <td style="padding:6px 14px;font-size:12px;color:var(--muted);white-space:nowrap">${esc(w.secondaryOwner||'')}</td>
@@ -3781,7 +3784,9 @@ function renderWsKanban(c,filteredWs,me,owners,l1Workstreams){
     const level=getLevel(w);
     const isLate=w.targetDate&&w.targetDate<today()&&w.status!=='closed';
     const isAtRisk=w.status==='at-risk'||w.status==='blocked';
-    const cardStyle=isLate||isAtRisk?'border-left:3px solid var(--red);background:rgba(239,68,68,.05)':'border-left:3px solid var(--border)';
+    const riskCard=isLate||isAtRisk;
+    let cardStyle=riskCard?'border-left:3px solid var(--red);background:rgba(239,68,68,.05)':'border-left:3px solid var(--border)';
+    if(!riskCard&&w.priority==='high')cardStyle='border-left:3px solid rgba(239,68,68,.28);background:rgba(239,68,68,.035)';
     const taskCount=(D.tasks||[]).filter(t=>t.workstream===w.id).length;
     const openCount=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status!=='done').length;
     return `<div class="kb-card" draggable="true" data-id="${w.id}" style="${cardStyle};cursor:pointer"
