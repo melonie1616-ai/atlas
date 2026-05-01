@@ -2455,6 +2455,9 @@ function wsOpts(sel){
   return html;
 }
 function wsOptsHierarchy(sel,excludeId){
+  const nb='\u00A0'; // NBSP so indent does not collapse inside <option>
+  const indL2=nb.repeat(6)+'└ ';
+  const indL3=nb.repeat(14)+'└ '; // deeper than L2 so L3 reads as child of L2
   const all=(D.workstreams||[]).filter(w=>w.id!==excludeId).map(w=>({id:w.id,name:w.name,parentWs:w.parentWs,color:w.color}));
   const l1s=all.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   let html='';
@@ -2462,12 +2465,12 @@ function wsOptsHierarchy(sel,excludeId){
     const l2s=all.filter(w=>w.parentWs===l1.id).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
     // L1 as selectable option with folder icon
     html+=`<option value="${l1.id}"${sel===l1.id?' selected':''}>📁 ${esc(l1.name)}</option>`;
-    // L2s indented under their L1; L3s indented under each L2
+    // L2s under L1; L3s further indented under each L2 (NBSP prevents browser collapsing spaces)
     l2s.forEach(l2=>{
-      html+=`<option value="${l2.id}"${sel===l2.id?' selected':''}>      └ ${esc(l2.name)}</option>`;
+      html+=`<option value="${l2.id}"${sel===l2.id?' selected':''}>${indL2}${esc(l2.name)}</option>`;
       const l3s=all.filter(w=>w.parentWs===l2.id).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
       l3s.forEach(l3=>{
-        html+=`<option value="${l3.id}"${sel===l3.id?' selected':''}>            └ ${esc(l3.name)}</option>`;
+        html+=`<option value="${l3.id}"${sel===l3.id?' selected':''}>${indL3}${esc(l3.name)}</option>`;
       });
     });
   });
