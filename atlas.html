@@ -715,7 +715,6 @@ body.nav-collapsed .topbar-menu{display:flex}
     <div style="display:flex;gap:2px;padding:2px 0">
       <button onclick="exportJSON()" style="flex:1" title="Export backup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;opacity:.4;display:inline;vertical-align:-2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export</button>
       <label style="flex:1;text-align:left;padding:7px 12px;border-radius:var(--r-sm);font-size:12px;color:#555570;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(255,255,255,.05)';this.style.color='#b0b0c8'" onmouseout="this.style.background='';this.style.color='#555570'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;opacity:.4;display:inline;vertical-align:-2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import JSON<input type="file" accept=".json,application/json" onchange="importJSON(event)" hidden></label>
-      <label style="flex:1;text-align:left;padding:7px 12px;border-radius:var(--r-sm);font-size:12px;color:#555570;cursor:pointer;transition:all .15s" title="Merge ATLAS workstream export CSV by name" onmouseover="this.style.background='rgba(255,255,255,.05)';this.style.color='#b0b0c8'" onmouseout="this.style.background='';this.style.color='#555570'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;opacity:.4;display:inline;vertical-align:-2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import CSV<input type="file" accept=".csv,text/csv" onchange="importWorkstreamsCSV(event)" hidden></label>
     </div>
   </div>
 </nav>
@@ -745,7 +744,7 @@ let D,V=localStorage.getItem('atlas_view')||'dashboard',ME='',dbRef=null,firebas
 const RELEASE_VERSION='2026-03-27';
 const RELEASE_NOTES=[
   {date:'March 27, 2026',whatsNew:[
-    'Dashboard timeline toggles: Show/hide 90-Day Enterprise Plan, Enterprise AI Roadmap, BU/Crosscutting workstreams, Milestones, and Action Items independently.',
+    'Dashboard timeline toggles: Show/hide 90-Day Enterprise Plan, Enterprise AI Roadmap, program workstreams, Milestones, and Action Items independently.',
     'Enhanced timeline visibility: Larger, more prominent Program Timeline section header with card-style background and better visual separation.',
     'Kanban board improvements: Toggle between list and board view for action items; drag-and-drop to update status; overdue/due-today highlighting (red/amber).',
     'AI Insights redesign: Full-page tabbed interface (Analyze + Ask) with larger, more visible tabs and uppercase labels for better clarity.',
@@ -772,13 +771,13 @@ const RELEASE_NOTES=[
   {date:'March 17, 2026 (prior)',whatsNew:[
     'Manage groups: Shows all existing groups; list stays in sync on load and after add/rename/delete.',
     'Quick Capture: Paste or speak notes; voice dictation in Chrome/Edge. Notes go to Inbox.',
-    'Report Out: Executive-style table; grouped by BU / Crosscutting; Copy, Print, AI Summarize.',
+    'Report Out: Executive-style table; program workstreams; Copy, Print, AI Summarize.',
     'Workstreams: Status Not Started; stakeholders per workstream (multi-select); shown on tiles and list.',
     'AI Program Insights: Real counts; Next Steps use actual task owners.',
     'Program Timeline: Configurable starting date.',
     'Dashboard: Open Items shows count due this week.'
   ],data:[
-    'Workstreams (8): GTM, Legal, HR, Operations (BU); Governance, Copilot, Data, Nexus (Cross-cutting). Status: Not Started, On Track, At Risk, Blocked, Complete. Stakeholders editable in Edit Workstream.',
+    'Workstreams (8): GTM, Legal, HR, Operations; Governance, Copilot, Data, Nexus. Status: Not Started, On Track, At Risk, Blocked, Complete. Stakeholders editable in Edit Workstream.',
     'Groups (8): CDO Leadership, CDO Team, Executive, Legal, HR, IT/Security, Business Stakeholder, Other.',
     'People: Name, role, group, email, phone, notes. Seed list for new installs.',
     'Engagements, tasks (with inbox), meetings, decisions, risks, metrics: workstream/engagement linkage supported.'
@@ -1423,7 +1422,7 @@ async function callAI(systemPrompt,userPrompt,opts={}){
   }catch(e){toast('AI request failed: '+e.message);return null}
 }
 function getProgramContext(){
-  const ws=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting').map(w=>w.name+' ('+w.status+', owner: '+(w.owner||'TBD')+')').join('; ');
+  const ws=allProgramWorkstreams().map(w=>w.name+' ('+w.status+', owner: '+(w.owner||'TBD')+')').join('; ');
   const allMs=(D.tasks||[]).filter(t=>t.isMilestone);
   const ms=allMs.map(m=>m.title+' — owner: '+(m.owner||'Unassigned')+' — '+(m.status==='done'?'done':m.due&&m.due<today()?'overdue':'upcoming')+(m.due?' due '+m.due:'')).join('; ');
   const openTasks=(D.tasks||[]).filter(t=>t.status!=='done');
@@ -1431,7 +1430,7 @@ function getProgramContext(){
   const openT=openTasks.map(t=>t.title+' (owner: '+(t.owner||'Unassigned')+(t.due?'; due '+t.due:'')+'; status: '+taskStatusLabel(t.status)+')').join('; ');
   const doneT=(D.tasks||[]).filter(t=>t.status==='done').map(t=>t.title+' (owner: '+(t.owner||'Unassigned')+')').join('; ');
   const eng=(D.engagements||[]).map(e=>e.title+' ('+e.status+', type: '+(e.type||'N/A')+')').join('; ');
-  const activeWsList=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  const activeWsList=allProgramWorkstreams();
   const wsCount=activeWsList.length;
   const wsInProgress=activeWsList.filter(w=>w.status&&w.status!=='not-started'&&w.status!=='complete').length;
   const msDone=allMs.filter(t=>t.status==='done').length;
@@ -1446,7 +1445,7 @@ TODAY: ${today()}`;
 }
 function getAskContext(){
   const lines=[];
-  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  const allWs=allProgramWorkstreams();
   allWs.forEach(w=>{
     const rec=(w.recentAccomplishments||'').trim()||recentAccomplishmentsFromApp(w.id);
     const nxt=(w.whatsNext||'').trim()||whatsNextFromApp(w.id);
@@ -1741,10 +1740,7 @@ function myWorkWeekNavNeedsAttention(){
   let docsRepoAck=false;
   try{docsRepoAck=localStorage.getItem('atlas-mw-docs-repo-ack')==='1';}catch(e){}
   if(!docsRepoAck)return true;
-  const myWs=(D.workstreams||[]).filter(w=>
-    (w.category==='BU'||w.category==='Cross-cutting')&&
-    (w.primaryOwner===ME||w.secondaryOwner===ME||w.owner===ME)
-  );
+  const myWs=workstreamsAssignedToPerson(ME);
   const myTasks=(D.tasks||[]).filter(t=>t.owner===ME);
   const openTasks=myTasks.filter(t=>t.status!=='done');
   const overdueTasks=openTasks.filter(t=>t.due&&t.due<today());
@@ -1785,7 +1781,7 @@ function updateMyWorkNavHighlight(){
 function badges(){
   const open=(D.tasks||[]).filter(t=>t.status!=='done');
   const overdue=open.filter(t=>t.due&&t.due<today());
-  const wsCount=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting').length;
+  const wsCount=allProgramWorkstreams().length;
   const ai=document.getElementById('nb-actionitems');if(ai){ai.textContent=open.length;ai.className='badge'+(overdue.length?' warn':open.length?' hot':'');}
   const ee=document.getElementById('nb-eng');if(ee)ee.textContent=(D.engagements||[]).length;
   const we=document.getElementById('nb-ws');if(we)we.textContent=wsCount;
@@ -2536,12 +2532,21 @@ function wsNamePlain(id){const w=(D.workstreams||[]).find(x=>x.id===id);return w
 function wsName(id){const w=(D.workstreams||[]).find(x=>x.id===id);return w?'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(w.color||'var(--muted)')+';margin-right:5px;vertical-align:middle;flex-shrink:0"></span>'+esc(w.name):'—'}
 function wsColor(id){const w=(D.workstreams||[]).find(x=>x.id===id)||WS_DEFS.find(x=>x.id===id);return w?w.color:'var(--muted)'}
 function wsOpts(sel){
-  const ws=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
-  const bu=ws.filter(w=>w.category==='BU').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-  const cc=ws.filter(w=>w.category==='Cross-cutting').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-  let html=`<optgroup label="Business Unit">${bu.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''} style="border-left:4px solid ${w.color||'var(--muted)'};padding-left:6px">&#9679; ${esc(w.name)}</option>`).join('')}</optgroup>`;
-  html+=`<optgroup label="Crosscutting">${cc.map(w=>`<option value="${w.id}"${sel===w.id?' selected':''} style="border-left:4px solid ${w.color||'var(--muted)'};padding-left:6px">&#9679; ${esc(w.name)}</option>`).join('')}</optgroup>`;
-  return html;
+  return wsOptsHierarchy(sel);
+}
+/** Workstreams where the person is lead, co-lead, or legacy owner (any category — matches Workstreams view). */
+function workstreamsAssignedToPerson(name){
+  if(!name)return[];
+  return(D.workstreams||[]).filter(w=>
+    w.primaryOwner===name||w.secondaryOwner===name||w.owner===name
+  ).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+}
+/** All program workstreams (no category filter). */
+function allProgramWorkstreams(){
+  return(D.workstreams||[]).slice();
+}
+function allProgramWorkstreamsSorted(){
+  return(D.workstreams||[]).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
 }
 function wsOptsHierarchy(sel,excludeId){
   const nb='\u00A0'; // NBSP so indent does not collapse inside <option>
@@ -2865,7 +2870,7 @@ function rDash(c){
   const msUp=allMs.filter(t=>t.status!=='done'&&(!t.due||t.due>=today()));
   const allPriorities=(D.tasks||[]).filter(t=>t.isPriority);
   const prioritiesDone=allPriorities.filter(t=>t.status==='done');
-  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  const allWs=allProgramWorkstreams();
   const activeWs=allWs.filter(w=>w.status!=='complete');
   const atRiskWs=allWs.filter(w=>{const s=w.status;return s==='at-risk'||s==='blocked'||(D.tasks||[]).some(t=>t.workstream===w.id&&t.status!=='done'&&t.due&&t.due<today())});
   const completeWs=allWs.filter(w=>w.status==='complete');
@@ -2911,7 +2916,7 @@ function rDash(c){
         <button onclick="go('actionitems')" style="flex:1;padding:12px 16px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:var(--r-sm);font-size:13px;font-weight:600;color:#fff;cursor:pointer;transition:all .15s" onmouseenter="this.style.background='rgba(255,255,255,.3)';this.style.transform='translateY(-1px)'" onmouseleave="this.style.background='rgba(255,255,255,.2)';this.style.transform=''">Manage Action Items</button>
       </div>
     </div>
-    <div style="background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);border-radius:var(--r-lg);padding:24px;box-shadow:0 4px 16px rgba(245,158,11,.25)">
+    <div style="background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);border-radius:var(--r-lg);padding:24px;box-shadow:0 4px 16px rgba(245,158,11,.25);cursor:pointer" onclick="openExecPptxSlideModal()" title="Choose slides and download executive PowerPoint" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openExecPptxSlideModal()}">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
         <div style="width:48px;height:48px;background:rgba(255,255,255,.2);border-radius:12px;display:flex;align-items:center;justify-content:center">
           <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:28px;height:28px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -2921,8 +2926,8 @@ function rDash(c){
           <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,.8)">Generate updates</p>
         </div>
       </div>
-      <div style="display:flex;gap:10px;align-items:center;justify-content:center;padding:12px;background:rgba(255,255,255,.15);border-radius:var(--r-sm)">
-        <span style="font-size:14px;font-weight:600;color:rgba(255,255,255,.9)">Coming Soon</span>
+      <div style="display:flex;gap:10px;align-items:center;justify-content:center;padding:12px 16px;background:rgba(255,255,255,.95);border:none;border-radius:var(--r-sm);box-shadow:0 2px 8px rgba(0,0,0,.08)">
+        <span style="font-size:14px;font-weight:700;color:#d97706">Generate Report</span>
       </div>
     </div>
   </div>
@@ -3061,10 +3066,7 @@ function rMyWork(c){
   if(vt)vt.textContent=me;
   if(['open','workstreams','actions'].includes(myWorkTab))myWorkTab='all';
   
-  const myWs=(D.workstreams||[]).filter(w=>
-    (w.category==='BU'||w.category==='Cross-cutting')&&
-    (w.primaryOwner===me||w.secondaryOwner===me||w.owner===me)
-  );
+  const myWs=workstreamsAssignedToPerson(me);
   const myTasks=(D.tasks||[]).filter(t=>t.owner===me);
   const openTasks=myTasks.filter(t=>t.status!=='done');
   const overdueTasks=openTasks.filter(t=>t.due&&t.due<today());
@@ -3106,7 +3108,7 @@ function rMyWork(c){
     const sc=statusColors[w.status]||'pill-m';
     const taskCount=(D.tasks||[]).filter(t=>t.workstream===w.id).length;
     const openCount=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status!=='done').length;
-    const isLead=w.primaryOwner===me;
+    const isLead=w.primaryOwner===me||(!w.primaryOwner&&w.owner===me);
     const levelBg=w.level===1?'#6366f1':w.level===2?'#8b5cf6':'#a855f7';
     return `<tr onclick="openWsDetail('${w.id}')" style="cursor:pointer" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background=''">
       <td><span style="font-size:9px;color:#fff;background:${levelBg};padding:1px 5px;border-radius:3px;margin-right:6px">L${w.level||2}</span><span style="font-weight:500">${esc(w.name)}</span></td>
@@ -3541,18 +3543,17 @@ async function runAIInsights(){
 // ═══════════════════════════════════════════════════
 // WORK ITEMS (Unified View)
 // ═══════════════════════════════════════════════════
-let workItemsExpanded={},workItemsCatCollapsed={BU:false,'Cross-cutting':false};
+let workItemsExpanded={},workItemsCatCollapsed={Program:false};
 function rWorkItems(c){
   const q=(document.getElementById('search').value||'').toLowerCase();
-  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  const allWs=allProgramWorkstreams();
   const allTasks=(D.tasks||[]);
   
-  function buildTree(category){
-    const catWs=allWs.filter(w=>w.category===category);
-    const l1s=catWs.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  function buildProgramTree(){
+    const l1s=allWs.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
     const tree=[];
     function addChildren(parentId,depth){
-      const children=catWs.filter(w=>w.parentWs===parentId).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+      const children=allWs.filter(w=>w.parentWs===parentId).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
       children.forEach(ch=>{
         tree.push({type:'ws',item:ch,depth});
         if(workItemsExpanded[ch.id]){
@@ -3570,17 +3571,11 @@ function rWorkItems(c){
         addChildren(ws.id,1);
       }
     });
-    const orphanTasks=allTasks.filter(t=>{
-      const ws=allWs.find(w=>w.id===t.workstream);
-      return ws&&ws.category===category&&!catWs.some(w=>w.id===t.workstream&&(workItemsExpanded[w.id]));
-    });
     return tree;
   }
   
-  const buTree=buildTree('BU');
-  const ccTree=buildTree('Cross-cutting');
-  const totalBU=allWs.filter(w=>w.category==='BU').length;
-  const totalCC=allWs.filter(w=>w.category==='Cross-cutting').length;
+  const programTree=buildProgramTree();
+  const totalWs=allWs.length;
   const totalTasks=allTasks.length;
   const openTasks=allTasks.filter(t=>t.status!=='done').length;
   
@@ -3653,9 +3648,8 @@ function rWorkItems(c){
         <button class="btn btn-s" onclick="openTaskModal()">+ Action Item</button>
       </div>
     </div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:16px">${totalBU+totalCC} workstreams &middot; ${openTasks} open action items / ${totalTasks} total</div>
-    ${renderCategory('Business Unit',buTree,totalBU,'BU')}
-    ${renderCategory('Cross-cutting',ccTree,totalCC,'Cross-cutting')}
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px">${totalWs} workstreams &middot; ${openTasks} open action items / ${totalTasks} total</div>
+    ${renderCategory('Program workstreams',programTree,totalWs,'Program')}
   </div>`;
 }
 
@@ -4407,20 +4401,14 @@ function rActionItemsNew(c){
 // ═══════════════════════════════════════════════════
 // WORK KANBAN (Combined Workstreams + Action Items) - LEGACY
 // ═══════════════════════════════════════════════════
-let workKanbanFilter='all',workKanbanOwner='',workKanbanCategory='';
+let workKanbanFilter='all',workKanbanOwner='';
 function rWorkKanban(c){
   const statuses=WS_STATUSES;
-  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  const allWs=allProgramWorkstreams();
   const allTasks=(D.tasks||[]);
   
   let filteredWs=allWs;
   let filteredTasks=allTasks;
-  
-  if(workKanbanCategory){
-    filteredWs=filteredWs.filter(w=>w.category===workKanbanCategory);
-    const wsIds=filteredWs.map(w=>w.id);
-    filteredTasks=filteredTasks.filter(t=>wsIds.includes(t.workstream));
-  }
   const isBlank3=v=>!v||!String(v).trim()||v==='""';
   if(workKanbanOwner){
     if(workKanbanOwner==='__unassigned__'){
@@ -4503,11 +4491,6 @@ function rWorkKanban(c){
         <div class="pill${workKanbanFilter==='actions'?' pill-i':' pill-m'}" onclick="workKanbanFilter='actions';render()">Action Items Only</div>
       </div>
       <div class="toolbar-right">
-        <select onchange="workKanbanCategory=this.value;render()">
-          <option value="">All Categories</option>
-          <option value="BU"${workKanbanCategory==='BU'?' selected':''}>Business Unit</option>
-          <option value="Cross-cutting"${workKanbanCategory==='Cross-cutting'?' selected':''}>Cross-cutting</option>
-        </select>
         <select onchange="workKanbanOwner=this.value;render()">
           <option value="">All Owners</option>
           <option value="__unassigned__"${workKanbanOwner==='__unassigned__'?' selected':''}>Unassigned</option>
@@ -4527,17 +4510,16 @@ function rWorkKanban(c){
 // ═══════════════════════════════════════════════════
 // WORKSTREAMS (Legacy)
 // ═══════════════════════════════════════════════════
-let wsLeadFilter='',wsCatFilter='',wsGroupCollapsed={};
+let wsLeadFilter='',wsGroupCollapsed={};
 function wsStatusValue(w){const s=w.status;if(!s)return'not-started';if(['on-track','at-risk','blocked','pilot-validate','deploy-scale'].includes(s))return'delivery';return s;}
 function rWork(c){
   const q=(document.getElementById('search').value||'').toLowerCase();
-  const leads=[...new Set((D.workstreams||[]).map(w=>w.owner).filter(Boolean))].sort();
+  const leads=[...new Set((D.workstreams||[]).map(w=>w.primaryOwner||w.owner).filter(Boolean))].sort();
 
-  let allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
-  if(wsLeadFilter==='__unassigned__')allWs=allWs.filter(w=>!w.owner);
-  else if(wsLeadFilter)allWs=allWs.filter(w=>w.owner===wsLeadFilter);
-  if(wsCatFilter)allWs=allWs.filter(w=>w.category===wsCatFilter);
-  if(q)allWs=allWs.filter(w=>(w.name+' '+w.desc+' '+w.owner+' '+(w.category||'')).toLowerCase().includes(q));
+  let allWs=allProgramWorkstreams();
+  if(wsLeadFilter==='__unassigned__')allWs=allWs.filter(w=>!w.primaryOwner&&!w.owner);
+  else if(wsLeadFilter)allWs=allWs.filter(w=>w.primaryOwner===wsLeadFilter||w.owner===wsLeadFilter||w.secondaryOwner===wsLeadFilter);
+  if(q)allWs=allWs.filter(w=>(w.name+' '+w.desc+' '+(w.primaryOwner||w.owner||'')+' '+(w.category||'')).toLowerCase().includes(q));
 
   const statusCounts={};
   WS_STATUSES.forEach(s=>{statusCounts[s.value]=allWs.filter(w=>wsStatusValue(w)===s.value).length;});
@@ -4553,10 +4535,8 @@ function rWork(c){
     list.filter(w=>w.parentWs&&!parents.find(p=>p.id===w.parentWs)).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).forEach(o=>out.push(o));
     return out;
   }
-  const buWs=hierarchicalSort(allWs.filter(w=>w.category==='BU'));
-  const ccWs=hierarchicalSort(allWs.filter(w=>w.category==='Cross-cutting'));
-  const totalBU=(D.workstreams||[]).filter(w=>w.category==='BU').length;
-  const totalCC=(D.workstreams||[]).filter(w=>w.category==='Cross-cutting').length;
+  const allSortedWs=hierarchicalSort(allWs);
+  const totalWsCount=allProgramWorkstreams().length;
 
   const renderRow=(w)=>{
     const isChild=!!w.parentWs;
@@ -4600,9 +4580,8 @@ function rWork(c){
   };
 
   const renderGroup=(items,label,gid,count)=>{
-    if(!items.length&&!wsLeadFilter&&!q&&!wsStatusFilter)return'';
     const collapsed=wsGroupCollapsed[gid];
-    const barColor=gid==='_bu'?'#2563eb':'#475569';
+    const barColor='#2563eb';
     return `<div class="page-section${collapsed?' collapsed':''}" data-gid="${gid}">
       <div class="section-header" onclick="wsGroupCollapsed['${gid}']=!wsGroupCollapsed['${gid}'];render()">
         <span class="section-chevron" style="transform:rotate(${collapsed?'0':'90'}deg)">&#9654;</span>
@@ -4643,11 +4622,6 @@ function rWork(c){
     <span class="page-title">Workstreams</span>
     <span style="font-size:13px;color:var(--muted)">${allWs.length} total${wsStatusFilter?' in '+wsStatusLabel(wsStatusFilter):''}</span>
     <div class="toolbar-right">
-      <select onchange="wsCatFilter=this.value;render()">
-        <option value="">All Categories</option>
-        <option value="BU"${wsCatFilter==='BU'?' selected':''}>Business Unit (${totalBU})</option>
-        <option value="Cross-cutting"${wsCatFilter==='Cross-cutting'?' selected':''}>Crosscutting (${totalCC})</option>
-      </select>
       <select onchange="wsLeadFilter=this.value;render()">
         <option value="">All Leads</option>
         <option value="__unassigned__"${wsLeadFilter==='__unassigned__'?' selected':''}>Unassigned</option>
@@ -4657,8 +4631,7 @@ function rWork(c){
       <button class="tb-btn" style="background:var(--accent);color:#fff" onclick="openWsEdit()">+ Add Workstream</button>
     </div>
   </div>
-  ${renderGroup(buWs,'Business Unit Workstreams','_bu',totalBU)}
-  ${renderGroup(ccWs,'Crosscutting Workstreams','_cc',totalCC)}
+  ${renderGroup(allSortedWs,'Workstreams','_all',totalWsCount)}
   </div>`;
 }
 
@@ -4685,6 +4658,11 @@ function openIntakeModal(){
 function openWsEdit(id){
   const w=id?(D.workstreams||[]).find(x=>x.id===id):null;
   const defaultOwner=w?w.primaryOwner||w.owner:(ME||'');
+  const vSel=(w&&w.verticalLifecycleStage)||'not-started';
+  const hSel=(w&&w.heartbeatLens)||'ai-business';
+  const vStageOpts=VERTICAL_LIFECYCLE_STAGES.map(s=>'<option value="'+esc(s.value)+'"'+(vSel===s.value?' selected':'')+'>'+esc(s.label)+'</option>').join('');
+  const lensOpts=HEARTBEAT_LENS_OPTS.map(s=>'<option value="'+esc(s.value)+'"'+(hSel===s.value?' selected':'')+'>'+esc(s.label)+'</option>').join('');
+  const hbHelp=w&&isVerticalAiPipelineWs(w)?'<strong>Pipeline L2</strong> — these fields are required. ':'<strong>Most workstreams</strong> — optional unless pipeline L2; used for reporting and program PowerPoint. ';
   openModal(`<div class="m-hd"><h3>${w?'Edit':'New'} Workstream</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
     <div class="fg"><label>Name of Workstream</label><input id="ws-name" value="${w?esc(w.name):''}" placeholder="Brief, descriptive name"></div>
@@ -4709,14 +4687,14 @@ function openWsEdit(id){
     </div>
     <div class="fg"><label>Description</label><textarea id="ws-desc" style="min-height:60px">${w?esc(w.desc):''}</textarea></div>
     <div class="fg"><label>Business Outcome / Impact</label><textarea id="ws-businessOutcome" style="min-height:60px;font-size:12px" placeholder="1-2 sentences describing business impact">${w?esc(w.businessOutcome||''):''}</textarea></div>
-    ${w&&isVerticalAiPipelineWs(w)?`<div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)">
-      <h4 style="font-size:13px;font-weight:700;margin:0 0 8px">Vertical AI pipeline (required)</h4>
-      <p style="font-size:12px;color:var(--muted);margin:0 0 12px">L2 workstreams under AI for the Business — used for program PowerPoint export.</p>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)">
+      <h4 style="font-size:13px;font-weight:700;margin:0 0 8px">Vertical lifecycle &amp; heartbeat</h4>
+      <p style="font-size:12px;color:var(--muted);margin:0 0 12px">${hbHelp}Maps to the <strong>four lenses</strong> heartbeat (AI for the Employee / Business, Grassroots, Praxo &amp; controls).</p>
       <div class="fg-row">
-        <div class="fg"><label>Vertical lifecycle stage</label><select id="ws-verticalLifecycleStage">${VERTICAL_LIFECYCLE_STAGES.map(s=>`<option value="${s.value}"${(w.verticalLifecycleStage||'not-started')===s.value?' selected':''}>${esc(s.label)}</option>`).join('')}</select></div>
-        <div class="fg"><label>Heartbeat lens</label><select id="ws-heartbeatLens">${HEARTBEAT_LENS_OPTS.map(s=>`<option value="${s.value}"${(w.heartbeatLens||'ai-business')===s.value?' selected':''}>${esc(s.label)}</option>`).join('')}</select></div>
+        <div class="fg"><label>Vertical lifecycle stage</label><select id="ws-verticalLifecycleStage">${vStageOpts}</select></div>
+        <div class="fg"><label>Heartbeat lens (four lenses)</label><select id="ws-heartbeatLens">${lensOpts}</select></div>
       </div>
-    </div>`:''}
+    </div>
     ${w?`<div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px">
       <h4 style="font-size:13px;font-weight:700;margin:0 0 10px 0">Linked Items</h4>
       ${wsLinkedItems(w.id)}
@@ -4882,13 +4860,15 @@ function saveWs(id){
   w.businessOutcome=(document.getElementById('ws-businessOutcome')?.value||'').trim();
   const defSelf=WS_DEFS.find(d=>d.id===w.id);
   if(defSelf?.parentL1)w.parentL1=defSelf.parentL1;
-  const vert=isVerticalAiPipelineWs(w);
-  if(vert){
-    const vls=document.getElementById('ws-verticalLifecycleStage')?.value||'';
-    const hl=document.getElementById('ws-heartbeatLens')?.value||'';
-    if(!vls||!hl){toast('Vertical lifecycle stage and heartbeat lens are required for AI for the Business vertical workstreams');return}
-    w.verticalLifecycleStage=vls;
-    w.heartbeatLens=hl;
+  const vlsEl=document.getElementById('ws-verticalLifecycleStage');
+  const hlEl=document.getElementById('ws-heartbeatLens');
+  if(vlsEl&&hlEl){
+    const vls=vlsEl.value||'';
+    const hl=hlEl.value||'';
+    const vert=isVerticalAiPipelineWs(w);
+    if(vert&&(!vls||!hl)){toast('Vertical lifecycle stage and heartbeat lens (four lenses) are required for AI for the Business pipeline L2 workstreams');return}
+    w.verticalLifecycleStage=vls||'not-started';
+    w.heartbeatLens=hl||'ai-business';
   }
   w.updatedBy=ME;w.updatedAt=new Date().toISOString();
   save();log((isNew?'Added':'Updated')+' workstream: '+esc(w.name));closeModal();render();
@@ -5238,7 +5218,7 @@ function addTaskComment(id){
 function openConvertToWorkstream(taskId){
   const t=D.tasks.find(x=>x.id===taskId);
   if(!t){toast('Action item not found');return}
-  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  const allWs=allProgramWorkstreams();
   const l1Ws=allWs.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const l2Ws=allWs.filter(w=>w.level===2).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   
@@ -5287,7 +5267,7 @@ function openConvertToWorkstream(taskId){
 function updateConvertParentOpts(){
   const level=document.getElementById('cvt-level').value;
   const parentSel=document.getElementById('cvt-parent');
-  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  const allWs=allProgramWorkstreams();
   const l1Ws=allWs.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const l2Ws=allWs.filter(w=>w.level===2).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   
@@ -5326,7 +5306,7 @@ function doConvertToWorkstream(taskId){
     name:name,
     level:actualLevel,
     parentWs:parentId,
-    category:parentWs.category||'BU',
+    category:parentWs.category||'',
     color:parentWs.color||'#6366f1',
     primaryOwner:document.getElementById('cvt-owner').value.trim(),
     targetStart:document.getElementById('cvt-start').value,
@@ -5606,7 +5586,7 @@ function rKanban(c){
   })();
   const inboxCount=(D.inbox||[]).filter(x=>!x.processed).length;
   const owners=[...new Set((D.tasks||[]).map(t=>t.owner).filter(Boolean))].sort();
-  const workstreams=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const workstreams=allProgramWorkstreamsSorted();
 
   const renderCard=(t)=>{
     const w=(D.workstreams||[]).find(x=>x.id===t.workstream);
@@ -6403,7 +6383,7 @@ function fillWsFromApp(wsId){
   toast('Filled from tasks in the app — edit and Save');
 }
 function updateAllWorkstreamsFromActionItems(){
-  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  const allWs=allProgramWorkstreams();
   let updated=0;
   allWs.forEach(w=>{
     const rec=recentAccomplishmentsFromApp(w.id);
@@ -6504,11 +6484,8 @@ function rReport(c){
   const msDone=allMs.filter(t=>t.status==='done');
   const msUp=allMs.filter(t=>t.status!=='done'&&(!t.due||t.due>=today())).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
   const msOD=allMs.filter(t=>t.status!=='done'&&t.due&&t.due<today());
-  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
-  const buWs=allWs.filter(w=>w.category==='BU');
-  const ccWs=allWs.filter(w=>w.category==='Cross-cutting');
-  const buWsSorted=[...buWs].sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
-  const ccWsSorted=[...ccWs].sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
+  const allWs=allProgramWorkstreams();
+  const allWsSorted=[...allWs].sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
   try{var reportViewMode=localStorage.getItem('atlas_report_view')||'outcomes'}catch(e){var reportViewMode='outcomes'}
   function keyDatesForWs(wsId){
     const openWithDue=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status!=='done'&&t.due).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
@@ -6564,19 +6541,13 @@ function rReport(c){
       <th>Workstream</th><th>Scope</th><th>Progress</th><th>Owner</th><th>Milestones</th><th>Open</th><th>Key timing</th>
     </tr></thead>
     <tbody>
-      ${buWs.length?'<tr><td colspan="7" style="background:var(--bg-subtle);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px">Business Unit</td></tr>':''}
-      ${buWs.map(renderWsRowFull).join('')}
-      ${ccWs.length?'<tr><td colspan="7" style="background:var(--bg-subtle);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px">Crosscutting</td></tr>':''}
-      ${ccWs.map(renderWsRowFull).join('')}
+      ${allWsSorted.map(renderWsRowFull).join('')}
     </tbody>
   </table>`;
   const execTableWorkstreamFocus=`<table class="rpt-exec-table rpt-ws-focus">
     <thead><tr><th>Workstream</th><th>Status</th><th>Recent accomplishments</th><th>Look Ahead</th></tr></thead>
     <tbody>
-      ${buWsSorted.length?'<tr class="rpt-group-header rpt-group-bu"><td colspan="4"><span>Business Unit Workstreams</span></td></tr>':''}
-      ${buWsSorted.map(renderWsRowExec).join('')}
-      ${ccWsSorted.length?'<tr class="rpt-group-header rpt-group-cc"><td colspan="4"><span>Crosscutting Workstreams</span></td></tr>':''}
-      ${ccWsSorted.map(renderWsRowExec).join('')}
+      ${allWsSorted.map(renderWsRowExec).join('')}
     </tbody>
   </table>`;
   const outcomeToWorkstreams={};
@@ -6611,10 +6582,7 @@ function rReport(c){
   const outcomesTable=`<table class="rpt-exec-table rpt-ws-focus rpt-outcomes-5col">
     <thead><tr><th>Workstream Name</th><th>Business Outcome</th><th>Status</th><th>Key Updates</th><th>Look Ahead + Risks</th></tr></thead>
     <tbody>
-      ${buWsSorted.length?'<tr class="rpt-group-header rpt-group-bu"><td colspan="5"><span>Business Unit</span></td></tr>':''}
-      ${buWsSorted.map(renderOutcomesRow).join('')}
-      ${ccWsSorted.length?'<tr class="rpt-group-header rpt-group-cc"><td colspan="5"><span>Crosscutting</span></td></tr>':''}
-      ${ccWsSorted.map(renderOutcomesRow).join('')}
+      ${allWsSorted.map(renderOutcomesRow).join('')}
     </tbody>
   </table>`;
   const execReportBuilder=(()=>{
@@ -6622,9 +6590,10 @@ function rReport(c){
     const er=getExecReport();
     const ta=`style="width:100%;font-size:12.5px;padding:8px 10px;border:1px solid var(--border-lt);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text);resize:vertical;font-family:Arial,sans-serif;line-height:1.5"`;
     const inp=`style="width:100%;font-size:12.5px;padding:6px 10px;border:1px solid var(--border-lt);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text);font-family:Arial,sans-serif"`;
-    const buParents=buWsSorted.filter(w=>!w.parentWs);
-    const horizWs=ccWsSorted.filter(w=>w.ccType==='horizontal');
-    const platWs=ccWsSorted.filter(w=>w.ccType!=='horizontal');
+    const verticalAiCount=(D.workstreams||[]).filter(isVerticalAiPipelineWs).length;
+    const buParents=allWsSorted.filter(w=>!w.parentWs);
+    const horizWs=allWsSorted.filter(w=>w.ccType==='horizontal');
+    const platWs=allWsSorted.filter(w=>w.ccType==='platform'||getWorkstreamParentL1(w)==='ai-platform');
     const totalTasks=(D.tasks||[]).length;
     const doneTasks=(D.tasks||[]).filter(t=>t.status==='done').length;
     const openTasks=totalTasks-doneTasks;
@@ -6634,7 +6603,7 @@ function rReport(c){
     return `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <p style="margin:0;font-size:13px;color:var(--muted)">Build your executive report below, then export to PowerPoint. All fields auto-save.</p>
-      <button class="tb-btn" style="background:#00274C;color:#fff;font-size:13px;padding:8px 16px;font-weight:700;border-radius:var(--r-sm)" onclick="exportExecPptx()">
+      <button class="tb-btn" style="background:#00274C;color:#fff;font-size:13px;padding:8px 16px;font-weight:700;border-radius:var(--r-sm)" onclick="openExecPptxSlideModal()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Export to PowerPoint
       </button>
@@ -6654,9 +6623,9 @@ function rReport(c){
       <div class="ws-section-bd">
         <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
           <div style="flex:1;min-width:140px;padding:12px 16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--r-sm)">
-            <div style="font-size:22px;font-weight:800;color:#1a5632">${buWs.length}</div>
+            <div style="font-size:22px;font-weight:800;color:#1a5632">${verticalAiCount}</div>
             <div style="font-size:11px;font-weight:700;color:#1a5632">Vertical AI</div>
-            <div style="font-size:10px;color:#64748b">across ${buParents.length} BUs</div></div>
+            <div style="font-size:10px;color:#64748b">L2 pipeline workstreams</div></div>
           <div style="flex:1;min-width:140px;padding:12px 16px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--r-sm)">
             <div style="font-size:22px;font-weight:800;color:#2c4a8a">${horizWs.length}</div>
             <div style="font-size:11px;font-weight:700;color:#2c4a8a">Horizontal AI</div>
@@ -6681,7 +6650,7 @@ function rReport(c){
       </div>
     </div>
     <div class="ws-section collapsed" id="execSec-3" style="margin-bottom:14px">
-      <div class="ws-section-hd" onclick="toggleWsSection('execSec-3')"><h4>Slide 3 &mdash; Vertical Engagements (${buParents.length} BUs)</h4><span class="ws-section-arrow">&#9660;</span></div>
+      <div class="ws-section-hd" onclick="toggleWsSection('execSec-3')"><h4>Slide 3 &mdash; Vertical Engagements (${buParents.length} top-level)</h4><span class="ws-section-arrow">&#9660;</span></div>
       <div class="ws-section-bd">
         <p style="font-size:11px;color:var(--muted);margin:0 0 10px">Each row appears on the vertical timeline slide. Keep updates short (1-2 lines).</p>
         <table style="width:100%;border-collapse:collapse;font-size:12px">
@@ -6699,7 +6668,7 @@ function rReport(c){
       <div class="ws-section-bd">
         <div class="fg" style="margin-bottom:12px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Slide Objective</label>
           <input ${inp} value="${esc(er.horizObjective||'Improve enterprise-wide productivity and employee experience through governed, scalable AI tools.')}" onchange="saveExecField('horizObjective',this.value)"></div>
-        ${horizWs.length?horizWs.map(w=>{const det=wsDet(w.id);return '<div style="background:var(--bg-card);border:1px solid var(--border-lt);border-radius:var(--r-sm);padding:12px;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+(w.color||'var(--muted)')+'"></span><strong style="font-size:13px">'+esc(w.name)+'</strong></div><textarea '+ta+' rows="3" placeholder="+ Bullet 1&#10;+ Bullet 2" onchange="saveExecWsDetail(\''+w.id+'\',\'bullets\',this.value)">'+esc(det.bullets||'')+'</textarea></div>';}).join(''):'<p style="color:var(--muted);font-size:12px">No workstreams tagged as Horizontal. Set subcategory on Cross-cutting workstreams below.</p>'}
+        ${horizWs.length?horizWs.map(w=>{const det=wsDet(w.id);return '<div style="background:var(--bg-card);border:1px solid var(--border-lt);border-radius:var(--r-sm);padding:12px;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+(w.color||'var(--muted)')+'"></span><strong style="font-size:13px">'+esc(w.name)+'</strong></div><textarea '+ta+' rows="3" placeholder="+ Bullet 1&#10;+ Bullet 2" onchange="saveExecWsDetail(\''+w.id+'\',\'bullets\',this.value)">'+esc(det.bullets||'')+'</textarea></div>';}).join(''):'<p style="color:var(--muted);font-size:12px">No workstreams tagged as Horizontal (set Subcategory to Horizontal in Workstream Configuration below).</p>'}
       </div>
     </div>
     <div class="ws-section collapsed" id="execSec-5" style="margin-bottom:14px">
@@ -6728,7 +6697,7 @@ function rReport(c){
     <div class="ws-section collapsed" id="execSec-config" style="margin-bottom:14px;border-top:2px dashed var(--border-lt);padding-top:10px">
       <div class="ws-section-hd" onclick="toggleWsSection('execSec-config')"><h4>Workstream Configuration</h4><span class="ws-section-arrow">&#9660;</span></div>
       <div class="ws-section-bd">
-        <p style="font-size:12px;color:var(--muted);margin:0 0 10px">Manage parent hierarchy and subcategories for Cross-cutting workstreams.</p>
+        <p style="font-size:12px;color:var(--muted);margin:0 0 10px">Manage parent hierarchy and Horizontal / Platform tags (used for executive export slides).</p>
         <table style="width:100%;border-collapse:collapse;font-size:12px">
           <thead><tr style="border-bottom:2px solid var(--border)">
             <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase">Workstream</th>
@@ -6736,7 +6705,7 @@ function rReport(c){
             <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase">Subcategory</th>
             <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase">Parent</th>
           </tr></thead>
-          <tbody>${allWs.sort((a,b)=>(a.category||'').localeCompare(b.category||'')||(a.name||'').localeCompare(b.name||'')).map(w=>{const opts=(D.workstreams||[]).filter(p=>p.id!==w.id&&!p.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));const isCc=w.category==='Cross-cutting';return '<tr style="border-bottom:1px solid var(--border-lt)"><td style="padding:6px 8px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(w.color||'var(--muted)')+';margin-right:6px;vertical-align:middle"></span>'+esc(w.name)+'</td><td style="padding:6px 8px;color:var(--muted)">'+esc(w.category||'—')+'</td><td style="padding:6px 8px">'+(isCc?'<select style="width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--border-lt);border-radius:var(--r-xs);background:var(--bg-subtle);color:var(--text)" onchange="saveBulkCcType(\''+w.id+'\',this.value)"><option value="horizontal"'+(w.ccType==='horizontal'?' selected':'')+'>Horizontal</option><option value="platform"'+(w.ccType!=='horizontal'?' selected':'')+'>Platform</option></select>':'<span style="color:var(--muted)">&mdash;</span>')+'</td><td style="padding:6px 8px"><select style="width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--border-lt);border-radius:var(--r-xs);background:var(--bg-subtle);color:var(--text)" onchange="saveBulkParentWs(\''+w.id+'\',this.value)"><option value="">&mdash; None &mdash;</option>'+opts.map(p=>'<option value="'+p.id+'"'+(w.parentWs===p.id?' selected':'')+'>'+esc(p.name)+'</option>').join('')+'</select></td></tr>';}).join('')}</tbody>
+          <tbody>${allWs.sort((a,b)=>(a.category||'').localeCompare(b.category||'')||(a.name||'').localeCompare(b.name||'')).map(w=>{const opts=(D.workstreams||[]).filter(p=>p.id!==w.id&&!p.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));return '<tr style="border-bottom:1px solid var(--border-lt)"><td style="padding:6px 8px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(w.color||'var(--muted)')+';margin-right:6px;vertical-align:middle"></span>'+esc(w.name)+'</td><td style="padding:6px 8px;color:var(--muted)">'+esc(w.category||'—')+'</td><td style="padding:6px 8px"><select style="width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--border-lt);border-radius:var(--r-xs);background:var(--bg-subtle);color:var(--text)" onchange="saveBulkCcType(\''+w.id+'\',this.value)"><option value=""'+(!w.ccType?' selected':'')+'>—</option><option value="horizontal"'+(w.ccType==='horizontal'?' selected':'')+'>Horizontal</option><option value="platform"'+(w.ccType==='platform'?' selected':'')+'>Platform</option></select></td><td style="padding:6px 8px"><select style="width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--border-lt);border-radius:var(--r-xs);background:var(--bg-subtle);color:var(--text)" onchange="saveBulkParentWs(\''+w.id+'\',this.value)"><option value="">&mdash; None &mdash;</option>'+opts.map(p=>'<option value="'+p.id+'"'+(w.parentWs===p.id?' selected':'')+'>'+esc(p.name)+'</option>').join('')+'</select></td></tr>';}).join('')}</tbody>
         </table>
       </div>
     </div>`;
@@ -6821,9 +6790,8 @@ function copyReport(){
   const rptEl=document.querySelector('.rpt');
   if(!rptEl){toast('Nothing to copy');return}
   const asOf=(document.getElementById('rpt-asof')?.value||D.reportNotes?.asOf||today());
-  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
-  const buWsCopy=allWs.filter(w=>w.category==='BU').sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
-  const ccWsCopy=allWs.filter(w=>w.category==='Cross-cutting').sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
+  const allWs=allProgramWorkstreams();
+  const allWsSorted=[...allWs].sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
   try{var reportViewMode=localStorage.getItem('atlas_report_view')||'outcomes'}catch(e){var reportViewMode='outcomes'}
   function keyDatesForWsCopy(wsId){
     const openWithDue=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status!=='done'&&t.due).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
@@ -6831,7 +6799,7 @@ function copyReport(){
   }
   let text=`AI PROGRAM STATUS — ${reportViewMode==='outcomes'?'BUSINESS OUTCOMES & IMPACT':reportViewMode==='exec'?'EXECUTIVE VIEW':'FULL VIEW'}\nAs of ${asOf}\n\n`;
   if(reportViewMode==='outcomes'){
-    const allWsCopy=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+    const allWsCopy=allProgramWorkstreams();
     text+='OUTCOMES BY WORKSTREAM\n\n';
     const addOutcomesWsRows=(list)=>{
       list.forEach(w=>{
@@ -6846,19 +6814,11 @@ function copyReport(){
         text+=`${w.name}\n  Business Outcome: ${outcomeTxt}\n  Status: ${statusTxt}\n  Key Updates:\n${recentBullets}\n  Look Ahead + Risks:\n${lookAheadBullets}\n\n`;
       });
     };
-    if(buWsCopy.length){text+='Business Unit\n';addOutcomesWsRows(buWsCopy);}
-    if(ccWsCopy.length){text+='Crosscutting\n';addOutcomesWsRows(ccWsCopy);}
+    if(allWsSorted.length){text+='WORKSTREAMS\n';addOutcomesWsRows(allWsSorted);}
   }else if(reportViewMode==='exec'){
     const execSum=(D.reportNotes||{}).executiveSummary||'';
     if(execSum.trim())text+=execSum.trim()+'\n\n';
-    if(buWsCopy.length){text+='BUSINESS UNIT WORKSTREAMS\n\n';buWsCopy.forEach(w=>{
-      const recentTxt=(w.recentAccomplishments||'').trim()||recentAccomplishmentsFromApp(w.id);
-      const nextTxt=(w.whatsNext||'').trim()||whatsNextFromApp(w.id);
-      const recentBullets=recentTxt?(recentTxt.split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,3).map(s=>'  • '+s).join('\n')):'  —';
-      const nextBullets=nextTxt?(nextTxt.split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,2).map(s=>'  • '+s).join('\n')):'  —';
-      text+=`${w.name}\n  Status: ${wsStatusLabel(w.status)}\n  Recent accomplishments:\n${recentBullets}\n  What's next:\n${nextBullets}\n\n`;
-    })}
-    if(ccWsCopy.length){text+='CROSSCUTTING WORKSTREAMS\n\n';ccWsCopy.forEach(w=>{
+    if(allWsSorted.length){text+='WORKSTREAMS\n\n';allWsSorted.forEach(w=>{
       const recentTxt=(w.recentAccomplishments||'').trim()||recentAccomplishmentsFromApp(w.id);
       const nextTxt=(w.whatsNext||'').trim()||whatsNextFromApp(w.id);
       const recentBullets=recentTxt?(recentTxt.split(/\n/).map(s=>s.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).slice(0,3).map(s=>'  • '+s).join('\n')):'  —';
@@ -6866,15 +6826,12 @@ function copyReport(){
       text+=`${w.name}\n  Status: ${wsStatusLabel(w.status)}\n  Recent accomplishments:\n${recentBullets}\n  What's next:\n${nextBullets}\n\n`;
     })}
   }else{
-    const buWs=allWs.filter(w=>w.category==='BU');
-    const ccWs=allWs.filter(w=>w.category==='Cross-cutting');
     function nextDue(wsId){
       const next=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status!=='done'&&t.due&&t.due>=today()).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'))[0];
       return next?fmtDate(next.due):'—';
     }
     text+='WORKSTREAMS\n';
-    if(buWs.length){text+='Business Unit\n';buWs.forEach(w=>{const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);const wMsDone=wMs.filter(t=>t.status==='done').length;const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status!=='done').length;text+=`  ${w.name} | ${w.status} | ${wMsDone}/${wMs.length} MS | Next: ${nextDue(w.id)} | Open: ${wOpen}\n`})}
-    if(ccWs.length){text+='Crosscutting\n';ccWs.forEach(w=>{const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);const wMsDone=wMs.filter(t=>t.status==='done').length;const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status!=='done').length;text+=`  ${w.name} | ${w.status} | ${wMsDone}/${wMs.length} MS | Next: ${nextDue(w.id)} | Open: ${wOpen}\n`})}
+    allWsSorted.forEach(w=>{const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);const wMsDone=wMs.filter(t=>t.status==='done').length;const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status!=='done').length;text+=`  ${w.name} | ${w.status} | ${wMsDone}/${wMs.length} MS | Next: ${nextDue(w.id)} | Open: ${wOpen}\n`});
     text+='\n';
   }
   const acc=(document.getElementById('rpt-acc')?.value||(D.reportNotes||{}).accomplishments||'').trim();
@@ -7003,7 +6960,7 @@ function getWorkstreamOutcomeContext(wsId){
   }).join('; ');
   return `WORKSTREAM
 Name: ${w.name}
-Category: ${w.category||'BU'}
+Category: ${w.category||'—'}
 Owner/Lead: ${w.owner||''}
 Status: ${wsStatusLabel(w.status)}
 Description: ${w.desc||''}
@@ -7041,7 +6998,7 @@ async function aiSuggestWorkstreamBusinessOutcome(wsId){
 
 async function aiPopulateAllWorkstreamBusinessOutcomes(){
   if(!OPENAI_KEY){toast('Set your OpenAI API key first');return}
-  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
+  const allWs=allProgramWorkstreams();
   if(!allWs.length){toast('No workstreams found');return}
   if(!confirm('AI will overwrite Business outcome / impact for all workstreams. Continue?'))return;
   toast('AI generating outcomes for '+allWs.length+' workstreams...');
@@ -7095,8 +7052,9 @@ function saveBulkParentWs(wsId,parentId){
 function saveBulkCcType(wsId,val){
   const w=(D.workstreams||[]).find(x=>x.id===wsId);
   if(!w)return;
-  w.ccType=val;save();
-  toast(esc(w.name)+' \u2192 '+val);render();
+  w.ccType=val||'';
+  save();
+  toast(esc(w.name)+' \u2192 '+(val?val:'(cleared)'));render();
 }
 function toggleFeaturedWs(wsId){
   const er=getExecReport();
@@ -7264,7 +7222,7 @@ async function generateAtlasProgramPptx(opts){
     });
     atlasPptxFooter(s,page);
   }
-  const allProgWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const allProgWs=allProgramWorkstreamsSorted();
   if(opts.resourcing){
     page++;
     const s=pptx.addSlide();
@@ -7319,235 +7277,215 @@ function parseBullets(text){
   return (text||'').split('\n').map(l=>l.replace(/^[\s]*[•\-\*]\s*/,'')).filter(l=>l.trim());
 }
 
-async function exportExecPptx(){
+const EXEC_PPTX_SLIDES_KEY='atlas_report_deck_slides_v2';
+function openExecPptxSlideModal(){
   if(typeof PptxGenJS==='undefined'){toast('PptxGenJS library not loaded');return}
+  const lb=D.pptxExportLabels||{};
+  const eg=lb.execGate!=null?String(lb.execGate):'▼ Exec Committee Gate';
+  const ab=String(lb.aboveLine||'');
+  const bl=String(lb.belowLine||'');
+  let saved={s1:true,s2:true,s3:true,s4:true,s5:true};
+  try{const raw=localStorage.getItem(EXEC_PPTX_SLIDES_KEY);if(raw){const j=JSON.parse(raw);if(j&&typeof j==='object')saved={...saved,...j}}}catch(e){}
+  const chk=(id,on)=>`<input type="checkbox" id="${id}" ${on?'checked':''} style="margin-top:3px"/>`;
+  openModal(`<div class="m-hd"><h3>Export program report (PowerPoint)</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd">
+    <p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.5">White 16:9 deck. Slide 2 uses the pipeline layout with your gate and above/below captions (saved with the deck).</p>
+    <div class="fg" style="margin-bottom:8px"><label style="font-size:11px;font-weight:700">Exec Committee gate (shown on pipeline slide)</label><input id="rptdeck-gate" value="${esc(eg)}" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px"></div>
+    <div class="fg-row" style="margin-bottom:10px">
+      <div class="fg"><label style="font-size:11px;font-weight:700">Above the line</label><input id="rptdeck-above" value="${esc(ab)}" placeholder="Caption above divider (e.g. active engagement)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px"></div>
+      <div class="fg"><label style="font-size:11px;font-weight:700">Below the line</label><input id="rptdeck-below" value="${esc(bl)}" placeholder="Caption below divider" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px"></div>
+    </div>
+    <p style="font-size:12px;font-weight:700;margin:0 0 8px">Slides to include</p>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <button type="button" class="mbtn" style="font-size:11px;padding:4px 10px" onclick="document.querySelectorAll('[id^=exec-pptx-sl]').forEach(c=>{c.checked=true})">Select all</button>
+      <button type="button" class="mbtn" style="font-size:11px;padding:4px 10px" onclick="document.querySelectorAll('[id^=exec-pptx-sl]').forEach(c=>{c.checked=false})">Clear all</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px">
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl1',saved.s1)} <span><strong>Slide 1 — Title</strong> — program title, subtitle, date</span></label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl2',saved.s2)} <span><strong>Slide 2 — Vertical AI pipeline</strong> — lifecycle bars, exec gate, above/below sections</span></label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl3',saved.s3)} <span><strong>Slide 3 — Weekly heartbeat</strong> — four lenses (AI uses your API key when set)</span></label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl4',saved.s4)} <span><strong>Slide 4 — Workstream status</strong> — all program workstreams with Red / Yellow / Green</span></label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl5',saved.s5)} <span><strong>Slide 5 — Resource allocation</strong> — each lead/co-lead and assigned workstreams</span></label>
+    </div>
+  </div>
+  <div class="m-ft">
+    <button class="mbtn mb-cancel" onclick="closeModal()">Cancel</button>
+    <button class="mbtn mb-save" onclick="runExecPptxFromSlideModal()">Generate &amp; download</button>
+  </div>`);
+}
+async function runExecPptxFromSlideModal(){
+  const ids=['exec-pptx-sl1','exec-pptx-sl2','exec-pptx-sl3','exec-pptx-sl4','exec-pptx-sl5'];
+  const keys=['s1','s2','s3','s4','s5'];
+  const opts={};
+  ids.forEach((id,i)=>{const el=document.getElementById(id);opts[keys[i]]=!!(el&&el.checked)});
+  if(!opts.s1&&!opts.s2&&!opts.s3&&!opts.s4&&!opts.s5){toast('Select at least one slide');return}
+  opts.execGate=(document.getElementById('rptdeck-gate')?.value||'').trim();
+  opts.aboveLine=(document.getElementById('rptdeck-above')?.value||'').trim();
+  opts.belowLine=(document.getElementById('rptdeck-below')?.value||'').trim();
+  if(!D.pptxExportLabels)D.pptxExportLabels={};
+  D.pptxExportLabels.execGate=opts.execGate;
+  D.pptxExportLabels.aboveLine=opts.aboveLine;
+  D.pptxExportLabels.belowLine=opts.belowLine;
+  save();
+  try{localStorage.setItem(EXEC_PPTX_SLIDES_KEY,JSON.stringify({s1:opts.s1,s2:opts.s2,s3:opts.s3,s4:opts.s4,s5:opts.s5}))}catch(e){}
+  closeModal();
+  await exportExecPptx(opts);
+}
 
+function workstreamRygForPptx(w){
+  if(isWsHealthPastDue(w))return{txt:'Red',fill:'B91C1C',fg:'FFFFFF'};
+  const raw=String(w.status||'').toLowerCase();
+  if(raw.includes('at-risk')||raw.includes('blocked'))return{txt:'Red',fill:'B91C1C',fg:'FFFFFF'};
+  const n=normalizeWsStatus(w.status);
+  if(n==='closed'||n==='value-achieved')return{txt:'Green',fill:'15803D',fg:'FFFFFF'};
+  if(n==='delivery')return{txt:'Green',fill:'15803D',fg:'FFFFFF'};
+  return{txt:'Yellow',fill:'CA8A04',fg:'1E293B'};
+}
+function splitVerticalPipelineRows(verticalRows){
+  const active=verticalRows.filter(w=>{
+    const st=(w.verticalLifecycleStage||'').trim();
+    return st==='executing'||st==='roadmapping';
+  });
+  const planning=verticalRows.filter(w=>!active.includes(w));
+  if(!active.length)return{above:verticalRows,below:[]};
+  return{above:active,below:planning};
+}
+async function exportExecPptx(opts){
+  if(typeof PptxGenJS==='undefined'){toast('PptxGenJS library not loaded');return}
+  const defSlides={s1:true,s2:true,s3:true,s4:true,s5:true};
+  opts={...defSlides,...(opts||{})};
+  if(!opts.s1&&!opts.s2&&!opts.s3&&!opts.s4&&!opts.s5){toast('Select at least one slide');return}
+  toast('Building presentation…');
   const er=getExecReport();
-  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting');
-  const buWs=allWs.filter(w=>w.category==='BU').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-  const ccWs=allWs.filter(w=>w.category==='Cross-cutting').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-  const buParents=buWs.filter(w=>!w.parentWs);
-  const horizWs=ccWs.filter(w=>w.ccType==='horizontal');
-  const platWs=ccWs.filter(w=>w.ccType!=='horizontal');
-
-  const allTasks=D.tasks||[];
-  const totalItems=allTasks.length;
-  const doneTasks=allTasks.filter(t=>t.status==='done').length;
-  const openTasks=totalItems-doneTasks;
-  const teamSize=er.teamSize||6;
-
-  let logoB64='';
-  try{
-    const resp=await fetch('dlr-logo.png');
-    const blob=await resp.blob();
-    logoB64=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(blob)});
-  }catch(e){}
-
-  const pptx=new PptxGenJS();
-  pptx.defineLayout({name:'DLR',width:13.333,height:7.5});
-  pptx.layout='DLR';
-
-  const BLACK='000000',NAVY='00274C',GRAY='666666',LTGRAY='94A3B8';
-  const GREEN='1A5632',BLUE='2C4A8A',PURPLE='6B21A8',RED='DC2626';
+  const allProgWs=allProgramWorkstreamsSorted();
+  const verticalRows=(D.workstreams||[]).filter(isVerticalAiPipelineWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const gateTxt=(opts.execGate!=null&&String(opts.execGate).trim())?String(opts.execGate).trim():((D.pptxExportLabels||{}).execGate||'▼ Exec Committee Gate');
+  const aboveCap=(opts.aboveLine!=null)?String(opts.aboveLine).trim():((D.pptxExportLabels||{}).aboveLine||'');
+  const belowCap=(opts.belowLine!=null)?String(opts.belowLine).trim():((D.pptxExportLabels||{}).belowLine||'');
   const dateStr=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
-  let pageNum=0;
+  const BLACK='000000',GRAY='333333',NAVY='00274C';
+  let page=0;
+  const pptx=new PptxGenJS();
+  pptx.defineLayout({name:'ATLAS16',width:13.333,height:7.5});
+  pptx.layout='ATLAS16';
 
-  function addFooter(slide){
-    pageNum++;
-    if(logoB64)slide.addImage({data:logoB64,x:0.56,y:7.02,h:0.21,w:1.39,sizing:{type:'contain',w:1.39,h:0.21}});
-    slide.addText(String(pageNum),{x:12.35,y:7.06,w:0.42,h:0.15,fontSize:8,color:GRAY,align:'right',fontFace:'Arial'});
+  if(opts.s1){
+    page++;
+    const s=pptx.addSlide();
+    s.background={fill:'FFFFFF'};
+    s.addText(er.titleText||'AI Transformation\nProgram Update',{x:0.5,y:2.15,w:12,h:1.35,fontSize:34,bold:true,color:NAVY,fontFace:'Arial',lineSpacingMultiple:1.08});
+    s.addText(er.subtitleText||'Corporate Data & AI Office',{x:0.5,y:3.75,w:10,h:0.75,fontSize:17,color:'666666',fontFace:'Arial'});
+    s.addText(dateStr,{x:0.5,y:4.85,w:6,h:0.45,fontSize:13,color:'666666',fontFace:'Arial'});
+    atlasPptxFooter(s,page);
   }
 
-  // ── SLIDE 1: Title (DLR "Title 2" layout) ──
-  const s1=pptx.addSlide();
-  s1.addText(er.titleText||'AI Transformation\nProgram Update',{x:0.76,y:2.30,w:10.03,h:1.45,fontSize:36,bold:true,color:NAVY,fontFace:'Arial',lineSpacingMultiple:1.1});
-  s1.addText(er.subtitleText||'Corporate Data & AI Office',{x:0.76,y:3.96,w:8.00,h:0.88,fontSize:18,color:GRAY,fontFace:'Arial'});
-  s1.addText(dateStr,{x:0.76,y:5.05,w:5.91,h:0.53,fontSize:14,color:GRAY,fontFace:'Arial'});
-  if(logoB64)s1.addImage({data:logoB64,x:0.56,y:7.02,h:0.21,w:1.39,sizing:{type:'contain',w:1.39,h:0.21}});
-
-  // ── SLIDE 2: Program Capacity & Summary ──
-  const s2=pptx.addSlide();
-  s2.addText('Program Capacity',{x:0.57,y:0.56,w:12.20,h:0.53,fontSize:30,bold:true,color:NAVY,fontFace:'Arial'});
-  s2.addText('AI demand is accelerating across the enterprise',{x:0.57,y:1.11,w:12.20,h:0.50,fontSize:20,color:GRAY,fontFace:'Arial'});
-
-  s2.addText(String(allWs.length),{x:0.57,y:1.88,w:4.0,h:1.3,fontSize:80,bold:true,color:NAVY,fontFace:'Arial',align:'center'});
-  s2.addText('workstreams',{x:0.57,y:3.08,w:4.0,h:0.25,fontSize:14,color:GRAY,fontFace:'Arial',align:'center'});
-  s2.addText(buParents.length+' business units   |   '+openTasks+' open action items',{x:0.57,y:3.30,w:4.0,h:0.25,fontSize:10,bold:true,color:NAVY,fontFace:'Arial',align:'center'});
-
-  s2.addText('vs.',{x:4.8,y:2.2,w:0.8,h:0.5,fontSize:16,bold:true,color:LTGRAY,fontFace:'Arial',align:'center'});
-
-  s2.addText(String(teamSize),{x:5.8,y:1.88,w:4.0,h:1.3,fontSize:80,bold:true,color:RED,fontFace:'Arial',align:'center'});
-  s2.addText(er.teamDedicated?'dedicated resources':'non-dedicated resources',{x:5.8,y:3.08,w:4.0,h:0.35,fontSize:12,color:GRAY,fontFace:'Arial',align:'center'});
-
-  const catCards=[
-    {label:'Vertical AI',sub:'AI for the Business',count:String(buWs.length),detail:buParents.length+' workstreams\nacross '+buParents.length+' BUs',fill:'E8F5E9',clr:GREEN,border:'A5D6A7'},
-    {label:'Horizontal AI',sub:'AI for the Employee',count:String(horizWs.length),detail:'workstreams',fill:'E3F2FD',clr:BLUE,border:'90CAF9'},
-    {label:'Platform AI',sub:'Supporting Workstreams',count:String(platWs.length),detail:'workstreams',fill:'F3E5F5',clr:PURPLE,border:'CE93D8'}
-  ];
-  catCards.forEach((c,i)=>{
-    const cx=0.57+i*4.0;
-    s2.addShape(pptx.ShapeType.roundRect,{x:cx,y:3.65,w:3.7,h:1.1,fill:{color:c.fill},line:{color:c.border,width:0.5},rectRadius:0.06});
-    s2.addText(c.count,{x:cx+0.15,y:3.7,w:0.8,h:0.6,fontSize:28,bold:true,color:c.clr,fontFace:'Arial',valign:'middle'});
-    s2.addText(c.label,{x:cx+0.9,y:3.7,w:2.5,h:0.3,fontSize:11,bold:true,color:c.clr,fontFace:'Arial',valign:'middle'});
-    s2.addText(c.sub,{x:cx+0.9,y:3.98,w:2.5,h:0.25,fontSize:9,color:GRAY,fontFace:'Arial'});
-    s2.addText(c.detail,{x:cx+0.15,y:4.3,w:3.4,h:0.35,fontSize:9,color:GRAY,fontFace:'Arial',italic:true});
-  });
-
-  const summaryLines=parseBullets(er.summary);
-  if(summaryLines.length){
-    s2.addText('Summary',{x:0.57,y:5.0,w:5,h:0.3,fontSize:12,bold:true,color:NAVY,fontFace:'Arial'});
-    s2.addText(summaryLines.map(l=>({text:l,options:{fontSize:11,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'},paraSpaceAfter:6}})),{x:0.57,y:5.35,w:11.6,h:1.3,valign:'top'});
+  if(opts.s2){
+    page++;
+    const s=pptx.addSlide();
+    s.background={fill:'FFFFFF'};
+    s.addText('Vertical AI | Pipeline',{x:0.5,y:0.32,w:12,h:0.42,fontSize:20,bold:true,color:BLACK,fontFace:'Arial'});
+    s.addText(dateStr,{x:0.5,y:0.72,w:6,h:0.2,fontSize:10,color:'666666',fontFace:'Arial'});
+    const labelW=2.75,trackL=0.5+labelW,trackW=9.55,stageN=VERTICAL_LIFECYCLE_STAGES.length,segW=trackW/stageN,barTop=1.02;
+    VERTICAL_LIFECYCLE_STAGES.forEach((st,i)=>{s.addText(st.label,{x:trackL+i*segW,y:barTop,w:segW,h:0.18,fontSize:7.5,color:BLACK,fontFace:'Arial',align:'center'})});
+    s.addText(gateTxt,{x:trackL+3.35*segW-0.05,y:barTop-0.1,w:segW*1.35,h:0.26,fontSize:6.5,color:'CC0000',fontFace:'Arial',align:'center',bold:true});
+    const split=splitVerticalPipelineRows(verticalRows);
+    const rowH=0.34;
+    const drawRows=(rows,y0,maxY,sectionLabel,barHex)=>{
+      let y=y0;
+      if(sectionLabel){s.addText(sectionLabel,{x:0.5,y:y,w:12,h:0.16,fontSize:9,bold:true,color:'555555',fontFace:'Arial'});y+=0.2}
+      rows.forEach(w=>{
+        if(y>maxY-0.05)return;
+        const vi=verticalLifecycleIndex(w.verticalLifecycleStage);
+        const fillW=trackW*((vi+1)/stageN);
+        s.addText(w.name,{x:0.5,y:y,w:labelW-0.12,h:rowH,fontSize:rows.length>10?8:9,color:BLACK,fontFace:'Arial',bold:true,valign:'middle'});
+        s.addShape(pptx.ShapeType.rect,{x:trackL,y:y+0.07,w:fillW,h:0.18,fill:{color:barHex},line:{color:'CCCCCC',width:0.5}});
+        const note=((w.desc||'').trim().slice(0,90))||wsStatusLabel(w.status);
+        s.addText(note,{x:trackL+trackW+0.06,y:y,w:13.2-trackL-trackW-0.55,h:rowH,fontSize:7.5,color:GRAY,fontFace:'Arial',valign:'middle'});
+        y+=rowH+0.05;
+      });
+      return y;
+    };
+    let yAfterStages=barTop+0.28;
+    if(aboveCap)yAfterStages=drawRows(split.above,yAfterStages,4.15,aboveCap,'4472C4')+0.12;
+    else yAfterStages=drawRows(split.above,yAfterStages,4.15,'','4472C4')+0.08;
+    s.addShape(pptx.ShapeType.rect,{x:0.45,y:yAfterStages,w:12.4,h:0.28,fill:{color:'6D28D9'},line:{color:'6D28D9',width:0.5}});
+    s.addText('CDO delivery capacity — Above: active engagement | Below: planning & support',{x:0.55,y:yAfterStages+0.04,w:12.2,h:0.22,fontSize:8,color:'FFFFFF',fontFace:'Arial',align:'center'});
+    yAfterStages+=0.34;
+    if(belowCap)yAfterStages=drawRows(split.below,yAfterStages,6.85,belowCap,'94A3B8');
+    else yAfterStages=drawRows(split.below,yAfterStages,6.85,'','94A3B8');
+    if(!verticalRows.length)s.addText('No L2 workstreams under AI for the Business — set parent/lifecycle on vertical workstreams.',{x:0.5,y:1.35,w:12,h:0.45,fontSize:11,color:'666666',fontFace:'Arial'});
+    atlasPptxFooter(s,page);
   }
 
-  s2.addText(totalItems+' action items  |  '+doneTasks+' completed  |  '+openTasks+' open/in progress',{x:0.57,y:6.7,w:8,h:0.25,fontSize:10,color:GRAY,fontFace:'Arial'});
-  addFooter(s2);
-
-  // ── SLIDE 3: Vertical Engagements ──
-  const s3=pptx.addSlide();
-  s3.addText('Vertical Engagements',{x:0.57,y:0.56,w:12.20,h:0.53,fontSize:30,bold:true,color:NAVY,fontFace:'Arial'});
-  s3.addText('Discovery \u2192 Capability \u2192 Prioritize \u2192 Roadmap',{x:0.57,y:1.11,w:12.20,h:0.50,fontSize:20,color:GRAY,fontFace:'Arial'});
-
-  s3.addText('VERTICAL',{x:0.57,y:1.72,w:2.6,h:0.25,fontSize:8,bold:true,color:LTGRAY,fontFace:'Arial'});
-  s3.addText('KEY UPDATES',{x:3.2,y:1.72,w:5.8,h:0.25,fontSize:8,bold:true,color:LTGRAY,fontFace:'Arial'});
-  s3.addText('DISCOVERY to ROADMAP TIMELINE',{x:9.2,y:1.72,w:3.57,h:0.25,fontSize:8,bold:true,color:LTGRAY,fontFace:'Arial',align:'center'});
-  s3.addShape(pptx.ShapeType.line,{x:0.57,y:1.97,w:12.20,h:0,line:{color:'CCCCCC',width:1}});
-
-  const phaseColors=['4CAF50','2196F3','FF9800','9C27B0'];
-  const phaseLabels=['Disc','Cap','Pri','Road'];
-  const tlX=9.2,tlW=3.57;
-  const weekW=tlW/7;
-  const phW=weekW*1.6;
-  const stagger=buParents.length>1?(7-4)/(buParents.length-1):0;
-  const rowH3=Math.min(0.6,4.65/Math.max(buParents.length,1));
-
-  buParents.forEach((w,i)=>{
-    const ry=2.05+i*rowH3;
-    if(ry>6.7)return;
-    const det=(er.wsDetails||{})[w.id]||{};
-    const keyUp=det.keyUpdate||'';
-    const keyNx=det.keyNext||'';
-    const combined=[keyUp,keyNx].filter(Boolean).join('\n');
-
-    s3.addShape(pptx.ShapeType.ellipse,{x:0.57,y:ry+(rowH3/2)-0.06,w:0.12,h:0.12,fill:{color:(w.color||'999999').replace('#','')}});
-    s3.addText(w.name,{x:0.77,y:ry,w:2.33,h:rowH3,fontSize:10,bold:true,color:BLACK,fontFace:'Arial',valign:'top',lineSpacingMultiple:1.05});
-    s3.addText(combined||'\u2014',{x:3.2,y:ry,w:5.8,h:rowH3,fontSize:9,color:'333333',fontFace:'Arial',valign:'top',lineSpacingMultiple:1.1});
-
-    const startWeek=i*stagger;
-    phaseColors.forEach((pc,pi)=>{
-      const px=tlX+startWeek*weekW+pi*phW;
-      const barW=phW-0.04;
-      if(px+barW>tlX+tlW+0.3)return;
-      s3.addShape(pptx.ShapeType.roundRect,{x:px,y:ry+(rowH3/2)-0.1,w:barW,h:0.2,fill:{color:pc},rectRadius:0.03});
-      if(rowH3>0.4)s3.addText(phaseLabels[pi],{x:px,y:ry+(rowH3/2)-0.1,w:barW,h:0.2,fontSize:6,color:'FFFFFF',fontFace:'Arial',align:'center',valign:'middle',bold:true});
+  let hb=null;
+  if(opts.s3){
+    if(OPENAI_KEY){hb=await draftHeartbeatWithAi();if(!hb)hb=fallbackHeartbeatBullets()}
+    else hb=fallbackHeartbeatBullets();
+    page++;
+    const s=pptx.addSlide();
+    s.background={fill:'FFFFFF'};
+    s.addText('AI Program Update | Weekly Heartbeat',{x:0.5,y:0.32,w:12,h:0.4,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
+    s.addText(dateStr,{x:0.5,y:0.72,w:6,h:0.18,fontSize:10,color:'666666',fontFace:'Arial'});
+    const rows=[{title:'AI for the Employee',key:'aiEmployee'},{title:'AI for the Business',key:'aiBusiness'},{title:'Grassroots / Superworkers',key:'grassroots'},{title:'Praxo & Technical Controls',key:'praxoTech'}];
+    let y=1.05;
+    rows.forEach(r=>{
+      s.addText(r.title,{x:0.5,y:y,w:3.1,h:0.2,fontSize:11,bold:true,color:BLACK,fontFace:'Arial'});
+      const rawLines=hb[r.key]||[];
+      const bullets=rawLines.length?rawLines.map(t=>({text:t,options:{fontSize:9.5,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'},paraSpaceAfter:2}})):[{text:'—',options:{fontSize:10,color:BLACK,fontFace:'Arial'}}];
+      s.addText(bullets,{x:3.55,y:y,w:9.1,h:1.0,valign:'top',fontFace:'Arial'});
+      y+=1.12;
     });
-
-    if(i<buParents.length-1)s3.addShape(pptx.ShapeType.line,{x:0.57,y:ry+rowH3,w:12.20,h:0,line:{color:'EEEEEE',width:0.5}});
-  });
-
-  const lgY=6.76;
-  phaseColors.forEach((pc,pi)=>{
-    const lx=9.2+pi*0.95;
-    s3.addShape(pptx.ShapeType.roundRect,{x:lx,y:lgY,w:0.2,h:0.14,fill:{color:pc},rectRadius:0.02});
-    s3.addText(['Discovery','Capability','Prioritize','Roadmap'][pi],{x:lx+0.24,y:lgY-0.02,w:0.7,h:0.18,fontSize:7,color:GRAY,fontFace:'Arial',valign:'middle'});
-  });
-  addFooter(s3);
-
-  // ── SLIDE 4: Horizontal AI ──
-  const s4=pptx.addSlide();
-  s4.addText('Horizontal View \u2014 AI for the Employee',{x:0.57,y:0.56,w:12.20,h:0.53,fontSize:30,bold:true,color:NAVY,fontFace:'Arial'});
-  s4.addText(er.horizObjective||'Improve enterprise-wide productivity and employee experience through governed, scalable AI tools.',{x:0.57,y:1.11,w:12.20,h:0.50,fontSize:20,italic:true,color:GRAY,fontFace:'Arial'});
-
-  horizWs.forEach((w,i)=>{
-    const col=i%2;
-    const row=Math.floor(i/2);
-    const xOff=col===0?0.57:7.09;
-    const colW=5.68;
-    const yOff=1.88+row*2.5;
-    const det=(er.wsDetails||{})[w.id]||{};
-    const bullets=parseBullets(det.bullets);
-
-    s4.addShape(pptx.ShapeType.ellipse,{x:xOff,y:yOff+0.08,w:0.14,h:0.14,fill:{color:(w.color||'2563eb').replace('#','')}});
-    s4.addText(w.name,{x:xOff+0.22,y:yOff,w:colW-0.22,h:0.35,fontSize:14,bold:true,color:NAVY,fontFace:'Arial',valign:'middle'});
-
-    if(bullets.length){
-      s4.addText(bullets.map(l=>({text:l,options:{fontSize:11,color:BLACK,fontFace:'Arial',bullet:{code:'2022'},paraSpaceAfter:4}})),{x:xOff+0.15,y:yOff+0.4,w:colW-0.15,h:2.0,valign:'top'});
-    }
-  });
-
-  if(!horizWs.length){
-    s4.addText('No workstreams tagged as Horizontal.',{x:0.57,y:2.5,w:10,h:0.5,fontSize:13,color:GRAY,fontFace:'Arial'});
+    atlasPptxFooter(s,page);
   }
-  addFooter(s4);
 
-  // ── SLIDE 5: Platform AI ──
-  const s5=pptx.addSlide();
-  s5.addText('Platform AI \u2014 Supporting Infrastructure',{x:0.57,y:0.56,w:12.20,h:0.53,fontSize:30,bold:true,color:NAVY,fontFace:'Arial'});
-  s5.addText(er.platformObjective||'Build the scalable infrastructure, data layer, and governance model that makes enterprise AI safe and reliable.',{x:0.57,y:1.11,w:12.20,h:0.50,fontSize:20,italic:true,color:GRAY,fontFace:'Arial'});
-
-  const platRowH=Math.min(1.0,4.65/Math.max(platWs.length,1));
-  platWs.forEach((w,i)=>{
-    const ry=1.88+i*platRowH;
-    if(ry>6.5)return;
-    const det=(er.wsDetails||{})[w.id]||{};
-    const desc=det.oneLiner||w.desc||'';
-
-    s5.addShape(pptx.ShapeType.roundRect,{x:0.57,y:ry,w:12.20,h:platRowH-0.12,fill:{color:'F8F9FA'},rectRadius:0.06});
-    s5.addShape(pptx.ShapeType.ellipse,{x:0.77,y:ry+(platRowH/2)-0.1,w:0.14,h:0.14,fill:{color:(w.color||'999999').replace('#','')}});
-    s5.addText(w.name,{x:1.02,y:ry,w:2.8,h:platRowH-0.12,fontSize:12,bold:true,color:NAVY,fontFace:'Arial',valign:'middle'});
-    s5.addText(desc,{x:3.95,y:ry,w:8.82,h:platRowH-0.12,fontSize:11,color:'333333',fontFace:'Arial',valign:'middle'});
-  });
-
-  if(!platWs.length){
-    s5.addText('No workstreams tagged as Platform.',{x:0.57,y:2.5,w:10,h:0.5,fontSize:13,color:GRAY,fontFace:'Arial'});
-  }
-  addFooter(s5);
-
-  // ── SLIDE 6: Featured Workstreams ──
-  const featIds=er.featuredWs||[];
-  const featWs=featIds.map(id=>allWs.find(w=>w.id===id)).filter(Boolean);
-  if(featWs.length){
-    const s6=pptx.addSlide();
-    s6.addText('Enterprise AI in Action',{x:0.57,y:0.56,w:12.20,h:0.53,fontSize:30,bold:true,color:NAVY,fontFace:'Arial'});
-    s6.addText('Executing Strategy Through Focused Pilots',{x:0.57,y:1.11,w:12.20,h:0.50,fontSize:20,color:GRAY,fontFace:'Arial'});
-    featWs.forEach((w,ci)=>{
-      const xOff=ci===0?0.57:7.09;
-      const colW=5.68;
-      const det=(er.wsDetails||{})[w.id]||{};
-
-      s6.addShape(pptx.ShapeType.ellipse,{x:xOff,y:1.95,w:0.16,h:0.16,fill:{color:(w.color||'999999').replace('#','')}});
-      s6.addText(w.name,{x:xOff+0.25,y:1.88,w:colW-0.25,h:0.35,fontSize:16,bold:true,color:NAVY,fontFace:'Arial',valign:'middle'});
-
-      let yPos=2.30;
-      const addSec=(label,text)=>{
-        s6.addText(label,{x:xOff,y:yPos,w:colW,h:0.25,fontSize:10,bold:true,color:NAVY,fontFace:'Arial'});
-        yPos+=0.25;
-        const lines=parseBullets(text);
-        if(lines.length){
-          const bH=Math.min(lines.length*0.22+0.05,1.4);
-          s6.addText(lines.map(l=>({text:l,options:{fontSize:10,color:BLACK,fontFace:'Arial',bullet:{code:'2022'},paraSpaceAfter:3}})),{x:xOff,y:yPos,w:colW,h:bH,valign:'top'});
-          yPos+=bH+0.04;
-        }else if(text){
-          s6.addText(text,{x:xOff,y:yPos,w:colW,h:0.3,fontSize:10,color:BLACK,fontFace:'Arial',valign:'top'});
-          yPos+=0.35;
-        }else{yPos+=0.04}
-      };
-      addSec('Purpose',det.purpose||'');
-      addSec('Target Outcomes',det.outcomes||'');
-      addSec('Key Progress',det.progress||'');
-      addSec('Next Steps',det.nextSteps||'');
-      if(det.value){
-        s6.addShape(pptx.ShapeType.roundRect,{x:xOff,y:Math.min(yPos+0.04,6.3),w:colW,h:0.35,fill:{color:'F0F4F8'},rectRadius:0.05});
-        s6.addText('Enterprise Value: '+det.value,{x:xOff+0.1,y:Math.min(yPos+0.04,6.3),w:colW-0.2,h:0.35,fontSize:9,italic:true,color:NAVY,fontFace:'Arial',valign:'middle'});
-      }
+  if(opts.s4){
+    page++;
+    const s=pptx.addSlide();
+    s.background={fill:'FFFFFF'};
+    s.addText('Workstream status (Red / Yellow / Green)',{x:0.5,y:0.32,w:12,h:0.4,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
+    s.addText(dateStr+' · Target past due or blocked/at-risk → Red. Closed/value achieved or active delivery → Green. Else Yellow.',{x:0.5,y:0.72,w:12.2,h:0.35,fontSize:9,color:'666666',fontFace:'Arial'});
+    const head=[{text:'Workstream',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},{text:'Category',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},{text:'Lead',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},{text:'Status',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},{text:'RYG',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}}];
+    const body=allProgWs.map(w=>{
+      const r=workstreamRygForPptx(w);
+      return[
+        {text:w.name,options:{fontFace:'Arial',fontSize:9,color:BLACK}},
+        {text:w.category||'—',options:{fontFace:'Arial',fontSize:9,color:BLACK}},
+        {text:w.primaryOwner||w.owner||'—',options:{fontFace:'Arial',fontSize:9,color:BLACK}},
+        {text:wsStatusLabel(w.status),options:{fontFace:'Arial',fontSize:9,color:BLACK}},
+        {text:r.txt,options:{fontFace:'Arial',fontSize:9,bold:true,color:r.fg,fill:{color:r.fill}}}
+      ];
     });
+    if(body.length)s.addTable([head,...body],{x:0.45,y:1.12,w:12.4,fontFace:'Arial',border:{type:'solid',color:'CCCCCC',pt:0.5}});
+    else s.addText('No workstreams.',{x:0.5,y:1.35,w:10,h:0.35,fontSize:11,color:'666666',fontFace:'Arial'});
+    atlasPptxFooter(s,page);
+  }
 
-    if(featWs.length===2)s6.addShape(pptx.ShapeType.line,{x:6.66,y:1.88,w:0,h:4.88,line:{color:'DDDDDD',width:0.75}});
-    addFooter(s6);
+  if(opts.s5){
+    page++;
+    const s=pptx.addSlide();
+    s.background={fill:'FFFFFF'};
+    s.addText('Resource allocation',{x:0.5,y:0.32,w:12,h:0.4,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
+    s.addText(dateStr,{x:0.5,y:0.72,w:6,h:0.18,fontSize:10,color:'666666',fontFace:'Arial'});
+    const by={};
+    const un=[];
+    allProgWs.forEach(w=>{
+      const leads=[...new Set([w.primaryOwner,w.secondaryOwner].filter(Boolean))];
+      if(!leads.length){un.push(w.name);return}
+      leads.forEach(nm=>{if(!by[nm])by[nm]=[];by[nm].push(w.name)});
+    });
+    const names=Object.keys(by).sort((a,b)=>a.localeCompare(b));
+    const head=[{text:'Team member',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},{text:'#',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},{text:'Workstreams',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}}];
+    const body=names.map(nm=>[{text:nm,options:{fontFace:'Arial',fontSize:9,color:BLACK}},{text:String(by[nm].length),options:{fontFace:'Arial',fontSize:9,color:BLACK}},{text:by[nm].join(', '),options:{fontFace:'Arial',fontSize:9,color:BLACK}}]);
+    const unRow=un.length?[[{text:'Unassigned lead',options:{bold:true,fontFace:'Arial',fontSize:9,color:'CC0000'}},{text:String(un.length),options:{fontFace:'Arial',fontSize:9,color:BLACK}},{text:un.join(', '),options:{fontFace:'Arial',fontSize:9,color:BLACK}}]]:[];
+    s.addTable([head,...body,...unRow],{x:0.45,y:1.05,w:12.4,fontFace:'Arial',border:{type:'solid',color:'CCCCCC',pt:0.5}});
+    atlasPptxFooter(s,page);
   }
 
   const fileDate=new Date().toISOString().slice(0,10);
-  pptx.writeFile({fileName:'AI-Program-Update-'+fileDate+'.pptx'});
-  toast('PowerPoint exported');
+  try{
+    await pptx.writeFile({fileName:'ATLAS-Program-Report-'+fileDate+'.pptx'});
+    toast('PowerPoint exported');
+  }catch(e){toast('Export failed: '+(e.message||String(e)))}
 }
 
 // ═══════════════════════════════════════════════════
@@ -7569,9 +7507,10 @@ function adoStateForWs(status){return'New'}
 function adoStateForTask(status){return'New'}
 
 function adoCategoryTag(w){
-  if(w.category==='BU')return'Vertical AI';
+  if(isVerticalAiPipelineWs(w))return'Vertical AI';
   if(w.ccType==='horizontal')return'Horizontal AI';
-  return'Platform AI';
+  if(w.ccType==='platform'||getWorkstreamParentL1(w)==='ai-platform')return'Platform AI';
+  return'Program';
 }
 
 async function adoApiCall(method,url,body){
@@ -7619,7 +7558,7 @@ async function adoLinkChild(childId,parentId){
 }
 
 function getAdoSyncItems(){
-  const allWs=(D.workstreams||[]).filter(w=>w.category==='BU'||w.category==='Cross-cutting').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const allWs=allProgramWorkstreamsSorted();
   const milestones=(D.tasks||[]).filter(t=>t.isMilestone);
   return{parents:allWs,milestones};
 }
@@ -7903,7 +7842,7 @@ function openDecModal(id){
     </div>
     <div class="fg"><label>Decided By</label><select id="dec-by">${peopleOpts(d?.decidedBy||'')}</select></div>
     <div class="fg-row">
-      <div class="fg"><label>Workstream</label><select id="dec-ws"><option value="">— None —</option>${wsOpts(d?.workstream)}</select></div>
+      <div class="fg"><label>Workstream</label><select id="dec-ws"><option value="">— None —</option>${wsOptsHierarchy(d?.workstream)}</select></div>
     </div>
     <div class="fg"><label>Notes</label><textarea id="dec-notes">${d?esc(d.notes||''):''}</textarea></div>
   </div>
@@ -7992,9 +7931,9 @@ function rGovernance(c){
   </div>
 
   ${govTab==='decisions'?`<div class="card"><div class="dash-hd" style="display:flex;justify-content:space-between;align-items:center">Decision Log <button class="mbtn mb-save" onclick="openDecModal()">+ Decision</button></div>
-  <div style="padding:0 18px 14px">${decisions.length?`<table class="tbl"><thead><tr><th>Date</th><th>Decision</th><th>Status</th><th>Decided By</th><th>Workstream</th></tr></thead><tbody>${decisions.map(d=>{
+  <div style="padding:0 18px 14px">${decisions.length?`<table class="tbl"><thead><tr><th style="white-space:nowrap;width:1%">Date</th><th>Decision</th><th>Status</th><th>Decided By</th><th>Workstream</th></tr></thead><tbody>${decisions.map(d=>{
     const sc=d.status==='approved'?'pill-g':d.status==='superseded'?'pill-r':d.status==='deferred'?'pill-a':'pill-m';
-    return `<tr style="cursor:pointer" onclick="openDecModal('${d.id}')"><td style="font-size:12px">${d.date?fmtDate(d.date):'—'}</td><td><strong>${esc(d.title)}</strong>${d.rationale?'<div style="font-size:11.5px;color:var(--muted);margin-top:2px">'+esc(d.rationale)+'</div>':''}</td><td><span class="pill ${sc}">${d.status}</span></td><td style="font-size:12px">${esc(d.decidedBy||'')}</td><td style="font-size:12px">${wsName(d.workstream)}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty"><h4>No decisions logged</h4><p>Track key decisions, architectural choices, and trade-offs. <button class="mbtn mb-save" style="margin-top:10px" onclick="openDecModal()">Add your first decision</button></p></div>'}</div></div>`
+    return `<tr style="cursor:pointer" onclick="openDecModal('${d.id}')"><td style="font-size:12px;white-space:nowrap;vertical-align:top">${d.date?fmtDate(d.date):'—'}</td><td><strong>${esc(d.title)}</strong>${d.rationale?'<div style="font-size:11.5px;color:var(--muted);margin-top:2px">'+esc(d.rationale)+'</div>':''}</td><td><span class="pill ${sc}">${d.status}</span></td><td style="font-size:12px">${esc(d.decidedBy||'')}</td><td style="font-size:12px">${wsName(d.workstream)}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty"><h4>No decisions logged</h4><p>Track key decisions, architectural choices, and trade-offs. <button class="mbtn mb-save" style="margin-top:10px" onclick="openDecModal()">Add your first decision</button></p></div>'}</div></div>`
   :`<div class="card"><div class="dash-hd" style="display:flex;justify-content:space-between;align-items:center">Risk Register <button class="mbtn mb-save" onclick="openRiskModal()">+ Risk</button></div>
   <div style="padding:0 18px 14px">${risks.length?`<table class="tbl"><thead><tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Status</th><th>Owner</th></tr></thead><tbody>${risks.map(r=>{
     const ic=r.impact==='critical'?'pill-r':r.impact==='high'?'pill-a':r.impact==='medium'?'pill-m':'pill-g';
@@ -8259,118 +8198,6 @@ function rStrategy(c){
 // ═══════════════════════════════════════════════════
 function exportJSON(){const b=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=`atlas-backup-${today()}.json`;a.click();URL.revokeObjectURL(u);toast('Exported')}
 function importJSON(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=function(ev){try{const d=JSON.parse(ev.target.result);if(d.workstreams||d.tasks){D=d;save();render();toast('Imported')}}catch(err){toast('Invalid JSON')}};r.readAsText(f);e.target.value=''}
-
-/** RFC-style CSV with quoted fields and embedded newlines (matches exportWorkstreamsCSV). */
-function parseCsvAtlas(text){
-  const rows=[];
-  let row=[];
-  let field='';
-  let i=0,inQuotes=false;
-  while(i<text.length){
-    const c=text[i];
-    if(inQuotes){
-      if(c==='"'){
-        if(text[i+1]==='"'){field+='"';i+=2;continue}
-        inQuotes=false;i++;continue;
-      }
-      field+=c;i++;continue;
-    }
-    if(c==='"'){inQuotes=true;i++;continue}
-    if(c===','){row.push(field);field='';i++;continue}
-    if(c==='\r'){i++;continue}
-    if(c==='\n'){row.push(field);rows.push(row);row=[];field='';i++;continue}
-    field+=c;i++;
-  }
-  row.push(field);
-  if(row.length&&(row.length>1||row[0]!==''))rows.push(row);
-  return rows;
-}
-function parseUsDateToIso(s){
-  const t=String(s||'').trim();
-  if(!t)return'';
-  const m=t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if(!m)return'';
-  const mo=String(m[1]).padStart(2,'0'),da=String(m[2]).padStart(2,'0');
-  return `${m[3]}-${mo}-${da}`;
-}
-function importWorkstreamsCSV(ev){
-  const f=ev.target.files&&ev.target.files[0];
-  if(ev.target)ev.target.value='';
-  if(!f)return;
-  const r=new FileReader();
-  r.onload=function(e){
-    try{
-      const text=String(e.target.result||'').replace(/^\uFEFF/,'');
-      const rows=parseCsvAtlas(text);
-      if(rows.length<2){toast('CSV has no data rows');return}
-      const hdr=rows[0].map(h=>String(h||'').trim().toLowerCase());
-      const col=n=>{const i=hdr.indexOf(n.toLowerCase());return i};
-      const nameIdx=col('name'),lvlIdx=col('level'),parIdx=col('parent'),leadIdx=col('lead'),coIdx=col('co-lead'),stIdx=col('status'),tdIdx=col('target date'),tsIdx=col('start date'),prIdx=col('priority'),dsIdx=col('description');
-      if(nameIdx<0){toast('CSV must have a Name column');return}
-      const labelToStatus={};
-      WS_STATUSES.forEach(s=>{labelToStatus[s.label]=s.value});
-      const findWs=n=>{
-        const k=String(n||'').trim().toLowerCase();
-        if(!k)return null;
-        return(D.workstreams||[]).find(w=>String(w.name||'').trim().toLowerCase()===k)||null;
-      };
-      const dataRows=rows.slice(1).filter(r=>r.some(c=>String(c||'').trim()!==''));
-      const records=dataRows.map(cells=>{
-        const get=i=>i>=0&&i<cells.length?String(cells[i]??'').trim():'';
-        return{
-          name:get(nameIdx),
-          level:parseInt(get(lvlIdx),10)||1,
-          parent:get(parIdx),
-          lead:get(leadIdx),
-          coLead:get(coIdx),
-          statusRaw:get(stIdx),
-          targetDate:parseUsDateToIso(get(tdIdx)),
-          targetStart:parseUsDateToIso(get(tsIdx)),
-          priority:String(get(prIdx)).toLowerCase(),
-          desc:get(dsIdx)
-        };
-      }).filter(rec=>rec.name);
-      if(!records.length){toast('No workstream rows to import');return}
-      let created=0,updated=0,parentMiss=0;
-      records.forEach(rec=>{
-        let w=findWs(rec.name);
-        const isNew=!w;
-        if(!w){
-          w={id:uid(),name:rec.name,color:'#6366f1',phase:'0-30',category:'',notes:'',status:'intake',desc:'',primaryOwner:'',secondaryOwner:'',owner:'',parentWs:'',level:1};
-          D.workstreams.push(w);
-          created++;
-        }else updated++;
-        w.primaryOwner=rec.lead;
-        w.secondaryOwner=rec.coLead;
-        w.owner=rec.lead||w.owner;
-        const mapped=labelToStatus[rec.statusRaw];
-        if(mapped)w.status=mapped;
-        else if(rec.statusRaw)w.status=normalizeWsStatus(rec.statusRaw);
-        w.targetDate=rec.targetDate||'';
-        w.targetStart=rec.targetStart||'';
-        w.priority=rec.priority==='high'?'high':'';
-        w.desc=rec.desc;
-        w.updatedBy=ME||'csv-import';
-        w.updatedAt=new Date().toISOString();
-      });
-      records.forEach(rec=>{
-        const w=findWs(rec.name);
-        if(!w)return;
-        const pnm=String(rec.parent||'').trim();
-        if(!pnm){w.parentWs='';w.level=1;return}
-        const par=findWs(pnm);
-        if(par){
-          w.parentWs=par.id;
-          w.level=(typeof par.level==='number'?par.level:1)+1;
-        }else parentMiss++;
-      });
-      ensureWorkstreamReportingFields();
-      save();render();
-      toast(`Workstreams CSV: ${updated} updated, ${created} created.${parentMiss?' '+parentMiss+' parent name(s) not matched (parent link unchanged).':''}`);
-    }catch(err){console.error(err);toast('CSV import failed: '+(err.message||'error'))}
-  };
-  r.readAsText(f);
-}
 
 // ═══════════════════════════════════════════════════
 // INIT
