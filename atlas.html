@@ -2095,7 +2095,7 @@ function renderFocusPopover(){
   const section=(title,items,isOverdue,onclickKey)=>{
     if(!items.length)return `<div class="focus-section${isOverdue?' overdue':''}"><div class="focus-section-title">${title}</div><div class="focus-empty">Nothing right now</div></div>`;
     return `<div class="focus-section${isOverdue?' overdue':''}"><div class="focus-section-title">${title}</div>${items.map(it=>{
-      const label=onclickKey==='task'?(it.isMilestone?'&#9733; ':'')+esc(it.title):esc(it.title);
+      const label=esc(it.title);
       const dateStr=it.due?fmtDate(it.due):(it.due||'');
       const oc=onclickKey==='task'?`closeFocusPopover();openTaskModal('${it.id}')`:onclickKey==='risk'?`closeFocusPopover();openRiskModal('${it.id}')`:'';
       const impactPill=onclickKey==='risk'&&it.impact?`<span class="pill ${it.impact==='critical'||it.impact==='high'?'pill-r':'pill-a'}" style="font-size:10px">${esc(it.impact)}</span>`:'';
@@ -2182,7 +2182,7 @@ function generateDailyUpdate(){
     recentUpdates.slice(0,8).forEach(t=>{
       const ws=wsNamePlain(t.workstream)||'No workstream';
       const status=t.status==='done'?'✓ Done':taskStatusLabel(t.status);
-      report+=`  • ${t.isMilestone?'★ ':''}${t.title} — ${t.owner||'Unassigned'} (${status}, ${ws})\n`;
+      report+=`  • ${t.title} — ${t.owner||'Unassigned'} (${status}, ${ws})\n`;
     });
     if(recentUpdates.length>8)report+=`  ... and ${recentUpdates.length-8} more\n`;
     report+='\n';
@@ -2193,7 +2193,7 @@ function generateDailyUpdate(){
     report+='📅 DUE TODAY\n';
     dueToday.forEach(t=>{
       const ws=wsNamePlain(t.workstream)||'No workstream';
-      report+=`  • ${t.isMilestone?'★ ':''}${t.title} — ${t.owner||'Unassigned'} (${ws})\n`;
+      report+=`  • ${t.title} — ${t.owner||'Unassigned'} (${ws})\n`;
     });
     report+='\n';
   }
@@ -2203,7 +2203,7 @@ function generateDailyUpdate(){
     report+='📅 DUE IN NEXT 3 DAYS\n';
     dueNext3.forEach(t=>{
       const ws=wsNamePlain(t.workstream)||'No workstream';
-      report+=`  • ${fmtDate(t.due)}: ${t.isMilestone?'★ ':''}${t.title} — ${t.owner||'Unassigned'} (${ws})\n`;
+      report+=`  • ${fmtDate(t.due)}: ${t.title} — ${t.owner||'Unassigned'} (${ws})\n`;
     });
     report+='\n';
   }
@@ -2215,7 +2215,7 @@ function generateDailyUpdate(){
     if(overdue.length){
       report+=`  Overdue (${overdue.length}):\n`;
       overdue.slice(0,6).forEach(t=>{
-        report+=`    • ${fmtDate(t.due)}: ${t.isMilestone?'★ ':''}${t.title} — ${t.owner||'Unassigned'}\n`;
+        report+=`    • ${fmtDate(t.due)}: ${t.title} — ${t.owner||'Unassigned'}\n`;
       });
       if(overdue.length>6)report+=`    ... and ${overdue.length-6} more\n`;
     }
@@ -2283,7 +2283,7 @@ function generateDailyUpdateHTML(){
         </thead>
         <tbody>
           ${recentUpdates.slice(0,8).map(t=>`<tr>
-            <td style="padding:8px;border:1px solid var(--border)">${t.isMilestone?'★ ':''}${esc(t.title)}</td>
+            <td style="padding:8px;border:1px solid var(--border)">${esc(t.title)}</td>
             <td style="padding:8px;border:1px solid var(--border)">${esc(t.owner||'Unassigned')}</td>
             <td style="padding:8px;border:1px solid var(--border)">${t.status==='done'?'✓ Done':taskStatusLabel(t.status)}</td>
             <td style="padding:8px;border:1px solid var(--border)">${esc(wsNamePlain(t.workstream)||'—')}</td>
@@ -2307,7 +2307,7 @@ function generateDailyUpdateHTML(){
         </thead>
         <tbody>
           ${dueToday.map(t=>`<tr>
-            <td style="padding:8px;border:1px solid var(--border)">${t.isMilestone?'★ ':''}${esc(t.title)}</td>
+            <td style="padding:8px;border:1px solid var(--border)">${esc(t.title)}</td>
             <td style="padding:8px;border:1px solid var(--border)">${esc(t.owner||'Unassigned')}</td>
             <td style="padding:8px;border:1px solid var(--border)">${esc(wsNamePlain(t.workstream)||'—')}</td>
           </tr>`).join('')}
@@ -2331,7 +2331,7 @@ function generateDailyUpdateHTML(){
         <tbody>
           ${dueNext3.map(t=>`<tr>
             <td style="padding:8px;border:1px solid var(--border)">${fmtDate(t.due)}</td>
-            <td style="padding:8px;border:1px solid var(--border)">${t.isMilestone?'★ ':''}${esc(t.title)}</td>
+            <td style="padding:8px;border:1px solid var(--border)">${esc(t.title)}</td>
             <td style="padding:8px;border:1px solid var(--border)">${esc(t.owner||'Unassigned')}</td>
             <td style="padding:8px;border:1px solid var(--border)">${esc(wsNamePlain(t.workstream)||'—')}</td>
           </tr>`).join('')}
@@ -2358,7 +2358,7 @@ function generateDailyUpdateHTML(){
           <tbody>
             ${overdue.slice(0,6).map(t=>`<tr>
               <td style="padding:8px;border:1px solid var(--border)">${fmtDate(t.due)}</td>
-              <td style="padding:8px;border:1px solid var(--border)">${t.isMilestone?'★ ':''}${esc(t.title)}</td>
+              <td style="padding:8px;border:1px solid var(--border)">${esc(t.title)}</td>
               <td style="padding:8px;border:1px solid var(--border)">${esc(t.owner||'Unassigned')}</td>
             </tr>`).join('')}
           </tbody>
@@ -2851,7 +2851,7 @@ function renderMyWorkSection(){
     const rowBg=isOD?'background:var(--red-lt)':'';
     return `<tr onclick="openTaskModal('${t.id}')" style="cursor:pointer;${rowBg}">
       <td style="vertical-align:middle;width:28px" onclick="event.stopPropagation()"><div class="task-chk${t.status==='done'?' done':''}" onclick="toggleTask('${t.id}')">&#10003;</div></td>
-      <td style="${t.status==='done'?'text-decoration:line-through;color:var(--muted)':''}">${t.isMilestone?'<span style="color:#f59e0b">&#9733;</span> ':''}${t.isPriority?'<span style="color:#8b5cf6">&#9670;</span> ':''}${esc(t.title)}</td>
+      <td style="${t.status==='done'?'text-decoration:line-through;color:var(--muted)':''}">${t.isPriority?'<span style="color:#8b5cf6">&#9670;</span> ':''}${esc(t.title)}</td>
       <td style="font-size:12px;color:var(--muted)">${wsName(t.workstream)}</td>
       <td style="font-size:12px;color:var(--muted)">${t.due?fmtDate(t.due):'—'}</td>
       <td><span class="pill ${taskStatusPill(t.status)}" style="font-size:10px">${taskStatusLabel(t.status)}</span></td>
@@ -2966,10 +2966,9 @@ function rMyWork(c){
     const isOD=!isDone&&t.due&&t.due<today();
     const ws=(D.workstreams||[]).find(w=>w.id===t.workstream);
     const statusPill=isDone?'pill-g':isOD?'pill-r':taskStatusPill(t.status);
-    const msIcon=t.isMilestone?'<span style="color:#f59e0b;margin-right:4px">★</span>':'';
     const prIcon=t.isPriority?'<span style="color:#8b5cf6;margin-right:4px">◆</span>':'';
     return `<tr onclick="openTaskModal('${t.id}')" style="cursor:pointer" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background=''">
-      <td>${msIcon}${prIcon}<span style="${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</span></td>
+      <td>${prIcon}<span style="${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</span></td>
       <td style="font-size:12px;color:var(--muted)">${ws?esc(ws.name):'—'}</td>
       <td><span class="pill ${statusPill}" style="font-size:10px">${isDone?'Done':isOD?'Overdue':taskStatusLabel(t.status)}</span></td>
       <td style="font-size:12px;color:${isOD?'var(--red)':'var(--muted)'}">${t.due?fmtDate(t.due):'—'}</td>
@@ -3055,7 +3054,7 @@ function renderMyWorkKanban(myTasks){
       ondrop="event.preventDefault();event.stopPropagation();kbDrop(event,this.closest('.kb-col').dataset.status);this.closest('.kb-col').classList.remove('drag-over')"
       ondragstart="event.dataTransfer.setData('text/plain','${t.id}');this.classList.add('dragging')"
       ondragend="this.classList.remove('dragging')">
-      <div class="kb-card-title">${t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">&#9733;</span>':''}${t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">&#9670;</span>':''}${esc(t.title)}</div>
+      <div class="kb-card-title">${t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">&#9670;</span>':''}${esc(t.title)}</div>
       <div class="kb-card-meta" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px">
         <span style="font-size:11px;color:var(--light)">${wName}</span>
         ${t.due?'<span style="font-size:11px;color:'+(isOD?'var(--red)':'var(--muted)')+';font-weight:'+(isOD||isDueToday?'600':'400')+'">'+(isOD?'&#9888; ':'')+(isDueToday?'&#9200; ':'')+fmtDate(t.due)+'</span>':''}
@@ -3387,10 +3386,9 @@ function rWorkItems(c){
       const isDone=t.status==='done';
       const isOD=!isDone&&t.due&&t.due<today();
       const statusPill=isDone?'pill-g':isOD?'pill-r':taskStatusPill(t.status);
-      const msIcon=t.isMilestone?'<span style="color:#f59e0b;margin-right:4px">&#9733;</span>':'';
       const prIcon=t.isPriority?'<span style="color:#8b5cf6;margin-right:4px">&#9670;</span>':'';
       return `<tr onclick="openTaskModal('${t.id}')" style="cursor:pointer;height:36px;background:rgba(0,0,0,.02)" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background='rgba(0,0,0,.02)'">
-        <td style="padding-left:${12+indent}px;white-space:nowrap"><span style="width:22px;display:inline-block"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:8px"></span>${msIcon}${prIcon}<span style="font-size:12.5px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</span></td>
+        <td style="padding-left:${12+indent}px;white-space:nowrap"><span style="width:22px;display:inline-block"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:8px"></span>${prIcon}<span style="font-size:12.5px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</span></td>
         <td style="font-size:12px;color:var(--muted)">${esc(t.owner||'')}</td>
         <td style="width:100px"><span class="pill ${statusPill}" style="font-size:10px">${isDone?'Done':isOD?'Overdue':taskStatusLabel(t.status)}</span></td>
         <td style="font-size:11px;color:var(--muted)">${t.due?fmtDate(t.due):'—'}</td>
@@ -3619,11 +3617,10 @@ function rWorkstreamsNew(c){
       const isDone=t.status==='done';
       const isOD=!isDone&&t.due&&t.due<today();
       const statusPill=isDone?'pill-g':isOD?'pill-r':taskStatusPill(t.status);
-      const msIcon=t.isMilestone?'<span style="color:#f59e0b;margin-right:4px">★</span>':'';
       const prIcon=t.isPriority?'<span style="color:#8b5cf6;margin-right:4px">◆</span>':'';
       const parentWsId=t.workstream||'';
       return `<tr draggable="true" ondragstart="event.dataTransfer.setData('text/plain','task:${t.id}');this.style.opacity='0.5'" ondragend="this.style.opacity='1'" onclick="openTaskModal('${t.id}')" style="cursor:pointer;height:32px;background:rgba(0,0,0,.015);border-bottom:1px solid var(--border-lt)" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background='rgba(0,0,0,.015)'">
-        <td style="padding:5px 14px;padding-left:${14+indent}px;white-space:nowrap"><span style="cursor:grab;color:var(--light);margin-right:4px;font-size:10px" title="Drag to move">⋮⋮</span><span style="width:22px;display:inline-block"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:8px"></span>${msIcon}${prIcon}<span style="font-size:12px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</span></td>
+        <td style="padding:5px 14px;padding-left:${14+indent}px;white-space:nowrap"><span style="cursor:grab;color:var(--light);margin-right:4px;font-size:10px" title="Drag to move">⋮⋮</span><span style="width:22px;display:inline-block"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:8px"></span>${prIcon}<span style="font-size:12px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</span></td>
         <td style="padding:5px 14px;font-size:12px;color:var(--muted);white-space:nowrap">${esc(t.owner||'')}</td>
         <td style="padding:5px 14px;font-size:12px;color:var(--muted)"></td>
         <td style="padding:5px 14px;width:120px"><span class="pill ${statusPill}" style="font-size:10px">${isDone?'Done':isOD?'Overdue':taskStatusLabel(t.status)}</span></td>
@@ -4047,10 +4044,9 @@ function rActionItemsNew(c){
     const wc=wsColor(t.workstream)||'var(--muted)';
     const isOD=t.status!=='done'&&t.due&&t.due<today();
     const isDone=t.status==='done';
-    const msIcon=t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">★</span>':'';
     const prIcon=t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">◆</span>':'';
     return `<div class="kb-card${isOD?' kb-overdue':''}" draggable="true" data-task-id="${t.id}" style="border-left:3px solid ${wc};cursor:grab" onclick="openTaskModal('${t.id}')" ondragstart="event.dataTransfer.setData('text/plain','task:${t.id}');this.classList.add('dragging');createDragGhost('${esc(t.title).replace(/'/g,"\\'")}');document.addEventListener('dragover',moveDragGhost)" ondragend="this.classList.remove('dragging');removeDragGhost();document.removeEventListener('dragover',moveDragGhost)">
-      <div style="font-size:12px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${msIcon}${prIcon}${esc(t.title)}</div>
+      <div style="font-size:12px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${prIcon}${esc(t.title)}</div>
       <div style="font-size:10px;color:var(--muted);margin-top:4px">${esc(t.owner||'Unassigned')}</div>
       ${w?`<div style="font-size:9px;color:var(--light);margin-top:2px">${esc(w.name)}</div>`:''}
       ${t.due?`<div style="font-size:10px;color:${isOD?'var(--red)':'var(--light)'};margin-top:2px">${fmtDate(t.due)}</div>`:''}
@@ -4179,10 +4175,9 @@ function rWorkKanban(c){
     const isDone=t.status==='done';
     const isOD=!isDone&&t.due&&t.due<today();
     const ws=(D.workstreams||[]).find(w=>w.id===t.workstream);
-    const msIcon=t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">★</span>':'';
     const prIcon=t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">◆</span>':'';
     return `<div class="kb-card${isOD?' kb-overdue':''}" style="border-left:3px solid ${ws?.color||'var(--muted)'};cursor:pointer;background:rgba(0,0,0,.02)" onclick="openTaskModal('${t.id}')">
-      <div style="font-size:12px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${msIcon}${prIcon}${esc(t.title)}</div>
+      <div style="font-size:12px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${prIcon}${esc(t.title)}</div>
       <div style="font-size:10px;color:var(--muted);margin-top:4px">${esc(t.owner||'Unassigned')}</div>
       ${ws?`<div style="font-size:9px;color:var(--light);margin-top:2px">${esc(ws.name)}</div>`:''}
       ${t.due?`<div style="font-size:10px;color:${isOD?'var(--red)':'var(--light)'};margin-top:2px">${fmtDate(t.due)}</div>`:''}
@@ -4480,7 +4475,7 @@ function wsLinkedItems(wsId){
     html+='<div style="margin-bottom:10px"><span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Action Items ('+tasks.length+' — '+openT.length+' open)</span>';
     html+=tasks.slice(0,12).map(t=>{
       const isDone=t.status==='done';const isOD=t.status!=='done'&&t.due&&t.due<today();
-      return '<div style="display:flex;align-items:center;gap:6px;padding:4px;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openTaskModal(\''+t.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'">'+(t.isMilestone?'<span style="color:#f59e0b">&#9733;</span>':'')+'<span class="pill '+(isDone?'pill-g':isOD?'pill-r':taskStatusPill(t.status))+'" style="min-width:45px;text-align:center;font-size:10px">'+(isDone?'done':isOD?'overdue':taskStatusLabel(t.status))+'</span><span style="flex:1">'+esc(t.title)+'</span>'+(t.due?'<span style="color:var(--light);font-size:11px">'+fmtDate(t.due)+'</span>':'')+'</div>'}).join('');
+      return '<div style="display:flex;align-items:center;gap:6px;padding:4px;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openTaskModal(\''+t.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'"><span class="pill '+(isDone?'pill-g':isOD?'pill-r':taskStatusPill(t.status))+'" style="min-width:45px;text-align:center;font-size:10px">'+(isDone?'done':isOD?'overdue':taskStatusLabel(t.status))+'</span><span style="flex:1">'+esc(t.title)+'</span>'+(t.due?'<span style="color:var(--light);font-size:11px">'+fmtDate(t.due)+'</span>':'')+'</div>'}).join('');
     if(tasks.length>12)html+='<div style="font-size:11px;color:var(--muted);padding:4px">... and '+(tasks.length-12)+' more</div>';
     html+='</div>';
   }
@@ -4555,10 +4550,9 @@ function wsTimeline(wsId){
     html+='<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Key dates ('+dated.length+')</div>';
     html+=dated.slice(0,15).map(t=>{
       const isDone=t.status==='done';const isOD=t.status!=='done'&&t.due&&t.due<today();
-      const icon=t.isMilestone?'<span style="color:#f59e0b;margin-right:2px">&#9733;</span>':'';
       const pillCls=isDone?'pill-g':isOD?'pill-r':taskStatusPill(t.status);
       const dateStr=t.due?fmtDate(t.due):(t.startDate?fmtDate(t.startDate):'');
-      return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer" onclick="closeModal();setTimeout(()=>openTaskModal(\''+t.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'">'+icon+'<span style="min-width:60px;flex-shrink:0;color:var(--light);font-size:11px">'+dateStr+'</span><span class="pill '+pillCls+'" style="min-width:40px;text-align:center;font-size:10px">'+(isDone?'done':isOD?'overdue':taskStatusLabel(t.status))+'</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.title)+'</span></div>';
+      return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer" onclick="closeModal();setTimeout(()=>openTaskModal(\''+t.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'"><span style="min-width:60px;flex-shrink:0;color:var(--light);font-size:11px">'+dateStr+'</span><span class="pill '+pillCls+'" style="min-width:40px;text-align:center;font-size:10px">'+(isDone?'done':isOD?'overdue':taskStatusLabel(t.status))+'</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.title)+'</span></div>';
     }).join('');
     if(dated.length>15)html+='<div style="font-size:11px;color:var(--muted);padding:4px 0">... and '+(dated.length-15)+' more</div>';
   }
@@ -4656,7 +4650,7 @@ function engLinkedItems(engId){
     html+='<div style="margin-bottom:8px"><span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Action Items ('+tasks.length+')</span>';
     html+=tasks.map(t=>{
       const isDone=t.status==='done';const isOD=t.status!=='done'&&t.due&&t.due<today();
-      return '<div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openTaskModal(\''+t.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'">'+(t.isMilestone?'<span style="color:#f59e0b">&#9733;</span>':'')+'<span class="pill '+(isDone?'pill-g':isOD?'pill-r':taskStatusPill(t.status))+'" style="min-width:45px;text-align:center;font-size:10px">'+(isDone?'done':isOD?'overdue':taskStatusLabel(t.status))+'</span><span style="flex:1">'+esc(t.title)+'</span>'+(t.due?'<span style="color:var(--light);font-size:11px">'+fmtDate(t.due)+'</span>':'')+'</div>'}).join('')+'</div>';
+      return '<div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:12px;border-bottom:1px solid var(--border-lt);cursor:pointer;border-radius:var(--r-xs)" onclick="closeModal();setTimeout(()=>openTaskModal(\''+t.id+'\'),150)" onmouseover="this.style.background=\'var(--border-lt)\'" onmouseout="this.style.background=\'\'"><span class="pill '+(isDone?'pill-g':isOD?'pill-r':taskStatusPill(t.status))+'" style="min-width:45px;text-align:center;font-size:10px">'+(isDone?'done':isOD?'overdue':taskStatusLabel(t.status))+'</span><span style="flex:1">'+esc(t.title)+'</span>'+(t.due?'<span style="color:var(--light);font-size:11px">'+fmtDate(t.due)+'</span>':'')+'</div>'}).join('')+'</div>';
   }
   if(risks.length){
     html+='<div style="margin-bottom:8px"><span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Risks ('+risks.length+')</span>';
@@ -4799,7 +4793,7 @@ function rTasks(c){
       const pp={high:'pill-r',medium:'pill-a',low:'pill-g'}[t.priority]||'pill-m';
       return `<tr onclick="openTaskModal('${t.id}')" style="height:36px;cursor:pointer;${rowBg}">
         <td style="width:28px" onclick="event.stopPropagation()"><div class="task-chk${t.status==='done'?' done':''}" onclick="toggleTask('${t.id}')">&#10003;</div></td>
-        <td style="overflow:hidden;text-overflow:ellipsis;${t.status==='done'?'text-decoration:line-through;color:var(--muted)':''}">${t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">&#9733;</span>':''}${t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">&#9670;</span>':''}${esc(t.title)}${(t.comments||[]).length?'<span style="margin-left:6px;font-size:10px;color:var(--light)" title="'+t.comments.length+' comment'+(t.comments.length!==1?'s':'')+'">&#128172; '+t.comments.length+'</span>':''}</td>
+        <td style="overflow:hidden;text-overflow:ellipsis;${t.status==='done'?'text-decoration:line-through;color:var(--muted)':''}">${t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">&#9670;</span>':''}${esc(t.title)}${(t.comments||[]).length?'<span style="margin-left:6px;font-size:10px;color:var(--light)" title="'+t.comments.length+' comment'+(t.comments.length!==1?'s':'')+'">&#128172; '+t.comments.length+'</span>':''}</td>
         <td style="font-size:12px;color:var(--muted);width:14%">${esc(t.owner)||'—'}</td>
         <td style="font-size:11.5px;width:8%;color:var(--muted)">${t.startDate?fmtDate(t.startDate):'—'}</td>
         <td style="font-size:11.5px;width:8%;${isOD?'color:var(--red);font-weight:600':''}">${t.due?fmtDate(t.due):'—'}</td>
@@ -5072,7 +5066,7 @@ function setTaskStatus(id,status){
   t.status=status;t.updatedBy=ME;t.updatedAt=new Date().toISOString();
   save();render();
 }
-function delTask(id){if(!confirm('Delete this item?'))return;const t=D.tasks.find(x=>x.id===id);D.tasks=D.tasks.filter(x=>x.id!==id);log('Deleted '+(t?.isMilestone?'milestone':'task')+': '+esc(t?.title||''));save();render();toast('Deleted')}
+function delTask(id){if(!confirm('Delete this item?'))return;const t=D.tasks.find(x=>x.id===id);D.tasks=D.tasks.filter(x=>x.id!==id);log('Deleted action item: '+esc(t?.title||''));save();render();toast('Deleted')}
 
 // ═══════════════════════════════════════════════════
 // MEETINGS
@@ -5317,7 +5311,7 @@ function rKanban(c){
       ondrop="event.preventDefault();event.stopPropagation();kbDrop(event,this.closest('.kb-col').dataset.status);this.closest('.kb-col').classList.remove('drag-over')"
       ondragstart="event.dataTransfer.setData('text/plain','${t.id}');this.classList.add('dragging')"
       ondragend="this.classList.remove('dragging')">
-      <div class="kb-card-title">${t.isMilestone?'<span style="color:#f59e0b;margin-right:3px">&#9733;</span>':''}${t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">&#9670;</span>':''}${esc(t.title)}</div>
+      <div class="kb-card-title">${t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">&#9670;</span>':''}${esc(t.title)}</div>
       <div class="kb-card-meta" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px">
         <span style="font-size:11px;color:var(--light)">${t.owner?esc(t.owner):'Unassigned'}</span>
         ${t.due?'<span style="font-size:11px;color:'+(isOD?'var(--red)':'var(--muted)')+';font-weight:'+(isOD||isDueToday?'600':'400')+'">'+(isOD?'&#9888; ':'')+(isDueToday?'&#9200; ':'')+fmtDate(t.due)+'</span>':''}
