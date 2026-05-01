@@ -3764,6 +3764,7 @@ function getFilteredWsAndTasksForWorkstreamView(){
 let wsViewMode='hierarchy',wsMyFilter=false,wsExpanded={},wsOwnerFilter='',wsCoLeadFilter='',wsL1Filter='',wsStatusFilter='',wsPriorityFilter='',wsHideDoneItems=true;
 function rWorkstreamsNew(c){
   const me=ME||'';
+  const q=(document.getElementById('search')?.value||'').toLowerCase();
   const {allWs,allTasks}=getFilteredWsAndTasksForWorkstreamView();
   
   // Only include people actually assigned as leads (have at least one item, no slashes - those are co-lead pairs)
