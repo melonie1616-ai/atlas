@@ -1794,9 +1794,10 @@ function badges(){
 
 function render(){
   const c=document.getElementById('content');
+  if(taskFilter==='priorities')taskFilter='all';
   ({dashboard:rDash,workstreams:rWorkstreamsNew,actionitems:rActionItemsNew,
     tasks:rTasks,extract:rExtract,mywork:rMyWork,people:rPeople,report:rReport,ask:rAsk,
-    decisions:rDecisions,risks:rRisks,governance:rGovernance,ado:rAdo,metrics:rMetrics,workmetrics:rWorkMetrics})[V]?.(c);
+    decisions:rDecisions,risks:rRisks,governance:rGovernance,ado:rAdo,metrics:rMetrics,workmetrics:rWorkMetrics  })[V]?.(c);
   badges();updateMyWorkNavHighlight();autoUpdateMilestones();
 }
 
@@ -1857,7 +1858,11 @@ function delLink(id){
   D.links=(D.links||[]).filter(x=>x.id!==id);
   save();closeModal();renderLinks();toast('Link removed');
 }
-function openModal(html){document.getElementById('modal').innerHTML=html;document.getElementById('overlay').classList.add('open')}
+function openModal(html){
+  const m=document.getElementById('modal');
+  m.innerHTML=html;
+  document.getElementById('overlay').classList.add('open');
+}
 function openReleaseNotesModal(){
   const blocks=(RELEASE_NOTES||[]).map(r=>{
     const w=(r.whatsNew||[]).map(i=>'<li>'+esc(i)+'</li>').join('');
@@ -2115,10 +2120,10 @@ function exportWorkstreamsCSV(){
 }
 function exportActionItemsCSV(){
   const tasks=(D.tasks||[]).sort((a,b)=>(a.title||'').localeCompare(b.title||''));
-  const headers=['Title','Owner','Workstream','Status','Due Date','Start Date','Priority','Notes'];
+  const headers=['Title','Owner','Workstream','Status','Due Date','Start Date','Notes'];
   const rows=tasks.map(t=>{
     const wsName=t.workstream?(D.workstreams||[]).find(w=>w.id===t.workstream)?.name||'':'';
-    return [t.title||'',t.owner||'',wsName,taskStatusLabel(t.status),t.due||'',t.startDate||'',t.isPriority?'High':'',t.notes||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',');
+    return [t.title||'',t.owner||'',wsName,taskStatusLabel(t.status),t.due||'',t.startDate||'',t.notes||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',');
   });
   const csv=headers.join(',')+'\n'+rows.join('\n');
   downloadFile(csv,'action-items-'+today()+'.csv','text/csv');
@@ -2595,8 +2600,27 @@ const HEARTBEAT_LENS_OPTS=[
   {value:'ai-employee',label:'AI for the Employee'},
   {value:'ai-business',label:'AI for the Business'},
   {value:'grassroots',label:'Grassroots / Superworkers'},
-  {value:'praxo-tech',label:'Praxo & Technical Controls'}
+  {value:'praxo-tech',label:'Praxo & Technical Controls'},
+  {value:'program-level',label:'Other / Program Level'}
 ];
+/** PPTX / AI heartbeat buckets (aligned with HEARTBEAT_LENS_OPTS values). */
+const HEARTBEAT_PPTX_ROWS=[
+  {title:'AI for the Employee',key:'aiEmployee'},
+  {title:'AI for the Business',key:'aiBusiness'},
+  {title:'Grassroots / Superworkers',key:'grassroots'},
+  {title:'Praxo & Technical Controls',key:'praxoTech'},
+  {title:'Other / Program Level',key:'programLevel'}
+];
+function wsMatchesLensFilter(w,filt){
+  if(!filt)return true;
+  return(w.heartbeatLens||'')===filt;
+}
+function wsMatchesLifecycleFilter(w,filt){
+  if(!filt)return true;
+  const st=(w.verticalLifecycleStage||'').trim();
+  if(st)return st===filt;
+  return isVerticalAiPipelineWs(w)&&filt==='not-started';
+}
 function getWorkstreamLevel(w){
   if(!w)return 1;
   if(typeof w.level==='number')return w.level;
@@ -2868,8 +2892,6 @@ function rDash(c){
   const msDone=allMs.filter(t=>t.status==='done');
   const msOD=allMs.filter(t=>t.status!=='done'&&t.due&&t.due<today());
   const msUp=allMs.filter(t=>t.status!=='done'&&(!t.due||t.due>=today()));
-  const allPriorities=(D.tasks||[]).filter(t=>t.isPriority);
-  const prioritiesDone=allPriorities.filter(t=>t.status==='done');
   const allWs=allProgramWorkstreams();
   const activeWs=allWs.filter(w=>w.status!=='complete');
   const atRiskWs=allWs.filter(w=>{const s=w.status;return s==='at-risk'||s==='blocked'||(D.tasks||[]).some(t=>t.workstream===w.id&&t.status!=='done'&&t.due&&t.due<today())});
@@ -2932,10 +2954,10 @@ function rDash(c){
     </div>
   </div>
   ${renderDashboardWidgets()}
-  ${renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,allPriorities,prioritiesDone,myOpenTasks,myWsCount)}`;
+  ${renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,myOpenTasks,myWsCount)}`;
 }
 
-function renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,allPriorities,prioritiesDone,myOpenTasks,myWsCount){
+function renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,myOpenTasks,myWsCount){
   return `
   <div class="ws-section" id="dashSec-timeline" style="margin-bottom:16px">
     <div class="ws-section-hd" onclick="toggleWsSection('dashSec-timeline')" style="background:var(--bg-card);padding:14px 18px;border-radius:var(--r-sm) var(--r-sm) 0 0;border:1px solid var(--border)"><h4 style="font-size:16px;font-weight:800;color:var(--text)">Program Timeline</h4><span class="ws-section-arrow">&#9660;</span></div>
@@ -2996,7 +3018,7 @@ function renderMyWorkSection(){
     const rowBg=isOD?'background:var(--red-lt)':'';
     return `<tr onclick="openTaskModal('${t.id}')" style="cursor:pointer;${rowBg}">
       <td style="vertical-align:middle;width:28px" onclick="event.stopPropagation()"><div class="task-chk${t.status==='done'?' done':''}" onclick="toggleTask('${t.id}')">&#10003;</div></td>
-      <td style="${t.status==='done'?'text-decoration:line-through;color:var(--muted)':''}">${t.isPriority?'<span style="color:#8b5cf6">&#9670;</span> ':''}${esc(t.title)}</td>
+      <td style="${t.status==='done'?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</td>
       <td style="font-size:12px;color:var(--muted)">${wsName(t.workstream)}</td>
       <td style="font-size:12px;color:var(--muted)">${t.due?fmtDate(t.due):'—'}</td>
       <td><span class="pill ${taskStatusPill(t.status)}" style="font-size:10px">${taskStatusLabel(t.status)}</span></td>
@@ -3124,9 +3146,8 @@ function rMyWork(c){
     const isOD=!isDone&&t.due&&t.due<today();
     const ws=(D.workstreams||[]).find(w=>w.id===t.workstream);
     const statusPill=isDone?'pill-g':isOD?'pill-r':taskStatusPill(t.status);
-    const prIcon=t.isPriority?'<span style="color:#8b5cf6;margin-right:4px">◆</span>':'';
     return `<tr onclick="openTaskModal('${t.id}')" style="cursor:pointer" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background=''">
-      <td>${prIcon}<span style="${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</span></td>
+      <td><span style="${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</span></td>
       <td style="font-size:12px;color:var(--muted)">${ws?esc(ws.name):'—'}</td>
       <td><span class="pill ${statusPill}" style="font-size:10px">${isDone?'Done':isOD?'Overdue':taskStatusLabel(t.status)}</span></td>
       <td style="font-size:12px;color:${isOD?'var(--red)':'var(--muted)'}">${t.due?fmtDate(t.due):'—'}</td>
@@ -3284,7 +3305,7 @@ function renderMyWorkKanban(myTasks){
       ondrop="event.preventDefault();event.stopPropagation();kbDrop(event,this.closest('.kb-col').dataset.status);this.closest('.kb-col').classList.remove('drag-over')"
       ondragstart="event.dataTransfer.setData('text/plain','${t.id}');this.classList.add('dragging')"
       ondragend="this.classList.remove('dragging')">
-      <div class="kb-card-title">${t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">&#9670;</span>':''}${esc(t.title)}</div>
+      <div class="kb-card-title">${esc(t.title)}</div>
       <div class="kb-card-meta" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px">
         <span style="font-size:11px;color:var(--light)">${wName}</span>
         ${t.due?'<span style="font-size:11px;color:'+(isOD?'var(--red)':'var(--muted)')+';font-weight:'+(isOD||isDueToday?'600':'400')+'">'+(isOD?'&#9888; ':'')+(isDueToday?'&#9200; ':'')+fmtDate(t.due)+'</span>':''}
@@ -3609,9 +3630,8 @@ function rWorkItems(c){
       const isDone=t.status==='done';
       const isOD=!isDone&&t.due&&t.due<today();
       const statusPill=isDone?'pill-g':isOD?'pill-r':taskStatusPill(t.status);
-      const prIcon=t.isPriority?'<span style="color:#8b5cf6;margin-right:4px">&#9670;</span>':'';
       return `<tr onclick="openTaskModal('${t.id}')" style="cursor:pointer;height:36px;background:rgba(0,0,0,.02)" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background='rgba(0,0,0,.02)'">
-        <td style="padding-left:${12+indent}px;white-space:nowrap"><span style="width:22px;display:inline-block"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:8px"></span>${prIcon}<span style="font-size:12.5px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</span></td>
+        <td style="padding-left:${12+indent}px;white-space:nowrap"><span style="width:22px;display:inline-block"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:8px"></span><span style="font-size:12.5px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</span></td>
         <td style="font-size:12px;color:var(--muted)">${esc(t.owner||'')}</td>
         <td style="width:100px"><span class="pill ${statusPill}" style="font-size:10px">${isDone?'Done':isOD?'Overdue':taskStatusLabel(t.status)}</span></td>
         <td style="font-size:11px;color:var(--muted)">${t.due?fmtDate(t.due):'—'}</td>
@@ -3730,6 +3750,28 @@ function getFilteredWsAndTasksForWorkstreamView(){
     allWs.filter(w=>w.secondaryOwner===wsCoLeadFilter).forEach(addWithAncestors);
     allWs=allWs.filter(w=>matchingIds.has(w.id));
   }
+  if(wsLensFilter){
+    const matchingIds=new Set();
+    const allWsMap=new Map((D.workstreams||[]).map(w=>[w.id,w]));
+    function addWithAncestors(w){
+      if(!w||matchingIds.has(w.id))return;
+      matchingIds.add(w.id);
+      if(w.parentWs)addWithAncestors(allWsMap.get(w.parentWs));
+    }
+    allWs.filter(w=>wsMatchesLensFilter(w,wsLensFilter)).forEach(addWithAncestors);
+    allWs=allWs.filter(w=>matchingIds.has(w.id));
+  }
+  if(wsLifecycleFilter){
+    const matchingIds=new Set();
+    const allWsMap=new Map((D.workstreams||[]).map(w=>[w.id,w]));
+    function addWithAncestors(w){
+      if(!w||matchingIds.has(w.id))return;
+      matchingIds.add(w.id);
+      if(w.parentWs)addWithAncestors(allWsMap.get(w.parentWs));
+    }
+    allWs.filter(w=>wsMatchesLifecycleFilter(w,wsLifecycleFilter)).forEach(addWithAncestors);
+    allWs=allWs.filter(w=>matchingIds.has(w.id));
+  }
   if(q){
     const matchingIds=new Set();
     const allWsMap=new Map((D.workstreams||[]).map(w=>[w.id,w]));
@@ -3752,7 +3794,7 @@ function getFilteredWsAndTasksForWorkstreamView(){
   return{allWs,allTasks};
 }
 // ═══════════════════════════════════════════════════
-let wsViewMode='hierarchy',wsMyFilter=false,wsExpanded={},wsOwnerFilter='',wsCoLeadFilter='',wsL1Filter='',wsStatusFilter='',wsPriorityFilter='',wsHideDoneItems=true;
+let wsViewMode='hierarchy',wsMyFilter=false,wsExpanded={},wsOwnerFilter='',wsCoLeadFilter='',wsL1Filter='',wsStatusFilter='',wsPriorityFilter='',wsLensFilter='',wsLifecycleFilter='',wsHideDoneItems=true;
 function rWorkstreamsNew(c){
   const me=ME||'';
   const q=(document.getElementById('search')?.value||'').toLowerCase();
@@ -3843,10 +3885,9 @@ function rWorkstreamsNew(c){
       const isDone=t.status==='done';
       const isOD=!isDone&&t.due&&t.due<today();
       const statusPill=isDone?'pill-g':isOD?'pill-r':taskStatusPill(t.status);
-      const prIcon=t.isPriority?'<span style="color:#8b5cf6;margin-right:4px">◆</span>':'';
       const parentWsId=t.workstream||'';
       return `<tr draggable="true" ondragstart="event.dataTransfer.setData('text/plain','task:${t.id}');this.style.opacity='0.5'" ondragend="this.style.opacity='1'" onclick="openTaskModal('${t.id}')" style="cursor:pointer;height:32px;background:rgba(0,0,0,.015);border-bottom:1px solid var(--border-lt)" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background='rgba(0,0,0,.015)'">
-        <td style="padding:5px 14px;padding-left:${14+indent}px;white-space:nowrap"><span style="cursor:grab;color:var(--light);margin-right:4px;font-size:10px" title="Drag to move">⋮⋮</span><span style="width:22px;display:inline-block"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:8px"></span>${prIcon}<span style="font-size:12px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</span></td>
+        <td style="padding:5px 14px;padding-left:${14+indent}px;white-space:nowrap"><span style="cursor:grab;color:var(--light);margin-right:4px;font-size:10px" title="Drag to move">⋮⋮</span><span style="width:22px;display:inline-block"></span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:8px"></span><span style="font-size:12px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</span></td>
         <td style="padding:5px 14px;font-size:12px;color:var(--muted);white-space:nowrap">${esc(t.owner||'')}</td>
         <td style="padding:5px 14px;font-size:12px;color:var(--muted)"></td>
         <td style="padding:5px 14px;width:120px"><span class="pill ${statusPill}" style="font-size:10px">${isDone?'Done':isOD?'Overdue':taskStatusLabel(t.status)}</span></td>
@@ -3877,6 +3918,28 @@ function rWorkstreamsNew(c){
   if(wsL1Filter){
     const l1Ids=getL1AndDescendants(wsL1Filter);
     baseFilteredWs=baseFilteredWs.filter(w=>l1Ids.includes(w.id));
+  }
+  if(wsLensFilter){
+    const matchingIds=new Set();
+    const allWsMap=new Map((D.workstreams||[]).map(w=>[w.id,w]));
+    function addWithAncestorsLens(w){
+      if(!w||matchingIds.has(w.id))return;
+      matchingIds.add(w.id);
+      if(w.parentWs)addWithAncestorsLens(allWsMap.get(w.parentWs));
+    }
+    baseFilteredWs.filter(w=>wsMatchesLensFilter(w,wsLensFilter)).forEach(addWithAncestorsLens);
+    baseFilteredWs=baseFilteredWs.filter(w=>matchingIds.has(w.id));
+  }
+  if(wsLifecycleFilter){
+    const matchingIds=new Set();
+    const allWsMap=new Map((D.workstreams||[]).map(w=>[w.id,w]));
+    function addWithAncestorsLc(w){
+      if(!w||matchingIds.has(w.id))return;
+      matchingIds.add(w.id);
+      if(w.parentWs)addWithAncestorsLc(allWsMap.get(w.parentWs));
+    }
+    baseFilteredWs.filter(w=>wsMatchesLifecycleFilter(w,wsLifecycleFilter)).forEach(addWithAncestorsLc);
+    baseFilteredWs=baseFilteredWs.filter(w=>matchingIds.has(w.id));
   }
   if(q){
     // Include matching items AND their ancestors for proper counts
@@ -3918,7 +3981,7 @@ function rWorkstreamsNew(c){
   }).length;
 
   const activeStatusLabel=wsStatusFilter?WS_STATUSES.find(s=>s.value===wsStatusFilter)?.label:'';
-  const hasFilters=wsOwnerFilter||wsCoLeadFilter||wsL1Filter||wsPriorityFilter;
+  const hasFilters=wsOwnerFilter||wsCoLeadFilter||wsL1Filter||wsPriorityFilter||wsLensFilter||wsLifecycleFilter;
   
   // Build active filter chips
   const filterChips=[];
@@ -3926,6 +3989,8 @@ function rWorkstreamsNew(c){
   if(wsCoLeadFilter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(139,92,246,.1);color:#8b5cf6;border-radius:20px;font-size:11px;font-weight:500">Co-Lead: ${wsCoLeadFilter}<span onclick="wsCoLeadFilter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
   if(wsL1Filter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(16,185,129,.1);color:#10b981;border-radius:20px;font-size:11px;font-weight:500">${l1Workstreams.find(w=>w.id===wsL1Filter)?.name||'Parent'}<span onclick="wsL1Filter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
   if(wsPriorityFilter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(239,68,68,.1);color:#ef4444;border-radius:20px;font-size:11px;font-weight:500">Priority: ${wsPriorityFilter.charAt(0).toUpperCase()+wsPriorityFilter.slice(1)}<span onclick="wsPriorityFilter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
+  if(wsLensFilter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(14,165,233,.12);color:#0284c7;border-radius:20px;font-size:11px;font-weight:500">Lens: ${esc((HEARTBEAT_LENS_OPTS.find(o=>o.value===wsLensFilter)||{}).label||wsLensFilter)}<span onclick="wsLensFilter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
+  if(wsLifecycleFilter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(245,158,11,.12);color:#b45309;border-radius:20px;font-size:11px;font-weight:500">Lifecycle: ${esc((VERTICAL_LIFECYCLE_STAGES.find(s=>s.value===wsLifecycleFilter)||{}).label||wsLifecycleFilter)}<span onclick="wsLifecycleFilter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
   
   c.innerHTML=`
   <div class="page-wrap">
@@ -3982,7 +4047,15 @@ function rWorkstreamsNew(c){
           <option value="medium"${wsPriorityFilter==='medium'?' selected':''}>Medium</option>
           <option value="low"${wsPriorityFilter==='low'?' selected':''}>Low</option>
         </select>
-        ${filterChips.length?`<span style="color:var(--light);margin:0 4px">|</span>${filterChips.join('')}<button onclick="wsOwnerFilter='';wsCoLeadFilter='';wsL1Filter='';wsPriorityFilter='';render()" style="padding:4px 8px;font-size:11px;background:none;border:none;color:var(--red);cursor:pointer;font-weight:500">Clear all</button>`:''}
+        <select style="padding:6px 10px;border-radius:6px;border:1px solid ${wsLensFilter?'#0284c7':'var(--border)'};background:${wsLensFilter?'rgba(14,165,233,.08)':'var(--bg-card)'};font-size:12px;color:var(--fg);max-width:200px" onchange="wsLensFilter=this.value;render()" title="Heartbeat lens">
+          <option value="">Lens</option>
+          ${HEARTBEAT_LENS_OPTS.map(o=>`<option value="${esc(o.value)}"${wsLensFilter===o.value?' selected':''}>${esc(o.label)}</option>`).join('')}
+        </select>
+        <select style="padding:6px 10px;border-radius:6px;border:1px solid ${wsLifecycleFilter?'#b45309':'var(--border)'};background:${wsLifecycleFilter?'rgba(245,158,11,.1)':'var(--bg-card)'};font-size:12px;color:var(--fg);max-width:180px" onchange="wsLifecycleFilter=this.value;render()" title="Vertical lifecycle stage (pipeline L2)">
+          <option value="">Lifecycle</option>
+          ${VERTICAL_LIFECYCLE_STAGES.map(s=>`<option value="${esc(s.value)}"${wsLifecycleFilter===s.value?' selected':''}>${esc(s.label)}</option>`).join('')}
+        </select>
+        ${filterChips.length?`<span style="color:var(--light);margin:0 4px">|</span>${filterChips.join('')}<button onclick="wsOwnerFilter='';wsCoLeadFilter='';wsL1Filter='';wsPriorityFilter='';wsLensFilter='';wsLifecycleFilter='';render()" style="padding:4px 8px;font-size:11px;background:none;border:none;color:var(--red);cursor:pointer;font-weight:500">Clear all</button>`:''}
       </div>
       <div style="display:flex;gap:6px;align-items:center">
         <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);cursor:pointer;padding:4px 8px;background:${wsHideDoneItems?'var(--bg-card)':'rgba(16,185,129,.1)'};border:1px solid ${wsHideDoneItems?'var(--border)':'#10b981'};border-radius:6px;white-space:nowrap" onclick="wsHideDoneItems=!wsHideDoneItems;render()"><span style="width:12px;height:12px;border:2px solid ${wsHideDoneItems?'var(--muted)':'#10b981'};border-radius:3px;display:flex;align-items:center;justify-content:center;background:${wsHideDoneItems?'transparent':'#10b981'};flex-shrink:0">${wsHideDoneItems?'':'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" style="width:8px;height:8px"><path d="M5 12l5 5L20 7"/></svg>'}</span>Show Closed Action Items</label>
@@ -4043,14 +4116,18 @@ function renderWsKanban(c,filteredWs,me,owners,l1Workstreams){
     </div>`;
   }
 
-  const hasFilters=wsOwnerFilter||wsL1Filter||wsStatusFilter;
+  const hasFilters=wsOwnerFilter||wsL1Filter||wsStatusFilter||wsLensFilter||wsLifecycleFilter;
   const ownerStyle=wsOwnerFilter?'border:2px solid var(--accent);background:rgba(99,102,241,.08)':'border:1px solid var(--border);background:var(--bg-subtle)';
   const l1Style=wsL1Filter?'border:2px solid var(--accent);background:rgba(99,102,241,.08)':'border:1px solid var(--border);background:var(--bg-subtle)';
-  const clearBtn=hasFilters?`<button onclick="wsOwnerFilter='';wsL1Filter='';wsStatusFilter='';render()" style="padding:6px 12px;font-size:11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;color:var(--muted);transition:all .15s" onmouseenter="this.style.background='var(--bg-subtle)';this.style.color='var(--red)'" onmouseleave="this.style.background='var(--bg-card)';this.style.color='var(--muted)'">✕ Clear Filters</button>`:'';
+  const lensStyle=wsLensFilter?'border:2px solid #0284c7;background:rgba(14,165,233,.08)':'border:1px solid var(--border);background:var(--bg-subtle)';
+  const lcStyle=wsLifecycleFilter?'border:2px solid #b45309;background:rgba(245,158,11,.1)':'border:1px solid var(--border);background:var(--bg-subtle)';
+  const clearBtn=hasFilters?`<button onclick="wsOwnerFilter='';wsL1Filter='';wsStatusFilter='';wsLensFilter='';wsLifecycleFilter='';render()" style="padding:6px 12px;font-size:11px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;color:var(--muted);transition:all .15s" onmouseenter="this.style.background='var(--bg-subtle)';this.style.color='var(--red)'" onmouseleave="this.style.background='var(--bg-card)';this.style.color='var(--muted)'">✕ Clear Filters</button>`:'';
 
   const activeFiltersText=[];
   if(wsOwnerFilter)activeFiltersText.push('<span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Owner: '+(wsOwnerFilter==='__unassigned__'?'Unassigned':wsOwnerFilter)+'</span>');
   if(wsL1Filter)activeFiltersText.push('<span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">'+l1Workstreams.find(w=>w.id===wsL1Filter)?.name+'</span>');
+  if(wsLensFilter)activeFiltersText.push('<span style="background:#0284c7;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Lens: '+(HEARTBEAT_LENS_OPTS.find(o=>o.value===wsLensFilter)?.label||wsLensFilter)+'</span>');
+  if(wsLifecycleFilter)activeFiltersText.push('<span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Lifecycle: '+(VERTICAL_LIFECYCLE_STAGES.find(s=>s.value===wsLifecycleFilter)?.label||wsLifecycleFilter)+'</span>');
 
   c.innerHTML=`
   <div class="page-wrap kb-page">
@@ -4074,6 +4151,14 @@ function renderWsKanban(c,filteredWs,me,owners,l1Workstreams){
           <select style="padding:6px 10px;border-radius:var(--r-sm);${l1Style};font-size:12px;min-width:130px" onchange="wsL1Filter=this.value;render()">
             <option value="">All Top-Level</option>
             ${l1Workstreams.map(w=>`<option value="${w.id}"${wsL1Filter===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}
+          </select>
+          <select style="padding:6px 10px;border-radius:var(--r-sm);${lensStyle};font-size:12px;min-width:140px;max-width:200px" onchange="wsLensFilter=this.value;render()" title="Heartbeat lens">
+            <option value="">All lenses</option>
+            ${HEARTBEAT_LENS_OPTS.map(o=>`<option value="${esc(o.value)}"${wsLensFilter===o.value?' selected':''}>${esc(o.label)}</option>`).join('')}
+          </select>
+          <select style="padding:6px 10px;border-radius:var(--r-sm);${lcStyle};font-size:12px;min-width:130px;max-width:180px" onchange="wsLifecycleFilter=this.value;render()" title="Vertical lifecycle">
+            <option value="">All lifecycles</option>
+            ${VERTICAL_LIFECYCLE_STAGES.map(s=>`<option value="${esc(s.value)}"${wsLifecycleFilter===s.value?' selected':''}>${esc(s.label)}</option>`).join('')}
           </select>
           ${clearBtn}
         </div>
@@ -4311,13 +4396,12 @@ function rActionItemsNew(c){
     const wc=wsColor(t.workstream)||'var(--muted)';
     const isOD=t.status!=='done'&&t.due&&t.due<today();
     const isDone=t.status==='done';
-    const prIcon=t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">◆</span>':'';
     const sel=aiBulkSelectedIds.has(t.id)?' checked':'';
     return `<div class="kb-card${isOD?' kb-overdue':''}" draggable="true" data-task-id="${t.id}" style="border-left:3px solid ${wc};cursor:grab;padding-left:30px" onclick="if(!event.target.closest('.ai-bulk-cb'))openTaskModal('${t.id}')" ondragstart="if(event.target.closest('.ai-bulk-cb')){event.preventDefault();return}event.dataTransfer.setData('text/plain','task:${t.id}');this.classList.add('dragging');createDragGhost('${esc(t.title).replace(/'/g,"\\'")}');document.addEventListener('dragover',moveDragGhost)" ondragend="this.classList.remove('dragging');removeDragGhost();document.removeEventListener('dragover',moveDragGhost)">
       <label class="ai-bulk-cb" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()" style="position:absolute;left:8px;top:10px;cursor:pointer;z-index:2">
         <input type="checkbox"${sel} onclick="event.stopPropagation();toggleAiTaskSelect('${t.id}',this.checked)" aria-label="Select for bulk move" style="cursor:pointer;width:15px;height:15px;accent-color:var(--accent)">
       </label>
-      <div style="font-size:12px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${prIcon}${esc(t.title)}</div>
+      <div style="font-size:12px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</div>
       <div style="font-size:10px;color:var(--muted);margin-top:4px">${esc(t.owner||'Unassigned')}</div>
       ${w?`<div style="font-size:9px;color:var(--light);margin-top:2px">${esc(w.name)}</div>`:''}
       ${t.due?`<div style="font-size:10px;color:${isOD?'var(--red)':'var(--light)'};margin-top:2px">${fmtDate(t.due)}</div>`:''}
@@ -4455,9 +4539,8 @@ function rWorkKanban(c){
     const isDone=t.status==='done';
     const isOD=!isDone&&t.due&&t.due<today();
     const ws=(D.workstreams||[]).find(w=>w.id===t.workstream);
-    const prIcon=t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">◆</span>':'';
     return `<div class="kb-card${isOD?' kb-overdue':''}" style="border-left:3px solid ${ws?.color||'var(--muted)'};cursor:pointer;background:rgba(0,0,0,.02)" onclick="openTaskModal('${t.id}')">
-      <div style="font-size:12px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${prIcon}${esc(t.title)}</div>
+      <div style="font-size:12px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</div>
       <div style="font-size:10px;color:var(--muted);margin-top:4px">${esc(t.owner||'Unassigned')}</div>
       ${ws?`<div style="font-size:9px;color:var(--light);margin-top:2px">${esc(ws.name)}</div>`:''}
       ${t.due?`<div style="font-size:10px;color:${isOD?'var(--red)':'var(--light)'};margin-top:2px">${fmtDate(t.due)}</div>`:''}
@@ -4689,10 +4772,10 @@ function openWsEdit(id){
     <div class="fg"><label>Business Outcome / Impact</label><textarea id="ws-businessOutcome" style="min-height:60px;font-size:12px" placeholder="1-2 sentences describing business impact">${w?esc(w.businessOutcome||''):''}</textarea></div>
     <div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)">
       <h4 style="font-size:13px;font-weight:700;margin:0 0 8px">Vertical lifecycle &amp; heartbeat</h4>
-      <p style="font-size:12px;color:var(--muted);margin:0 0 12px">${hbHelp}Maps to the <strong>four lenses</strong> heartbeat (AI for the Employee / Business, Grassroots, Praxo &amp; controls).</p>
+      <p style="font-size:12px;color:var(--muted);margin:0 0 12px">${hbHelp}Maps to the <strong>five lenses</strong> weekly heartbeat (Employee, Business, Grassroots, Praxo &amp; controls, Other / Program Level).</p>
       <div class="fg-row">
         <div class="fg"><label>Vertical lifecycle stage</label><select id="ws-verticalLifecycleStage">${vStageOpts}</select></div>
-        <div class="fg"><label>Heartbeat lens (four lenses)</label><select id="ws-heartbeatLens">${lensOpts}</select></div>
+        <div class="fg"><label>Heartbeat lens</label><select id="ws-heartbeatLens">${lensOpts}</select></div>
       </div>
     </div>
     ${w?`<div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px">
@@ -4866,7 +4949,7 @@ function saveWs(id){
     const vls=vlsEl.value||'';
     const hl=hlEl.value||'';
     const vert=isVerticalAiPipelineWs(w);
-    if(vert&&(!vls||!hl)){toast('Vertical lifecycle stage and heartbeat lens (four lenses) are required for AI for the Business pipeline L2 workstreams');return}
+    if(vert&&(!vls||!hl)){toast('Vertical lifecycle stage and heartbeat lens are required for AI for the Business pipeline L2 workstreams');return}
     w.verticalLifecycleStage=vls||'not-started';
     w.heartbeatLens=hl||'ai-business';
   }
@@ -5002,7 +5085,6 @@ function rTasks(c){
   else if(taskStatusFilter==='done')items=items.filter(t=>t.status==='done');
   
   if(taskFilter==='milestones')items=items.filter(t=>t.isMilestone);
-  else if(taskFilter==='priorities')items=items.filter(t=>t.isPriority);
   else if(taskFilter==='overdue')items=items.filter(t=>t.status!=='done'&&t.due&&t.due<today());
   else if(taskFilter==='thisweek'){
     const todayD=new Date(today()+'T00:00:00');
@@ -5025,7 +5107,6 @@ function rTasks(c){
   else if(taskSort==='workstream')items.sort((a,b)=>taskSortDir*wsNamePlain(a.workstream).localeCompare(wsNamePlain(b.workstream)));
   else{const so={'not-started':0,'open':1,'blocked-dependency':2,'done':3,'blocked':2};items.sort((a,b)=>{if(normalizeTaskStatus(a.status)!==normalizeTaskStatus(b.status))return(so[normalizeTaskStatus(a.status)]??1)-(so[normalizeTaskStatus(b.status)]??1);if((pv[a.priority]??1)!==(pv[b.priority]??1))return(pv[a.priority]??1)-(pv[b.priority]??1);return(a.due||'9').localeCompare(b.due||'9')})}
   const open=D.tasks.filter(t=>t.status!=='done').length,done=D.tasks.filter(t=>t.status==='done').length,msCount=D.tasks.filter(t=>t.isMilestone).length;
-  const priorityCount=D.tasks.filter(t=>t.isPriority).length;
   const overdueCount=D.tasks.filter(t=>t.status!=='done'&&t.due&&t.due<today()).length;
   const thisWeekCount=(()=>{
     const todayD=new Date(today()+'T00:00:00');
@@ -5047,7 +5128,6 @@ function rTasks(c){
       <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
       <div class="pill${taskFilter==='thisweek'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='thisweek';render()" style="${thisWeekCount?'':'opacity:.6'}">&#128197; This Week (${thisWeekCount})</div>
       <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
-      <div class="pill${taskFilter==='priorities'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='priorities';render()">&#9670; Priorities (${priorityCount})</div>
       <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
       <div class="pill${taskStatusFilter==='done'?' pill-i':' pill-m'}" onclick="taskStatusFilter='done';taskFilter='all';render()" style="margin-left:auto">Done (${done})</div>
     </div>
@@ -5083,7 +5163,7 @@ function rTasks(c){
       const pp={high:'pill-r',medium:'pill-a',low:'pill-g'}[t.priority]||'pill-m';
       return `<tr onclick="openTaskModal('${t.id}')" style="height:36px;cursor:pointer;${rowBg}">
         <td style="width:28px" onclick="event.stopPropagation()"><div class="task-chk${t.status==='done'?' done':''}" onclick="toggleTask('${t.id}')">&#10003;</div></td>
-        <td style="overflow:hidden;text-overflow:ellipsis;${t.status==='done'?'text-decoration:line-through;color:var(--muted)':''}">${t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">&#9670;</span>':''}${esc(t.title)}${(t.comments||[]).length?'<span style="margin-left:6px;font-size:10px;color:var(--light)" title="'+t.comments.length+' comment'+(t.comments.length!==1?'s':'')+'">&#128172; '+t.comments.length+'</span>':''}</td>
+        <td style="overflow:hidden;text-overflow:ellipsis;${t.status==='done'?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}${(t.comments||[]).length?'<span style="margin-left:6px;font-size:10px;color:var(--light)" title="'+t.comments.length+' comment'+(t.comments.length!==1?'s':'')+'">&#128172; '+t.comments.length+'</span>':''}</td>
         <td style="font-size:12px;color:var(--muted);width:14%">${esc(t.owner)||'—'}</td>
         <td style="font-size:11.5px;width:8%;color:var(--muted)">${t.startDate?fmtDate(t.startDate):'—'}</td>
         <td style="font-size:11.5px;width:8%;${isOD?'color:var(--red);font-weight:600':''}">${t.due?fmtDate(t.due):'—'}</td>
@@ -5140,14 +5220,6 @@ function openTaskModal(id){
       <strong style="color:#1d4ed8">&#128193; Need to upload documents?</strong> Visit the <a href="https://digitalrealtyeur.sharepoint.com/sites/AITransformationProgram/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FAITransformationProgram%2FShared%20Documents%2FGeneral&viewid=be024a85%2D931b%2D4a01%2Dacac%2D217f020d89c0" target="_blank" style="color:#2563eb;text-decoration:underline;font-weight:600">AI Transformation Program SharePoint folder</a>
     </div>
     <div class="fg"><label>Title</label><input id="t-title" value="${t?esc(t.title):''}" placeholder="Brief, clear description of the action item"></div>
-    <div style="padding:10px 14px;margin:8px 0 12px;border-radius:var(--r-sm);background:${t?.isPriority?'rgba(139,92,246,.12)':'var(--bg-subtle)'};border:1px solid ${t?.isPriority?'#8b5cf6':'var(--border)'}">
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px" onclick="const cb=document.getElementById('t-priority-flag');cb.checked=!cb.checked;const box=this.parentElement;if(cb.checked){box.style.background='rgba(139,92,246,.12)';box.style.borderColor='#8b5cf6'}else{box.style.background='var(--bg-subtle)';box.style.borderColor='var(--border)'}">
-        <input type="checkbox" id="t-priority-flag" ${t?.isPriority?'checked':''} style="accent-color:#8b5cf6;width:18px;height:18px" onclick="event.stopPropagation();const box=this.closest('div');if(this.checked){box.style.background='rgba(139,92,246,.12)';box.style.borderColor='#8b5cf6'}else{box.style.background='var(--bg-subtle)';box.style.borderColor='var(--border)'}">
-        <span style="font-size:20px;color:#8b5cf6">&#9670;</span>
-        <strong style="font-size:14px">Priority Initiative</strong>
-        <span style="color:var(--muted);font-size:12.5px">— executive focus item</span>
-      </label>
-    </div>
     <div class="fg-row">
       <div class="fg"><label>Owner</label><select id="t-owner">${peopleOpts(defaultOwner)}</select></div>
       <div class="fg"><label>Parent</label><select id="t-ws"><option value="">— None —</option>${wsOptsHierarchy(t?.workstream)}</select></div>
@@ -5194,7 +5266,7 @@ function saveTask(id){
   t.due=document.getElementById('t-due').value;
   t.status=document.getElementById('t-status').value;
   t.blockedBy=document.getElementById('t-blocked-by').value.trim();
-  t.isPriority=document.getElementById('t-priority-flag').checked;
+  delete t.isPriority;
   t.workstream=document.getElementById('t-ws').value;
   t.notes=document.getElementById('t-notes').value;
   t.updatedBy=ME;t.updatedAt=new Date().toISOString();
@@ -5313,7 +5385,6 @@ function doConvertToWorkstream(taskId){
     targetEnd:document.getElementById('cvt-end').value,
     desc:document.getElementById('cvt-desc').value,
     status:'delivery',
-    isPriority:t.isPriority||false,
     notes:t.notes||'',
     updatedBy:ME,
     updatedAt:new Date().toISOString()
@@ -5459,7 +5530,6 @@ function rTasksInbox(c){
   const processed=inboxItems.filter(d=>d.processed);
   const inboxCount=waiting.length;
   const open=D.tasks.filter(t=>t.status!=='done').length,done=D.tasks.filter(t=>t.status==='done').length,msCount=D.tasks.filter(t=>t.isMilestone).length;
-  const priorityCount=D.tasks.filter(t=>t.isPriority).length;
   c.innerHTML=`
   <div class="page-wrap tasks-page">
   <div class="page-toolbar">
@@ -5467,7 +5537,6 @@ function rTasksInbox(c){
     <div class="pill-filters">
       <div class="pill pill-m" onclick="taskStatusFilter='open';taskFilter='all';render()">Open (${open})</div>
       <div class="pill pill-m" onclick="taskStatusFilter='open';taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
-      <div class="pill pill-m" onclick="taskStatusFilter='open';taskFilter='priorities';render()">&#9670; Priorities (${priorityCount})</div>
       <div class="pill pill-i" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
       <div class="pill pill-m" onclick="taskStatusFilter='done';taskFilter='all';render()" style="margin-left:auto">Done (${done})</div>
     </div>
@@ -5546,7 +5615,6 @@ function rKanban(c){
   else if(taskStatusFilter==='done')items=items.filter(t=>t.status==='done');
   
   if(taskFilter==='milestones')items=items.filter(t=>t.isMilestone);
-  else if(taskFilter==='priorities')items=items.filter(t=>t.isPriority);
   else if(taskFilter==='overdue')items=items.filter(t=>t.status!=='done'&&t.due&&t.due<today());
   else if(taskFilter==='thisweek'){
     const todayD=new Date(today()+'T00:00:00');
@@ -5574,7 +5642,6 @@ function rKanban(c){
   });
 
   const open=D.tasks.filter(t=>t.status!=='done').length,done=D.tasks.filter(t=>t.status==='done').length,msCount=D.tasks.filter(t=>t.isMilestone).length;
-  const priorityCount=D.tasks.filter(t=>t.isPriority).length;
   const overdueCount=D.tasks.filter(t=>t.status!=='done'&&t.due&&t.due<today()).length;
   const thisWeekCount=(()=>{
     const todayD=new Date(today()+'T00:00:00');
@@ -5601,7 +5668,7 @@ function rKanban(c){
       ondrop="event.preventDefault();event.stopPropagation();kbDrop(event,this.closest('.kb-col').dataset.status);this.closest('.kb-col').classList.remove('drag-over')"
       ondragstart="event.dataTransfer.setData('text/plain','${t.id}');this.classList.add('dragging')"
       ondragend="this.classList.remove('dragging')">
-      <div class="kb-card-title">${t.isPriority?'<span style="color:#8b5cf6;margin-right:3px">&#9670;</span>':''}${esc(t.title)}</div>
+      <div class="kb-card-title">${esc(t.title)}</div>
       <div class="kb-card-meta" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px">
         <span style="font-size:11px;color:var(--light)">${t.owner?esc(t.owner):'Unassigned'}</span>
         ${t.due?'<span style="font-size:11px;color:'+(isOD?'var(--red)':'var(--muted)')+';font-weight:'+(isOD||isDueToday?'600':'400')+'">'+(isOD?'&#9888; ':'')+(isDueToday?'&#9200; ':'')+fmtDate(t.due)+'</span>':''}
@@ -5639,7 +5706,6 @@ function rKanban(c){
       <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
       <div class="pill${taskFilter==='thisweek'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='thisweek';render()" style="${thisWeekCount?'':'opacity:.6'}">&#128197; This Week (${thisWeekCount})</div>
       <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
-      <div class="pill${taskFilter==='priorities'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='priorities';render()">&#9670; Priorities (${priorityCount})</div>
       <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
       <div class="pill${taskStatusFilter==='done'?' pill-i':' pill-m'}" onclick="taskStatusFilter='done';taskFilter='all';render()" style="margin-left:auto">Done (${done})</div>
     </div>
@@ -7077,7 +7143,7 @@ function openAtlasProgramPptxModal(){
     <p style="font-size:13px;color:var(--muted);margin:0 0 14px;line-height:1.5">Select slides to include (16:9, white background, Arial). Weekly Heartbeat uses OpenAI for a first draft when your API key is set; refine text in PowerPoint after download.</p>
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-pipeline" checked style="margin-top:3px"/> <span><strong>Vertical AI Pipeline</strong> — L2 “AI for the Business” workstreams and lifecycle bar</span></label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-heartbeat" checked style="margin-top:3px"/> <span><strong>Weekly Heartbeat (four lenses)</strong></span></label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-heartbeat" checked style="margin-top:3px"/> <span><strong>Weekly Heartbeat (five lenses)</strong></span></label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-resource" checked style="margin-top:3px"/> <span><strong>Resourcing summary</strong> — leads/co-leads and workstream counts</span></label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-health" checked style="margin-top:3px"/> <span><strong>Health / target date</strong> — red if past target date (not closed), else green</span></label>
     </div>
@@ -7116,14 +7182,14 @@ function isWsHealthPastDue(w){
   return w.targetDate<today();
 }
 function fallbackHeartbeatBullets(){
-  const out={aiEmployee:[],aiBusiness:[],grassroots:[],praxoTech:[]};
-  const map={'ai-employee':'aiEmployee','ai-business':'aiBusiness','grassroots':'grassroots','praxo-tech':'praxoTech'};
+  const out={aiEmployee:[],aiBusiness:[],grassroots:[],praxoTech:[],programLevel:[]};
+  const map={'ai-employee':'aiEmployee','ai-business':'aiBusiness','grassroots':'grassroots','praxo-tech':'praxoTech','program-level':'programLevel'};
   (D.workstreams||[]).filter(isVerticalAiPipelineWs).forEach(w=>{
     const k=map[w.heartbeatLens]||'aiBusiness';
     const bit=`${w.name}: ${((w.desc||'').trim().slice(0,140))||wsStatusLabel(w.status)}${w.targetDate?' · Target '+fmtDate(w.targetDate):''}`;
     out[k].push(bit);
   });
-  ['aiEmployee','aiBusiness','grassroots','praxoTech'].forEach(k=>{
+  ['aiEmployee','aiBusiness','grassroots','praxoTech','programLevel'].forEach(k=>{
     if(!out[k].length)out[k]=['No vertical workstreams tagged for this lens yet.'];
   });
   return out;
@@ -7132,7 +7198,7 @@ async function draftHeartbeatWithAi(){
   const verticals=(D.workstreams||[]).filter(isVerticalAiPipelineWs);
   if(!verticals.length)return fallbackHeartbeatBullets();
   const ctx=verticals.map(w=>`- ${w.name} | lens:${w.heartbeatLens} | lifecycle:${w.verticalLifecycleStage} | lead:${w.primaryOwner||'—'} | target:${w.targetDate||'—'} | status:${wsStatusLabel(w.status)}\n  ${(w.desc||'').trim().slice(0,320)}`).join('\n');
-  const sys=`You draft concise executive bullets for Digital Realty's AI Transformation Program. Output ONLY valid JSON (no markdown fences) with keys: aiEmployee, aiBusiness, grassroots, praxoTech. Each value is an array of 2-4 short bullet strings (plain text). Use program data; say TBD only when nothing exists.`;
+  const sys=`You draft concise executive bullets for Digital Realty's AI Transformation Program. Output ONLY valid JSON (no markdown fences) with keys: aiEmployee, aiBusiness, grassroots, praxoTech, programLevel (Other / Program Level). Each value is an array of 2-4 short bullet strings (plain text). Use program data; say TBD only when nothing exists.`;
   const raw=await callAI(sys,'Weekly heartbeat context:\n'+ctx+'\nToday: '+today(),{temperature:0.35});
   if(!raw)return null;
   let s=raw.trim();
@@ -7143,7 +7209,8 @@ async function draftHeartbeatWithAi(){
       aiEmployee:Array.isArray(j.aiEmployee)?j.aiEmployee:[],
       aiBusiness:Array.isArray(j.aiBusiness)?j.aiBusiness:[],
       grassroots:Array.isArray(j.grassroots)?j.grassroots:[],
-      praxoTech:Array.isArray(j.praxoTech)?j.praxoTech:[]
+      praxoTech:Array.isArray(j.praxoTech)?j.praxoTech:[],
+      programLevel:Array.isArray(j.programLevel)?j.programLevel:[]
     };
   }catch(e){return null}
 }
@@ -7204,21 +7271,15 @@ async function generateAtlasProgramPptx(opts){
     s.background={fill:'FFFFFF'};
     s.addText('AI Program Update | Weekly Heartbeat',{x:0.5,y:0.35,w:12,h:0.42,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
     s.addText(dateStr,{x:0.5,y:0.78,w:6,h:0.2,fontSize:10,color:'666666',fontFace:'Arial'});
-    const rows=[
-      {title:'AI for the Employee',key:'aiEmployee'},
-      {title:'AI for the Business',key:'aiBusiness'},
-      {title:'Grassroots / Superworkers',key:'grassroots'},
-      {title:'Praxo & Technical Controls',key:'praxoTech'}
-    ];
-    let y=1.12;
-    rows.forEach(r=>{
-      s.addText(r.title,{x:0.5,y:y,w:3.1,h:0.22,fontSize:12,bold:true,color:BLACK,fontFace:'Arial'});
+    let y=1.08;
+    HEARTBEAT_PPTX_ROWS.forEach(r=>{
+      s.addText(r.title,{x:0.5,y:y,w:3.15,h:0.2,fontSize:11,bold:true,color:BLACK,fontFace:'Arial'});
       const rawLines=hb[r.key]||[];
       const bullets=rawLines.length
-        ?rawLines.map(t=>({text:t,options:{fontSize:10,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'},paraSpaceAfter:3}}))
+        ?rawLines.map(t=>({text:t,options:{fontSize:9.5,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'},paraSpaceAfter:2}}))
         :[{text:'—',options:{fontSize:10,color:BLACK,fontFace:'Arial'}}];
-      s.addText(bullets,{x:3.65,y:y,w:9.0,h:1.05,valign:'top',fontFace:'Arial'});
-      y+=1.18;
+      s.addText(bullets,{x:3.65,y:y,w:9.0,h:0.95,valign:'top',fontFace:'Arial'});
+      y+=1.05;
     });
     atlasPptxFooter(s,page);
   }
@@ -7303,7 +7364,7 @@ function openExecPptxSlideModal(){
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px">
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl1',saved.s1)} <span><strong>Slide 1 — Title</strong> — program title, subtitle, date</span></label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl2',saved.s2)} <span><strong>Slide 2 — Vertical AI pipeline</strong> — lifecycle bars, exec gate, above/below sections</span></label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl3',saved.s3)} <span><strong>Slide 3 — Weekly heartbeat</strong> — four lenses (AI uses your API key when set)</span></label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl3',saved.s3)} <span><strong>Slide 3 — Weekly heartbeat</strong> — five lenses (AI uses your API key when set)</span></label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl4',saved.s4)} <span><strong>Slide 4 — Workstream status</strong> — all program workstreams with Red / Yellow / Green</span></label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl5',saved.s5)} <span><strong>Slide 5 — Resource allocation</strong> — each lead/co-lead and assigned workstreams</span></label>
     </div>
@@ -7426,14 +7487,13 @@ async function exportExecPptx(opts){
     s.background={fill:'FFFFFF'};
     s.addText('AI Program Update | Weekly Heartbeat',{x:0.5,y:0.32,w:12,h:0.4,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
     s.addText(dateStr,{x:0.5,y:0.72,w:6,h:0.18,fontSize:10,color:'666666',fontFace:'Arial'});
-    const rows=[{title:'AI for the Employee',key:'aiEmployee'},{title:'AI for the Business',key:'aiBusiness'},{title:'Grassroots / Superworkers',key:'grassroots'},{title:'Praxo & Technical Controls',key:'praxoTech'}];
-    let y=1.05;
-    rows.forEach(r=>{
-      s.addText(r.title,{x:0.5,y:y,w:3.1,h:0.2,fontSize:11,bold:true,color:BLACK,fontFace:'Arial'});
+    let y=1.02;
+    HEARTBEAT_PPTX_ROWS.forEach(r=>{
+      s.addText(r.title,{x:0.5,y:y,w:3.15,h:0.18,fontSize:10.5,bold:true,color:BLACK,fontFace:'Arial'});
       const rawLines=hb[r.key]||[];
-      const bullets=rawLines.length?rawLines.map(t=>({text:t,options:{fontSize:9.5,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'},paraSpaceAfter:2}})):[{text:'—',options:{fontSize:10,color:BLACK,fontFace:'Arial'}}];
-      s.addText(bullets,{x:3.55,y:y,w:9.1,h:1.0,valign:'top',fontFace:'Arial'});
-      y+=1.12;
+      const bullets=rawLines.length?rawLines.map(t=>({text:t,options:{fontSize:9.2,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'},paraSpaceAfter:2}})):[{text:'—',options:{fontSize:10,color:BLACK,fontFace:'Arial'}}];
+      s.addText(bullets,{x:3.55,y:y,w:9.1,h:0.92,valign:'top',fontFace:'Arial'});
+      y+=1.02;
     });
     atlasPptxFooter(s,page);
   }
