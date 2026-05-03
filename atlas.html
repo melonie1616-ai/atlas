@@ -744,7 +744,7 @@ let D,V=localStorage.getItem('atlas_view')||'dashboard',ME='',dbRef=null,firebas
 const RELEASE_VERSION='2026-03-27';
 const RELEASE_NOTES=[
   {date:'March 27, 2026',whatsNew:[
-    'Dashboard timeline toggles: Show/hide 90-Day Enterprise Plan, Enterprise AI Roadmap, program workstreams, Milestones, and Action Items independently.',
+    'Dashboard timeline toggles: Show/hide 90-Day Enterprise Plan, Enterprise AI Roadmap, program workstreams, and Action Items independently.',
     'Enhanced timeline visibility: Larger, more prominent Program Timeline section header with card-style background and better visual separation.',
     'Kanban board improvements: Toggle between list and board view for action items; drag-and-drop to update status; overdue/due-today highlighting (red/amber).',
     'AI Insights redesign: Full-page tabbed interface (Analyze + Ask) with larger, more visible tabs and uppercase labels for better clarity.',
@@ -993,13 +993,6 @@ function defaults(){
       status:'not-started',notes:'',phase:'0-30',businessOutcome:w.businessOutcome||'',
       targetStart:'',targetEnd:''})),
     engagements:[],
-    milestones:[
-      {id:uid(),title:'Deliver data infrastructure / MSFT Graph connector draft',workstream:'data-infra',date:'2026-03-11',status:'done',owner:'Brian Letort',notes:'Socialize with Don, Stephen, key BU leaders'},
-      {id:uid(),title:'Deliver Executive AI Framework draft',workstream:'ai-program',date:'2026-03-11',status:'done',owner:'Brian Letort',notes:'Socialize with Don, Stephen, key BU leaders'},
-      {id:uid(),title:'Align with Stuart on HR ownership for AI training',workstream:'superworker',date:'2026-03-11',status:'done',owner:'',notes:''},
-      {id:uid(),title:'Launch enterprise AI usage survey',workstream:'standards',date:'2026-03-13',status:'upcoming',owner:'',notes:''},
-      {id:uid(),title:'Publish initial executive AI dashboard',workstream:'ai-program',date:'2026-03-20',status:'upcoming',owner:'Melonie Poole',notes:'Covering AI activities, data readiness, tool standards, BU initiatives, pacing'}
-    ],
     tasks:[],
     meetings:[],
     inbox:[],
@@ -1121,20 +1114,10 @@ function loadLs(){
   try{D=JSON.parse(localStorage.getItem('ai-tracker'))}catch(e){}
   if(!D||!D.workstreams)D=defaults();
   if(!D.engagements)D.engagements=[];
-  if(!D.milestones)D.milestones=[];
   if(!D.tasks)D.tasks=[];
   ensureGroups();
-  if(D.milestones&&D.milestones.length&&!D._msMigrated){
-    D.milestones.forEach(m=>{
-      if(!D.tasks.find(t=>t.id===m.id)){
-        D.tasks.push({id:m.id,title:m.title,owner:m.owner||'',due:m.date||'',
-          status:m.status==='done'?'done':'not-started',priority:'high',
-          workstream:m.workstream||'',notes:m.notes||'',
-          isMilestone:true,addedBy:m.addedBy||'',created:m.date||today()});
-      }
-    });
-    D._msMigrated=true;
-  }
+  (D.tasks||[]).forEach(t=>{delete t.isMilestone});
+  if(D.milestones)delete D.milestones;
   if(!D.meetings)D.meetings=[];
   if(!D.inbox)D.inbox=[];
   if(!D.people)D.people=[];
@@ -1423,21 +1406,18 @@ async function callAI(systemPrompt,userPrompt,opts={}){
 }
 function getProgramContext(){
   const ws=allProgramWorkstreams().map(w=>w.name+' ('+w.status+', owner: '+(w.owner||'TBD')+')').join('; ');
-  const allMs=(D.tasks||[]).filter(t=>t.isMilestone);
-  const ms=allMs.map(m=>m.title+' — owner: '+(m.owner||'Unassigned')+' — '+(m.status==='done'?'done':m.due&&m.due<today()?'overdue':'upcoming')+(m.due?' due '+m.due:'')).join('; ');
   const openTasks=(D.tasks||[]).filter(t=>t.status!=='done');
   const overdueCount=openTasks.filter(t=>t.due&&t.due<today()).length;
+  const doneCount=(D.tasks||[]).filter(t=>t.status==='done').length;
   const openT=openTasks.map(t=>t.title+' (owner: '+(t.owner||'Unassigned')+(t.due?'; due '+t.due:'')+'; status: '+taskStatusLabel(t.status)+')').join('; ');
   const doneT=(D.tasks||[]).filter(t=>t.status==='done').map(t=>t.title+' (owner: '+(t.owner||'Unassigned')+')').join('; ');
   const eng=(D.engagements||[]).map(e=>e.title+' ('+e.status+', type: '+(e.type||'N/A')+')').join('; ');
   const activeWsList=allProgramWorkstreams();
   const wsCount=activeWsList.length;
   const wsInProgress=activeWsList.filter(w=>w.status&&w.status!=='not-started'&&w.status!=='complete').length;
-  const msDone=allMs.filter(t=>t.status==='done').length;
   return `PROGRAM: AI Transformation Program — Digital Realty CDO
-COUNTS (use these exact numbers in insights): ${openTasks.length} open action items, ${overdueCount} overdue (past due date). ${wsCount} workstreams total, ${wsInProgress} in progress. ${msDone}/${allMs.length} milestones complete.
+COUNTS (use these exact numbers in insights): ${openTasks.length} open action items, ${overdueCount} overdue (past due date). ${doneCount} completed action items total. ${wsCount} workstreams total, ${wsInProgress} in progress.
 WORKSTREAMS: ${ws||'None'}
-MILESTONES: ${ms||'None'}
 OPEN TASKS: ${openT||'None'}
 COMPLETED TASKS: ${doneT||'None'}
 ENGAGEMENTS: ${eng||'None'}
@@ -1789,23 +1769,28 @@ function badges(){
   const we2=document.getElementById('nb-ws2');if(we2){we2.textContent=wsCount;we2.className='badge'+(wsCount?' hot':'');}
   const ppl=document.getElementById('nb-ppl');if(ppl)ppl.textContent=(D.people||[]).length;
   const f=getImmediateFocus();
-  const focusCount=f.overdueTasks.length+f.overdueMilestones.length+(f.openRisks.filter(r=>r.impact==='critical'||r.impact==='high').length);
+  const focusCount=f.overdueTasks.length+(f.openRisks.filter(r=>r.impact==='critical'||r.impact==='high').length);
   const fb=document.getElementById('focusBadge');if(fb){fb.textContent=focusCount;fb.style.display=focusCount>0?'inline-flex':'none';fb.style.alignItems='center';fb.style.justifyContent='center'}
 }
 
 function render(){
   const c=document.getElementById('content');
   if(taskFilter==='priorities')taskFilter='all';
+  if(taskFilter==='milestones')taskFilter='all';
   ({dashboard:rDash,workstreams:rWorkstreamsNew,actionitems:rActionItemsNew,
     tasks:rTasks,extract:rExtract,mywork:rMyWork,people:rPeople,report:rReport,ask:rAsk,
     decisions:rDecisions,risks:rRisks,governance:rGovernance,ado:rAdo,metrics:rMetrics,workmetrics:rWorkMetrics  })[V]?.(c);
-  badges();updateMyWorkNavHighlight();autoUpdateMilestones();
+  badges();updateMyWorkNavHighlight();
 }
 
-function autoUpdateMilestones(){
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  const cb=window._afterModalCloseOnce;
+  if(typeof cb==='function'){
+    window._afterModalCloseOnce=null;
+    setTimeout(cb,0);
+  }
 }
-
-function closeModal(){document.getElementById('overlay').classList.remove('open')}
 
 function renderLinks(){
   const el=document.getElementById('sidebar-links');if(!el)return;
@@ -2149,8 +2134,6 @@ function getImmediateFocus(){
   const now=t();
   const tasks=(D.tasks||[]).filter(x=>x.status!=='done');
   const overdueTasks=tasks.filter(x=>x.due&&x.due<now).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
-  const allMs=tasks.filter(x=>x.isMilestone);
-  const overdueMilestones=allMs.filter(x=>x.due&&x.due<now).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
   const wkEnd=new Date(now+'T00:00:00');wkEnd.setDate(wkEnd.getDate()+7);
   const wkEndStr=wkEnd.toISOString().slice(0,10);
   const twoWkEnd=new Date(now+'T00:00:00');twoWkEnd.setDate(twoWkEnd.getDate()+14);
@@ -2158,13 +2141,13 @@ function getImmediateFocus(){
   const dueThisWeek=tasks.filter(x=>x.due&&x.due>=now&&x.due<=wkEndStr).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
   const dueNextTwoWeeks=tasks.filter(x=>x.due&&x.due>wkEndStr&&x.due<=twoWkEndStr).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
   const openRisks=(D.risks||[]).filter(r=>r.status!=='closed').sort((a,b)=>{const o={critical:0,high:1,medium:2,low:3};return (o[a.impact]||2)-(o[b.impact]||2);});
-  return{overdueTasks,overdueMilestones,dueThisWeek,dueNextTwoWeeks,openRisks};
+  return{overdueTasks,dueThisWeek,dueNextTwoWeeks,openRisks};
 }
 function renderFocusPopover(){
   const body=document.getElementById('focusPopoverBody');if(!body)return;
   const f=getImmediateFocus();
-  const {overdueTasks,overdueMilestones,dueThisWeek,openRisks}=f;
-  const overdueAll=[...overdueMilestones,...overdueTasks.filter(t=>!t.isMilestone)];
+  const {overdueTasks,dueThisWeek,openRisks}=f;
+  const overdueAll=overdueTasks;
   const section=(title,items,isOverdue,onclickKey)=>{
     if(!items.length)return `<div class="focus-section${isOverdue?' overdue':''}"><div class="focus-section-title">${title}</div><div class="focus-empty">Nothing right now</div></div>`;
     return `<div class="focus-section${isOverdue?' overdue':''}"><div class="focus-section-title">${title}</div>${items.map(it=>{
@@ -2624,6 +2607,23 @@ function getWorkstreamLevel(w){
   const parent=(D.workstreams||[]).find(x=>x.id===w.parentWs);
   return parent?getWorkstreamLevel(parent)+1:1;
 }
+/** When L1 is a real workstream row (dynamic id), map its id or display name to WS_L1_CATEGORIES slug (e.g. ai-for-business). */
+function l1CanonicalSlugForRootWorkstream(root){
+  if(!root||root.parentWs)return'';
+  const idStr=String(root.id||'').trim();
+  const nm=String(root.name||'').trim().toLowerCase();
+  for(const c of WS_L1_CATEGORIES){
+    if(idStr&&c.id===idStr)return c.id;
+    const cname=String(c.name||'').trim().toLowerCase();
+    if(!nm||!cname)continue;
+    if(nm===cname)return c.id;
+    if(nm.startsWith(cname)){
+      const rest=nm.slice(cname.length);
+      if(!rest.length||/^[\s\(-–—]/.test(rest))return c.id;
+    }
+  }
+  return'';
+}
 function getWorkstreamParentL1(w){
   if(!w)return '';
   const def=WS_DEFS.find(d=>d.id===w.id);
@@ -2631,10 +2631,24 @@ function getWorkstreamParentL1(w){
   if(w.parentL1)return w.parentL1;
   if(!w.parentWs)return '';
   const parent=(D.workstreams||[]).find(x=>x.id===w.parentWs);
-  return parent?getWorkstreamParentL1(parent):'';
+  if(!parent)return '';
+  const slug=getWorkstreamParentL1(parent);
+  if(slug)return slug;
+  if(!parent.parentWs)return l1CanonicalSlugForRootWorkstream(parent)||'';
+  return'';
 }
 function isVerticalAiPipelineWs(w){
   return getWorkstreamParentL1(w)==='ai-for-business'&&getWorkstreamLevel(w)===2;
+}
+/** Rows for Vertical AI pipeline slides: strict L2 under AI for the Business, else any ws under that L1 (preview/export stay aligned). */
+function verticalAiPipelineWorkstreamsForDeck(){
+  ensureWorkstreamReportingFields();
+  const all=D.workstreams||[];
+  const strict=all.filter(isVerticalAiPipelineWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  if(strict.length)return{rows:strict,fallbackNote:null};
+  const loose=all.filter(w=>getWorkstreamParentL1(w)==='ai-for-business').sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  if(loose.length)return{rows:loose,fallbackNote:'Showing all workstreams under AI for the Business (no strict L2 matches — set parent L1 and depth in Workstreams, or match seeded template ids).'};
+  return{rows:[],fallbackNote:null};
 }
 /** Lens used for dashboard counts and Workstreams lens filter when heartbeatLens is unset. */
 function effectiveHeartbeatLensForWorkstream(w){
@@ -3002,7 +3016,7 @@ function renderExecutiveSnapshotHtml(){
         <div style="padding:12px 14px;border-radius:14px;border:1px solid #bfdbfe;background:linear-gradient(180deg,#ffffff,#f8fafc);width:100%;box-sizing:border-box">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
             <span style="font-size:11px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.04em">Workstreams per team member</span>
-            <button type="button" class="mbtn mb-add" style="font-size:11px;padding:4px 10px" onclick="metricsIncludeCoLead=false;go('workmetrics')">Metrics</button>
+            <button type="button" class="mbtn mb-add" style="font-size:11px;padding:4px 10px" onclick="go('workmetrics')">Metrics</button>
           </div>
           <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Lead only · top ${wsLeadList.length||0}</div>
           ${wsBarChart}
@@ -3032,10 +3046,6 @@ function rDash(c){
   const weekEnd=new Date(weekStart);weekEnd.setDate(weekStart.getDate()+6);
   const wkS=weekStart.toISOString().slice(0,10),wkE=weekEnd.toISOString().slice(0,10);
   const dueThisWeek=open.filter(t=>t.due&&t.due>=wkS&&t.due<=wkE);
-  const allMs=(D.tasks||[]).filter(t=>t.isMilestone);
-  const msDone=allMs.filter(t=>t.status==='done');
-  const msOD=allMs.filter(t=>t.status!=='done'&&t.due&&t.due<today());
-  const msUp=allMs.filter(t=>t.status!=='done'&&(!t.due||t.due>=today()));
   const allWs=allProgramWorkstreams();
   const activeWs=allWs.filter(w=>w.status!=='complete');
   const atRiskWs=allWs.filter(w=>{const s=w.status;return s==='at-risk'||s==='blocked'||(D.tasks||[]).some(t=>t.workstream===w.id&&t.status!=='done'&&t.due&&t.due<today())});
@@ -3098,10 +3108,10 @@ function rDash(c){
     <button onclick="openDailyDigestModal()" style="padding:6px 12px;font-size:11px;background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.3);border-radius:4px;cursor:pointer;white-space:nowrap;transition:all .15s" onmouseenter="this.style.background='rgba(37,99,235,.2)'" onmouseleave="this.style.background='rgba(37,99,235,.1)'">📧 Daily Digest</button>
   </div>
   ${renderExecutiveSnapshotHtml()}
-  ${renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,myOpenTasks,myWsCount)}`;
+  ${renderDashboardOverview()}`;
 }
 
-function renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,myOpenTasks,myWsCount){
+function renderDashboardOverview(){
   return `
   <div class="ws-section" id="dashSec-timeline" style="margin-bottom:16px">
     <div class="ws-section-hd" onclick="toggleWsSection('dashSec-timeline')" style="background:var(--bg-card);padding:14px 18px;border-radius:var(--r-sm) var(--r-sm) 0 0;border:1px solid var(--border)"><h4 style="font-size:16px;font-weight:800;color:var(--text)">Program Timeline</h4><span class="ws-section-arrow">&#9660;</span></div>
@@ -3692,7 +3702,7 @@ async function runAIInsights(){
   const ctx=getProgramContext();
   const result=await callAI(
     `You are a senior program advisor for Digital Realty's AI Transformation Program. STRICT RULES: (1) Output raw HTML only — NO code fences, NO backticks, NO markdown. (2) Each section header uses <strong style="font-size:13.5px">. (3) Bullets use <ul style="margin:4px 0 12px 8px;padding-left:16px"> and <li style="margin-bottom:3px">. (4) Be concise — each bullet is ONE sentence max. (5) ALWAYS include specific dates, counts (X of Y complete, X overdue), and percentages where the data supports it. (6) Name specific workstreams, owners, and deadlines. (7) Three sections: "Key Updates" (progress, wins, status with numbers), "Watch List" (overdue items, at-risk workstreams, blockers with dates), "Next Steps" (owner + action + date). 2-4 bullets per section.`,
-    'Executive briefing. Use ONLY the numbers from the COUNTS line. For people: each OPEN TASK and MILESTONE in the data includes "owner: Name" — in Next Steps and elsewhere, assign actions ONLY to that owner (the person actually assigned to that task). Do not substitute workstream leads or guess; use the owner field from the data.\n\n'+ctx
+    'Executive briefing. Use ONLY the numbers from the COUNTS line. For people: each OPEN TASK in the data includes "owner: Name" — in Next Steps and elsewhere, assign actions ONLY to that owner (the person actually assigned to that task). Do not substitute workstream leads or guess; use the owner field from the data.\n\n'+ctx
   );
   if(!el)return;
   if(result){
@@ -4875,7 +4885,7 @@ function openIntakeModal(){
       </button>
       <button onclick="closeModal();openTaskModal()" style="padding:16px 20px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);cursor:pointer;text-align:left;transition:all .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.background='rgba(99,102,241,.05)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-subtle)'">
         <div style="font-weight:600;font-size:14px;margin-bottom:4px;color:var(--text)">Action Item</div>
-        <div style="font-size:12px;color:var(--muted)">A specific task, milestone, or deliverable</div>
+        <div style="font-size:12px;color:var(--muted)">A specific task or deliverable</div>
       </button>
     </div>
   </div>
@@ -5043,8 +5053,8 @@ function wsTimeline(wsId){
     let barHtml='<div style="position:relative;height:28px;background:var(--border-lt);border-radius:6px;overflow:hidden;margin-bottom:8px">';
     barHtml+='<div style="position:absolute;left:'+barL+'%;top:0;height:100%;width:'+(barR-barL)+'%;background:'+wc+';opacity:.18;border-radius:6px"></div>';
     if(nowPct>=0&&nowPct<=100)barHtml+='<div style="position:absolute;left:'+nowPct+'%;top:0;bottom:0;width:2px;background:var(--red);z-index:2" title="Today"></div>';
-    const milestones=dated.filter(t=>t.isMilestone&&t.due);
-    milestones.forEach(m=>{
+    const keyDates=dated.filter(t=>t.due);
+    keyDates.forEach(m=>{
       const x=pct(m.due);
       const isDone=m.status==='done';const isOD=m.status!=='done'&&m.due&&m.due<today();
       const mc=isDone?'var(--green)':isOD?'var(--red)':wc;
@@ -5230,8 +5240,7 @@ function rTasks(c){
   if(taskStatusFilter==='open')items=items.filter(t=>t.status!=='done');
   else if(taskStatusFilter==='done')items=items.filter(t=>t.status==='done');
   
-  if(taskFilter==='milestones')items=items.filter(t=>t.isMilestone);
-  else if(taskFilter==='overdue')items=items.filter(t=>t.status!=='done'&&t.due&&t.due<today());
+  if(taskFilter==='overdue')items=items.filter(t=>t.status!=='done'&&t.due&&t.due<today());
   else if(taskFilter==='thisweek'){
     const todayD=new Date(today()+'T00:00:00');
     const dayOfWeek=todayD.getDay();
@@ -5253,7 +5262,7 @@ function rTasks(c){
   else if(taskSort==='priority')items.sort((a,b)=>taskSortDir*((pv[a.priority]??1)-(pv[b.priority]??1)));
   else if(taskSort==='workstream')items.sort((a,b)=>taskSortDir*wsNamePlain(a.workstream).localeCompare(wsNamePlain(b.workstream)));
   else{const so={'not-started':0,'open':1,'blocked-dependency':2,'done':3,'blocked':2};items.sort((a,b)=>{if(normalizeTaskStatus(a.status)!==normalizeTaskStatus(b.status))return(so[normalizeTaskStatus(a.status)]??1)-(so[normalizeTaskStatus(b.status)]??1);if((pv[a.priority]??1)!==(pv[b.priority]??1))return(pv[a.priority]??1)-(pv[b.priority]??1);return(a.due||'9').localeCompare(b.due||'9')})}
-  const open=D.tasks.filter(t=>t.status!=='done').length,done=D.tasks.filter(t=>t.status==='done').length,msCount=D.tasks.filter(t=>t.isMilestone).length;
+  const open=D.tasks.filter(t=>t.status!=='done').length,done=D.tasks.filter(t=>t.status==='done').length;
   const overdueCount=D.tasks.filter(t=>t.status!=='done'&&t.due&&t.due<today()).length;
   const thisWeekCount=(()=>{
     const todayD=new Date(today()+'T00:00:00');
@@ -5275,7 +5284,6 @@ function rTasks(c){
       <div class="pill${taskFilter==='all'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='all';render()">Open (${open})</div>
       <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
       <div class="pill${taskFilter==='thisweek'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='thisweek';render()" style="${thisWeekCount?'':'opacity:.6'}">&#128197; This Week (${thisWeekCount})</div>
-      <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
       <div class="pill${taskFilter==='blockeddep'?' pill-r':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='blockeddep';render()" style="${blockedDepCount?'':'opacity:.6'}">Blocked (${blockedDepCount})</div>
       <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
       <div class="pill${taskStatusFilter==='done'?' pill-i':' pill-m'}" onclick="taskStatusFilter='done';taskFilter='all';render()" style="margin-left:auto">Done (${done})</div>
@@ -5678,14 +5686,13 @@ function rTasksInbox(c){
   const waiting=inboxItems.filter(d=>!d.processed);
   const processed=inboxItems.filter(d=>d.processed);
   const inboxCount=waiting.length;
-  const open=D.tasks.filter(t=>t.status!=='done').length,done=D.tasks.filter(t=>t.status==='done').length,msCount=D.tasks.filter(t=>t.isMilestone).length;
+  const open=D.tasks.filter(t=>t.status!=='done').length,done=D.tasks.filter(t=>t.status==='done').length;
   c.innerHTML=`
   <div class="page-wrap tasks-page">
   <div class="page-toolbar">
     <span class="page-title">Action Items</span>
     <div class="pill-filters">
       <div class="pill pill-m" onclick="taskStatusFilter='open';taskFilter='all';render()">Open (${open})</div>
-      <div class="pill pill-m" onclick="taskStatusFilter='open';taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
       <div class="pill pill-i" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
       <div class="pill pill-m" onclick="taskStatusFilter='done';taskFilter='all';render()" style="margin-left:auto">Done (${done})</div>
     </div>
@@ -5763,8 +5770,7 @@ function rKanban(c){
   if(taskStatusFilter==='open')items=items.filter(t=>t.status!=='done');
   else if(taskStatusFilter==='done')items=items.filter(t=>t.status==='done');
   
-  if(taskFilter==='milestones')items=items.filter(t=>t.isMilestone);
-  else if(taskFilter==='overdue')items=items.filter(t=>t.status!=='done'&&t.due&&t.due<today());
+  if(taskFilter==='overdue')items=items.filter(t=>t.status!=='done'&&t.due&&t.due<today());
   else if(taskFilter==='thisweek'){
     const todayD=new Date(today()+'T00:00:00');
     const dayOfWeek=todayD.getDay();
@@ -5791,7 +5797,7 @@ function rKanban(c){
     else grouped['not-started'].push(t);
   });
 
-  const open=D.tasks.filter(t=>t.status!=='done').length,done=D.tasks.filter(t=>t.status==='done').length,msCount=D.tasks.filter(t=>t.isMilestone).length;
+  const open=D.tasks.filter(t=>t.status!=='done').length,done=D.tasks.filter(t=>t.status==='done').length;
   const overdueCount=D.tasks.filter(t=>t.status!=='done'&&t.due&&t.due<today()).length;
   const thisWeekCount=(()=>{
     const todayD=new Date(today()+'T00:00:00');
@@ -5856,7 +5862,6 @@ function rKanban(c){
       <div class="pill${taskFilter==='all'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='all';render()">Open (${open})</div>
       <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
       <div class="pill${taskFilter==='thisweek'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='thisweek';render()" style="${thisWeekCount?'':'opacity:.6'}">&#128197; This Week (${thisWeekCount})</div>
-      <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
       <div class="pill${taskFilter==='blockeddep'?' pill-r':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='blockeddep';render()" style="${blockedDepCount?'':'opacity:.6'}">Blocked (${blockedDepCount})</div>
       <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
       <div class="pill${taskStatusFilter==='done'?' pill-i':' pill-m'}" onclick="taskStatusFilter='done';taskFilter='all';render()" style="margin-left:auto">Done (${done})</div>
@@ -5999,7 +6004,6 @@ async function submitInbox(){
 - "due": date in YYYY-MM-DD format (if mentioned or inferable, otherwise "")
 - "priority": "high", "medium", or "low" based on urgency
 - "workstream": best-matching workstream ID from the list below, or "" if none fit
-- "isMilestone": true if it's a major deliverable or milestone, false for regular tasks
 
 WORKSTREAMS:
 ${wsContext||'(none defined yet)'}
@@ -6066,12 +6070,12 @@ function routeDoc(id){
   if(!items.length&&!aiTasks.length){toast('No tasks found');return}
   if(aiTasks.length){
     aiTasks.forEach(t=>{
-      D.tasks.push({id:uid(),title:t.title||'Untitled',workstream:t.workstream||'',isMilestone:!!t.isMilestone,owner:t.owner||'',due:t.due||'',status:'not-started',priority:t.priority||'medium',notes:'From: '+d.title,source:d.title,created:today(),addedBy:ME});
+      D.tasks.push({id:uid(),title:t.title||'Untitled',workstream:t.workstream||'',owner:t.owner||'',due:t.due||'',status:'not-started',priority:t.priority||'medium',notes:'From: '+d.title,source:d.title,created:today(),addedBy:ME});
     });
     d.processed=true;d.updatedBy=ME;
     save();log(aiTasks.length+' AI item(s) from: '+esc(d.title));go('tasks');toast(aiTasks.length+' action items created with AI details');
   }else{
-    items.forEach(t=>D.tasks.push({id:uid(),title:t,workstream:'',isMilestone:false,owner:'',due:'',status:'not-started',priority:'medium',notes:'From: '+d.title,source:d.title,created:today(),addedBy:ME}));
+    items.forEach(t=>D.tasks.push({id:uid(),title:t,workstream:'',owner:'',due:'',status:'not-started',priority:'medium',notes:'From: '+d.title,source:d.title,created:today(),addedBy:ME}));
     d.processed=true;d.updatedBy=ME;
     save();log(items.length+' item(s) from: '+esc(d.title));go('tasks');toast(items.length+' action items created');
   }
@@ -6095,7 +6099,7 @@ function inboxToTask(id){
   const taskId=uid();
   const notes='From inbox: '+d.title+((d.content||'').trim()?'\n\n'+(d.content||'').substring(0,800):'');
   if(!D.tasks)D.tasks=[];
-  D.tasks.push({id:taskId,title:d.title||'Untitled',workstream:'',isMilestone:false,owner:'',due:'',startDate:'',status:'not-started',priority:'medium',notes,source:d.title,created:today(),addedBy:ME});
+  D.tasks.push({id:taskId,title:d.title||'Untitled',workstream:'',owner:'',due:'',startDate:'',status:'not-started',priority:'medium',notes,source:d.title,created:today(),addedBy:ME});
   d.processed=true;d.updatedBy=ME;
   save();log('Created action item from inbox: '+esc(d.title));
   render();openTaskModal(taskId);toast('Action item created — set workstream & dates');
@@ -6181,219 +6185,120 @@ function rPeople(c){
   </div>`;
 }
 
-let metricsIncludeCoLead=true;
+/** ISO date string offset by whole days (local noon avoids DST edge cases). */
+function addDaysIso(dateStr,deltaDays){
+  const d=new Date(String(dateStr)+'T12:00:00');
+  d.setDate(d.getDate()+deltaDays);
+  return d.toISOString().slice(0,10);
+}
+/** Day bucket for a completed action item (last update when marked done; else created). */
+function taskCompletionDayKey(t){
+  if(normalizeTaskStatus(t.status)!=='done')return null;
+  const raw=t.updatedAt||t.created||'';
+  return raw.length>=10?raw.slice(0,10):null;
+}
+/** Created date (YYYY-MM-DD) for an action item — uses `created` only (ISO or date prefix). */
+function taskCreatedDayKey(t){
+  const raw=t.created||'';
+  return raw.length>=10?raw.slice(0,10):null;
+}
+
+/** Throughput / backlog snapshot for the Metrics page (uses existing task timestamps only). */
+function buildVelocityMetricsHtml(){
+  const tasks=D.tasks||[];
+  const doneTs=tasks.filter(t=>normalizeTaskStatus(t.status)==='done');
+  const openCt=tasks.filter(t=>t.status!=='done').length;
+  const end=today();
+  const last7Start=addDaysIso(end,-6);
+  const prev7End=addDaysIso(end,-7);
+  const prev7Start=addDaysIso(end,-13);
+  function countDoneBetween(startStr,endStrInclusive){
+    return doneTs.filter(t=>{
+      const k=taskCompletionDayKey(t);
+      return k&&k>=startStr&&k<=endStrInclusive;
+    }).length;
+  }
+  function countAddedBetween(startStr,endStrInclusive){
+    return tasks.filter(t=>{
+      const k=taskCreatedDayKey(t);
+      return k&&k>=startStr&&k<=endStrInclusive;
+    }).length;
+  }
+  const last7=countDoneBetween(last7Start,end);
+  const prev7=countDoneBetween(prev7Start,prev7End);
+  const delta=last7-prev7;
+  const deltaTxt=delta===0?'Same as prior 7 days':delta>0?'+'+delta+' vs prior 7 days':String(delta)+' vs prior 7 days';
+  const deltaCol=delta>0?'#059669':delta<0?'#dc2626':'var(--muted)';
+  const weeks=[];
+  for(let i=0;i<4;i++){
+    const bs=addDaysIso(end,-27+i*7);
+    const be=addDaysIso(end,-21+i*7);
+    const comp=countDoneBetween(bs,be);
+    const add=countAddedBetween(bs,be);
+    const d0=new Date(bs+'T12:00:00');
+    const d1=new Date(be+'T12:00:00');
+    const lab=d0.toLocaleDateString('en-US',{month:'short',day:'numeric'})+'–'+d1.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    weeks.push({lab,comp,add});
+  }
+  const maxBar=Math.max(1,...weeks.flatMap(w=>[w.comp,w.add]));
+  const weekBars=weeks.map(w=>{
+    const hc=Math.max(w.comp?6:0,Math.round(w.comp/maxBar*56));
+    const ha=Math.max(w.add?6:0,Math.round(w.add/maxBar*56));
+    return`<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end">
+      <div style="display:flex;align-items:flex-end;justify-content:center;gap:5px;height:68px;margin-bottom:4px">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px" title="Completed this week">
+          <span style="font-size:10px;font-weight:800;color:#1d4ed8">${w.comp}</span>
+          <div style="width:14px;height:${hc}px;background:linear-gradient(180deg,#60a5fa,#1d4ed8);border-radius:4px 4px 1px 1px"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px" title="New items added this week">
+          <span style="font-size:10px;font-weight:800;color:#7c3aed">${w.add}</span>
+          <div style="width:14px;height:${ha}px;background:linear-gradient(180deg,#c4b5fd,#7c3aed);border-radius:4px 4px 1px 1px"></div>
+        </div>
+      </div>
+      <div style="font-size:10px;font-weight:600;color:var(--muted);margin-top:6px;text-align:center;line-height:1.2">${esc(w.lab)}</div>
+    </div>`;
+  }).join('');
+  const pill='display:inline-flex;align-items:center;gap:12px;flex:1;min-width:140px;padding:12px 18px;border-radius:999px;border:1px solid var(--border);background:linear-gradient(145deg,var(--bg-card) 0%,var(--bg-subtle) 100%);box-sizing:border-box;box-shadow:0 1px 2px rgba(15,23,42,.06)';
+  return`
+  <div class="card" style="padding:20px;margin-bottom:24px">
+    <h3 style="font-size:15px;font-weight:700;color:var(--fg);margin:0 0 6px">Action item velocity</h3>
+    <p style="font-size:12px;color:var(--muted);margin:0 0 14px;line-height:1.45"><strong>Completed</strong> uses last <strong>updated</strong> date when status is Done (else <strong>created</strong>). <strong>Added</strong> uses each item’s <strong>created</strong> date.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;align-items:stretch">
+      <div style="${pill};border-color:#93c5fd;background:linear-gradient(145deg,#eff6ff,#dbeafe)">
+        <span style="font-size:22px;font-weight:800;color:#1d4ed8;line-height:1">${last7}</span>
+        <span style="font-size:12px;font-weight:600;color:#1e3a8a">Done · last 7 days</span>
+      </div>
+      <div style="${pill};border-color:#e9d5ff;background:linear-gradient(145deg,#faf5ff,#f3e8ff)">
+        <span style="font-size:22px;font-weight:800;color:#6b21a8;line-height:1">${prev7}</span>
+        <span style="font-size:12px;font-weight:600;color:#5b21b6">Done · prior 7 days</span>
+      </div>
+      <div style="${pill};border-color:#cbd5e1">
+        <span style="font-size:22px;font-weight:800;color:var(--fg);line-height:1">${openCt}</span>
+        <span style="font-size:12px;font-weight:600;color:var(--muted)">Open backlog</span>
+      </div>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:${deltaCol};margin:-8px 0 14px">${esc(deltaTxt)}</div>
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Weekly flow (last 4 weeks)</div>
+    <div style="display:flex;align-items:flex-end;justify-content:center;gap:6px;margin-bottom:8px;font-size:10px;color:var(--muted)">
+      <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:linear-gradient(180deg,#60a5fa,#1d4ed8)"></span> Completed</span>
+      <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:linear-gradient(180deg,#c4b5fd,#7c3aed)"></span> Added</span>
+    </div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:6px;width:100%;min-height:132px;padding:12px 10px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,#f8fafc,#eff6ff);box-sizing:border-box">
+      ${weekBars}
+    </div>
+  </div>`;
+}
+
 function rWorkMetrics(c){
-  const allWs=(D.workstreams||[]);
   const allTasks=(D.tasks||[]);
-  const wsMap=new Map(allWs.map(w=>[w.id,w]));
-  
-  function getWsLevel(ws){return workstreamHierarchyLevel(ws,wsMap)}
-  
-  const closedStatuses=['closed','value-achieved','deferred-rejected'];
-  const openWs=allWs.filter(w=>!closedStatuses.includes(normalizeWsStatus(w.status)));
-  const openTasks=allTasks.filter(t=>t.status!=='done');
-  
-  const people=[...new Set([
-    ...allWs.map(w=>w.primaryOwner||w.owner).filter(n=>n&&!n.includes('/')),
-    ...allWs.map(w=>w.secondaryOwner).filter(n=>n&&!n.includes('/')),
-    ...allTasks.map(t=>t.owner).filter(n=>n&&!n.includes('/'))
-  ])].sort();
-  
-  const wsPerPerson=people.map(name=>{
-    const owned=openWs.filter(w=>{
-      const isLead=(w.primaryOwner||w.owner)===name;
-      const isCoLead=w.secondaryOwner===name;
-      return metricsIncludeCoLead?(isLead||isCoLead):isLead;
-    });
-    const l1=owned.filter(w=>getWsLevel(w)===1).length;
-    const l2=owned.filter(w=>getWsLevel(w)===2).length;
-    const l3=owned.filter(w=>getWsLevel(w)===3).length;
-    return {name,l1,l2,l3,total:l1+l2+l3};
-  }).filter(p=>p.total>0).sort((a,b)=>b.total-a.total);
-  
-  const tasksPerPerson=people.map(name=>{
-    const count=openTasks.filter(t=>t.owner===name).length;
-    return {name,count};
-  }).filter(p=>p.count>0).sort((a,b)=>b.count-a.count);
-  
-  const blockedTasks=openTasks.filter(t=>normalizeTaskStatus(t.status)==='blocked-dependency');
-  
-  const todayStr=today();
-  const todayDate=new Date(todayStr);
-  const twoWeeksOut=new Date(todayDate.getTime()+14*24*60*60*1000);
-  const twoWeeksStr=twoWeeksOut.toISOString().slice(0,10);
-  const overdueWs=openWs.filter(w=>w.endDate&&w.endDate<todayStr).sort((a,b)=>(a.endDate||'').localeCompare(b.endDate||''));
-  const overdueTasks=openTasks.filter(t=>t.due&&t.due<todayStr).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
-  const dueSoonWs=openWs.filter(w=>{
-    if(!w.endDate)return false;
-    return w.endDate>=todayStr&&w.endDate<=twoWeeksStr;
-  }).sort((a,b)=>(a.endDate||'').localeCompare(b.endDate||''));
-  const dueSoonTasks=openTasks.filter(t=>{
-    if(!t.due)return false;
-    return t.due>=todayStr&&t.due<=twoWeeksStr;
-  }).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
-  
-  const maxWs=Math.max(...wsPerPerson.map(p=>p.total),1);
-  const maxTasks=Math.max(...tasksPerPerson.map(p=>p.count),1);
-  
-  function renderWsBar(p){
-    const pct=(p.total/maxWs)*100;
-    const l1Pct=(p.l1/maxWs)*100;
-    const l2Pct=(p.l2/maxWs)*100;
-    const l3Pct=(p.l3/maxWs)*100;
-    return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border-lt)">
-      <div style="width:120px;font-size:13px;font-weight:500;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(p.name)}">${esc(p.name)}</div>
-      <div style="flex:1;height:20px;background:var(--bg-subtle);border-radius:4px;overflow:hidden;display:flex">
-        <div style="width:${l1Pct}%;background:#1e40af;transition:width .3s" title="L1: ${p.l1}"></div>
-        <div style="width:${l2Pct}%;background:#3b82f6;transition:width .3s" title="L2: ${p.l2}"></div>
-        <div style="width:${l3Pct}%;background:#93c5fd;transition:width .3s" title="L3: ${p.l3}"></div>
-      </div>
-      <div style="width:80px;text-align:right;font-size:12px;color:var(--muted)">
-        <span style="color:#1e40af;font-weight:600">${p.l1}</span> / 
-        <span style="color:#3b82f6;font-weight:600">${p.l2}</span> / 
-        <span style="color:#93c5fd;font-weight:600">${p.l3}</span>
-      </div>
-      <div style="width:40px;text-align:right;font-size:13px;font-weight:700;color:var(--fg)">${p.total}</div>
-    </div>`;
-  }
-  
-  function renderTaskBar(p){
-    const pct=(p.count/maxTasks)*100;
-    return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border-lt)">
-      <div style="width:120px;font-size:13px;font-weight:500;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(p.name)}">${esc(p.name)}</div>
-      <div style="flex:1;height:20px;background:var(--bg-subtle);border-radius:4px;overflow:hidden">
-        <div style="width:${pct}%;height:100%;background:var(--accent);border-radius:4px;transition:width .3s"></div>
-      </div>
-      <div style="width:40px;text-align:right;font-size:13px;font-weight:700;color:var(--fg)">${p.count}</div>
-    </div>`;
-  }
-  
   c.innerHTML=`
   <div class="page-wrap">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
       <h1 style="font-size:24px;font-weight:600;color:var(--fg);margin:0">Metrics</h1>
     </div>
     ${buildDailyUpdatesTrackerHtml()}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
-      <div class="card" style="padding:20px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <h3 style="font-size:15px;font-weight:700;color:var(--fg);margin:0">Workstreams per Person</h3>
-          <div style="display:flex;gap:12px;font-size:11px">
-            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#1e40af;border-radius:2px"></span>L1</span>
-            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#3b82f6;border-radius:2px"></span>L2</span>
-            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#93c5fd;border-radius:2px"></span>L3</span>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div style="font-size:11px;color:var(--muted)">Open workstreams only</div>
-          <div style="display:flex;gap:4px;background:var(--bg-subtle);border-radius:6px;padding:2px">
-            <button onclick="metricsIncludeCoLead=true;render()" style="padding:4px 10px;font-size:11px;font-weight:${metricsIncludeCoLead?'600':'400'};background:${metricsIncludeCoLead?'var(--bg-card)':'transparent'};color:${metricsIncludeCoLead?'var(--fg)':'var(--muted)'};border:none;border-radius:4px;cursor:pointer;box-shadow:${metricsIncludeCoLead?'0 1px 2px rgba(0,0,0,.1)':'none'}">Lead or Co-Lead</button>
-            <button onclick="metricsIncludeCoLead=false;render()" style="padding:4px 10px;font-size:11px;font-weight:${!metricsIncludeCoLead?'600':'400'};background:${!metricsIncludeCoLead?'var(--bg-card)':'transparent'};color:${!metricsIncludeCoLead?'var(--fg)':'var(--muted)'};border:none;border-radius:4px;cursor:pointer;box-shadow:${!metricsIncludeCoLead?'0 1px 2px rgba(0,0,0,.1)':'none'}">Lead Only</button>
-          </div>
-        </div>
-        ${wsPerPerson.length?wsPerPerson.map(renderWsBar).join(''):'<div style="text-align:center;color:var(--muted);padding:20px">No assigned workstreams</div>'}
-      </div>
-      
-      <div class="card" style="padding:20px">
-        <h3 style="font-size:15px;font-weight:700;color:var(--fg);margin:0 0 16px">Action Items per Person</h3>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Open action items only</div>
-        ${tasksPerPerson.length?tasksPerPerson.map(renderTaskBar).join(''):'<div style="text-align:center;color:var(--muted);padding:20px">No assigned action items</div>'}
-      </div>
-    </div>
-    
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-      <div class="card" style="padding:20px">
-        <div style="display:flex;align-items:flex-start;gap:16px">
-          <div style="width:64px;height:64px;background:rgba(239,68,68,.1);border-radius:12px;display:flex;align-items:center;justify-content:center">
-            <span style="font-size:28px;font-weight:800;color:#ef4444">${blockedTasks.length}</span>
-          </div>
-          <div style="flex:1">
-            <h3 style="font-size:15px;font-weight:700;color:var(--fg);margin:0 0 4px">Blocked by Other Teams</h3>
-            <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Action items waiting on dependencies</div>
-            ${blockedTasks.length?`<div style="max-height:300px;overflow-y:auto">
-              ${blockedTasks.map(t=>{
-                const ws=wsMap.get(t.workstream);
-                return `<div style="padding:8px;margin-bottom:4px;border-radius:6px;background:var(--bg-subtle);font-size:12px;cursor:pointer;transition:background .15s" onclick="openTaskModal('${t.id}')" onmouseenter="this.style.background='var(--accent-lt)'" onmouseleave="this.style.background='var(--bg-subtle)'">
-                  <div style="font-weight:500;color:var(--fg)">${esc(t.title)}</div>
-                  <div style="color:var(--muted);font-size:11px;margin-top:2px">${ws?esc(ws.name):''}${t.owner?' · '+esc(t.owner):''}${t.blockedBy?' · <span style="color:var(--red)">Blocked by: '+esc(t.blockedBy)+'</span>':''}</div>
-                </div>`;
-              }).join('')}
-            </div>`:'<div style="color:var(--green);font-size:13px;font-weight:500">✓ No blocked items</div>'}
-          </div>
-        </div>
-      </div>
-      
-      <div class="card" style="padding:20px">
-        <div style="display:flex;align-items:flex-start;gap:16px">
-          <div style="display:flex;flex-direction:column;gap:8px">
-            ${(overdueWs.length+overdueTasks.length)?`<div style="width:64px;height:48px;background:rgba(239,68,68,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-direction:column">
-              <span style="font-size:18px;font-weight:800;color:#ef4444">${overdueWs.length+overdueTasks.length}</span>
-              <span style="font-size:8px;color:#ef4444;font-weight:600">OVERDUE</span>
-            </div>`:''}
-            <div style="width:64px;height:48px;background:rgba(245,158,11,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-direction:column">
-              <span style="font-size:18px;font-weight:800;color:#f59e0b">${dueSoonWs.length+dueSoonTasks.length}</span>
-              <span style="font-size:8px;color:#f59e0b;font-weight:600">DUE SOON</span>
-            </div>
-          </div>
-          <div style="flex:1">
-            <h3 style="font-size:15px;font-weight:700;color:var(--fg);margin:0 0 4px">Past Due & Due Next 2 Weeks</h3>
-            <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
-              ${(overdueWs.length+overdueTasks.length)?`<span style="font-weight:600;color:var(--red)">${overdueWs.length+overdueTasks.length}</span> overdue · `:''}
-              <span style="font-weight:600;color:var(--fg)">${dueSoonWs.length+dueSoonTasks.length}</span> due soon
-            </div>
-            ${(overdueWs.length||overdueTasks.length||dueSoonWs.length||dueSoonTasks.length)?`<div style="max-height:300px;overflow-y:auto">
-              ${(overdueWs.length||overdueTasks.length)?`<div style="font-size:10px;font-weight:600;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;padding-top:4px">Overdue</div>`:''}
-              ${[...overdueWs.map(w=>({type:'ws',item:w,date:w.endDate,overdue:true})),...overdueTasks.map(t=>({type:'task',item:t,date:t.due,overdue:true}))].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(x=>{
-                const d=new Date(x.date);
-                const dStr=d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
-                if(x.type==='ws'){
-                  return `<div style="padding:8px;margin-bottom:4px;border-radius:6px;background:rgba(239,68,68,.08);font-size:12px;cursor:pointer;transition:background .15s" onclick="openWsEdit('${x.item.id}')" onmouseenter="this.style.background='rgba(239,68,68,.15)'" onmouseleave="this.style.background='rgba(239,68,68,.08)'">
-                    <div style="display:flex;justify-content:space-between;align-items:center">
-                      <span style="font-weight:500;color:var(--fg)">${esc(x.item.name)}</span>
-                      <span style="font-size:10px;background:rgba(239,68,68,.15);color:#ef4444;padding:2px 6px;border-radius:4px">${dStr}</span>
-                    </div>
-                    <div style="color:var(--muted);font-size:11px;margin-top:2px">Workstream${x.item.primaryOwner||x.item.owner?' · '+esc(x.item.primaryOwner||x.item.owner):''}</div>
-                  </div>`;
-                }else{
-                  const ws=wsMap.get(x.item.workstream);
-                  return `<div style="padding:8px;margin-bottom:4px;border-radius:6px;background:rgba(239,68,68,.08);font-size:12px;cursor:pointer;transition:background .15s" onclick="openTaskModal('${x.item.id}')" onmouseenter="this.style.background='rgba(239,68,68,.15)'" onmouseleave="this.style.background='rgba(239,68,68,.08)'">
-                    <div style="display:flex;justify-content:space-between;align-items:center">
-                      <span style="font-weight:500;color:var(--fg)">${esc(x.item.title)}</span>
-                      <span style="font-size:10px;background:rgba(239,68,68,.15);color:#ef4444;padding:2px 6px;border-radius:4px">${dStr}</span>
-                    </div>
-                    <div style="color:var(--muted);font-size:11px;margin-top:2px">Action Item${x.item.owner?' · '+esc(x.item.owner):''}</div>
-                  </div>`;
-                }
-              }).join('')}
-              ${(dueSoonWs.length||dueSoonTasks.length)?`<div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px;padding-top:4px;border-top:1px solid var(--border-lt)">Due Soon</div>`:''}
-              ${[...dueSoonWs.map(w=>({type:'ws',item:w,date:w.endDate})),...dueSoonTasks.map(t=>({type:'task',item:t,date:t.due}))].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(x=>{
-                const d=new Date(x.date);
-                const dStr=d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
-                if(x.type==='ws'){
-                  return `<div style="padding:8px;margin-bottom:4px;border-radius:6px;background:var(--bg-subtle);font-size:12px;cursor:pointer;transition:background .15s" onclick="openWsEdit('${x.item.id}')" onmouseenter="this.style.background='var(--accent-lt)'" onmouseleave="this.style.background='var(--bg-subtle)'">
-                    <div style="display:flex;justify-content:space-between;align-items:center">
-                      <span style="font-weight:500;color:var(--fg)">${esc(x.item.name)}</span>
-                      <span style="font-size:10px;background:rgba(59,130,246,.1);color:#3b82f6;padding:2px 6px;border-radius:4px">${dStr}</span>
-                    </div>
-                    <div style="color:var(--muted);font-size:11px;margin-top:2px">Workstream${x.item.primaryOwner||x.item.owner?' · '+esc(x.item.primaryOwner||x.item.owner):''}</div>
-                  </div>`;
-                }else{
-                  const ws=wsMap.get(x.item.workstream);
-                  return `<div style="padding:8px;margin-bottom:4px;border-radius:6px;background:var(--bg-subtle);font-size:12px;cursor:pointer;transition:background .15s" onclick="openTaskModal('${x.item.id}')" onmouseenter="this.style.background='var(--accent-lt)'" onmouseleave="this.style.background='var(--bg-subtle)'">
-                    <div style="display:flex;justify-content:space-between;align-items:center">
-                      <span style="font-weight:500;color:var(--fg)">${esc(x.item.title)}</span>
-                      <span style="font-size:10px;background:rgba(245,158,11,.1);color:#f59e0b;padding:2px 6px;border-radius:4px">${dStr}</span>
-                    </div>
-                    <div style="color:var(--muted);font-size:11px;margin-top:2px">Action Item${x.item.owner?' · '+esc(x.item.owner):''}</div>
-                  </div>`;
-                }
-              }).join('')}
-            </div>`:'<div style="color:var(--green);font-size:13px;font-weight:500">✓ Nothing due or overdue</div>'}
-          </div>
-        </div>
-      </div>
-    </div>
-    
+    ${buildVelocityMetricsHtml()}
+    <p style="font-size:12px;color:var(--muted);margin:-8px 0 20px;line-height:1.45">If action items exist without a parent workstream, they appear under <strong>Data cleanup</strong> below.</p>
     ${(()=>{
       const orphanedTasks=allTasks.filter(t=>!t.workstream);
       if(!orphanedTasks.length)return '';
@@ -6576,17 +6481,11 @@ function deleteGroup(btn){
 // REPORT OUT
 // ═══════════════════════════════════════════════════
 function recentAccomplishmentsFromApp(wsId){
-  const done=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='done').sort((a,b)=>{
-    const mile=(t)=>(t.isMilestone?1:0); if(mile(b)!==mile(a))return mile(b)-mile(a);
-    return (b.due||'0').localeCompare(a.due||'0');
-  });
+  const done=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='done').sort((a,b)=>(b.due||'0').localeCompare(a.due||'0'));
   return done.slice(0,3).map(t=>'• '+(t.title||'')+(t.due?' ('+fmtDate(t.due)+')':'')).filter(s=>s.length>2).join('\n')||'';
 }
 function whatsNextFromApp(wsId){
-  const open=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status!=='done').sort((a,b)=>{
-    const mile=(t)=>(t.isMilestone?1:0); if(mile(b)!==mile(a))return mile(b)-mile(a);
-    return (a.due||'9').localeCompare(b.due||'9');
-  });
+  const open=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status!=='done').sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
   return open.slice(0,2).map(t=>'• '+(t.title||'')+(t.due?' ('+fmtDate(t.due)+')':'')).filter(s=>s.length>2).join('\n')||'';
 }
 function fillWsFromApp(wsId){
@@ -6638,10 +6537,10 @@ function rAIInsights(c){
       <h3 style="font-size:16px;font-weight:800;margin:0 0 4px">&#128172; Ask Questions</h3>
       <p style="font-size:13px;color:var(--muted);margin:0 0 16px">Ask anything about your program data</p>
       <div class="fg" style="margin-bottom:8px">
-        <textarea id="ask-input" style="min-height:70px;font-size:14px" placeholder="e.g. What's the latest on GTM? Which milestones are overdue?">${(window._askAILastQuestion||'').replace(/</g,'&lt;')}</textarea>
+        <textarea id="ask-input" style="min-height:70px;font-size:14px" placeholder="e.g. What's the latest on GTM? Which action items are overdue?">${(window._askAILastQuestion||'').replace(/</g,'&lt;')}</textarea>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="document.getElementById('ask-input').value='What milestones are overdue?';runAskAI()">Overdue milestones</button>
+        <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="document.getElementById('ask-input').value='Which action items are overdue?';runAskAI()">Overdue items</button>
         <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="document.getElementById('ask-input').value='Status on each BU workstream';runAskAI()">BU status</button>
         <button class="pill pill-m" style="cursor:pointer;border:none;font-size:11px;padding:4px 10px" onclick="document.getElementById('ask-input').value='Top risks and blockers';runAskAI()">Risks &amp; blockers</button>
       </div>
@@ -6693,10 +6592,6 @@ async function runAskAI(){
 function rReport(c){
   const rn=D.reportNotes||{};
   const reportAsOf=rn.asOf||today();
-  const allMs=(D.tasks||[]).filter(t=>t.isMilestone);
-  const msDone=allMs.filter(t=>t.status==='done');
-  const msUp=allMs.filter(t=>t.status!=='done'&&(!t.due||t.due>=today())).sort((a,b)=>(a.due||'9').localeCompare(b.due||'9'));
-  const msOD=allMs.filter(t=>t.status!=='done'&&t.due&&t.due<today());
   const allWs=allProgramWorkstreams();
   const allWsSorted=[...allWs].sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
   try{var reportViewMode=localStorage.getItem('atlas_report_view')||'outcomes'}catch(e){var reportViewMode='outcomes'}
@@ -6734,9 +6629,9 @@ function rReport(c){
     </tr>`;
   }
   function renderWsRowFull(w){
-    const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);
-    const wMsDone=wMs.filter(t=>t.status==='done').length;
-    const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status!=='done').length;
+    const wTasks=(D.tasks||[]).filter(t=>t.workstream===w.id);
+    const wDone=wTasks.filter(t=>t.status==='done').length;
+    const wOpen=wTasks.filter(t=>t.status!=='done').length;
     const st=w.status||'not-started';
     const statusClass=reportStatusClass(st);
     return `<tr>
@@ -6744,14 +6639,14 @@ function rReport(c){
       <td class="rpt-scope">${esc((w.desc||'').slice(0,200))}${(w.desc||'').length>200?'…':''}</td>
       <td><span class="rpt-status ${statusClass}">${wsStatusLabel(st)}</span></td>
       <td style="font-size:11.5px">${esc(w.owner)||'TBD'}</td>
-      <td style="font-size:11.5px">${wMsDone}/${wMs.length}</td>
+      <td style="font-size:11.5px">${wDone}/${wTasks.length}</td>
       <td style="font-size:11.5px">${wOpen}</td>
       <td class="rpt-timing">${nextDue(w.id)}</td>
     </tr>`;
   }
   const execTableFull=`<table class="rpt-exec-table">
     <thead><tr>
-      <th>Workstream</th><th>Scope</th><th>Progress</th><th>Owner</th><th>Milestones</th><th>Open</th><th>Key timing</th>
+      <th>Workstream</th><th>Scope</th><th>Progress</th><th>Owner</th><th>Done / total</th><th>Open</th><th>Key timing</th>
     </tr></thead>
     <tbody>
       ${allWsSorted.map(renderWsRowFull).join('')}
@@ -6929,12 +6824,6 @@ function rReport(c){
     :reportViewMode==='exec'
     ?execReportBuilder
     :`<div class="rpt-section"><h3>Workstream Status</h3>${allWs.length?execTableFull:'<p style="color:var(--muted);font-size:13px">No workstreams defined.</p>'}</div>`;
-  const milestoneSectionFull=reportViewMode==='full'?`<div class="rpt-section">
-    <h3>Milestone Progress (${msDone.length}/${allMs.length} complete)</h3>
-    ${msOD.length?'<div style="margin-bottom:10px"><span style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase">Overdue</span>'+msOD.map(m=>`<div style="display:flex;gap:8px;padding:4px 0;font-size:12px;align-items:center"><span style="color:var(--red);font-weight:600;flex:1">${esc(m.title)}</span><span style="color:var(--muted);font-size:11px">${esc(m.owner||'Unassigned')}</span><span style="color:var(--light)">${fmtDate(m.due)}</span></div>`).join('')+'</div>':''}
-    ${msUp.length?'<div><span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Upcoming</span>'+msUp.slice(0,8).map(m=>`<div style="display:flex;gap:8px;padding:4px 0;font-size:12px;align-items:center"><span style="flex:1">${esc(m.title)}</span><span style="color:var(--muted);font-size:11px">${esc(m.owner||'Unassigned')}</span><span style="color:var(--light)">${fmtDate(m.due)}</span></div>`).join('')+'</div>':''}
-    ${!msOD.length&&!msUp.length?'<p style="color:var(--muted);font-size:13px">No open milestones.</p>':''}
-  </div>`:'';
   const accPlaceholder=reportViewMode==='exec'?'Bullet points: key wins, deliverables, value delivered this period':'Key accomplishments this period...';
   const blockPlaceholder=reportViewMode==='exec'?'Bullet points: blockers, risks, escalations (or "None")':'Current blockers, risks, and escalations...';
   const nextPlaceholder=reportViewMode==='exec'?'Bullet points: focus areas and key dates for next period':'What the team will focus on next...';
@@ -6953,7 +6842,6 @@ function rReport(c){
     </div>
 
     ${workstreamSection}
-    ${milestoneSectionFull}
 
     ${reportViewMode==='full'?`<div class="rpt-section">
       <h3>Accomplishments</h3>
@@ -7044,7 +6932,7 @@ function copyReport(){
       return next?fmtDate(next.due):'—';
     }
     text+='WORKSTREAMS\n';
-    allWsSorted.forEach(w=>{const wMs=(D.tasks||[]).filter(t=>t.isMilestone&&t.workstream===w.id);const wMsDone=wMs.filter(t=>t.status==='done').length;const wOpen=(D.tasks||[]).filter(t=>t.workstream===w.id&&t.status!=='done').length;text+=`  ${w.name} | ${w.status} | ${wMsDone}/${wMs.length} MS | Next: ${nextDue(w.id)} | Open: ${wOpen}\n`});
+    allWsSorted.forEach(w=>{const wTasks=(D.tasks||[]).filter(t=>t.workstream===w.id);const wDone=wTasks.filter(t=>t.status==='done').length;const wOpen=wTasks.filter(t=>t.status!=='done').length;text+=`  ${w.name} | ${w.status} | ${wDone}/${wTasks.length} done | Next: ${nextDue(w.id)} | Open: ${wOpen}\n`});
     text+='\n';
   }
   const acc=(document.getElementById('rpt-acc')?.value||(D.reportNotes||{}).accomplishments||'').trim();
@@ -7127,7 +7015,7 @@ async function aiSummarizeReport(){
   toast('AI is generating summary...');
   const ctx=getProgramContext();
   const result=await callAI(
-    `You are an executive communications assistant for Digital Realty's AI Transformation Program. Write clear, concise status report sections for a senior leadership audience (CTO, executives). Use bullet points. Be specific about what was accomplished, what's blocked, and what's next. Reference specific workstreams, milestones, and deliverables by name.`,
+    `You are an executive communications assistant for Digital Realty's AI Transformation Program. Write clear, concise status report sections for a senior leadership audience (CTO, executives). Use bullet points. Be specific about what was accomplished, what's blocked, and what's next. Reference specific workstreams and deliverables by name.`,
     `Based on this program data, generate three sections for an executive status report:
 
 ${ctx}
@@ -7162,7 +7050,7 @@ function getWorkstreamOutcomeContext(wsId){
   const recentRaw=(w.recentAccomplishments||'').trim()||recentAccomplishmentsFromApp(wsId);
   const nextRaw=(w.whatsNext||'').trim()||whatsNextFromApp(wsId);
   const open=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status!=='done').sort((a,b)=>(a.due||'9').localeCompare(b.due||'9')).slice(0,6);
-  const done=(D.tasks||[]).filter(t=>t.workstream===wsId&&(t.status==='done'||t.isMilestone)).sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,6);
+  const done=(D.tasks||[]).filter(t=>t.workstream===wsId&&t.status==='done').sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,6);
   const openTxt=open.map(t=>{
     const due=t.due?(' due '+t.due):'';
     return `${t.title}${due}${t.owner?(' — '+t.owner):''}`;
@@ -7376,15 +7264,24 @@ async function generateAtlasProgramPptx(opts){
   const BLACK='000000',GRAY='333333',RED='CC0000',GREEN='1A5632';
   const dateStr=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
   let page=0;
-  const verticalRows=(D.workstreams||[]).filter(isVerticalAiPipelineWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const _pipeDeckProg=verticalAiPipelineWorkstreamsForDeck();
+  const verticalRows=_pipeDeckProg.rows;
+  const pipeProgFallbackNote=_pipeDeckProg.fallbackNote;
+  let atlasProgPipeAi={};
+  if(opts.pipeline&&verticalRows.length&&OPENAI_KEY){
+    atlasProgPipeAi=await aiSummarizeVerticalPipelineRows7d(verticalRows);
+  }
   if(opts.pipeline){
     page++;
     const s=pptx.addSlide();
     s.background={fill:'FFFFFF'};
     s.addText('Vertical AI | Pipeline',{x:0.5,y:0.35,w:12,h:0.45,fontSize:20,bold:true,color:BLACK,fontFace:'Arial'});
     s.addText(dateStr,{x:0.5,y:0.78,w:6,h:0.22,fontSize:11,color:'666666',fontFace:'Arial'});
-    if(opts.aboveLine)s.addText(opts.aboveLine,{x:0.5,y:1.0,w:12,h:0.2,fontSize:10,color:GRAY,fontFace:'Arial'});
-    const labelW=2.85,trackL=0.5+labelW,trackW=9.5,stageN=5,segW=trackW/stageN,barTop=opts.aboveLine?1.28:1.12;
+    if(pipeProgFallbackNote)s.addText(pipeProgFallbackNote,{x:0.5,y:0.96,w:12,h:0.24,fontSize:6.5,color:'B45309',fontFace:'Arial',wrap:true});
+    if(opts.aboveLine)s.addText(opts.aboveLine,{x:0.5,y:pipeProgFallbackNote?1.2:1.0,w:12,h:0.2,fontSize:10,color:GRAY,fontFace:'Arial'});
+    const labelW=2.85,trackL=0.5+labelW,trackW=9.5,stageN=5,segW=trackW/stageN;
+    let barTop=opts.aboveLine?1.28:1.12;
+    if(pipeProgFallbackNote)barTop+=0.22;
     VERTICAL_LIFECYCLE_STAGES.forEach((st,i)=>{
       s.addText(st.label,{x:trackL+i*segW,y:barTop,w:segW,h:0.2,fontSize:8,color:BLACK,fontFace:'Arial',align:'center'});
     });
@@ -7400,11 +7297,11 @@ async function generateAtlasProgramPptx(opts){
       const fillW=trackW*((vi+1)/stageN);
       s.addText(w.name,{x:0.5,y:rowY,w:labelW-0.15,h:rowH,fontSize:slice.length>8?9:10,color:BLACK,fontFace:'Arial',bold:true,valign:'middle'});
       s.addShape(pptx.ShapeType.rect,{x:trackL,y:rowY+0.06,w:fillW,h:0.2,fill:{color:'4472C4'},line:{color:'CCCCCC',width:0.5}});
-      const one=(w.desc||'').trim().slice(0,100)||wsStatusLabel(w.status);
+      const one=atlasProgPipeAi[w.id]||((w.desc||'').trim().slice(0,100)||wsStatusLabel(w.status));
       s.addText(one,{x:trackL+trackW+0.08,y:rowY,w:13.2-trackL-trackW-0.5,h:rowH,fontSize:8,color:GRAY,fontFace:'Arial',valign:'middle'});
       rowY+=rowH+0.06;
     });
-    if(!slice.length)s.addText('No L2 workstreams under AI for the Business — add lifecycle & lens on each vertical workstream.',{x:0.5,y:rowY,w:12,h:0.5,fontSize:11,color:'666666',fontFace:'Arial'});
+    if(!slice.length)s.addText('No workstreams under AI for the Business matched this slide — set parent L1, depth (L2), and vertical lifecycle where applicable.',{x:0.5,y:rowY,w:12,h:0.5,fontSize:11,color:'666666',fontFace:'Arial'});
     else if(verticalRows.length>rowMax)s.addText('('+verticalRows.length+' verticals — showing first '+rowMax+')',{x:0.5,y:6.85,w:12,h:0.2,fontSize:9,color:'666666',fontFace:'Arial'});
     atlasPptxFooter(s,page);
   }
@@ -7486,19 +7383,20 @@ function parseBullets(text){
   return (text||'').split('\n').map(l=>l.replace(/^[\s]*[•\-\*]\s*/,'')).filter(l=>l.trim());
 }
 
-const EXEC_PPTX_SLIDES_KEY='atlas_report_deck_slides_v2';
+const EXEC_PPTX_SLIDES_KEY='atlas_report_deck_slides_v3';
 function openExecPptxSlideModal(){
   if(typeof PptxGenJS==='undefined'){toast('PptxGenJS library not loaded');return}
   const lb=D.pptxExportLabels||{};
   const eg=lb.execGate!=null?String(lb.execGate):'▼ Exec Committee Gate';
   const ab=String(lb.aboveLine||'');
   const bl=String(lb.belowLine||'');
-  let saved={s1:true,s2:true,s3:true,s4:true,s5:true};
+  let saved={s1:true,s2:true,s3:true,s4:true,s5:true,s6:true};
   try{const raw=localStorage.getItem(EXEC_PPTX_SLIDES_KEY);if(raw){const j=JSON.parse(raw);if(j&&typeof j==='object')saved={...saved,...j}}}catch(e){}
   const chk=(id,on)=>`<input type="checkbox" id="${id}" ${on?'checked':''} style="margin-top:3px"/>`;
+  const prev=(n)=>n<=5?`<button type="button" class="mbtn" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=function(){openExecPptxSlideModal()};openProgramReportSlidePreview(${n})">Preview</button>`:`<button type="button" class="mbtn" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=null;previewDailyDigest()">Preview</button>`;
   openModal(`<div class="m-hd"><h3>Export program report (PowerPoint)</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
-    <p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.5">White 16:9 deck. Slide 2 uses the pipeline layout with your gate and above/below captions (saved with the deck).</p>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.5">White 16:9 deck. Slide 2: AI summarizes each L2 vertical from the <strong>last 7 calendar days</strong> (≤10 words each) when your API key is set. Use <strong>Preview</strong> to check layout before exporting.</p>
     <div class="fg" style="margin-bottom:8px"><label style="font-size:11px;font-weight:700">Exec Committee gate (shown on pipeline slide)</label><input id="rptdeck-gate" value="${esc(eg)}" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px"></div>
     <div class="fg-row" style="margin-bottom:10px">
       <div class="fg"><label style="font-size:11px;font-weight:700">Above the line</label><input id="rptdeck-above" value="${esc(ab)}" placeholder="Caption above divider (e.g. active engagement)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px"></div>
@@ -7510,11 +7408,12 @@ function openExecPptxSlideModal(){
       <button type="button" class="mbtn" style="font-size:11px;padding:4px 10px" onclick="document.querySelectorAll('[id^=exec-pptx-sl]').forEach(c=>{c.checked=false})">Clear all</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px">
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl1',saved.s1)} <span><strong>Slide 1 — Title</strong> — program title, subtitle, date</span></label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl2',saved.s2)} <span><strong>Slide 2 — Vertical AI pipeline</strong> — lifecycle bars, exec gate, above/below sections</span></label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl3',saved.s3)} <span><strong>Slide 3 — Weekly heartbeat</strong> — six lenses (AI uses your API key when set)</span></label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl4',saved.s4)} <span><strong>Slide 4 — Workstream status</strong> — all program workstreams with Red / Yellow / Green</span></label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl5',saved.s5)} <span><strong>Slide 5 — Resource allocation</strong> — each lead/co-lead and assigned workstreams</span></label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:wrap">${chk('exec-pptx-sl1',saved.s1)} <span style="flex:1"><strong>Slide 1 — Title</strong> — program title, subtitle, date</span>${prev(1)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:wrap">${chk('exec-pptx-sl2',saved.s2)} <span style="flex:1"><strong>Slide 2 — Vertical AI pipeline</strong> — L2 under AI for the Business; AI status (7 days, ≤10 words)</span>${prev(2)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:wrap">${chk('exec-pptx-sl3',saved.s3)} <span style="flex:1"><strong>Slide 3 — Weekly heartbeat</strong> — six lenses (AI when API key set)</span>${prev(3)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:wrap">${chk('exec-pptx-sl4',saved.s4)} <span style="flex:1"><strong>Slide 4 — Workstream status</strong> — L1/L2, decisions, risks, blocked, open counts, leads (no R/Y/G)</span>${prev(4)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:wrap">${chk('exec-pptx-sl5',saved.s5)} <span style="flex:1"><strong>Slide 5 — Program snapshot</strong> — same metrics as dashboard executive snapshot</span>${prev(5)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:wrap">${chk('exec-pptx-sl6',saved.s6)} <span style="flex:1"><strong>Slide 6 — Daily digest</strong> — overdue, due soon, blocked (same logic as dashboard digest)</span>${prev(6)}</label>
     </div>
   </div>
   <div class="m-ft">
@@ -7523,11 +7422,11 @@ function openExecPptxSlideModal(){
   </div>`);
 }
 async function runExecPptxFromSlideModal(){
-  const ids=['exec-pptx-sl1','exec-pptx-sl2','exec-pptx-sl3','exec-pptx-sl4','exec-pptx-sl5'];
-  const keys=['s1','s2','s3','s4','s5'];
+  const ids=['exec-pptx-sl1','exec-pptx-sl2','exec-pptx-sl3','exec-pptx-sl4','exec-pptx-sl5','exec-pptx-sl6'];
+  const keys=['s1','s2','s3','s4','s5','s6'];
   const opts={};
   ids.forEach((id,i)=>{const el=document.getElementById(id);opts[keys[i]]=!!(el&&el.checked)});
-  if(!opts.s1&&!opts.s2&&!opts.s3&&!opts.s4&&!opts.s5){toast('Select at least one slide');return}
+  if(!opts.s1&&!opts.s2&&!opts.s3&&!opts.s4&&!opts.s5&&!opts.s6){toast('Select at least one slide');return}
   opts.execGate=(document.getElementById('rptdeck-gate')?.value||'').trim();
   opts.aboveLine=(document.getElementById('rptdeck-above')?.value||'').trim();
   opts.belowLine=(document.getElementById('rptdeck-below')?.value||'').trim();
@@ -7536,20 +7435,11 @@ async function runExecPptxFromSlideModal(){
   D.pptxExportLabels.aboveLine=opts.aboveLine;
   D.pptxExportLabels.belowLine=opts.belowLine;
   save();
-  try{localStorage.setItem(EXEC_PPTX_SLIDES_KEY,JSON.stringify({s1:opts.s1,s2:opts.s2,s3:opts.s3,s4:opts.s4,s5:opts.s5}))}catch(e){}
+  try{localStorage.setItem(EXEC_PPTX_SLIDES_KEY,JSON.stringify({s1:opts.s1,s2:opts.s2,s3:opts.s3,s4:opts.s4,s5:opts.s5,s6:opts.s6}))}catch(e){}
   closeModal();
   await exportExecPptx(opts);
 }
 
-function workstreamRygForPptx(w){
-  if(isWsHealthPastDue(w))return{txt:'Red',fill:'B91C1C',fg:'FFFFFF'};
-  const raw=String(w.status||'').toLowerCase();
-  if(raw.includes('at-risk')||raw.includes('blocked'))return{txt:'Red',fill:'B91C1C',fg:'FFFFFF'};
-  const n=normalizeWsStatus(w.status);
-  if(n==='closed'||n==='value-achieved')return{txt:'Green',fill:'15803D',fg:'FFFFFF'};
-  if(n==='delivery')return{txt:'Green',fill:'15803D',fg:'FFFFFF'};
-  return{txt:'Yellow',fill:'CA8A04',fg:'1E293B'};
-}
 function splitVerticalPipelineRows(verticalRows){
   const active=verticalRows.filter(w=>{
     const st=(w.verticalLifecycleStage||'').trim();
@@ -7559,15 +7449,311 @@ function splitVerticalPipelineRows(verticalRows){
   if(!active.length)return{above:verticalRows,below:[]};
   return{above:active,below:planning};
 }
+function programReportLast7DayRange(){return{start:addDaysIso(today(),-6),end:today()};}
+function collectDescendantWorkstreamIds(rootId){
+  const out=new Set([rootId]);
+  let added=true;
+  while(added){
+    added=false;
+    (D.workstreams||[]).forEach(w=>{
+      if(w.parentWs&&out.has(w.parentWs)&&!out.has(w.id)){out.add(w.id);added=true;}
+    });
+  }
+  return out;
+}
+function dayStrInRange(dayStr,start,end){
+  const d=String(dayStr||'').slice(0,10);
+  return d.length===10&&d>=start&&d<=end;
+}
+function taskTouchedInProgramReportWindow(t,start,end){
+  if(dayStrInRange((t.updatedAt||'').slice(0,10),start,end))return true;
+  if(dayStrInRange((t.created||'').slice(0,10),start,end))return true;
+  const comp=taskCompletionDayKey(t);
+  return comp&&dayStrInRange(comp,start,end);
+}
+function buildVerticalWsActivityLines(w,start,end){
+  const ids=collectDescendantWorkstreamIds(w.id);
+  const lines=[];
+  (D.tasks||[]).forEach(t=>{
+    if(!t.workstream||!ids.has(t.workstream))return;
+    if(!taskTouchedInProgramReportWindow(t,start,end))return;
+    const tl=(t.title||'Untitled').replace(/\s+/g,' ').trim();
+    lines.push('- Action: '+tl.slice(0,100)+' ['+taskStatusLabel(t.status)+']');
+  });
+  (D.decisions||[]).forEach(d=>{
+    if(!d.workstream||!ids.has(d.workstream))return;
+    const dd=String(d.date||d.created||'').slice(0,10);
+    if(!dayStrInRange(dd,start,end))return;
+    lines.push('- Decision: '+((d.title||'').replace(/\s+/g,' ')).slice(0,100));
+  });
+  (D.risks||[]).forEach(r=>{
+    if(!r.workstream||!ids.has(r.workstream))return;
+    const rd=String(r.updatedAt||r.created||'').slice(0,10);
+    if(!dayStrInRange(rd,start,end))return;
+    lines.push('- Risk: '+((r.title||'').replace(/\s+/g,' ')).slice(0,100));
+  });
+  const wu=(w.updatedAt||'').slice(0,10);
+  if(dayStrInRange(wu,start,end)&&(w.recentAccomplishments||'').trim()){
+    lines.push('- Workstream: '+((w.recentAccomplishments||'').replace(/\s+/g,' ')).slice(0,160));
+  }
+  return lines.slice(0,30);
+}
+function truncateToMaxWords(text,maxWords){
+  const t=String(text||'').trim().replace(/\s+/g,' ');
+  if(!t)return'';
+  const parts=t.split(/\s+/);
+  if(parts.length<=maxWords)return t;
+  return parts.slice(0,maxWords).join(' ');
+}
+async function aiSummarizeVerticalPipelineRows7d(verticalRows){
+  const out={};
+  if(!OPENAI_KEY||!verticalRows||!verticalRows.length)return out;
+  const{start,end}=programReportLast7DayRange();
+  const blocks=verticalRows.map(w=>{
+    const act=buildVerticalWsActivityLines(w,start,end);
+    return'WS_ID: '+w.id+'\nWS_NAME: '+w.name+'\nACTIVITY (last 7 calendar days):\n'+(act.length?act.join('\n'):'(no dated changes in window)');
+  });
+  const sys='You summarize ATLAS program updates for an executive pipeline slide. Output ONLY valid JSON: one object whose keys are workstream ids (exactly as in WS_ID: lines) and values are English phrases of at most 10 words, summarizing what changed in the activity window. No markdown. If nothing meaningful, use exactly: No material updates this week.';
+  const raw=await callAI(sys,blocks.join('\n\n---\n\n')+'\n\nToday: '+today(),{temperature:0.25});
+  if(!raw)return out;
+  let s=raw.trim();
+  if(s.startsWith('```'))s=s.replace(/^```[a-z]*\n?/i,'').replace(/\n?```$/,'');
+  try{
+    const j=JSON.parse(s);
+    verticalRows.forEach(w=>{
+      const v=j[w.id];
+      if(typeof v==='string'&&v.trim())out[w.id]=truncateToMaxWords(v,10);
+    });
+  }catch(e){}
+  return out;
+}
+function governanceTitlesForWorkstreams(wsIdSet){
+  const dec=(D.decisions||[]).filter(d=>d.workstream&&wsIdSet.has(d.workstream)).map(d=>(d.title||'').trim()).filter(Boolean);
+  const rk=(D.risks||[]).filter(r=>r.workstream&&wsIdSet.has(r.workstream)).map(r=>(r.title||'').trim()).filter(Boolean);
+  return{dec,rk};
+}
+function actionItemStatsForWorkstreams(wsIdSet){
+  const tasks=(D.tasks||[]).filter(t=>t.workstream&&wsIdSet.has(t.workstream));
+  const openC=tasks.filter(t=>t.status!=='done').length;
+  const blocked=tasks.filter(t=>t.status!=='done'&&normalizeTaskStatus(t.status)==='blocked-dependency').map(t=>(t.title||'').trim()).filter(Boolean);
+  return{openC,blocked};
+}
+function formatLeadCoLead(w){
+  const a=w.primaryOwner||w.owner||'';
+  const b=w.secondaryOwner||'';
+  if(a&&b)return a+' / '+b;
+  return a||b||'—';
+}
+function buildL1L2StatusRows(){
+  ensureWorkstreamReportingFields();
+  const all=D.workstreams||[];
+  const l1s=all.filter(w=>!w.parentWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const rows=[];
+  l1s.forEach(l1=>{
+    const sub1=collectDescendantWorkstreamIds(l1.id);
+    const g1=governanceTitlesForWorkstreams(sub1);
+    const t1=actionItemStatsForWorkstreams(sub1);
+    rows.push({type:'l1',w:l1,g:g1,open:t1.openC,blocked:t1.blocked});
+    all.filter(w=>w.parentWs===l1.id).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).forEach(l2=>{
+      const sub2=collectDescendantWorkstreamIds(l2.id);
+      const g2=governanceTitlesForWorkstreams(sub2);
+      const t2=actionItemStatsForWorkstreams(sub2);
+      rows.push({type:'l2',w:l2,g:g2,open:t2.openC,blocked:t2.blocked});
+    });
+  });
+  return rows;
+}
+function buildWorkstreamStatusPptxLines(){
+  const rows=buildL1L2StatusRows();
+  const lines=[];
+  rows.forEach(r=>{
+    const ind=r.type==='l1'?'':'  ';
+    const nm=r.w.name||'';
+    const leads=formatLeadCoLead(r.w);
+    const decs=(r.g.dec||[]).slice(0,4).join('; ')||'—';
+    const risks=(r.g.rk||[]).slice(0,4).join('; ')||'—';
+    const blk=(r.blocked||[]).slice(0,4).join('; ')||'—';
+    lines.push(ind+(r.type==='l1'?'L1: ':'L2: ')+nm+' | Leads: '+leads);
+    lines.push(ind+'  Open action items (subtree): '+r.open+' | Blocked: '+blk);
+    lines.push(ind+'  Decisions: '+decs+(r.g.dec.length>4?' (+more)':''));
+    lines.push(ind+'  Risks: '+risks+(r.g.rk.length>4?' (+more)':''));
+    lines.push('');
+  });
+  return lines.join('\n').trim()||'No workstreams.';
+}
+function getSnapshotMetricsForDeck(){
+  const allWs=D.workstreams||[];
+  const allTasks=D.tasks||[];
+  const wsMap=new Map(allWs.map(w=>[w.id,w]));
+  const closedStatuses=['closed','value-achieved','deferred-rejected'];
+  const openWs=allWs.filter(w=>!closedStatuses.includes(normalizeWsStatus(w.status)));
+  const wsForLensCounts=allWs.filter(w=>{
+    const s=normalizeWsStatus(w.status);
+    return s!=='closed'&&s!=='deferred-rejected';
+  });
+  let l1=0,l2=0,l3=0;
+  openWs.forEach(w=>{
+    const lv=workstreamHierarchyLevel(w,wsMap);
+    if(lv===1)l1++;else if(lv===2)l2++;else l3++;
+  });
+  const activeWsTotal=openWs.length;
+  const openTaskCount=allTasks.filter(t=>t.status!=='done').length;
+  const blockedDepCount=allTasks.filter(t=>t.status!=='done'&&normalizeTaskStatus(t.status)==='blocked-dependency').length;
+  const allRisks=D.risks||[];
+  const totalRisks=allRisks.length;
+  const openRiskCount=allRisks.filter(r=>r.status!=='closed').length;
+  const lensRows=HEARTBEAT_LENS_OPTS.map(o=>({label:o.label,count:wsForLensCounts.filter(w=>effectiveHeartbeatLensForWorkstream(w)===o.value).length}));
+  const noLens=wsForLensCounts.filter(w=>effectiveHeartbeatLensForWorkstream(w)==='').length;
+  const wsLeadCounts={};
+  openWs.forEach(w=>{
+    const lead=w.primaryOwner||w.owner;
+    if(!lead||String(lead).includes('/'))return;
+    wsLeadCounts[lead]=(wsLeadCounts[lead]||0)+1;
+  });
+  const wsLeadList=Object.entries(wsLeadCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const taskOwnerCounts={};
+  allTasks.filter(t=>t.status!=='done'&&t.owner&&!String(t.owner).includes('/')).forEach(t=>{
+    taskOwnerCounts[t.owner]=(taskOwnerCounts[t.owner]||0)+1;
+  });
+  const taskOwnerList=Object.entries(taskOwnerCounts).sort((a,b)=>b[1]-a[1]).slice(0,11);
+  return{activeWsTotal,l1,l2,l3,openTaskCount,blockedDepCount,totalRisks,openRiskCount,lensRows,noLens,wsLeadList,taskOwnerList};
+}
+async function openProgramReportSlidePreview(slideNum){
+  const er=getExecReport();
+  const dateStr=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  const gateTxt=(D.pptxExportLabels||{}).execGate||'▼ Exec Committee Gate';
+  const aboveCap=(D.pptxExportLabels||{}).aboveLine||'';
+  const belowCap=(D.pptxExportLabels||{}).belowLine||'';
+  if(slideNum===1){
+    openModal(`<div class="m-hd"><h3>Preview — Slide 1</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+    <div class="m-bd" style="min-height:200px;padding:32px;background:#fff;border:1px solid var(--border);border-radius:12px;text-align:center">
+      <div style="font-size:28px;font-weight:800;color:#00274C;line-height:1.2">${esc(er.titleText||'AI Transformation Program Update')}</div>
+      <div style="font-size:16px;color:#64748b;margin-top:16px">${esc(er.subtitleText||'Corporate Data & AI Office')}</div>
+      <div style="font-size:14px;color:#94a3b8;margin-top:24px">${esc(dateStr)}</div>
+    </div>`);
+    return;
+  }
+  if(slideNum===2){
+    openModal(`<div class="m-hd"><h3>Preview — Slide 2 (loading summaries…)</h3><button class="m-close" onclick="closeModal()">&times;</button></div><div class="m-bd" id="pptx-prev-2"><p style="color:var(--muted)">…</p></div>`);
+    const el=document.getElementById('pptx-prev-2');
+    const hd=document.querySelector('.m-hd h3');
+    try{
+      const {rows:verticalRows,fallbackNote}=verticalAiPipelineWorkstreamsForDeck();
+      const sum=OPENAI_KEY&&verticalRows.length?await aiSummarizeVerticalPipelineRows7d(verticalRows):{};
+      const split=splitVerticalPipelineRows(verticalRows);
+      const rowHtml=(rows,barColor)=>rows.map(w=>{
+        const vi=verticalLifecycleIndex(w.verticalLifecycleStage);
+        const pct=((vi+1)/VERTICAL_LIFECYCLE_STAGES.length)*100;
+        const note=sum[w.id]||((w.desc||'').trim().slice(0,90)||wsStatusLabel(w.status));
+        return`<div style="display:grid;grid-template-columns:160px 1fr 1fr;gap:8px;align-items:center;margin-bottom:8px;font-size:12px">
+        <strong>${esc(w.name)}</strong>
+        <div style="height:10px;background:#e2e8f0;border-radius:6px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:6px"></div></div>
+        <span style="color:var(--muted);font-size:11px">${esc(note)}</span>
+      </div>`;
+      }).join('');
+      const pctEach=100/VERTICAL_LIFECYCLE_STAGES.length;
+      const stageChips=VERTICAL_LIFECYCLE_STAGES.map(s=>'<span style="display:inline-block;width:'+pctEach+'%;text-align:center">'+esc(s.label)+'</span>').join('');
+      const fbBanner=fallbackNote?'<div style="font-size:11px;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:8px;margin-bottom:10px">'+esc(fallbackNote)+'</div>':'';
+      const emptyBanner=!verticalRows.length?'<div style="font-size:12px;color:var(--muted);padding:16px;background:#f8fafc;border-radius:8px;border:1px dashed var(--border)">No workstreams under <strong>AI for the Business</strong> matched this slide. The deck expects L2 children of that L1 (parent L1 + depth), or any workstream tagged to that L1 when no strict L2 rows exist. Check Workstreams hierarchy and template ids.</div>':'';
+      const pipelineBody=verticalRows.length?('<div style="font-size:10px;margin-bottom:8px">'+stageChips+'</div>'+
+        '<div style="color:#dc2626;font-size:11px;font-weight:700;margin-bottom:8px;text-align:center">'+esc(gateTxt)+'</div>'+
+        (aboveCap?'<div style="font-size:11px;font-weight:700;margin:8px 0">'+esc(aboveCap)+'</div>':'')+
+        rowHtml(split.above,'#2563eb')+
+        '<div style="margin:12px 0;padding:8px;background:#6D28D9;color:#fff;border-radius:6px;text-align:center;font-size:11px;font-weight:700">CDO delivery capacity — Above: active engagement | Below: planning &amp; support</div>'+
+        (belowCap?'<div style="font-size:11px;font-weight:700;margin:8px 0">'+esc(belowCap)+'</div>':'')+
+        rowHtml(split.below,'#94a3b8')):'';
+      if(el){
+        el.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:8px">Vertical AI | Pipeline</div>'+
+        '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">'+esc(dateStr)+' · Status: ≤10 words from last 7 days (AI)</div>'+
+        fbBanner+emptyBanner+pipelineBody;
+      }
+    }catch(e){
+      console.error(e);
+      if(el)el.innerHTML='<p style="color:#dc2626">Could not build pipeline preview. See the browser console for details.</p>';
+    }
+    if(hd)hd.textContent='Preview — Slide 2';
+    return;
+  }
+  if(slideNum===3){
+    openModal(`<div class="m-hd"><h3>Preview — Slide 3</h3><button class="m-close" onclick="closeModal()">&times;</button></div><div class="m-bd" id="pptx-prev-3"><p style="color:var(--muted)">Loading…</p></div>`);
+    const hb=OPENAI_KEY?(await draftHeartbeatWithAi())||fallbackHeartbeatBullets():fallbackHeartbeatBullets();
+    const el=document.getElementById('pptx-prev-3');
+    if(el){
+      el.innerHTML=HEARTBEAT_PPTX_ROWS.map(r=>{
+        const lines=(hb[r.key]||[]).map(t=>'<li style="margin:4px 0">'+esc(t)+'</li>').join('')||'<li>—</li>';
+        return`<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;margin-bottom:14px;align-items:start">
+          <strong style="font-size:13px">${esc(r.title)}</strong>
+          <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:12px"><ul style="margin:0;padding-left:18px;font-size:12px">${lines}</ul></div>
+        </div>`;
+      }).join('');
+    }
+    return;
+  }
+  if(slideNum===4){
+    const rows=buildL1L2StatusRows();
+    const body=rows.map(r=>{
+      const ind=r.type==='l1'?'':'padding-left:20px;border-left:2px solid #e2e8f0;margin-left:6px';
+      const decs=(r.g.dec||[]).slice(0,5).map(t=>'<li>'+esc(t)+'</li>').join('')||'<li>—</li>';
+      const risks=(r.g.rk||[]).slice(0,5).map(t=>'<li>'+esc(t)+'</li>').join('')||'<li>—</li>';
+      const blk=(r.blocked||[]).slice(0,6).map(t=>'<li>'+esc(t)+'</li>').join('')||'<li>—</li>';
+      return`<div style="margin-bottom:16px;${ind}">
+        <div style="font-size:14px;font-weight:800">${esc((r.type==='l1'?'L1: ':'L2: ')+(r.w.name||''))} <span style="font-weight:500;color:var(--muted)">· ${esc(formatLeadCoLead(r.w))}</span></div>
+        <div style="font-size:12px;margin-top:6px">Open action items (subtree): <strong>${r.open}</strong></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px;font-size:11px">
+          <div><div style="font-weight:700;margin-bottom:4px">Blocked</div><ul style="margin:0;padding-left:16px;color:var(--muted)">${blk}</ul></div>
+          <div><div style="font-weight:700;margin-bottom:4px">Decisions</div><ul style="margin:0;padding-left:16px;color:var(--muted)">${decs}</ul></div>
+          <div><div style="font-weight:700;margin-bottom:4px">Risks</div><ul style="margin:0;padding-left:16px;color:var(--muted)">${risks}</ul></div>
+        </div>
+      </div>`;
+    }).join('');
+    openModal(`<div class="m-hd"><h3>Preview — Slide 4</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+    <div class="m-bd" style="max-height:70vh;overflow:auto;font-size:13px"><p style="color:var(--muted);margin-bottom:12px">L1 / L2 tree · decisions · risks · blocked · open counts · leads (no R/Y/G).</p>${body}</div>`);
+    return;
+  }
+  if(slideNum===5){
+    openModal(`<div class="m-hd"><h3>Preview — Slide 5</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+    <div class="m-bd" style="max-height:75vh;overflow:auto">${renderExecutiveSnapshotHtml()}</div>`);
+    return;
+  }
+  if(slideNum===6){
+    previewDailyDigest();
+    return;
+  }
+  toast('Unknown slide');
+}
+function getDailyDigestStructured(){
+  const todayStr=today();
+  const todayDate=new Date(todayStr);
+  const sevenDaysOut=new Date(todayDate.getTime()+7*24*60*60*1000);
+  const sevenDaysStr=sevenDaysOut.toISOString().slice(0,10);
+  const allWs=D.workstreams||[];
+  const allTasks=D.tasks||[];
+  const closedStatuses=['closed','value-achieved','deferred-rejected'];
+  const openWs=allWs.filter(w=>!closedStatuses.includes(normalizeWsStatus(w.status)));
+  const openTasks=allTasks.filter(t=>t.status!=='done');
+  const overdueWs=openWs.filter(w=>w.endDate&&w.endDate<todayStr).sort((a,b)=>(a.endDate||'').localeCompare(b.endDate||''));
+  const overdueTasks=openTasks.filter(t=>t.due&&t.due<todayStr).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
+  const dueSoonWs=openWs.filter(w=>w.endDate&&w.endDate>=todayStr&&w.endDate<=sevenDaysStr).sort((a,b)=>(a.endDate||'').localeCompare(b.endDate||''));
+  const dueSoonTasks=openTasks.filter(t=>t.due&&t.due>=todayStr&&t.due<=sevenDaysStr).sort((a,b)=>(a.due||'').localeCompare(b.due||''));
+  const blockedTasks=openTasks.filter(t=>normalizeTaskStatus(t.status)==='blocked-dependency');
+  const dateStr=todayDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  return{overdueWs,overdueTasks,dueSoonWs,dueSoonTasks,blockedTasks,dateStr};
+}
 async function exportExecPptx(opts){
   if(typeof PptxGenJS==='undefined'){toast('PptxGenJS library not loaded');return}
-  const defSlides={s1:true,s2:true,s3:true,s4:true,s5:true};
+  const defSlides={s1:true,s2:true,s3:true,s4:true,s5:true,s6:true};
   opts={...defSlides,...(opts||{})};
-  if(!opts.s1&&!opts.s2&&!opts.s3&&!opts.s4&&!opts.s5){toast('Select at least one slide');return}
+  if(!opts.s1&&!opts.s2&&!opts.s3&&!opts.s4&&!opts.s5&&!opts.s6){toast('Select at least one slide');return}
   toast('Building presentation…');
   const er=getExecReport();
   const allProgWs=allProgramWorkstreamsSorted();
-  const verticalRows=(D.workstreams||[]).filter(isVerticalAiPipelineWs).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const _pipeDeck=verticalAiPipelineWorkstreamsForDeck();
+  const verticalRows=_pipeDeck.rows;
+  const pipeDeckFallbackNote=_pipeDeck.fallbackNote;
+  let pipelineAiSummaries={};
+  if(opts.s2&&verticalRows.length&&OPENAI_KEY){
+    pipelineAiSummaries=await aiSummarizeVerticalPipelineRows7d(verticalRows);
+  }
   const gateTxt=(opts.execGate!=null&&String(opts.execGate).trim())?String(opts.execGate).trim():((D.pptxExportLabels||{}).execGate||'▼ Exec Committee Gate');
   const aboveCap=(opts.aboveLine!=null)?String(opts.aboveLine).trim():((D.pptxExportLabels||{}).aboveLine||'');
   const belowCap=(opts.belowLine!=null)?String(opts.belowLine).trim():((D.pptxExportLabels||{}).belowLine||'');
@@ -7594,7 +7780,12 @@ async function exportExecPptx(opts){
     s.background={fill:'FFFFFF'};
     s.addText('Vertical AI | Pipeline',{x:0.5,y:0.32,w:12,h:0.42,fontSize:20,bold:true,color:BLACK,fontFace:'Arial'});
     s.addText(dateStr,{x:0.5,y:0.72,w:6,h:0.2,fontSize:10,color:'666666',fontFace:'Arial'});
-    const labelW=2.75,trackL=0.5+labelW,trackW=9.55,stageN=VERTICAL_LIFECYCLE_STAGES.length,segW=trackW/stageN,barTop=1.02;
+    let barTop=1.02;
+    if(pipeDeckFallbackNote){
+      s.addText(pipeDeckFallbackNote,{x:0.5,y:0.88,w:12,h:0.22,fontSize:6,color:'B45309',fontFace:'Arial',wrap:true});
+      barTop=1.14;
+    }
+    const labelW=2.75,trackL=0.5+labelW,trackW=9.55,stageN=VERTICAL_LIFECYCLE_STAGES.length,segW=trackW/stageN;
     VERTICAL_LIFECYCLE_STAGES.forEach((st,i)=>{s.addText(st.label,{x:trackL+i*segW,y:barTop,w:segW,h:0.18,fontSize:7.5,color:BLACK,fontFace:'Arial',align:'center'})});
     s.addText(gateTxt,{x:trackL+3.35*segW-0.05,y:barTop-0.1,w:segW*1.35,h:0.26,fontSize:6.5,color:'CC0000',fontFace:'Arial',align:'center',bold:true});
     const split=splitVerticalPipelineRows(verticalRows);
@@ -7608,7 +7799,7 @@ async function exportExecPptx(opts){
         const fillW=trackW*((vi+1)/stageN);
         s.addText(w.name,{x:0.5,y:y,w:labelW-0.12,h:rowH,fontSize:rows.length>10?8:9,color:BLACK,fontFace:'Arial',bold:true,valign:'middle'});
         s.addShape(pptx.ShapeType.rect,{x:trackL,y:y+0.07,w:fillW,h:0.18,fill:{color:barHex},line:{color:'CCCCCC',width:0.5}});
-        const note=((w.desc||'').trim().slice(0,90))||wsStatusLabel(w.status);
+        const note=pipelineAiSummaries[w.id]||(((w.desc||'').trim().slice(0,90))||wsStatusLabel(w.status));
         s.addText(note,{x:trackL+trackW+0.06,y:y,w:13.2-trackL-trackW-0.55,h:rowH,fontSize:7.5,color:GRAY,fontFace:'Arial',valign:'middle'});
         y+=rowH+0.05;
       });
@@ -7622,7 +7813,7 @@ async function exportExecPptx(opts){
     yAfterStages+=0.34;
     if(belowCap)yAfterStages=drawRows(split.below,yAfterStages,6.85,belowCap,'94A3B8');
     else yAfterStages=drawRows(split.below,yAfterStages,6.85,'','94A3B8');
-    if(!verticalRows.length)s.addText('No L2 workstreams under AI for the Business — set parent/lifecycle on vertical workstreams.',{x:0.5,y:1.35,w:12,h:0.45,fontSize:11,color:'666666',fontFace:'Arial'});
+    if(!verticalRows.length)s.addText('No workstreams under AI for the Business matched this slide — set parent L1, depth (L2), and vertical lifecycle on pipeline workstreams.',{x:0.5,y:1.35,w:12,h:0.45,fontSize:11,color:'666666',fontFace:'Arial'});
     atlasPptxFooter(s,page);
   }
 
@@ -7637,10 +7828,11 @@ async function exportExecPptx(opts){
     s.addText(dateStr,{x:0.5,y:0.72,w:6,h:0.18,fontSize:10,color:'666666',fontFace:'Arial'});
     let y=1.02;
     HEARTBEAT_PPTX_ROWS.forEach(r=>{
+      s.addShape(pptx.ShapeType.rect,{x:3.52,y:y-0.02,w:9.12,h:0.88,fill:{color:'F1F5F9'},line:{color:'E2E8F0',width:0.5}});
       s.addText(r.title,{x:0.5,y:y,w:3.15,h:0.18,fontSize:10.5,bold:true,color:BLACK,fontFace:'Arial'});
       const rawLines=hb[r.key]||[];
       const bullets=rawLines.length?rawLines.map(t=>({text:t,options:{fontSize:9.2,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'},paraSpaceAfter:2}})):[{text:'—',options:{fontSize:10,color:BLACK,fontFace:'Arial'}}];
-      s.addText(bullets,{x:3.55,y:y,w:9.1,h:0.92,valign:'top',fontFace:'Arial'});
+      s.addText(bullets,{x:3.58,y:y+0.04,w:9.0,h:0.84,valign:'top',fontFace:'Arial'});
       y+=1.02;
     });
     atlasPptxFooter(s,page);
@@ -7650,21 +7842,10 @@ async function exportExecPptx(opts){
     page++;
     const s=pptx.addSlide();
     s.background={fill:'FFFFFF'};
-    s.addText('Workstream status (Red / Yellow / Green)',{x:0.5,y:0.32,w:12,h:0.4,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
-    s.addText(dateStr+' · Target past due or blocked/at-risk → Red. Closed/value achieved or active delivery → Green. Else Yellow.',{x:0.5,y:0.72,w:12.2,h:0.35,fontSize:9,color:'666666',fontFace:'Arial'});
-    const head=[{text:'Workstream',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},{text:'Category',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},{text:'Lead',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},{text:'Status',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},{text:'RYG',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}}];
-    const body=allProgWs.map(w=>{
-      const r=workstreamRygForPptx(w);
-      return[
-        {text:w.name,options:{fontFace:'Arial',fontSize:9,color:BLACK}},
-        {text:w.category||'—',options:{fontFace:'Arial',fontSize:9,color:BLACK}},
-        {text:w.primaryOwner||w.owner||'—',options:{fontFace:'Arial',fontSize:9,color:BLACK}},
-        {text:wsStatusLabel(w.status),options:{fontFace:'Arial',fontSize:9,color:BLACK}},
-        {text:r.txt,options:{fontFace:'Arial',fontSize:9,bold:true,color:r.fg,fill:{color:r.fill}}}
-      ];
-    });
-    if(body.length)s.addTable([head,...body],{x:0.45,y:1.12,w:12.4,fontFace:'Arial',border:{type:'solid',color:'CCCCCC',pt:0.5}});
-    else s.addText('No workstreams.',{x:0.5,y:1.35,w:10,h:0.35,fontSize:11,color:'666666',fontFace:'Arial'});
+    s.addText('Workstream status',{x:0.5,y:0.32,w:12,h:0.4,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
+    s.addText(dateStr+' · L1 / L2 tree: decisions, risks, blocked action items, open counts, lead & co-lead (no R/Y/G).',{x:0.5,y:0.72,w:12.2,h:0.32,fontSize:9,color:'666666',fontFace:'Arial'});
+    const body=buildWorkstreamStatusPptxLines();
+    s.addText(body,{x:0.45,y:1.05,w:12.4,h:5.85,fontSize:7,color:'333333',fontFace:'Arial',valign:'top',wrap:true});
     atlasPptxFooter(s,page);
   }
 
@@ -7672,20 +7853,76 @@ async function exportExecPptx(opts){
     page++;
     const s=pptx.addSlide();
     s.background={fill:'FFFFFF'};
-    s.addText('Resource allocation',{x:0.5,y:0.32,w:12,h:0.4,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
+    const m=getSnapshotMetricsForDeck();
+    s.addText('Program snapshot',{x:0.5,y:0.32,w:12,h:0.4,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
     s.addText(dateStr,{x:0.5,y:0.72,w:6,h:0.18,fontSize:10,color:'666666',fontFace:'Arial'});
-    const by={};
-    const un=[];
-    allProgWs.forEach(w=>{
-      const leads=[...new Set([w.primaryOwner,w.secondaryOwner].filter(Boolean))];
-      if(!leads.length){un.push(w.name);return}
-      leads.forEach(nm=>{if(!by[nm])by[nm]=[];by[nm].push(w.name)});
+    const y0=1.0,gw=2.95,gh=1.32,gap=0.12;
+    const kpiBox=(x,y,w,h,title,big,sub,fill,border)=>{
+      s.addShape(pptx.ShapeType.rect,{x,y,w,h,fill:{color:fill},line:{color:border,width:0.5}});
+      s.addText(title,{x:x+0.1,y:y+0.08,w:w-0.2,h:0.32,fontSize:8,bold:true,color:'334155',fontFace:'Arial'});
+      s.addText(big,{x:x+0.1,y:y+0.38,w:w-0.2,h:0.5,fontSize:24,bold:true,color:'0f172a',fontFace:'Arial'});
+      if(sub)s.addText(sub,{x:x+0.1,y:y+0.88,w:w-0.2,h:0.36,fontSize:9,color:'475569',fontFace:'Arial',wrap:true});
+    };
+    kpiBox(0.5,y0,gw,gh,'ACTIVE WORKSTREAMS',String(m.activeWsTotal),'L1: '+m.l1+' | L2: '+m.l2+' | L3: '+m.l3,'EFF6FF','93C5FD');
+    kpiBox(0.5+gw+gap,y0,gw,gh,'OPEN ACTION ITEMS',String(m.openTaskCount),'Not done','E0F2FE','38BDF8');
+    kpiBox(0.5+2*(gw+gap),y0,gw,gh,'BLOCKED / DEPENDENCY',String(m.blockedDepCount),'Waiting on another team','FEF2F2','FCA5A5');
+    kpiBox(0.5+3*(gw+gap),y0,gw,gh,'RISKS',String(m.totalRisks),'Open: '+m.openRiskCount,'FEFCE8','FDE047');
+    const lensY=y0+gh+0.16;
+    s.addShape(pptx.ShapeType.rect,{x:0.5,y:lensY,w:12.35,h:0.92,fill:{color:'F8FAFC'},line:{color:'BFDBFE',width:0.5}});
+    s.addText('WORKSTREAMS BY HEARTBEAT LENS',{x:0.62,y:lensY+0.06,w:11.8,h:0.2,fontSize:8.5,bold:true,color:'334155',fontFace:'Arial'});
+    const lensLine=m.lensRows.map(o=>o.label+': '+o.count).join('   ·   ')+(m.noLens?'   ·   Unassigned lens: '+m.noLens:'');
+    s.addText(lensLine,{x:0.62,y:lensY+0.3,w:11.8,h:0.55,fontSize:7.5,color:'1e293b',fontFace:'Arial',wrap:true});
+    const chartY=lensY+1.05,halfW=6.05;
+    const maxWsLead=Math.max(1,...m.wsLeadList.map(([,c])=>c));
+    s.addText('WORKSTREAMS PER TEAM MEMBER (lead · top '+m.wsLeadList.length+')',{x:0.5,y:chartY,w:halfW,h:0.18,fontSize:8,bold:true,color:'334155',fontFace:'Arial'});
+    let by=chartY+0.22;
+    m.wsLeadList.slice(0,8).forEach(([name,c])=>{
+      const pct=Math.round(c/maxWsLead*100);
+      const short=(name.split(' ')[0]||name).slice(0,10);
+      s.addText(short,{x:0.5,y:by,w:0.95,h:0.15,fontSize:7.5,fontFace:'Arial'});
+      s.addShape(pptx.ShapeType.rect,{x:1.48,y:by+0.03,w:Math.max(0.15,4.2*pct/100),h:0.11,fill:{color:'2563EB'}});
+      s.addText(String(c),{x:5.85,y:by,w:0.45,h:0.15,fontSize:7.5,bold:true,fontFace:'Arial',align:'right'});
+      by+=0.19;
     });
-    const names=Object.keys(by).sort((a,b)=>a.localeCompare(b));
-    const head=[{text:'Team member',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},{text:'#',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},{text:'Workstreams',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}}];
-    const body=names.map(nm=>[{text:nm,options:{fontFace:'Arial',fontSize:9,color:BLACK}},{text:String(by[nm].length),options:{fontFace:'Arial',fontSize:9,color:BLACK}},{text:by[nm].join(', '),options:{fontFace:'Arial',fontSize:9,color:BLACK}}]);
-    const unRow=un.length?[[{text:'Unassigned lead',options:{bold:true,fontFace:'Arial',fontSize:9,color:'CC0000'}},{text:String(un.length),options:{fontFace:'Arial',fontSize:9,color:BLACK}},{text:un.join(', '),options:{fontFace:'Arial',fontSize:9,color:BLACK}}]]:[];
-    s.addTable([head,...body,...unRow],{x:0.45,y:1.05,w:12.4,fontFace:'Arial',border:{type:'solid',color:'CCCCCC',pt:0.5}});
+    const maxT=Math.max(1,...m.taskOwnerList.map(([,c])=>c));
+    s.addText('OPEN ACTION ITEMS BY OWNER (top '+m.taskOwnerList.length+')',{x:6.65,y:chartY,w:halfW,h:0.18,fontSize:8,bold:true,color:'334155',fontFace:'Arial'});
+    const colW=0.5,bx0=6.68,barTop=chartY+0.24;
+    m.taskOwnerList.slice(0,10).forEach(([name,c],i)=>{
+      const barH=Math.max(c?0.06:0,(c/maxT)*0.75);
+      s.addText(String(c),{x:bx0+i*colW,y:barTop,w:colW,h:0.12,fontSize:6.5,bold:true,align:'center',fontFace:'Arial'});
+      s.addShape(pptx.ShapeType.rect,{x:bx0+i*colW+0.1,y:barTop+0.14+(0.75-barH),w:0.3,h:barH,fill:{color:'1D4ED8'}});
+      const short=((name.split(' ')[0]||name).slice(0,5));
+      s.addText(short,{x:bx0+i*colW,y:barTop+0.92,w:colW,h:0.22,fontSize:6,align:'center',fontFace:'Arial',wrap:true});
+    });
+    atlasPptxFooter(s,page);
+  }
+
+  if(opts.s6){
+    page++;
+    const s=pptx.addSlide();
+    s.background={fill:'FFFFFF'};
+    const dg=getDailyDigestStructured();
+    s.addText('Daily Digest',{x:0.5,y:0.32,w:12,h:0.4,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
+    s.addText(dg.dateStr,{x:0.5,y:0.72,w:12,h:0.2,fontSize:10,color:'666666',fontFace:'Arial'});
+    const headDue=[{text:'Item',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}},{text:'Owner',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}},{text:'Due',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}}];
+    const headBlk=[{text:'Item',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}},{text:'Owner',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}},{text:'Blocked by',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}}];
+    let y=1.05;
+    function addDigestTable(title,rows,headRow,mapFn,maxR){
+      if(!rows.length)return;
+      s.addText(title+' ('+rows.length+')',{x:0.5,y:y,w:12,h:0.16,fontSize:9,bold:true,color:'334155',fontFace:'Arial'});
+      y+=0.2;
+      const slice=rows.slice(0,maxR).map(mapFn);
+      s.addTable([headRow,...slice],{x:0.45,y:y,w:12.4,fontFace:'Arial',fontSize:8,border:{type:'solid',color:'CCCCCC',pt:0.5}});
+      y+=0.28+Math.min(maxR,slice.length)*0.16;
+    }
+    const od=[...dg.overdueWs.map(w=>({t:w.name,o:w.primaryOwner||w.owner||'',d:w.endDate,ws:true})),...dg.overdueTasks.map(t=>({t:t.title,o:t.owner||'',d:t.due,ws:false}))].sort((a,b)=>(a.d||'').localeCompare(b.d||''));
+    addDigestTable('Past due',od,headDue,r=>[{text:r.t,options:{fontFace:'Arial',fontSize:8}},{text:r.o,options:{fontFace:'Arial',fontSize:8}},{text:r.d||'—',options:{fontFace:'Arial',fontSize:8}}],6);
+    const soon=[...dg.dueSoonWs.map(w=>({t:w.name,o:w.primaryOwner||w.owner||'',d:w.endDate})),...dg.dueSoonTasks.map(t=>({t:t.title,o:t.owner||'',d:t.due}))].sort((a,b)=>(a.d||'').localeCompare(b.d||''));
+    addDigestTable('Due next 7 days',soon,headDue,r=>[{text:r.t,options:{fontFace:'Arial',fontSize:8}},{text:r.o,options:{fontFace:'Arial',fontSize:8}},{text:r.d||'—',options:{fontFace:'Arial',fontSize:8}}],6);
+    addDigestTable('Blocked / dependency',dg.blockedTasks,headBlk,t=>[{text:t.title||'',options:{fontFace:'Arial',fontSize:8}},{text:t.owner||'',options:{fontFace:'Arial',fontSize:8}},{text:t.blockedBy||'—',options:{fontFace:'Arial',fontSize:8}}],6);
+    if(!dg.overdueWs.length&&!dg.overdueTasks.length&&!dg.dueSoonWs.length&&!dg.dueSoonTasks.length&&!dg.blockedTasks.length){
+      s.addText('No overdue, upcoming, or blocked items in digest window.',{x:0.5,y:1.2,w:12,h:0.4,fontSize:11,color:'666666',fontFace:'Arial'});
+    }
     atlasPptxFooter(s,page);
   }
 
@@ -7767,15 +8004,15 @@ async function adoLinkChild(childId,parentId){
 
 function getAdoSyncItems(){
   const allWs=allProgramWorkstreamsSorted();
-  const milestones=(D.tasks||[]).filter(t=>t.isMilestone);
-  return{parents:allWs,milestones};
+  const features=(D.tasks||[]).filter(t=>t.workstream);
+  return{parents:allWs,features};
 }
 
 async function adoPushAll(){
   const pat=getAdoPat();
   if(!pat){toast('Set your ADO PAT first');return}
   const cfg=getAdoConfig();
-  const {parents,milestones}=getAdoSyncItems();
+  const {parents,features}=getAdoSyncItems();
   const area=cfg.areaPath||'';
 
   let created=0,updated=0,errors=0;
@@ -7820,7 +8057,7 @@ async function adoPushAll(){
     }
   }
 
-  for(const t of milestones){
+  for(const t of features){
     const parentWs=parents.find(w=>w.id===t.workstream);
     const desiredState=adoStateForTask(t.status);
     const baseFields=[
@@ -7901,12 +8138,12 @@ function saveAdoSettings(){
 }
 
 function adoResetSync(){
-  const {parents,milestones}=getAdoSyncItems();
-  const linked=[...parents.filter(w=>w.adoId),...milestones.filter(t=>t.adoId)];
+  const {parents,features}=getAdoSyncItems();
+  const linked=[...parents.filter(w=>w.adoId),...features.filter(t=>t.adoId)];
   if(!linked.length){toast('Nothing to reset — no ADO IDs found');return}
   if(!confirm('Reset '+linked.length+' ADO IDs?\n\nItems will remain in ADO but ATLAS will treat them as new on the next sync.')){return}
   parents.forEach(w=>{delete w.adoId});
-  milestones.forEach(t=>{delete t.adoId});
+  features.forEach(t=>{delete t.adoId});
   const adoCfg=getAdoConfig();
   delete adoCfg.lastSync;
   save();
@@ -7917,11 +8154,11 @@ function adoResetSync(){
 function rAdo(c){
   const cfg=getAdoConfig();
   const pat=getAdoPat();
-  const {parents,milestones}=getAdoSyncItems();
+  const {parents,features}=getAdoSyncItems();
   const lastSync=cfg.lastSync?new Date(cfg.lastSync).toLocaleString():'Never';
 
   const wsRows=parents.map(w=>{
-    const wsMs=milestones.filter(t=>t.workstream===w.id);
+    const wsFeat=features.filter(t=>t.workstream===w.id);
     const tag=adoCategoryTag(w);
     const adoState=adoStateForWs(w.status);
     const tagColor=tag==='Vertical AI'?'var(--green)':tag==='Horizontal AI'?'var(--accent)':'#7C3AED';
@@ -7933,11 +8170,11 @@ function rAdo(c){
       '<td><span class="badge" style="background:'+tagColor+'">'+tag+'</span></td>'+
       '<td>'+esc(adoState)+'</td>'+
       '<td>'+(w.adoId?'<span style="color:var(--green)">#'+w.adoId+'</span>':'<span style="color:var(--muted)">New</span>')+'</td>'+
-      '<td>'+wsMs.length+'</td>'+
+      '<td>'+wsFeat.length+'</td>'+
       '</tr>';
   }).join('');
 
-  const msRows=milestones.map(t=>{
+  const featRows=features.map(t=>{
     const pw=parents.find(w=>w.id===t.workstream);
     return'<tr>'+
       '<td>'+esc(t.title)+'</td>'+
@@ -7984,27 +8221,27 @@ function rAdo(c){
         <div style="font-size:11px;color:var(--muted)">Epics (All Workstreams)</div>
       </div>
       <div style="background:var(--lt);border-radius:8px;padding:12px 20px;text-align:center;flex:1">
-        <div style="font-size:28px;font-weight:800;color:#7C3AED">${milestones.length}</div>
-        <div style="font-size:11px;color:var(--muted)">Features (Milestones)</div>
+        <div style="font-size:28px;font-weight:800;color:#7C3AED">${features.length}</div>
+        <div style="font-size:11px;color:var(--muted)">Features (action items)</div>
       </div>
       <div style="background:var(--lt);border-radius:8px;padding:12px 20px;text-align:center;flex:1">
-        <div style="font-size:28px;font-weight:800;color:var(--green)">${parents.filter(w=>w.adoId).length+milestones.filter(t=>t.adoId).length}</div>
+        <div style="font-size:28px;font-weight:800;color:var(--green)">${parents.filter(w=>w.adoId).length+features.filter(t=>t.adoId).length}</div>
         <div style="font-size:11px;color:var(--muted)">Already in ADO</div>
       </div>
       <div style="background:var(--lt);border-radius:8px;padding:12px 20px;text-align:center;flex:1">
-        <div style="font-size:28px;font-weight:800;color:var(--amber)">${parents.filter(w=>!w.adoId).length+milestones.filter(t=>!t.adoId).length}</div>
+        <div style="font-size:28px;font-weight:800;color:var(--amber)">${parents.filter(w=>!w.adoId).length+features.filter(t=>!t.adoId).length}</div>
         <div style="font-size:11px;color:var(--muted)">Will Be Created</div>
       </div>
     </div>
 
     <details open style="margin-bottom:12px">
       <summary style="cursor:pointer;font-weight:700;font-size:13px;margin-bottom:8px">Epics &mdash; All Workstreams (${parents.length})</summary>
-      <table class="tbl"><thead><tr><th>Workstream</th><th>Type</th><th>Parent</th><th>Category</th><th>ADO State</th><th>ADO ID</th><th>Milestones</th></tr></thead><tbody>${wsRows||'<tr><td colspan="7" style="color:var(--muted)">No workstreams found</td></tr>'}</tbody></table>
+      <table class="tbl"><thead><tr><th>Workstream</th><th>Type</th><th>Parent</th><th>Category</th><th>ADO State</th><th>ADO ID</th><th>Features</th></tr></thead><tbody>${wsRows||'<tr><td colspan="7" style="color:var(--muted)">No workstreams found</td></tr>'}</tbody></table>
     </details>
 
     <details style="margin-bottom:12px">
-      <summary style="cursor:pointer;font-weight:700;font-size:13px;margin-bottom:8px">Features &mdash; Milestones (${milestones.length})</summary>
-      <table class="tbl"><thead><tr><th>Milestone</th><th>Type</th><th>Parent Epic</th><th>ADO State</th><th>ADO ID</th><th>Target Date</th></tr></thead><tbody>${msRows||'<tr><td colspan="6" style="color:var(--muted)">No milestones found. Mark action items as milestones to sync them as Features.</td></tr>'}</tbody></table>
+      <summary style="cursor:pointer;font-weight:700;font-size:13px;margin-bottom:8px">Features &mdash; Action items (${features.length})</summary>
+      <table class="tbl"><thead><tr><th>Title</th><th>Type</th><th>Parent Epic</th><th>ADO State</th><th>ADO ID</th><th>Target Date</th></tr></thead><tbody>${featRows||'<tr><td colspan="6" style="color:var(--muted)">No action items with a workstream. Assign a parent workstream on an action item to sync it as a Feature.</td></tr>'}</tbody></table>
     </details>
 
     <div id="ado-sync-log"></div>
@@ -8023,7 +8260,7 @@ function rAdo(c){
       <tr><td>Delivery</td><td>Active</td></tr>
       <tr><td>Complete</td><td>Closed</td></tr>
     </tbody></table>
-    <p style="font-size:11px;color:var(--muted);margin-top:8px">Milestones: open &rarr; New, done &rarr; Closed</p>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px">Action items: not done &rarr; New in ADO; done &rarr; Closed when synced.</p>
   </div>`;
 }
 
