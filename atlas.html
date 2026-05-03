@@ -352,6 +352,8 @@ body.nav-collapsed .topbar-menu{display:flex}
 .overlay{position:fixed;inset:0;background:var(--overlay-bg);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s ease-out}
 .overlay.open{opacity:1;pointer-events:all}
 .modal{background:var(--bg-card);border-radius:var(--r-lg);width:720px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.15);transform:scale(.95) translateY(-10px);opacity:0;transition:all .25s cubic-bezier(.4,0,.2,1)}
+.modal.modal-wide{width:min(1180px,98vw);max-width:98vw}
+.modal.modal-wide.modal-ws-status-preview{width:min(1420px,99vw);max-width:99vw}
 .overlay.open .modal{transform:scale(1) translateY(0);opacity:1}
 .m-hd{padding:22px 24px 12px;display:flex;align-items:center;justify-content:space-between}
 .m-hd h3{font-size:19px;font-weight:800;letter-spacing:-.01em}
@@ -373,6 +375,18 @@ body.nav-collapsed .topbar-menu{display:flex}
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--indigo)}
 .fg textarea{resize:vertical;min-height:80px}
 .fg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* Workstream edit — CDO delivery line (avoid .fg label uppercase on radio rows) */
+.ws-cdo-line-box{margin-top:12px;padding:14px 16px;border:1px solid var(--border-lt);border-radius:var(--r-md);background:var(--bg-card);box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.ws-cdo-line-title{font-size:13px;font-weight:700;color:var(--text);margin:0 0 6px;letter-spacing:.01em;text-transform:none}
+.ws-cdo-line-help{font-size:12px;color:var(--muted);margin:0 0 14px;line-height:1.5;text-transform:none}
+label.ws-cdo-opt{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border:1px solid var(--border-lt);border-radius:var(--r-sm);margin-bottom:8px;cursor:pointer;background:var(--bg);transition:border-color .15s,background .15s,box-shadow .15s;font-size:13px;color:var(--text);text-transform:none;letter-spacing:0;line-height:1.35}
+label.ws-cdo-opt:last-of-type{margin-bottom:0}
+label.ws-cdo-opt:hover{border-color:var(--accent);background:var(--bg-subtle)}
+label.ws-cdo-opt input[type=radio]{flex-shrink:0;width:16px;height:16px;margin:2px 0 0;accent-color:var(--accent)}
+label.ws-cdo-opt .ws-cdo-opt-body{flex:1;min-width:0}
+label.ws-cdo-opt .ws-cdo-opt-main{display:block;font-weight:600;color:var(--text);margin-bottom:3px}
+label.ws-cdo-opt .ws-cdo-opt-sub{display:block;font-size:11.5px;font-weight:500;color:var(--muted);line-height:1.4}
+label.ws-cdo-opt:has(input:checked){border-color:var(--accent);background:rgba(99,102,241,.1);box-shadow:0 0 0 1px rgba(99,102,241,.28)}
 .mbtn{padding:10px 24px;border-radius:var(--r-sm);font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .15s}
 .mb-save{background:var(--indigo);color:#fff}.mb-save:hover{background:var(--indigo-hov)}
 .mb-cancel{background:var(--bg-subtle);color:var(--muted);border:1px solid var(--border)}.mb-cancel:hover{background:var(--border-lt);color:var(--text)}
@@ -1861,6 +1875,7 @@ function delLink(id){
 }
 function openModal(html){
   const m=document.getElementById('modal');
+  m.classList.remove('modal-wide','modal-ws-status-preview');
   m.innerHTML=html;
   document.getElementById('overlay').classList.add('open');
 }
@@ -2674,6 +2689,21 @@ function effectiveHeartbeatLensForWorkstream(w){
   if(getWorkstreamParentL1(w)==='ai-platform')return'praxo-tech';
   return'';
 }
+/** Human-readable lens label for tables / previews (empty if none). */
+function heartbeatLensDisplayLabel(w){
+  if(!w)return'';
+  const v=effectiveHeartbeatLensForWorkstream(w);
+  if(!v)return'';
+  const o=HEARTBEAT_LENS_OPTS.find(x=>x.value===v);
+  return o?o.label:v;
+}
+/** Map effective heartbeat lens to PPTX / AI JSON bucket (HEARTBEAT_PPTX_ROWS keys). Unset or unknown → programLevel. */
+function heartbeatLensPptxBucketKey(w){
+  const lens=effectiveHeartbeatLensForWorkstream(w);
+  const map={'ai-employee':'aiEmployee','ai-business':'aiBusiness','grassroots':'grassroots','praxo-tech':'praxoTech','governance-compliance':'govCompliance','program-level':'programLevel'};
+  if(lens&&map[lens])return map[lens];
+  return'programLevel';
+}
 function verticalLifecycleIndex(v){
   const i=VERTICAL_LIFECYCLE_STAGES.findIndex(s=>s.value===v);
   return i>=0?i:0;
@@ -2738,7 +2768,7 @@ const engTypes=['Use Case','Question','Tool Evaluation','Licensing','Escalation'
 const engTypeColors={'Use Case':'pill-i','Question':'pill-b','Tool Evaluation':'pill-v','Licensing':'pill-a','Escalation':'pill-r','General Request':'pill-m'};
 
 // ═══════════════════════════════════════════════════
-// DAILY DIGEST
+// DAILY PRIORITIES — dashboard + email HTML + program report slide 6
 // ═══════════════════════════════════════════════════
 /** @param {{forEmail?:boolean}} [opts] forEmail: omit header stat cards + Action Required (for Outlook/Teams copy & preview); dashboard modal adds those separately. */
 function generateDailyDigest(opts){
@@ -2821,7 +2851,7 @@ function generateDailyDigest(opts){
 </head>
 <body>
   <div class="header">
-    <h1>📊 AI Transformation Program - Daily Update</h1>
+    <h1>📊 AI Transformation Program — Daily Priorities</h1>
     <p>${dateStr}</p>
     ${forEmail?'':`<div class="stats">
       <div class="stat"><div class="stat-num">${overdueWs.length+overdueTasks.length}</div><div class="stat-label">OVERDUE</div></div>
@@ -2916,7 +2946,7 @@ function openDailyDigestModal(){
       <li><strong>Upload documents:</strong> Move all AI Program documents to our Teams site. <a href="${esc(DIGEST_TEAMS_FILES_URL)}" target="_blank" rel="noopener">Open AI Program Files →</a></li>
     </ul>
   </div>`;
-  openModal(`<div class="m-hd"><h3>Daily Digest</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  openModal(`<div class="m-hd"><h3>Daily Priorities</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
     ${dashBanner}
     <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Copy the HTML below and paste into Outlook or Teams to share with the team.</p>
@@ -2939,13 +2969,16 @@ function copyDailyDigest(){
 
 function previewDailyDigest(){
   const html=generateDailyDigest({forEmail:true});
-  const win=window.open('','_blank','width=750,height=800');
-  win.document.write(html);
-  win.document.close();
+  const dataUrl='data:text/html;charset=utf-8,'+encodeURIComponent(html);
+  openModal(`<div class="m-hd" style="align-items:flex-start"><div><h3 style="margin:0">Preview — Slide 6</h3><p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">Daily Priorities</p></div><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd" style="padding:0 24px 18px">
+    <iframe title="Daily Priorities preview" src="${dataUrl}" style="width:100%;height:min(72vh,820px);min-height:380px;border:1px solid var(--border-lt);border-radius:var(--r-sm);display:block;background:#fff;box-sizing:border-box"></iframe>
+  </div>`);
+  document.getElementById('modal').classList.add('modal-wide');
 }
 
 // ═══════════════════════════════════════════════════
-// DASHBOARD — executive snapshot (KPIs + drill-down)
+// DASHBOARD — program snapshot (KPIs + drill-down)
 // ═══════════════════════════════════════════════════
 function renderExecutiveSnapshotHtml(){
   const allWs=D.workstreams||[];
@@ -3025,7 +3058,7 @@ function renderExecutiveSnapshotHtml(){
   </div>`:'<div style="padding:12px;color:var(--muted);font-size:12px;border:1px dashed var(--border);border-radius:10px">No open owners.</div>';
   return`
   <div class="ws-section" id="dashSec-exec" style="margin-bottom:20px;width:100%;box-sizing:border-box">
-    <div class="ws-section-hd" onclick="toggleWsSection('dashSec-exec')" style="background:var(--bg-card);padding:14px 18px;border-radius:var(--r-sm) var(--r-sm) 0 0;border:1px solid var(--border)"><h4 style="font-size:16px;font-weight:800;color:var(--text)">Executive snapshot</h4><span class="ws-section-arrow">&#9660;</span></div>
+    <div class="ws-section-hd" onclick="toggleWsSection('dashSec-exec')" style="background:var(--bg-card);padding:14px 18px;border-radius:var(--r-sm) var(--r-sm) 0 0;border:1px solid var(--border)"><h4 style="font-size:16px;font-weight:800;color:var(--text)">Program Snapshot</h4><span class="ws-section-arrow">&#9660;</span></div>
     <div class="ws-section-bd" style="padding:14px 16px;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r-sm) var(--r-sm);background:var(--bg-card);width:100%;box-sizing:border-box">
       <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;width:100%;margin-bottom:18px;box-sizing:border-box">
         <div role="button" tabindex="0" style="${kpiBlueA}" onclick="wsLensFilter='';wsL1Filter='';go('workstreams')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();wsLensFilter='';wsL1Filter='';go('workstreams')}">
@@ -3146,7 +3179,7 @@ function rDash(c){
       <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" style="width:20px;height:20px;flex-shrink:0"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
       <span style="font-size:13px;color:#1e40af;line-height:1.45"><strong>All AI Program documents must be stored in our Teams channel.</strong> <a href="https://digitalrealtyeur.sharepoint.com/sites/AITransformationProgram/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FAITransformationProgram%2FShared%20Documents%2FGeneral&viewid=be024a85%2D931b%2D4a01%2Dacac%2D217f020d89c0" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:underline;font-weight:600">Open AI Program Files →</a><span style="color:#64748b;margin:0 6px">·</span><a href="https://digitalrealtyeur.sharepoint.com/:u:/s/AITransformationProgram/IQDxyv5M0FPmTYj-Uua8GeJhAajGCYZrdWmIQzu_iudQvF4?e=hb3ASh" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:underline;font-weight:600">AI Program Repository Agent</a> <span style="color:#64748b;font-weight:500">(same source)</span></span>
     </div>
-    <button onclick="openDailyDigestModal()" style="padding:6px 12px;font-size:11px;background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.3);border-radius:4px;cursor:pointer;white-space:nowrap;transition:all .15s" onmouseenter="this.style.background='rgba(37,99,235,.2)'" onmouseleave="this.style.background='rgba(37,99,235,.1)'">📧 Daily Digest</button>
+    <button onclick="openDailyDigestModal()" style="padding:6px 12px;font-size:11px;background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.3);border-radius:4px;cursor:pointer;white-space:nowrap;transition:all .15s" onmouseenter="this.style.background='rgba(37,99,235,.2)'" onmouseleave="this.style.background='rgba(37,99,235,.1)'">📧 Daily Priorities</button>
   </div>
   ${renderExecutiveSnapshotHtml()}
   ${renderDashboardOverview()}`;
@@ -4940,6 +4973,10 @@ function openWsEdit(id){
   const defaultOwner=w?w.primaryOwner||w.owner:(ME||'');
   const vSel=(w&&w.verticalLifecycleStage)||'not-started';
   const hSel=(w&&w.heartbeatLens)||'ai-business';
+  const cdoBand=String((w&&w.pipelineCdoBand)||'').trim().toLowerCase();
+  const cdoAuto=!cdoBand||cdoBand==='auto';
+  const cdoAbove=cdoBand==='above';
+  const cdoBelow=cdoBand==='below';
   const vStageOpts=VERTICAL_LIFECYCLE_STAGES.map(s=>'<option value="'+esc(s.value)+'"'+(vSel===s.value?' selected':'')+'>'+esc(s.label)+'</option>').join('');
   const lensOpts=HEARTBEAT_LENS_OPTS.map(s=>'<option value="'+esc(s.value)+'"'+(hSel===s.value?' selected':'')+'>'+esc(s.label)+'</option>').join('');
   const hbHelp=w&&isVerticalAiPipelineWs(w)?'<strong>Pipeline L2</strong> — these fields are required. ':'<strong>Most workstreams</strong> — optional unless pipeline L2; used for reporting and program PowerPoint. ';
@@ -4974,6 +5011,13 @@ function openWsEdit(id){
         <div class="fg"><label>Vertical AI lifecycle stage</label><select id="ws-verticalLifecycleStage">${vStageOpts}</select></div>
         <div class="fg"><label>Heartbeat lens</label><select id="ws-heartbeatLens">${lensOpts}</select></div>
       </div>
+      ${w&&isVerticalAiPipelineWs(w)?`<div class="ws-cdo-line-box">
+        <div class="ws-cdo-line-title">Pipeline slide — CDO delivery line</div>
+        <p class="ws-cdo-line-help">Controls Program Report <strong>Vertical AI Pipeline</strong> placement: <strong>above</strong> the CDO divider (active engagement) or <strong>below</strong> (planning &amp; support). <strong>Auto</strong> follows lifecycle: Executing or Roadmapping = above; other stages = below.</p>
+        <label class="ws-cdo-opt"><input type="radio" name="ws-pipeline-cdo" value="auto"${cdoAuto?' checked':''}><span class="ws-cdo-opt-body"><span class="ws-cdo-opt-main">Auto</span><span class="ws-cdo-opt-sub">Infer from lifecycle stage (Executing / Roadmapping → above the line)</span></span></label>
+        <label class="ws-cdo-opt"><input type="radio" name="ws-pipeline-cdo" value="above"${cdoAbove?' checked':''}><span class="ws-cdo-opt-body"><span class="ws-cdo-opt-main">Above the line</span><span class="ws-cdo-opt-sub">Active engagement — CDO delivery capacity</span></span></label>
+        <label class="ws-cdo-opt"><input type="radio" name="ws-pipeline-cdo" value="below"${cdoBelow?' checked':''}><span class="ws-cdo-opt-body"><span class="ws-cdo-opt-main">Below the line</span><span class="ws-cdo-opt-sub">Planning &amp; support</span></span></label>
+      </div>`:''}
     </div>
     ${w?`<div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px">
       <h4 style="font-size:13px;font-weight:700;margin:0 0 10px 0">Linked Items</h4>
@@ -5150,6 +5194,11 @@ function saveWs(id){
     w.verticalLifecycleStage=vls||'not-started';
     w.heartbeatLens=hl||'ai-business';
   }
+  if(isVerticalAiPipelineWs(w)){
+    const cdoEl=document.querySelector('input[name="ws-pipeline-cdo"]:checked');
+    if(cdoEl&&(cdoEl.value==='above'||cdoEl.value==='below'))w.pipelineCdoBand=cdoEl.value;
+    else delete w.pipelineCdoBand;
+  }else delete w.pipelineCdoBand;
   w.updatedBy=ME;w.updatedAt=new Date().toISOString();
   save();log((isNew?'Added':'Updated')+' workstream: '+esc(w.name));closeModal();render();
   toast(isNew?'Workstream added':'Workstream updated');
@@ -6270,10 +6319,12 @@ function buildVelocityMetricsHtml(){
   const delta=last7-prev7;
   const deltaTxt=delta===0?'Same as prior 7 days':delta>0?'+'+delta+' vs prior 7 days':String(delta)+' vs prior 7 days';
   const deltaCol=delta>0?'#059669':delta<0?'#dc2626':'var(--muted)';
+  const numWeeks=12;
   const weeks=[];
-  for(let i=0;i<4;i++){
-    const bs=addDaysIso(end,-27+i*7);
-    const be=addDaysIso(end,-21+i*7);
+  const oldestOffset=27+(numWeeks-4)*7;
+  for(let i=0;i<numWeeks;i++){
+    const bs=addDaysIso(end,-oldestOffset+i*7);
+    const be=addDaysIso(end,-(oldestOffset-6)+i*7);
     const comp=countDoneBetween(bs,be);
     const add=countAddedBetween(bs,be);
     const d0=new Date(bs+'T12:00:00');
@@ -6282,21 +6333,22 @@ function buildVelocityMetricsHtml(){
     weeks.push({lab,comp,add});
   }
   const maxBar=Math.max(1,...weeks.flatMap(w=>[w.comp,w.add]));
+  const barMaxPx=52;
   const weekBars=weeks.map(w=>{
-    const hc=Math.max(w.comp?6:0,Math.round(w.comp/maxBar*56));
-    const ha=Math.max(w.add?6:0,Math.round(w.add/maxBar*56));
-    return`<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end">
-      <div style="display:flex;align-items:flex-end;justify-content:center;gap:5px;height:68px;margin-bottom:4px">
+    const hc=Math.max(w.comp?5:0,Math.round(w.comp/maxBar*barMaxPx));
+    const ha=Math.max(w.add?5:0,Math.round(w.add/maxBar*barMaxPx));
+    return`<div style="flex:1 0 56px;min-width:50px;max-width:80px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end">
+      <div style="display:flex;align-items:flex-end;justify-content:center;gap:3px;height:62px;margin-bottom:4px">
         <div style="display:flex;flex-direction:column;align-items:center;gap:2px" title="Completed this week">
-          <span style="font-size:10px;font-weight:800;color:#1d4ed8">${w.comp}</span>
-          <div style="width:14px;height:${hc}px;background:linear-gradient(180deg,#60a5fa,#1d4ed8);border-radius:4px 4px 1px 1px"></div>
+          <span style="font-size:9px;font-weight:800;color:#1d4ed8">${w.comp}</span>
+          <div style="width:11px;height:${hc}px;background:linear-gradient(180deg,#60a5fa,#1d4ed8);border-radius:3px 3px 1px 1px"></div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:2px" title="New items added this week">
-          <span style="font-size:10px;font-weight:800;color:#7c3aed">${w.add}</span>
-          <div style="width:14px;height:${ha}px;background:linear-gradient(180deg,#c4b5fd,#7c3aed);border-radius:4px 4px 1px 1px"></div>
+          <span style="font-size:9px;font-weight:800;color:#7c3aed">${w.add}</span>
+          <div style="width:11px;height:${ha}px;background:linear-gradient(180deg,#c4b5fd,#7c3aed);border-radius:3px 3px 1px 1px"></div>
         </div>
       </div>
-      <div style="font-size:10px;font-weight:600;color:var(--muted);margin-top:6px;text-align:center;line-height:1.2">${esc(w.lab)}</div>
+      <div style="font-size:9px;font-weight:600;color:var(--muted);margin-top:5px;text-align:center;line-height:1.15">${esc(w.lab)}</div>
     </div>`;
   }).join('');
   const pill='display:inline-flex;align-items:center;gap:12px;flex:1;min-width:140px;padding:12px 18px;border-radius:999px;border:1px solid var(--border);background:linear-gradient(145deg,var(--bg-card) 0%,var(--bg-subtle) 100%);box-sizing:border-box;box-shadow:0 1px 2px rgba(15,23,42,.06)';
@@ -6319,13 +6371,16 @@ function buildVelocityMetricsHtml(){
       </div>
     </div>
     <div style="font-size:11px;font-weight:600;color:${deltaCol};margin:-8px 0 14px">${esc(deltaTxt)}</div>
-    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Weekly flow (last 4 weeks)</div>
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Weekly flow (last 12 weeks)</div>
     <div style="display:flex;align-items:flex-end;justify-content:center;gap:6px;margin-bottom:8px;font-size:10px;color:var(--muted)">
       <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:linear-gradient(180deg,#60a5fa,#1d4ed8)"></span> Completed</span>
       <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:linear-gradient(180deg,#c4b5fd,#7c3aed)"></span> Added</span>
     </div>
-    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:6px;width:100%;min-height:132px;padding:12px 10px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,#f8fafc,#eff6ff);box-sizing:border-box">
+    <p style="font-size:11px;color:var(--muted);margin:0 0 8px;line-height:1.4">Oldest week on the left, current week on the right. Scroll horizontally on smaller screens.</p>
+    <div style="overflow-x:auto;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,#f8fafc,#eff6ff);-webkit-overflow-scrolling:touch;box-sizing:border-box">
+      <div style="display:flex;align-items:flex-end;justify-content:flex-start;gap:4px;min-width:780px;padding:12px 10px;min-height:124px;box-sizing:border-box">
       ${weekBars}
+      </div>
     </div>
   </div>`;
 }
@@ -7212,23 +7267,18 @@ function toggleFeaturedWs(wsId){
 function openAtlasProgramPptxModal(){
   const lb=D.pptxExportLabels||{};
   const eg=lb.execGate!=null?lb.execGate:'Exec Committee Gate';
-  const ab=lb.aboveLine||'';
-  const bl=lb.belowLine||'';
   openModal(`<div class="m-hd"><h3>Export program PowerPoint</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
     <p style="font-size:13px;color:var(--muted);margin:0 0 14px;line-height:1.5">Select slides to include (16:9, white background, Arial). Weekly Heartbeat uses OpenAI for a first draft when your API key is set; refine text in PowerPoint after download.</p>
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-pipeline" checked style="margin-top:3px"/> <span><strong>Vertical AI Pipeline</strong> — L2 “AI for the Business” workstreams and lifecycle bar</span></label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-heartbeat" checked style="margin-top:3px"/> <span><strong>Weekly Heartbeat (six lenses)</strong></span></label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-heartbeat" checked style="margin-top:3px"/> <span><strong>Weekly Heartbeat</strong> — all program workstreams by effective lens (AI summary when API key set)</span></label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-resource" checked style="margin-top:3px"/> <span><strong>Resourcing summary</strong> — leads/co-leads and workstream counts</span></label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-health" checked style="margin-top:3px"/> <span><strong>Health / target date</strong> — red if past target date (not closed), else green</span></label>
     </div>
-    <p style="font-size:12px;font-weight:700;margin:0 0 8px">Pipeline slide labels (editable on slide after export)</p>
+    <p style="font-size:12px;font-weight:700;margin:0 0 8px">Pipeline slide</p>
     <div class="fg" style="margin-bottom:8px"><label>Exec Committee gate</label><input id="pptx-exec-gate" value="${esc(eg)}" placeholder="e.g. Exec Committee Gate"></div>
-    <div class="fg-row">
-      <div class="fg"><label>Above the line (optional)</label><input id="pptx-above-line" value="${esc(ab)}" placeholder="Section caption"></div>
-      <div class="fg"><label>Below the line (optional)</label><input id="pptx-below-line" value="${esc(bl)}" placeholder="Section caption"></div>
-    </div>
+    <p style="font-size:11px;color:var(--muted);margin:0;line-height:1.45">Above/below the CDO divider follows each pipeline L2 workstream’s <strong>CDO delivery line</strong> setting (or Auto from lifecycle).</p>
   </div>
   <div class="m-ft">
     <button class="mbtn mb-cancel" onclick="closeModal()">Cancel</button>
@@ -7242,11 +7292,11 @@ async function runAtlasProgramPptxFromModal(){
     resourcing:document.getElementById('pptx-sl-resource')?.checked,
     health:document.getElementById('pptx-sl-health')?.checked,
     execGate:(document.getElementById('pptx-exec-gate')?.value||'').trim(),
-    aboveLine:(document.getElementById('pptx-above-line')?.value||'').trim(),
-    belowLine:(document.getElementById('pptx-below-line')?.value||'').trim()
+    aboveLine:'',
+    belowLine:''
   };
   if(!opts.pipeline&&!opts.heartbeat&&!opts.resourcing&&!opts.health){toast('Select at least one slide');return}
-  D.pptxExportLabels={execGate:opts.execGate,aboveLine:opts.aboveLine,belowLine:opts.belowLine};
+  D.pptxExportLabels={execGate:opts.execGate,aboveLine:'',belowLine:''};
   save();
   closeModal();
   await generateAtlasProgramPptx(opts);
@@ -7259,23 +7309,30 @@ function isWsHealthPastDue(w){
 }
 function fallbackHeartbeatBullets(){
   const out={aiEmployee:[],aiBusiness:[],grassroots:[],praxoTech:[],govCompliance:[],programLevel:[]};
-  const map={'ai-employee':'aiEmployee','ai-business':'aiBusiness','grassroots':'grassroots','praxo-tech':'praxoTech','governance-compliance':'govCompliance','program-level':'programLevel'};
-  (D.workstreams||[]).filter(isVerticalAiPipelineWs).forEach(w=>{
-    const k=map[w.heartbeatLens]||'aiBusiness';
-    const bit=`${w.name}: ${((w.desc||'').trim().slice(0,140))||wsStatusLabel(w.status)}${w.targetDate?' · Target '+fmtDate(w.targetDate):''}`;
+  ensureWorkstreamReportingFields();
+  allProgramWorkstreamsSorted().forEach(w=>{
+    const k=heartbeatLensPptxBucketKey(w);
+    const pipeLife=isVerticalAiPipelineWs(w)&&(w.verticalLifecycleStage||'').trim();
+    const life=pipeLife?` · vertical stage ${pipeLife}`:'';
+    const bit=`${w.name}: ${((w.desc||'').trim().slice(0,140))||wsStatusLabel(w.status)}${w.targetDate?' · Target '+fmtDate(w.targetDate):''}${life}`;
     out[k].push(bit);
   });
   ['aiEmployee','aiBusiness','grassroots','praxoTech','govCompliance','programLevel'].forEach(k=>{
-    if(!out[k].length)out[k]=['No vertical workstreams tagged for this lens yet.'];
+    if(!out[k].length)out[k]=['No workstreams in this lens yet.'];
   });
   return out;
 }
 async function draftHeartbeatWithAi(){
-  const verticals=(D.workstreams||[]).filter(isVerticalAiPipelineWs);
-  if(!verticals.length)return fallbackHeartbeatBullets();
-  const ctx=verticals.map(w=>`- ${w.name} | lens:${w.heartbeatLens} | lifecycle:${w.verticalLifecycleStage} | lead:${w.primaryOwner||'—'} | target:${w.targetDate||'—'} | status:${wsStatusLabel(w.status)}\n  ${(w.desc||'').trim().slice(0,320)}`).join('\n');
-  const sys=`You draft concise executive bullets for Digital Realty's AI Transformation Program. Output ONLY valid JSON (no markdown fences) with keys: aiEmployee, aiBusiness, grassroots, praxoTech, govCompliance (Governance & Compliance), programLevel (Other / Program Level). Each value is an array of 2-4 short bullet strings (plain text). Use program data; say TBD only when nothing exists.`;
-  const raw=await callAI(sys,'Weekly heartbeat context:\n'+ctx+'\nToday: '+today(),{temperature:0.35});
+  ensureWorkstreamReportingFields();
+  const rows=allProgramWorkstreamsSorted();
+  if(!rows.length)return fallbackHeartbeatBullets();
+  const ctx=rows.map(w=>{
+    const lens=effectiveHeartbeatLensForWorkstream(w)||'(none — use programLevel bucket)';
+    const vl=isVerticalAiPipelineWs(w)?(w.verticalLifecycleStage||'—'):'n/a';
+    return`- ${w.name} | effective heartbeat lens: ${lens} | vertical AI lifecycle (pipeline L2 only): ${vl} | lead: ${w.primaryOwner||w.owner||'—'} | target: ${w.targetDate||'—'} | status: ${wsStatusLabel(w.status)}\n  ${(w.desc||'').trim().slice(0,280)}`;
+  }).join('\n');
+  const sys=`You draft concise executive bullets for Digital Realty's AI Transformation Program. Output ONLY valid JSON (no markdown fences) with keys: aiEmployee, aiBusiness, grassroots, praxoTech, govCompliance (Governance & Compliance), programLevel (Other / Program Level). Each value is an array of 2-4 short bullet strings (plain text). The context lists every program workstream with its effective heartbeat lens (explicit field or inferred: pipeline L2 under AI for the Business defaults to ai-business; L1 AI platform roots default to praxo-tech). Workstreams with no lens go to programLevel. Synthesize across all lines; use program data; say TBD only when nothing exists.`;
+  const raw=await callAI(sys,'Weekly heartbeat context ('+rows.length+' workstreams):\n'+ctx+'\nToday: '+today(),{temperature:0.35});
   if(!raw)return null;
   let s=raw.trim();
   if(s.startsWith('```'))s=s.replace(/^```[a-z]*\n?/i,'').replace(/\n?```$/,'');
@@ -7292,7 +7349,12 @@ async function draftHeartbeatWithAi(){
   }catch(e){return null}
 }
 function atlasPptxFooter(slide,n){
-  slide.addText(String(n),{x:12.35,y:7.06,w:0.55,h:0.18,fontSize:9,color:'666666',fontFace:'Arial',align:'right'});
+  /* Page numbers removed for report exports */
+}
+/** Bottom-centered date on 16:9 ATLAS layout (Arial, black). */
+function atlasPptxDateBottom(slide,dateStr){
+  if(dateStr==null||dateStr==='')return;
+  slide.addText(String(dateStr),{x:0.45,y:6.92,w:12.433,h:0.38,fontSize:11,color:'000000',fontFace:'Arial',align:'center',valign:'middle'});
 }
 async function generateAtlasProgramPptx(opts){
   if(typeof PptxGenJS==='undefined'){toast('PptxGenJS library not loaded');return}
@@ -7302,7 +7364,7 @@ async function generateAtlasProgramPptx(opts){
   const pptx=new PptxGenJS();
   pptx.defineLayout({name:'ATLAS16',width:13.333,height:7.5});
   pptx.layout='ATLAS16';
-  const BLACK='000000',GRAY='333333',RED='CC0000',GREEN='1A5632';
+  const BLACK='000000',RED='CC0000',GREEN='1A5632';
   const dateStr=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
   let page=0;
   const _pipeDeckProg=verticalAiPipelineWorkstreamsForDeck();
@@ -7316,40 +7378,36 @@ async function generateAtlasProgramPptx(opts){
     page++;
     const s=pptx.addSlide();
     s.background={fill:'FFFFFF'};
-    s.addText('Vertical AI | Pipeline',{x:0.5,y:0.35,w:12,h:0.45,fontSize:20,bold:true,color:BLACK,fontFace:'Arial'});
-    s.addText(dateStr,{x:0.5,y:0.78,w:6,h:0.22,fontSize:11,color:'666666',fontFace:'Arial'});
-    if(pipeProgFallbackNote)s.addText(pptxSanitize(pipeProgFallbackNote,800),{x:0.5,y:0.96,w:12,h:0.24,fontSize:6.5,color:'B45309',fontFace:'Arial',wrap:true});
-    if(opts.aboveLine)s.addText(pptxSanitize(opts.aboveLine,400),{x:0.5,y:pipeProgFallbackNote?1.2:1.0,w:12,h:0.2,fontSize:10,color:GRAY,fontFace:'Arial'});
-    const slideW=13.333,leftM=0.5,labelW=2.65,noteGap=0.08,minNoteW=1.45,rightM=0.38;
-    const trackL=leftM+labelW;
-    const trackW=Math.max(5.2,slideW-trackL-noteGap-minNoteW-rightM);
-    const noteX=trackL+trackW+noteGap;
-    const noteW=Math.max(0.55,slideW-noteX-rightM);
+    s.addText('Vertical AI | Pipeline',{x:0.5,y:0.35,w:12,h:0.45,fontSize:32,bold:true,color:BLACK,fontFace:'Arial'});
+    if(pipeProgFallbackNote)s.addText(pptxSanitize(pipeProgFallbackNote,800),{x:0.5,y:0.78,w:12,h:0.24,fontSize:6.5,color:BLACK,fontFace:'Arial',wrap:true});
+    const slideW=13.333,leftM=0.5,labelW=2.15,colGap=0.08,updateW=2.85,barLeadGap=0.06,rightM=0.38;
+    const updateX=leftM+labelW+colGap;
+    const trackL=updateX+updateW+barLeadGap;
+    const trackW=Math.max(5.0,slideW-trackL-rightM);
     const stageN=VERTICAL_LIFECYCLE_STAGES.length,segW=trackW/stageN;
-    let barTop=opts.aboveLine?1.28:1.12;
+    let barTop=0.94;
     if(pipeProgFallbackNote)barTop+=0.22;
     VERTICAL_LIFECYCLE_STAGES.forEach((st,i)=>{
-      s.addText(pptxSanitize(st.label,80),{x:trackL+i*segW,y:barTop,w:segW,h:0.2,fontSize:8,color:BLACK,fontFace:'Arial',align:'center'});
+      s.addText(pptxSanitize(st.label,80),{x:trackL+i*segW,y:barTop,w:segW,h:0.26,fontSize:12,bold:true,color:BLACK,fontFace:'Arial',align:'center'});
     });
     const gateTxtProg=pptxSanitize(opts.execGate||'▼ Exec Committee Gate',400);
-    s.addText(gateTxtProg,{x:trackL+3.5*segW-0.1,y:barTop-0.12,w:segW*1.2,h:0.28,fontSize:7,color:RED,fontFace:'Arial',align:'center',bold:true});
-    if(opts.belowLine)s.addText(pptxSanitize(opts.belowLine,400),{x:0.5,y:barTop+0.35,w:12,h:0.18,fontSize:10,color:GRAY,fontFace:'Arial'});
-    let rowY=barTop+0.42+(opts.belowLine?0.2:0);
+    s.addText(gateTxtProg,{x:trackL+3.5*segW-0.1,y:barTop-0.2,w:segW*1.2,h:0.34,fontSize:12,color:'CC0000',fontFace:'Arial',align:'center',bold:true});
+    let rowY=barTop+0.42;
     const rowMax=12;
     const slice=verticalRows.slice(0,rowMax);
     const rowH=slice.length>8?0.32:0.38;
     slice.forEach(w=>{
       const vi=verticalLifecycleIndex(w.verticalLifecycleStage);
       const fillW=trackW*((vi+1)/stageN);
-      s.addText(pptxSanitize(w.name,500),{x:leftM,y:rowY,w:labelW-0.12,h:rowH,fontSize:slice.length>8?9:10,color:BLACK,fontFace:'Arial',bold:true,valign:'middle'});
-      s.addShape(pptx.ShapeType.rect,{x:trackL,y:rowY+0.06,w:Math.min(trackW,Math.max(0.02,fillW)),h:0.2,fill:{color:'4472C4'},line:{color:'CCCCCC',width:1}});
+      s.addText(pptxSanitize(w.name,500),{x:leftM,y:rowY,w:labelW-0.06,h:rowH,fontSize:slice.length>8?9:10,color:BLACK,fontFace:'Arial',bold:true,valign:'middle'});
       const one=atlasProgPipeAi[w.id]||((w.desc||'').trim().slice(0,100)||wsStatusLabel(w.status));
-      s.addText(pptxSanitize(String(one),600),{x:noteX,y:rowY,w:noteW,h:rowH,fontSize:8,color:GRAY,fontFace:'Arial',valign:'middle',wrap:true});
+      s.addText(pptxSanitize(String(one),600),{x:updateX,y:rowY,w:updateW,h:rowH,fontSize:8,color:BLACK,fontFace:'Arial',valign:'middle',wrap:true});
+      s.addShape(pptx.ShapeType.rect,{x:trackL,y:rowY+0.06,w:Math.min(trackW,Math.max(0.02,fillW)),h:0.2,fill:{color:'4472C4'},line:{color:'CCCCCC',width:1}});
       rowY+=rowH+0.06;
     });
-    if(!slice.length)s.addText('No workstreams under AI for the Business matched this slide — set parent L1, depth (L2), and vertical lifecycle where applicable.',{x:0.5,y:rowY,w:12,h:0.5,fontSize:11,color:'666666',fontFace:'Arial'});
-    else if(verticalRows.length>rowMax)s.addText('('+verticalRows.length+' verticals — showing first '+rowMax+')',{x:0.5,y:6.85,w:12,h:0.2,fontSize:9,color:'666666',fontFace:'Arial'});
-    atlasPptxFooter(s,page);
+    if(!slice.length)s.addText('No workstreams under AI for the Business matched this slide — set parent L1, depth (L2), and vertical lifecycle where applicable.',{x:0.5,y:rowY,w:12,h:0.5,fontSize:11,color:BLACK,fontFace:'Arial'});
+    else if(verticalRows.length>rowMax)s.addText('('+verticalRows.length+' verticals — showing first '+rowMax+')',{x:0.5,y:6.85,w:12,h:0.2,fontSize:9,color:BLACK,fontFace:'Arial'});
+    atlasPptxDateBottom(s,dateStr);
   }
   let hb=null;
   if(opts.heartbeat){
@@ -7360,8 +7418,7 @@ async function generateAtlasProgramPptx(opts){
     page++;
     const s=pptx.addSlide();
     s.background={fill:'FFFFFF'};
-    s.addText('AI Program Update | Weekly Heartbeat',{x:0.5,y:0.35,w:12,h:0.42,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
-    s.addText(dateStr,{x:0.5,y:0.78,w:6,h:0.2,fontSize:10,color:'666666',fontFace:'Arial'});
+    s.addText('AI Program Update | Weekly Heartbeat',{x:0.5,y:0.35,w:12,h:0.42,fontSize:32,bold:true,color:BLACK,fontFace:'Arial'});
     let y=1.08;
     HEARTBEAT_PPTX_ROWS.forEach(r=>{
       s.addText(r.title,{x:0.5,y:y,w:3.15,h:0.2,fontSize:11,bold:true,color:BLACK,fontFace:'Arial'});
@@ -7372,15 +7429,14 @@ async function generateAtlasProgramPptx(opts){
       s.addText(bullets,{x:3.65,y:y,w:9.0,h:0.95,valign:'top',fontFace:'Arial'});
       y+=1.05;
     });
-    atlasPptxFooter(s,page);
+    atlasPptxDateBottom(s,dateStr);
   }
   const allProgWs=allProgramWorkstreamsSorted();
   if(opts.resourcing){
     page++;
     const s=pptx.addSlide();
     s.background={fill:'FFFFFF'};
-    s.addText('Resourcing — leads & workstreams',{x:0.5,y:0.35,w:12,h:0.42,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
-    s.addText(dateStr,{x:0.5,y:0.78,w:6,h:0.2,fontSize:10,color:'666666',fontFace:'Arial'});
+    s.addText('Resourcing — leads & workstreams',{x:0.5,y:0.35,w:12,h:0.42,fontSize:32,bold:true,color:BLACK,fontFace:'Arial'});
     const by={};
     const un=[];
     allProgWs.forEach(w=>{
@@ -7394,16 +7450,16 @@ async function generateAtlasProgramPptx(opts){
     const names=Object.keys(by).sort((a,b)=>a.localeCompare(b));
     const head=[{text:'Resource',options:{bold:true,fontFace:'Arial',fontSize:11,color:BLACK}},{text:'# WS',options:{bold:true,fontFace:'Arial',fontSize:11,color:BLACK}},{text:'Workstreams',options:{bold:true,fontFace:'Arial',fontSize:11,color:BLACK}}];
     const body=names.map(nm=>[{text:nm,options:{fontFace:'Arial',fontSize:10,color:BLACK}},{text:String(by[nm].length),options:{fontFace:'Arial',fontSize:10,color:BLACK}},{text:by[nm].join(', '),options:{fontFace:'Arial',fontSize:10,color:BLACK}}]);
-    const unRow=un.length?[[{text:'Unassigned',options:{bold:true,fontFace:'Arial',fontSize:10,color:RED}},{text:String(un.length),options:{fontFace:'Arial',fontSize:10,color:BLACK}},{text:un.join(', '),options:{fontFace:'Arial',fontSize:10,color:BLACK}}]]:[];
+    const unRow=un.length?[[{text:'Unassigned',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},{text:String(un.length),options:{fontFace:'Arial',fontSize:10,color:BLACK}},{text:un.join(', '),options:{fontFace:'Arial',fontSize:10,color:BLACK}}]]:[];
     s.addTable([head,...body,...unRow],{x:0.5,y:1.15,w:12.3,fontFace:'Arial',border:{type:'solid',color:'CCCCCC',pt:0.5}});
-    atlasPptxFooter(s,page);
+    atlasPptxDateBottom(s,dateStr);
   }
   if(opts.health){
     page++;
     const s=pptx.addSlide();
     s.background={fill:'FFFFFF'};
-    s.addText('Health / target date',{x:0.5,y:0.35,w:12,h:0.42,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
-    s.addText('Red = past target date and not closed. Green = on track.'+dateStr,{x:0.5,y:0.75,w:12,h:0.35,fontSize:10,color:'666666',fontFace:'Arial'});
+    s.addText('Health / target date',{x:0.5,y:0.35,w:12,h:0.42,fontSize:32,bold:true,color:BLACK,fontFace:'Arial'});
+    s.addText('Red = past target date and not closed. Green = on track.',{x:0.5,y:0.75,w:12,h:0.35,fontSize:10,color:BLACK,fontFace:'Arial'});
     const head=[{text:'Workstream',options:{bold:true,fontFace:'Arial',fontSize:11,color:BLACK}},{text:'Target',options:{bold:true,fontFace:'Arial',fontSize:11,color:BLACK}},{text:'Health',options:{bold:true,fontFace:'Arial',fontSize:11,color:BLACK}}];
     const body=allProgWs.map(w=>{
       const bad=isWsHealthPastDue(w);
@@ -7414,8 +7470,8 @@ async function generateAtlasProgramPptx(opts){
       ];
     });
     if(body.length)s.addTable([head,...body],{x:0.5,y:1.2,w:12.3,fontFace:'Arial',border:{type:'solid',color:'CCCCCC',pt:0.5}});
-    else s.addText('No workstreams.',{x:0.5,y:1.4,w:10,h:0.4,fontSize:11,color:'666666',fontFace:'Arial'});
-    atlasPptxFooter(s,page);
+    else s.addText('No workstreams.',{x:0.5,y:1.4,w:10,h:0.4,fontSize:11,color:BLACK,fontFace:'Arial'});
+    atlasPptxDateBottom(s,dateStr);
   }
   try{
     await pptx.writeFile({fileName:'ATLAS-Program-Update-'+today()+'.pptx'});
@@ -7430,42 +7486,40 @@ function parseBullets(text){
 }
 
 const EXEC_PPTX_SLIDES_KEY='atlas_report_deck_slides_v3';
+/** Max L1/L2 table rows per Workstream Status slide in the program report PPTX (chunking is automatic; no UI setting). */
+const WS_STATUS_PPTX_ROWS_PER_SLIDE=7;
 function openExecPptxSlideModal(){
   if(typeof PptxGenJS==='undefined'){toast('PptxGenJS library not loaded');return}
   const lb=D.pptxExportLabels||{};
   const eg=lb.execGate!=null?String(lb.execGate):'▼ Exec Committee Gate';
-  const ab=String(lb.aboveLine||'');
-  const bl=String(lb.belowLine||'');
   let saved={s1:true,s2:true,s3:true,s4:true,s5:true,s6:true};
   try{const raw=localStorage.getItem(EXEC_PPTX_SLIDES_KEY);if(raw){const j=JSON.parse(raw);if(j&&typeof j==='object')saved={...saved,...j}}}catch(e){}
   const chk=(id,on)=>`<input type="checkbox" id="${id}" ${on?'checked':''} style="margin-top:3px"/>`;
-  const prev=(n)=>n<=5?`<button type="button" class="mbtn" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=function(){openExecPptxSlideModal()};openProgramReportSlidePreview(${n})">Preview</button>`:`<button type="button" class="mbtn" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=null;previewDailyDigest()">Preview</button>`;
+  const prev=(n)=>n<=5?`<button type="button" class="mbtn" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0;white-space:nowrap" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=function(){openExecPptxSlideModal()};openProgramReportSlidePreview(${n})">Content preview</button>`:`<button type="button" class="mbtn" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0;white-space:nowrap" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=null;previewDailyDigest()">Content preview</button>`;
   openModal(`<div class="m-hd"><h3>Export program report (PowerPoint)</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
-    <p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.5">White 16:9 deck. Slide 2: AI summarizes each L2 vertical from the <strong>last 7 calendar days</strong> (≤10 words each) when your API key is set. Use <strong>Preview</strong> to check layout before exporting.</p>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.5">White 16:9 deck. Slide 2: AI summarizes each L2 vertical from the <strong>last 7 calendar days</strong> (≤10 words each) when your API key is set. Use <strong>Content preview</strong> to check layout before exporting.</p>
     <div class="fg" style="margin-bottom:8px"><label style="font-size:11px;font-weight:700">Exec Committee gate (shown on pipeline slide)</label><input id="rptdeck-gate" value="${esc(eg)}" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px"></div>
-    <div class="fg-row" style="margin-bottom:10px">
-      <div class="fg"><label style="font-size:11px;font-weight:700">Above the line</label><input id="rptdeck-above" value="${esc(ab)}" placeholder="Caption above divider (e.g. active engagement)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px"></div>
-      <div class="fg"><label style="font-size:11px;font-weight:700">Below the line</label><input id="rptdeck-below" value="${esc(bl)}" placeholder="Caption below divider" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px"></div>
-    </div>
+    <p style="font-size:11px;color:var(--muted);margin:0 0 12px;line-height:1.45">Which verticals appear above vs below the CDO divider on slide 2 is set on each <strong>AI for the Business</strong> L2 workstream (<strong>Edit workstream → CDO delivery line</strong>). <strong>Auto</strong> uses lifecycle (Executing / Roadmapping = above).</p>
     <p style="font-size:12px;font-weight:700;margin:0 0 8px">Slides to include</p>
     <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
       <button type="button" class="mbtn" style="font-size:11px;padding:4px 10px" onclick="document.querySelectorAll('[id^=exec-pptx-sl]').forEach(c=>{c.checked=true})">Select all</button>
       <button type="button" class="mbtn" style="font-size:11px;padding:4px 10px" onclick="document.querySelectorAll('[id^=exec-pptx-sl]').forEach(c=>{c.checked=false})">Clear all</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px">
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:wrap">${chk('exec-pptx-sl1',saved.s1)} <span style="flex:1"><strong>Slide 1 — Title</strong> — program title, subtitle, date</span>${prev(1)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:wrap">${chk('exec-pptx-sl2',saved.s2)} <span style="flex:1"><strong>Slide 2 — Vertical AI pipeline</strong> — L2 under AI for the Business; AI status (7 days, ≤10 words)</span>${prev(2)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:wrap">${chk('exec-pptx-sl3',saved.s3)} <span style="flex:1"><strong>Slide 3 — Weekly heartbeat</strong> — six lenses (AI when API key set)</span>${prev(3)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:wrap">${chk('exec-pptx-sl4',saved.s4)} <span style="flex:1"><strong>Slide 4 — Workstream status</strong> — L1/L2, decisions, risks, blocked, open counts, leads (no R/Y/G)</span>${prev(4)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:wrap">${chk('exec-pptx-sl5',saved.s5)} <span style="flex:1"><strong>Slide 5 — Program snapshot</strong> — same metrics as dashboard executive snapshot</span>${prev(5)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:wrap">${chk('exec-pptx-sl6',saved.s6)} <span style="flex:1"><strong>Slide 6 — Daily digest</strong> — overdue, due soon, blocked (same logic as dashboard digest)</span>${prev(6)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl1',saved.s1)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 1 — Title</strong> — program title, subtitle, date</span>${prev(1)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl2',saved.s2)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 2 — Vertical AI pipeline</strong> — L2 under AI for the Business; AI status (7 days, ≤10 words)</span>${prev(2)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl3',saved.s3)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 3 — Weekly heartbeat</strong> — all program workstreams by effective lens (AI summary when API key set)</span>${prev(3)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl4',saved.s4)} <span style="flex:1;min-width:0"><strong>Slide 4 — Workstream status</strong> — L1/L2 table (preview); export may add slides 4b, 4c… (~${WS_STATUS_PPTX_ROWS_PER_SLIDE} rows each) so nothing clips</span>${prev(4)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl5',saved.s5)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 5 — Program Snapshot</strong> — same metrics as Program Snapshot on the dashboard</span>${prev(5)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl6',saved.s6)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 6 — Daily Priorities</strong> — overdue, due soon, blocked (same logic as on the dashboard)</span>${prev(6)}</label>
     </div>
   </div>
   <div class="m-ft">
     <button class="mbtn mb-cancel" onclick="closeModal()">Cancel</button>
     <button class="mbtn mb-save" onclick="runExecPptxFromSlideModal()">Generate &amp; download</button>
   </div>`);
+  document.getElementById('modal').classList.add('modal-wide');
 }
 async function runExecPptxFromSlideModal(){
   const ids=['exec-pptx-sl1','exec-pptx-sl2','exec-pptx-sl3','exec-pptx-sl4','exec-pptx-sl5','exec-pptx-sl6'];
@@ -7474,19 +7528,21 @@ async function runExecPptxFromSlideModal(){
   ids.forEach((id,i)=>{const el=document.getElementById(id);opts[keys[i]]=!!(el&&el.checked)});
   if(!opts.s1&&!opts.s2&&!opts.s3&&!opts.s4&&!opts.s5&&!opts.s6){toast('Select at least one slide');return}
   opts.execGate=(document.getElementById('rptdeck-gate')?.value||'').trim();
-  opts.aboveLine=(document.getElementById('rptdeck-above')?.value||'').trim();
-  opts.belowLine=(document.getElementById('rptdeck-below')?.value||'').trim();
+  opts.aboveLine='';
+  opts.belowLine='';
   if(!D.pptxExportLabels)D.pptxExportLabels={};
   D.pptxExportLabels.execGate=opts.execGate;
-  D.pptxExportLabels.aboveLine=opts.aboveLine;
-  D.pptxExportLabels.belowLine=opts.belowLine;
+  D.pptxExportLabels.aboveLine='';
+  D.pptxExportLabels.belowLine='';
   save();
   try{localStorage.setItem(EXEC_PPTX_SLIDES_KEY,JSON.stringify({s1:opts.s1,s2:opts.s2,s3:opts.s3,s4:opts.s4,s5:opts.s5,s6:opts.s6}))}catch(e){}
   closeModal();
   await exportExecPptx(opts);
 }
 
-function splitVerticalPipelineRows(verticalRows){
+/** When pipelineCdoBand is unset, split by lifecycle (Executing / Roadmapping = above the CDO line). */
+function splitVerticalPipelineRowsLifecycleOnly(verticalRows){
+  if(!verticalRows.length)return{above:[],below:[]};
   const active=verticalRows.filter(w=>{
     const st=(w.verticalLifecycleStage||'').trim();
     return st==='executing'||st==='roadmapping';
@@ -7494,6 +7550,18 @@ function splitVerticalPipelineRows(verticalRows){
   const planning=verticalRows.filter(w=>!active.includes(w));
   if(!active.length)return{above:verticalRows,below:[]};
   return{above:active,below:planning};
+}
+/** Above/below CDO delivery line: explicit per-workstream pipelineCdoBand ('above'|'below') overrides; else lifecycle auto. */
+function splitVerticalPipelineRows(verticalRows){
+  const explicitAbove=[],explicitBelow=[],undecided=[];
+  verticalRows.forEach(w=>{
+    const b=String(w.pipelineCdoBand||'').trim().toLowerCase();
+    if(b==='above')explicitAbove.push(w);
+    else if(b==='below')explicitBelow.push(w);
+    else undecided.push(w);
+  });
+  const auto=splitVerticalPipelineRowsLifecycleOnly(undecided);
+  return{above:[...explicitAbove,...auto.above],below:[...explicitBelow,...auto.below]};
 }
 function programReportLast7DayRange(){return{start:addDaysIso(today(),-6),end:today()};}
 function collectDescendantWorkstreamIds(rootId){
@@ -7609,23 +7677,101 @@ function buildL1L2StatusRows(){
   });
   return rows;
 }
-function buildWorkstreamStatusPptxLines(){
+/** One PPTX table body row per `buildL1L2StatusRows` entry (9 columns). */
+function buildWorkstreamStatusPptxTableRowCells(){
   const rows=buildL1L2StatusRows();
-  const lines=[];
-  rows.forEach(r=>{
-    const ind=r.type==='l1'?'':'  ';
-    const nm=r.w.name||'';
-    const leads=formatLeadCoLead(r.w);
-    const decs=(r.g.dec||[]).slice(0,4).join('; ')||'—';
-    const risks=(r.g.rk||[]).slice(0,4).join('; ')||'—';
-    const blk=(r.blocked||[]).slice(0,4).join('; ')||'—';
-    lines.push(ind+(r.type==='l1'?'L1: ':'L2: ')+nm+' | Leads: '+leads);
-    lines.push(ind+'  Open action items (subtree): '+r.open+' | Blocked: '+blk);
-    lines.push(ind+'  Decisions: '+decs+(r.g.dec.length>4?' (+more)':''));
-    lines.push(ind+'  Risks: '+risks+(r.g.rk.length>4?' (+more)':''));
-    lines.push('');
+  const joinTitles=(arr,max)=>{
+    const a=arr||[];
+    const slice=a.slice(0,max);
+    if(!slice.length)return'—';
+    const more=a.length>max?' (+'+(a.length-max)+')':'';
+    return pptxSanitize(slice.join(' · ')+more,480);
+  };
+  return rows.map(r=>{
+    const rawNm=String(r.w.name||'').trim()||'—';
+    const ws=r.type==='l1'?pptxSanitize(rawNm,140):pptxSanitize('  '+rawNm,136);
+    const lens=heartbeatLensDisplayLabel(r.w);
+    const lead=String(r.w.primaryOwner||r.w.owner||'').trim();
+    const co=String(r.w.secondaryOwner||'').trim();
+    const blk=(r.blocked&&r.blocked.length)?r.blocked.length:0;
+    const hasBlocked=r.blocked&&r.blocked.length>0;
+    const hasRisk=r.g.rk&&r.g.rk.length>0;
+    const shade=hasBlocked?{fill:{color:'FEF2F2'}}:hasRisk?{fill:{color:'FEF9C3'}}:{};
+    return[
+      {text:ws,options:{fontFace:'Arial',fontSize:6.5,color:'000000',bold:r.type==='l1',...shade}},
+      {text:pptxSanitize(lens||'—',120),options:{fontFace:'Arial',fontSize:6,color:'000000',...shade}},
+      {text:r.type==='l1'?'L1':'L2',options:{fontFace:'Arial',fontSize:6.5,color:'000000',bold:true,...shade}},
+      {text:pptxSanitize(lead||'—',90),options:{fontFace:'Arial',fontSize:6.5,color:'000000',...shade}},
+      {text:pptxSanitize(co||'—',90),options:{fontFace:'Arial',fontSize:6.5,color:'000000',...shade}},
+      {text:String(r.open),options:{fontFace:'Arial',fontSize:6.5,color:'000000',...shade}},
+      {text:String(blk),options:{fontFace:'Arial',fontSize:6.5,color:'000000',...shade}},
+      {text:joinTitles(r.g.rk,4),options:{fontFace:'Arial',fontSize:6,color:'000000',...shade}},
+      {text:joinTitles(r.g.dec,4),options:{fontFace:'Arial',fontSize:6,color:'000000',...shade}}
+    ];
   });
-  return lines.join('\n').trim()||'No workstreams.';
+}
+/** HTML table for Slide 4 “Workstream Status” modal preview (compact; subtree roll-up matches `buildL1L2StatusRows`). */
+function renderWorkstreamStatusPreviewTableHtml(){
+  const rows=buildL1L2StatusRows();
+  if(!rows.length)return'<p style="color:var(--muted);font-size:13px;margin:0">No workstreams defined.</p>';
+  const titleCell=(arr,max)=>{
+    const a=arr||[];
+    const slice=a.slice(0,max);
+    if(!slice.length)return'<span class="ws-st-empty">—</span>';
+    const more=a.length>max?'<div class="ws-st-more">+'+(a.length-max)+' more</div>':'';
+    return slice.map(t=>{
+      const s=String(t||'').trim();
+      const short=s.length>100?s.slice(0,97)+'…':s;
+      return'<div class="ws-st-title">'+esc(short)+'</div>';
+    }).join('')+more;
+  };
+  const trs=rows.map(r=>{
+    const nmCls=r.type==='l2'?' class="ws-st-l2"':'';
+    const nm=r.type==='l1'?'<strong>'+esc((r.w.name||'').trim()||'—')+'</strong>':esc((r.w.name||'').trim()||'—');
+    const lens=heartbeatLensDisplayLabel(r.w);
+    const lensCell=lens?'<span class="ws-st-muted">'+esc(lens)+'</span>':'<span class="ws-st-empty">—</span>';
+    const lvl=r.type==='l1'?'L1':'L2';
+    const lead=String(r.w.primaryOwner||r.w.owner||'').trim();
+    const co=String(r.w.secondaryOwner||'').trim();
+    const blkCount=(r.blocked&&r.blocked.length)?r.blocked.length:0;
+    const hasBlocked=blkCount>0;
+    const hasRisk=r.g.rk&&r.g.rk.length>0;
+    const trCls=hasBlocked?' class="ws-st-row-blocked"':hasRisk?' class="ws-st-row-risk"':'';
+    return'<tr'+trCls+'>'+
+      '<td'+nmCls+'>'+nm+'</td>'+
+      '<td>'+lensCell+'</td>'+
+      '<td class="ws-st-nowrap"><strong>'+lvl+'</strong></td>'+
+      '<td>'+(lead?esc(lead):'<span class="ws-st-empty">—</span>')+'</td>'+
+      '<td>'+(co?esc(co):'<span class="ws-st-empty">—</span>')+'</td>'+
+      '<td class="ws-st-nowrap" style="text-align:right;font-variant-numeric:tabular-nums">'+r.open+'</td>'+
+      '<td class="ws-st-nowrap" style="text-align:right;font-variant-numeric:tabular-nums">'+blkCount+'</td>'+
+      '<td class="ws-st-gov">'+titleCell(r.g.rk,5)+'</td>'+
+      '<td class="ws-st-gov">'+titleCell(r.g.dec,5)+'</td>'+
+    '</tr>';
+  }).join('');
+  return'<style>'+
+    '.ws-st-prev-wrap table.ws-st-table{width:100%;border-collapse:collapse;font-size:11px;line-height:1.35;table-layout:fixed}'+
+    '.ws-st-prev-wrap th{background:#f1f5f9;font-weight:700;padding:6px 8px;border:1px solid #cbd5e1;text-align:left;position:sticky;top:0;z-index:1;box-shadow:0 1px 0 #cbd5e1}'+
+    '.ws-st-prev-wrap td{padding:5px 8px;border:1px solid #e2e8f0;vertical-align:top;word-break:break-word}'+
+    '.ws-st-prev-wrap td.ws-st-l2{padding-left:22px}'+
+    '.ws-st-prev-wrap .ws-st-muted{color:var(--muted);font-size:10px}'+
+    '.ws-st-prev-wrap .ws-st-title{margin:0 0 3px;font-size:10px}'+
+    '.ws-st-prev-wrap .ws-st-more{color:var(--muted);font-style:italic;font-size:9px;margin-top:2px}'+
+    '.ws-st-prev-wrap span.ws-st-empty,.ws-st-prev-wrap .ws-st-empty{color:#94a3b8}'+
+    '.ws-st-prev-wrap td.ws-st-gov{min-width:150px;max-width:340px}'+
+    '.ws-st-prev-wrap td.ws-st-nowrap{white-space:nowrap}'+
+    '.ws-st-prev-wrap tr.ws-st-row-blocked td{background:rgba(254,226,226,.88)}'+
+    '.ws-st-prev-wrap tr.ws-st-row-risk td{background:rgba(254,249,195,.9)}'+
+    '[data-theme="dark"] .ws-st-prev-wrap tr.ws-st-row-blocked td{background:rgba(127,29,29,.35)}'+
+    '[data-theme="dark"] .ws-st-prev-wrap tr.ws-st-row-risk td{background:rgba(113,63,18,.32)}'+
+  '</style>'+
+  '<p style="font-size:11px;color:var(--muted);margin:0 0 10px;line-height:1.45">Open action items and blocked counts roll up the <strong>subtree</strong> under each workstream. Risk and decision cells list <strong>titles</strong> linked to that subtree. <strong>Shading:</strong> light red = at least one blocked/dependency action item in the subtree; light yellow = at least one risk (no blocked items). Red wins when both apply.</p>'+
+  '<div class="ws-st-prev-wrap" style="overflow:auto">'+
+  '<table class="ws-st-table"><thead><tr>'+
+  '<th>Workstream</th><th>Lens</th><th>Level</th><th>Lead</th><th>Co-Lead</th>'+
+  '<th style="text-align:right" class="ws-st-nowrap">Open action items</th><th style="text-align:right;min-width:11em;line-height:1.25">Blocked Action Items / Dependencies</th>'+
+  '<th>Risks</th><th>Decisions</th>'+
+  '</tr></thead><tbody>'+trs+'</tbody></table></div>';
 }
 function getSnapshotMetricsForDeck(){
   const allWs=D.workstreams||[];
@@ -7668,8 +7814,6 @@ async function openProgramReportSlidePreview(slideNum){
   const er=getExecReport();
   const dateStr=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
   const gateTxt=(D.pptxExportLabels||{}).execGate||'▼ Exec Committee Gate';
-  const aboveCap=(D.pptxExportLabels||{}).aboveLine||'';
-  const belowCap=(D.pptxExportLabels||{}).belowLine||'';
   if(slideNum===1){
     openModal(`<div class="m-hd"><h3>Preview — Slide 1</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
     <div class="m-bd" style="min-height:200px;padding:32px;background:#fff;border:1px solid var(--border);border-radius:12px;text-align:center">
@@ -7677,12 +7821,15 @@ async function openProgramReportSlidePreview(slideNum){
       <div style="font-size:16px;color:#64748b;margin-top:16px">${esc(er.subtitleText||'Corporate Data & AI Office')}</div>
       <div style="font-size:14px;color:#94a3b8;margin-top:24px">${esc(dateStr)}</div>
     </div>`);
+    document.getElementById('modal').classList.add('modal-wide');
     return;
   }
   if(slideNum===2){
     openModal(`<div class="m-hd"><h3>Preview — Slide 2 (loading summaries…)</h3><button class="m-close" onclick="closeModal()">&times;</button></div><div class="m-bd" id="pptx-prev-2"><p style="color:var(--muted)">…</p></div>`);
+    document.getElementById('modal').classList.add('modal-wide');
     const el=document.getElementById('pptx-prev-2');
     const hd=document.querySelector('.m-hd h3');
+    const pipeGridCols='minmax(120px,15%) minmax(200px,38%) minmax(180px,1fr)';
     try{
       const {rows:verticalRows,fallbackNote}=verticalAiPipelineWorkstreamsForDeck();
       const sum=OPENAI_KEY&&verticalRows.length?await aiSummarizeVerticalPipelineRows7d(verticalRows):{};
@@ -7691,22 +7838,22 @@ async function openProgramReportSlidePreview(slideNum){
         const vi=verticalLifecycleIndex(w.verticalLifecycleStage);
         const pct=((vi+1)/VERTICAL_LIFECYCLE_STAGES.length)*100;
         const note=sum[w.id]||((w.desc||'').trim().slice(0,90)||wsStatusLabel(w.status));
-        return`<div style="display:grid;grid-template-columns:160px 1fr 1fr;gap:8px;align-items:center;margin-bottom:8px;font-size:12px">
-        <strong>${esc(w.name)}</strong>
-        <div style="height:10px;background:#e2e8f0;border-radius:6px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:6px"></div></div>
-        <span style="color:var(--muted);font-size:11px">${esc(note)}</span>
+        return`<div style="display:grid;grid-template-columns:${pipeGridCols};gap:8px 14px;align-items:center;margin-bottom:8px;font-size:12px">
+        <strong style="min-width:0">${esc(w.name)}</strong>
+        <span style="color:var(--muted);font-size:11px;line-height:1.35;min-width:0;white-space:normal;word-break:break-word">${esc(note)}</span>
+        <div style="min-width:0;height:10px;background:#e2e8f0;border-radius:6px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:6px"></div></div>
       </div>`;
       }).join('');
       const pctEach=100/VERTICAL_LIFECYCLE_STAGES.length;
-      const stageChips=VERTICAL_LIFECYCLE_STAGES.map(s=>'<span style="display:inline-block;width:'+pctEach+'%;text-align:center">'+esc(s.label)+'</span>').join('');
+      const stageChips=VERTICAL_LIFECYCLE_STAGES.map(s=>'<span style="display:inline-block;width:'+pctEach+'%;text-align:center;font-size:12px;font-weight:700">'+esc(s.label)+'</span>').join('');
       const fbBanner=fallbackNote?'<div style="font-size:11px;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:8px;margin-bottom:10px">'+esc(fallbackNote)+'</div>':'';
       const emptyBanner=!verticalRows.length?'<div style="font-size:12px;color:var(--muted);padding:16px;background:#f8fafc;border-radius:8px;border:1px dashed var(--border)">No workstreams under <strong>AI for the Business</strong> matched this slide. The deck expects L2 children of that L1 (parent L1 + depth), or any workstream tagged to that L1 when no strict L2 rows exist. Check Workstreams hierarchy and template ids.</div>':'';
-      const pipelineBody=verticalRows.length?('<div style="font-size:10px;margin-bottom:8px">'+stageChips+'</div>'+
-        '<div style="color:#dc2626;font-size:11px;font-weight:700;margin-bottom:8px;text-align:center">'+esc(gateTxt)+'</div>'+
-        (aboveCap?'<div style="font-size:11px;font-weight:700;margin:8px 0">'+esc(aboveCap)+'</div>':'')+
+      const stageRow='<div style="display:grid;grid-template-columns:'+pipeGridCols+';gap:8px 14px;align-items:end;margin-bottom:10px">'+
+        '<div></div><div></div><div style="display:flex;width:100%;min-width:0">'+stageChips+'</div></div>';
+      const pipelineBody=verticalRows.length?('<div style="color:#dc2626;font-size:12px;font-weight:700;margin-bottom:6px;text-align:center">'+esc(gateTxt)+'</div>'+
+        stageRow+
         rowHtml(split.above,'#2563eb')+
         '<div style="margin:12px 0;padding:8px;background:#6D28D9;color:#fff;border-radius:6px;text-align:center;font-size:11px;font-weight:700">CDO delivery capacity — Above: active engagement | Below: planning &amp; support</div>'+
-        (belowCap?'<div style="font-size:11px;font-weight:700;margin:8px 0">'+esc(belowCap)+'</div>':'')+
         rowHtml(split.below,'#94a3b8')):'';
       if(el){
         el.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:8px">Vertical AI | Pipeline</div>'+
@@ -7721,7 +7868,8 @@ async function openProgramReportSlidePreview(slideNum){
     return;
   }
   if(slideNum===3){
-    openModal(`<div class="m-hd"><h3>Preview — Slide 3</h3><button class="m-close" onclick="closeModal()">&times;</button></div><div class="m-bd" id="pptx-prev-3"><p style="color:var(--muted)">Loading…</p></div>`);
+    openModal(`<div class="m-hd" style="align-items:flex-start"><div><h3 style="margin:0">Preview — Slide 3</h3><p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">Weekly Heartbeat</p></div><button class="m-close" onclick="closeModal()">&times;</button></div><div class="m-bd" id="pptx-prev-3"><p style="color:var(--muted)">Loading…</p></div>`);
+    document.getElementById('modal').classList.add('modal-wide');
     const hb=OPENAI_KEY?(await draftHeartbeatWithAi())||fallbackHeartbeatBullets():fallbackHeartbeatBullets();
     const el=document.getElementById('pptx-prev-3');
     if(el){
@@ -7736,29 +7884,17 @@ async function openProgramReportSlidePreview(slideNum){
     return;
   }
   if(slideNum===4){
-    const rows=buildL1L2StatusRows();
-    const body=rows.map(r=>{
-      const ind=r.type==='l1'?'':'padding-left:20px;border-left:2px solid #e2e8f0;margin-left:6px';
-      const decs=(r.g.dec||[]).slice(0,5).map(t=>'<li>'+esc(t)+'</li>').join('')||'<li>—</li>';
-      const risks=(r.g.rk||[]).slice(0,5).map(t=>'<li>'+esc(t)+'</li>').join('')||'<li>—</li>';
-      const blk=(r.blocked||[]).slice(0,6).map(t=>'<li>'+esc(t)+'</li>').join('')||'<li>—</li>';
-      return`<div style="margin-bottom:16px;${ind}">
-        <div style="font-size:14px;font-weight:800">${esc((r.type==='l1'?'L1: ':'L2: ')+(r.w.name||''))} <span style="font-weight:500;color:var(--muted)">· ${esc(formatLeadCoLead(r.w))}</span></div>
-        <div style="font-size:12px;margin-top:6px">Open action items (subtree): <strong>${r.open}</strong></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px;font-size:11px">
-          <div><div style="font-weight:700;margin-bottom:4px">Blocked</div><ul style="margin:0;padding-left:16px;color:var(--muted)">${blk}</ul></div>
-          <div><div style="font-weight:700;margin-bottom:4px">Decisions</div><ul style="margin:0;padding-left:16px;color:var(--muted)">${decs}</ul></div>
-          <div><div style="font-weight:700;margin-bottom:4px">Risks</div><ul style="margin:0;padding-left:16px;color:var(--muted)">${risks}</ul></div>
-        </div>
-      </div>`;
-    }).join('');
-    openModal(`<div class="m-hd"><h3>Preview — Slide 4</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
-    <div class="m-bd" style="max-height:70vh;overflow:auto;font-size:13px"><p style="color:var(--muted);margin-bottom:12px">L1 / L2 tree · decisions · risks · blocked · open counts · leads (no R/Y/G).</p>${body}</div>`);
+    const body=renderWorkstreamStatusPreviewTableHtml();
+    openModal(`<div class="m-hd" style="align-items:flex-start"><div><h3 style="margin:0">Preview — Slide 4</h3><p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">Workstream Status</p></div><button class="m-close" onclick="closeModal()">&times;</button></div>
+    <div class="m-bd" style="max-height:70vh;overflow:auto;padding-top:4px">${body}</div>`);
+    const _mws=document.getElementById('modal');
+    _mws.classList.add('modal-wide','modal-ws-status-preview');
     return;
   }
   if(slideNum===5){
-    openModal(`<div class="m-hd"><h3>Preview — Slide 5</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+    openModal(`<div class="m-hd" style="align-items:flex-start"><div><h3 style="margin:0">Preview — Slide 5</h3><p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">Program Snapshot</p></div><button class="m-close" onclick="closeModal()">&times;</button></div>
     <div class="m-bd" style="max-height:75vh;overflow:auto">${renderExecutiveSnapshotHtml()}</div>`);
+    document.getElementById('modal').classList.add('modal-wide');
     return;
   }
   if(slideNum===6){
@@ -7792,15 +7928,13 @@ function pptxSanitize(str,maxLen){
   if(n>0&&s.length>n)s=s.slice(0,n)+'\u2026';
   return s;
 }
-/** Some Office builds reject tables with an odd total row count; pad with a blank row. */
-function pptxTableRowsPadEven(rows){
+/** Some Office builds reject tables with an odd total row count; pad with a blank row. @param {number} [colCount=3] cells in the padding row. */
+function pptxTableRowsPadEven(rows,colCount){
   const out=rows.slice();
+  const n=colCount==null||colCount===undefined?3:Math.max(1,Math.floor(Number(colCount)));
   if(out.length%2===1){
-    out.push([
-      {text:' ',options:{fontFace:'Arial',fontSize:8,color:'FFFFFF'}},
-      {text:' ',options:{fontFace:'Arial',fontSize:8,color:'FFFFFF'}},
-      {text:' ',options:{fontFace:'Arial',fontSize:8,color:'FFFFFF'}}
-    ]);
+    const pad=Array.from({length:n},()=>({text:' ',options:{fontFace:'Arial',fontSize:8,color:'FFFFFF'}}));
+    out.push(pad);
   }
   return out;
 }
@@ -7810,6 +7944,7 @@ async function exportExecPptx(opts){
   opts={...defSlides,...(opts||{})};
   if(!opts.s1&&!opts.s2&&!opts.s3&&!opts.s4&&!opts.s5&&!opts.s6){toast('Select at least one slide');return}
   toast('Building presentation…');
+  try{
   const er=getExecReport();
   const allProgWs=allProgramWorkstreamsSorted();
   const _pipeDeck=verticalAiPipelineWorkstreamsForDeck();
@@ -7820,14 +7955,10 @@ async function exportExecPptx(opts){
     pipelineAiSummaries=await aiSummarizeVerticalPipelineRows7d(verticalRows);
   }
   const gateTxt=(opts.execGate!=null&&String(opts.execGate).trim())?String(opts.execGate).trim():((D.pptxExportLabels||{}).execGate||'▼ Exec Committee Gate');
-  const aboveCap=(opts.aboveLine!=null)?String(opts.aboveLine).trim():((D.pptxExportLabels||{}).aboveLine||'');
-  const belowCap=(opts.belowLine!=null)?String(opts.belowLine).trim():((D.pptxExportLabels||{}).belowLine||'');
   const gateTxtX=pptxSanitize(gateTxt,500);
-  const aboveCapX=pptxSanitize(aboveCap,400);
-  const belowCapX=pptxSanitize(belowCap,400);
   const pipeNoteX=pptxSanitize(pipeDeckFallbackNote,800);
   const dateStr=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
-  const BLACK='000000',GRAY='333333',NAVY='00274C';
+  const BLACK='000000';
   let page=0;
   const pptx=new PptxGenJS();
   pptx.defineLayout({name:'ATLAS16',width:13.333,height:7.5});
@@ -7837,58 +7968,53 @@ async function exportExecPptx(opts){
     page++;
     const s=pptx.addSlide();
     s.background={fill:'FFFFFF'};
-    s.addText(pptxSanitize(er.titleText||'AI Transformation\nProgram Update',500),{x:0.5,y:2.15,w:12,h:1.35,fontSize:34,bold:true,color:NAVY,fontFace:'Arial',lineSpacingMultiple:1.08});
-    s.addText(pptxSanitize(er.subtitleText||'Corporate Data & AI Office',300),{x:0.5,y:3.75,w:10,h:0.75,fontSize:17,color:'666666',fontFace:'Arial'});
-    s.addText(dateStr,{x:0.5,y:4.85,w:6,h:0.45,fontSize:13,color:'666666',fontFace:'Arial'});
-    atlasPptxFooter(s,page);
+    s.addText(pptxSanitize(er.titleText||'AI Transformation\nProgram Update',500),{x:0.5,y:2.15,w:12,h:1.35,fontSize:32,bold:true,color:BLACK,fontFace:'Arial',lineSpacingMultiple:1.08});
+    s.addText(pptxSanitize(er.subtitleText||'Corporate Data & AI Office',300),{x:0.5,y:3.75,w:10,h:0.75,fontSize:17,color:BLACK,fontFace:'Arial'});
+    atlasPptxDateBottom(s,dateStr);
   }
 
   if(opts.s2){
     page++;
     const s=pptx.addSlide();
     s.background={fill:'FFFFFF'};
-    s.addText('Vertical AI | Pipeline',{x:0.5,y:0.32,w:12,h:0.42,fontSize:20,bold:true,color:BLACK,fontFace:'Arial'});
-    s.addText(dateStr,{x:0.5,y:0.72,w:6,h:0.2,fontSize:10,color:'666666',fontFace:'Arial'});
+    s.addText('Vertical AI | Pipeline',{x:0.5,y:0.32,w:12,h:0.42,fontSize:32,bold:true,color:BLACK,fontFace:'Arial'});
     let barTop=1.02;
     if(pipeNoteX){
-      s.addText(pipeNoteX,{x:0.5,y:0.88,w:12,h:0.22,fontSize:6,color:'B45309',fontFace:'Arial',wrap:true});
+      s.addText(pipeNoteX,{x:0.5,y:0.88,w:12,h:0.22,fontSize:6,color:BLACK,fontFace:'Arial',wrap:true});
       barTop=1.14;
     }
-    const slideW=13.333,leftM=0.5,labelW=2.65,noteGap=0.06,minNoteW=1.45,rightM=0.38;
-    const trackL=leftM+labelW;
-    const trackW=Math.max(5.2,slideW-trackL-noteGap-minNoteW-rightM);
-    const noteX=trackL+trackW+noteGap;
-    const noteW=Math.max(0.55,slideW-noteX-rightM);
+    const slideW=13.333,leftM=0.5,labelW=2.15,colGap=0.08,updateW=2.85,barLeadGap=0.06,rightM=0.38;
+    const updateX=leftM+labelW+colGap;
+    const trackL=updateX+updateW+barLeadGap;
+    const trackW=Math.max(5.0,slideW-trackL-rightM);
     const stageN=VERTICAL_LIFECYCLE_STAGES.length,segW=trackW/stageN;
-    VERTICAL_LIFECYCLE_STAGES.forEach((st,i)=>{s.addText(pptxSanitize(st.label,80),{x:trackL+i*segW,y:barTop,w:segW,h:0.18,fontSize:7.5,color:BLACK,fontFace:'Arial',align:'center'})});
-    s.addText(gateTxtX,{x:trackL+3.35*segW-0.05,y:barTop-0.1,w:segW*1.35,h:0.26,fontSize:6.5,color:'CC0000',fontFace:'Arial',align:'center',bold:true});
+    VERTICAL_LIFECYCLE_STAGES.forEach((st,i)=>{s.addText(pptxSanitize(st.label,80),{x:trackL+i*segW,y:barTop,w:segW,h:0.26,fontSize:12,bold:true,color:BLACK,fontFace:'Arial',align:'center'})});
+    s.addText(gateTxtX,{x:trackL+3.35*segW-0.05,y:barTop-0.2,w:segW*1.35,h:0.34,fontSize:12,color:'CC0000',fontFace:'Arial',align:'center',bold:true});
     const split=splitVerticalPipelineRows(verticalRows);
     const rowH=0.34;
     const drawRows=(rows,y0,maxY,sectionLabel,barHex)=>{
       let y=y0;
-      if(sectionLabel){s.addText(pptxSanitize(sectionLabel,200),{x:0.5,y:y,w:12,h:0.16,fontSize:9,bold:true,color:'555555',fontFace:'Arial'});y+=0.2}
+      if(sectionLabel){s.addText(pptxSanitize(sectionLabel,200),{x:0.5,y:y,w:12,h:0.16,fontSize:9,bold:true,color:BLACK,fontFace:'Arial'});y+=0.2}
       rows.forEach(w=>{
         if(y>maxY-0.05)return;
         const vi=verticalLifecycleIndex(w.verticalLifecycleStage);
         const fillW=trackW*((vi+1)/stageN);
-        s.addText(pptxSanitize(w.name,500),{x:leftM,y:y,w:labelW-0.12,h:rowH,fontSize:rows.length>10?8:9,color:BLACK,fontFace:'Arial',bold:true,valign:'middle'});
-        s.addShape(pptx.ShapeType.rect,{x:trackL,y:y+0.07,w:Math.min(trackW,Math.max(0.02,fillW)),h:0.18,fill:{color:barHex},line:{color:'CCCCCC',width:1}});
+        s.addText(pptxSanitize(w.name,500),{x:leftM,y:y,w:labelW-0.06,h:rowH,fontSize:rows.length>10?8:9,color:BLACK,fontFace:'Arial',bold:true,valign:'middle'});
         const note=pipelineAiSummaries[w.id]||(((w.desc||'').trim().slice(0,90))||wsStatusLabel(w.status));
-        s.addText(pptxSanitize(String(note),600),{x:noteX,y:y,w:noteW,h:rowH,fontSize:7.5,color:GRAY,fontFace:'Arial',valign:'middle',wrap:true});
+        s.addText(pptxSanitize(String(note),600),{x:updateX,y:y,w:updateW,h:rowH,fontSize:7.5,color:BLACK,fontFace:'Arial',valign:'middle',wrap:true});
+        s.addShape(pptx.ShapeType.rect,{x:trackL,y:y+0.07,w:Math.min(trackW,Math.max(0.02,fillW)),h:0.18,fill:{color:barHex},line:{color:'CCCCCC',width:1}});
         y+=rowH+0.05;
       });
       return y;
     };
-    let yAfterStages=barTop+0.28;
-    if(aboveCapX)yAfterStages=drawRows(split.above,yAfterStages,4.15,aboveCapX,'4472C4')+0.12;
-    else yAfterStages=drawRows(split.above,yAfterStages,4.15,'','4472C4')+0.08;
-    s.addShape(pptx.ShapeType.rect,{x:0.45,y:yAfterStages,w:12.4,h:0.28,fill:{color:'6D28D9'},line:{color:'6D28D9',width:1}});
-    s.addText(pptxSanitize('CDO delivery capacity — Above: active engagement | Below: planning & support',200),{x:0.55,y:yAfterStages+0.04,w:12.2,h:0.22,fontSize:8,color:'FFFFFF',fontFace:'Arial',align:'center',wrap:true});
+    let yAfterStages=barTop+0.32;
+    yAfterStages=drawRows(split.above,yAfterStages,4.15,'','4472C4')+0.1;
+    s.addShape(pptx.ShapeType.rect,{x:0.45,y:yAfterStages,w:12.4,h:0.28,fill:{color:'F3F4F6'},line:{color:'CCCCCC',width:1}});
+    s.addText(pptxSanitize('CDO delivery capacity — Above: active engagement | Below: planning & support',200),{x:0.55,y:yAfterStages+0.04,w:12.2,h:0.22,fontSize:8,color:BLACK,fontFace:'Arial',align:'center',wrap:true});
     yAfterStages+=0.34;
-    if(belowCapX)yAfterStages=drawRows(split.below,yAfterStages,6.85,belowCapX,'94A3B8');
-    else yAfterStages=drawRows(split.below,yAfterStages,6.85,'','94A3B8');
-    if(!verticalRows.length)s.addText('No workstreams under AI for the Business matched this slide — set parent L1, depth (L2), and vertical lifecycle on pipeline workstreams.',{x:0.5,y:1.35,w:12,h:0.45,fontSize:11,color:'666666',fontFace:'Arial'});
-    atlasPptxFooter(s,page);
+    yAfterStages=drawRows(split.below,yAfterStages,6.85,'','94A3B8');
+    if(!verticalRows.length)s.addText('No workstreams under AI for the Business matched this slide — set parent L1, depth (L2), and vertical lifecycle on pipeline workstreams.',{x:0.5,y:1.35,w:12,h:0.45,fontSize:11,color:BLACK,fontFace:'Arial'});
+    atlasPptxDateBottom(s,dateStr);
   }
 
   let hb=null;
@@ -7898,8 +8024,7 @@ async function exportExecPptx(opts){
     page++;
     const s=pptx.addSlide();
     s.background={fill:'FFFFFF'};
-    s.addText('AI Program Update | Weekly Heartbeat',{x:0.5,y:0.32,w:12,h:0.4,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
-    s.addText(dateStr,{x:0.5,y:0.72,w:6,h:0.18,fontSize:10,color:'666666',fontFace:'Arial'});
+    s.addText('AI Program Update | Weekly Heartbeat',{x:0.5,y:0.32,w:12,h:0.4,fontSize:32,bold:true,color:BLACK,fontFace:'Arial'});
     let y=1.02;
     HEARTBEAT_PPTX_ROWS.forEach(r=>{
       s.addShape(pptx.ShapeType.rect,{x:3.52,y:y-0.02,w:9.12,h:0.88,fill:{color:'F1F5F9'},line:{color:'E2E8F0',width:0.5}});
@@ -7909,18 +8034,41 @@ async function exportExecPptx(opts){
       s.addText(bullets,{x:3.58,y:y+0.04,w:9.0,h:0.84,valign:'top',fontFace:'Arial'});
       y+=1.02;
     });
-    atlasPptxFooter(s,page);
+    atlasPptxDateBottom(s,dateStr);
   }
 
   if(opts.s4){
-    page++;
-    const s=pptx.addSlide();
-    s.background={fill:'FFFFFF'};
-    s.addText('Workstream status',{x:0.5,y:0.32,w:12,h:0.4,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
-    s.addText(dateStr+' · L1 / L2 tree: decisions, risks, blocked action items, open counts, lead & co-lead (no R/Y/G).',{x:0.5,y:0.72,w:12.2,h:0.32,fontSize:9,color:'666666',fontFace:'Arial'});
-    const body=pptxSanitize(buildWorkstreamStatusPptxLines(),28000);
-    s.addText(body,{x:0.45,y:1.05,w:12.4,h:5.85,fontSize:7,color:'333333',fontFace:'Arial',valign:'top',wrap:true});
-    atlasPptxFooter(s,page);
+    const wsHead=[
+      {text:'Workstream',options:{bold:true,fontFace:'Arial',fontSize:7,color:BLACK}},
+      {text:'Lens',options:{bold:true,fontFace:'Arial',fontSize:7,color:BLACK}},
+      {text:'Lv',options:{bold:true,fontFace:'Arial',fontSize:7,color:BLACK}},
+      {text:'Lead',options:{bold:true,fontFace:'Arial',fontSize:7,color:BLACK}},
+      {text:'Co-Lead',options:{bold:true,fontFace:'Arial',fontSize:7,color:BLACK}},
+      {text:'Open action items',options:{bold:true,fontFace:'Arial',fontSize:7,color:BLACK}},
+      {text:'Blocked Action Items / Dependencies',options:{bold:true,fontFace:'Arial',fontSize:6.5,color:BLACK}},
+      {text:'Risks',options:{bold:true,fontFace:'Arial',fontSize:7,color:BLACK}},
+      {text:'Decisions',options:{bold:true,fontFace:'Arial',fontSize:7,color:BLACK}}
+    ];
+    const wsColW=[2.1,1.38,0.36,1.12,1.12,0.56,1.35,2.32,2.09];
+    const wsBody=buildWorkstreamStatusPptxTableRowCells();
+    const wsChunks=[];
+    if(!wsBody.length)wsChunks.push([]);
+    else for(let i=0;i<wsBody.length;i+=WS_STATUS_PPTX_ROWS_PER_SLIDE)wsChunks.push(wsBody.slice(i,i+WS_STATUS_PPTX_ROWS_PER_SLIDE));
+    wsChunks.forEach((chunk,wi)=>{
+      page++;
+      const s=pptx.addSlide();
+      s.background={fill:'FFFFFF'};
+      const parts=wsChunks.length>1?' ('+(wi+1)+' of '+wsChunks.length+')':'';
+      s.addText('Workstream status'+parts,{x:0.5,y:0.32,w:12,h:0.4,fontSize:30,bold:true,color:BLACK,fontFace:'Arial'});
+      s.addText('L1 / L2 tree — same columns as ATLAS preview; multiple slides when row count exceeds '+WS_STATUS_PPTX_ROWS_PER_SLIDE+'.',{x:0.5,y:0.72,w:12.2,h:0.34,fontSize:8.5,color:BLACK,fontFace:'Arial',wrap:true});
+      if(chunk.length){
+        const tableRows=pptxTableRowsPadEven([wsHead,...chunk],9);
+        s.addTable(tableRows,{x:0.45,y:1.02,w:12.4,colW:wsColW,fontFace:'Arial',fontSize:6.5,border:{type:'solid',color:'CCCCCC',pt:1}});
+      }else{
+        s.addText('No workstreams defined.',{x:0.5,y:1.35,w:12,h:0.45,fontSize:11,color:BLACK,fontFace:'Arial'});
+      }
+      atlasPptxDateBottom(s,dateStr);
+    });
   }
 
   if(opts.s5){
@@ -7928,84 +8076,127 @@ async function exportExecPptx(opts){
     const s=pptx.addSlide();
     s.background={fill:'FFFFFF'};
     const m=getSnapshotMetricsForDeck();
-    s.addText('Program snapshot',{x:0.5,y:0.32,w:12,h:0.4,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
-    s.addText(dateStr,{x:0.5,y:0.72,w:6,h:0.18,fontSize:10,color:'666666',fontFace:'Arial'});
-    const y0=1.0,gw=2.95,gh=1.32,gap=0.12;
+    s.addText('Program Snapshot',{x:0.5,y:0.28,w:12,h:0.38,fontSize:32,bold:true,color:BLACK,fontFace:'Arial'});
+    const y0=0.9,gw=2.96,gh=1.55,gap=0.13;
     const kpiBox=(x,y,w,h,title,big,sub,fill,border)=>{
       s.addShape(pptx.ShapeType.rect,{x,y,w,h,fill:{color:fill},line:{color:border,width:0.5}});
-      s.addText(title,{x:x+0.1,y:y+0.08,w:w-0.2,h:0.32,fontSize:8,bold:true,color:'334155',fontFace:'Arial'});
-      s.addText(big,{x:x+0.1,y:y+0.38,w:w-0.2,h:0.5,fontSize:24,bold:true,color:'0f172a',fontFace:'Arial'});
-      if(sub)s.addText(sub,{x:x+0.1,y:y+0.88,w:w-0.2,h:0.36,fontSize:9,color:'475569',fontFace:'Arial',wrap:true});
+      s.addText(title,{x:x+0.1,y:y+0.06,w:w-0.2,h:0.4,fontSize:11,bold:true,color:BLACK,fontFace:'Arial'});
+      s.addText(big,{x:x+0.1,y:y+0.48,w:w-0.2,h:0.5,fontSize:26,bold:true,color:BLACK,fontFace:'Arial'});
+      if(sub)s.addText(sub,{x:x+0.1,y:y+1.0,w:w-0.2,h:0.48,fontSize:9.5,color:BLACK,fontFace:'Arial',wrap:true});
     };
-    kpiBox(0.5,y0,gw,gh,'ACTIVE WORKSTREAMS',String(m.activeWsTotal),'L1: '+m.l1+' | L2: '+m.l2+' | L3: '+m.l3,'EFF6FF','93C5FD');
+    kpiBox(0.5,y0,gw,gh,'ACTIVE WORKSTREAMS',String(m.activeWsTotal),'Level 1: '+m.l1+' | Level 2: '+m.l2+' | Level 3: '+m.l3,'EFF6FF','93C5FD');
     kpiBox(0.5+gw+gap,y0,gw,gh,'OPEN ACTION ITEMS',String(m.openTaskCount),'Not done','E0F2FE','38BDF8');
     kpiBox(0.5+2*(gw+gap),y0,gw,gh,'BLOCKED / DEPENDENCY',String(m.blockedDepCount),'Waiting on another team','FEF2F2','FCA5A5');
     kpiBox(0.5+3*(gw+gap),y0,gw,gh,'RISKS',String(m.totalRisks),'Open: '+m.openRiskCount,'FEFCE8','FDE047');
-    const lensY=y0+gh+0.16;
-    s.addShape(pptx.ShapeType.rect,{x:0.5,y:lensY,w:12.35,h:0.92,fill:{color:'F8FAFC'},line:{color:'BFDBFE',width:0.5}});
-    s.addText('WORKSTREAMS BY HEARTBEAT LENS',{x:0.62,y:lensY+0.06,w:11.8,h:0.2,fontSize:8.5,bold:true,color:'334155',fontFace:'Arial'});
+    const lensY=y0+gh+0.2;
+    s.addShape(pptx.ShapeType.rect,{x:0.5,y:lensY,w:12.35,h:1.05,fill:{color:'F8FAFC'},line:{color:'BFDBFE',width:0.5}});
+    s.addText('WORKSTREAMS BY HEARTBEAT LENS',{x:0.62,y:lensY+0.08,w:11.8,h:0.28,fontSize:12,bold:true,color:BLACK,fontFace:'Arial'});
     const lensLine=pptxSanitize(m.lensRows.map(o=>o.label+': '+o.count).join('   ·   ')+(m.noLens?'   ·   Unassigned lens: '+m.noLens:''),2000);
-    s.addText(lensLine,{x:0.62,y:lensY+0.3,w:11.8,h:0.55,fontSize:7.5,color:'1e293b',fontFace:'Arial',wrap:true});
-    const chartY=lensY+1.05,halfW=6.05;
+    s.addText(lensLine,{x:0.62,y:lensY+0.36,w:11.8,h:0.62,fontSize:8.5,color:BLACK,fontFace:'Arial',wrap:true});
+    const chartY=lensY+1.22,halfW=6.2;
     const maxWsLead=Math.max(1,...m.wsLeadList.map(([,c])=>c));
-    s.addText('WORKSTREAMS PER TEAM MEMBER (lead · top '+m.wsLeadList.length+')',{x:0.5,y:chartY,w:halfW,h:0.18,fontSize:8,bold:true,color:'334155',fontFace:'Arial'});
-    let by=chartY+0.22;
+    s.addShape(pptx.ShapeType.rect,{x:0.48,y:chartY-0.02,w:halfW+0.08,h:0.28,fill:{color:'EDE9FE'},line:{color:'DDD6FE',width:0.5}});
+    s.addText('WORKSTREAMS PER TEAM MEMBER (lead · top '+m.wsLeadList.length+')',{x:0.52,y:chartY,w:halfW,h:0.24,fontSize:11,bold:true,color:BLACK,fontFace:'Arial'});
+    let by=chartY+0.3;
     m.wsLeadList.slice(0,8).forEach(([name,c])=>{
       const pct=Math.round(c/maxWsLead*100);
-      const short=pptxSanitize((name.split(' ')[0]||name).slice(0,10),40);
-      s.addText(short,{x:0.5,y:by,w:0.95,h:0.15,fontSize:7.5,fontFace:'Arial'});
-      s.addShape(pptx.ShapeType.rect,{x:1.48,y:by+0.03,w:Math.max(0.15,4.2*pct/100),h:0.11,fill:{color:'2563EB'}});
-      s.addText(String(c),{x:5.85,y:by,w:0.45,h:0.15,fontSize:7.5,bold:true,fontFace:'Arial',align:'right'});
-      by+=0.19;
+      const short=pptxSanitize((name.split(' ')[0]||name).slice(0,12),44);
+      s.addText(short,{x:0.5,y:by,w:1.05,h:0.17,fontSize:8,color:BLACK,fontFace:'Arial'});
+      s.addShape(pptx.ShapeType.rect,{x:1.58,y:by+0.03,w:Math.max(0.18,4.35*pct/100),h:0.14,fill:{color:'6D28D9'}});
+      s.addText(String(c),{x:6.05,y:by,w:0.5,h:0.17,fontSize:8,bold:true,color:BLACK,fontFace:'Arial',align:'right'});
+      by+=0.23;
     });
     const maxT=Math.max(1,...m.taskOwnerList.map(([,c])=>c));
-    s.addText('OPEN ACTION ITEMS BY OWNER (top '+m.taskOwnerList.length+')',{x:6.65,y:chartY,w:halfW,h:0.18,fontSize:8,bold:true,color:'334155',fontFace:'Arial'});
-    const colW=0.5,bx0=6.68,barTop=chartY+0.24;
+    s.addShape(pptx.ShapeType.rect,{x:6.52,y:chartY-0.02,w:halfW+0.1,h:0.28,fill:{color:'ECFDF5'},line:{color:'BBF7D0',width:0.5}});
+    s.addText('OPEN ACTION ITEMS BY OWNER (top '+m.taskOwnerList.length+')',{x:6.58,y:chartY,w:halfW,h:0.24,fontSize:11,bold:true,color:BLACK,fontFace:'Arial'});
+    const colW=0.54,bx0=6.58,barTop=chartY+0.32,maxBarStack=0.95;
     m.taskOwnerList.slice(0,10).forEach(([name,c],i)=>{
-      const barH=c?Math.max(0.08,(c/maxT)*0.75):0;
-      s.addText(String(c),{x:bx0+i*colW,y:barTop,w:colW,h:0.12,fontSize:6.5,bold:true,align:'center',fontFace:'Arial'});
-      if(barH>0)s.addShape(pptx.ShapeType.rect,{x:bx0+i*colW+0.1,y:barTop+0.14+(0.75-barH),w:0.3,h:barH,fill:{color:'1D4ED8'}});
-      const short=pptxSanitize(((name.split(' ')[0]||name).slice(0,5)),32);
-      s.addText(short,{x:bx0+i*colW,y:barTop+0.92,w:colW,h:0.22,fontSize:6,align:'center',fontFace:'Arial',wrap:true});
+      const barH=c?Math.max(0.1,(c/maxT)*maxBarStack):0;
+      s.addText(String(c),{x:bx0+i*colW,y:barTop,w:colW,h:0.14,fontSize:7,bold:true,color:BLACK,align:'center',fontFace:'Arial'});
+      if(barH>0)s.addShape(pptx.ShapeType.rect,{x:bx0+i*colW+0.12,y:barTop+0.16+(maxBarStack-barH),w:0.32,h:barH,fill:{color:'16A34A'}});
+      const short=pptxSanitize(((name.split(' ')[0]||name).slice(0,6)),36);
+      s.addText(short,{x:bx0+i*colW,y:barTop+0.18+maxBarStack+0.06,w:colW,h:0.28,fontSize:6.5,color:BLACK,align:'center',fontFace:'Arial',wrap:true});
     });
-    atlasPptxFooter(s,page);
+    atlasPptxDateBottom(s,dateStr);
   }
 
   if(opts.s6){
-    page++;
-    const s=pptx.addSlide();
-    s.background={fill:'FFFFFF'};
     const dg=getDailyDigestStructured();
-    s.addText('Daily Digest',{x:0.5,y:0.32,w:12,h:0.4,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
-    s.addText(pptxSanitize(dg.dateStr,120),{x:0.5,y:0.72,w:12,h:0.2,fontSize:10,color:'666666',fontFace:'Arial'});
-    const headDue=[{text:'Item',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}},{text:'Owner',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}},{text:'Due',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}}];
-    const headBlk=[{text:'Item',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}},{text:'Owner',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}},{text:'Blocked by',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}}];
-    let y=1.05;
-    function addDigestTable(title,rows,headRow,mapFn,maxR){
+    const headFill='F3F4F6';
+    const cellPast='FEF2F2';
+    const cellSoon='EEF2FF';
+    const cellBlk='FFFBEB';
+    const fmtDigestDue=(d)=>{
+      if(!d)return'—';
+      try{
+        return new Date(String(d)+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      }catch(e){return String(d).slice(0,12)}
+    };
+    const headDue=[
+      {text:'Item',options:{bold:true,fontFace:'Arial',fontSize:8,color:'000000',fill:{color:headFill}}},
+      {text:'Owner',options:{bold:true,fontFace:'Arial',fontSize:8,color:'000000',fill:{color:headFill}}},
+      {text:'Due',options:{bold:true,fontFace:'Arial',fontSize:8,color:'000000',fill:{color:headFill}}}
+    ];
+    const headBlk=[
+      {text:'Item',options:{bold:true,fontFace:'Arial',fontSize:8,color:'000000',fill:{color:headFill}}},
+      {text:'Owner',options:{bold:true,fontFace:'Arial',fontSize:8,color:'000000',fill:{color:headFill}}},
+      {text:'Blocked by',options:{bold:true,fontFace:'Arial',fontSize:8,color:'000000',fill:{color:headFill}}}
+    ];
+    const rowH=0.27;
+    let digSlide=null;
+    let yTop=0.95;
+    const openDigestSlide=(continued)=>{
+      if(digSlide)atlasPptxDateBottom(digSlide,dg.dateStr);
+      page++;
+      digSlide=pptx.addSlide();
+      digSlide.background={fill:'FFFFFF'};
+      digSlide.addText(continued?'Daily Priorities (continued)':'Daily Priorities',{x:0.5,y:0.28,w:12,h:0.38,fontSize:30,bold:true,color:'000000',fontFace:'Arial'});
+      digSlide.addText(pptxSanitize(dg.dateStr,140),{x:0.5,y:0.66,w:12,h:0.24,fontSize:11,color:'475569',fontFace:'Arial'});
+      yTop=0.96;
+    };
+    const addDigestTable=(title,rows,headRow,mapFn,maxR)=>{
       if(!rows.length)return;
-      s.addText(pptxSanitize(title+' ('+rows.length+')',200),{x:0.5,y:y,w:12,h:0.16,fontSize:9,bold:true,color:'334155',fontFace:'Arial'});
-      y+=0.2;
-      const slice=rows.slice(0,maxR).map(mapFn).map(row=>row.map(cell=>({text:pptxSanitize(cell.text,2000)||' ',options:cell.options||{fontFace:'Arial',fontSize:8}})));
-      const tableRows=pptxTableRowsPadEven([headRow,...slice]);
-      s.addTable(tableRows,{x:0.45,y:y,w:12.4,fontFace:'Arial',fontSize:8,border:{type:'solid',color:'CCCCCC',pt:1}});
-      y+=0.28+(tableRows.length-1)*0.16;
-    }
+      const slice=rows.slice(0,maxR).map(mapFn).map(row=>row.map(cell=>({text:pptxSanitize(cell.text,2000)||' ',options:cell.options||{fontFace:'Arial',fontSize:8,color:'000000'}})));
+      const tableRows=pptxTableRowsPadEven([headRow,...slice],3);
+      const th=0.1+tableRows.length*rowH+0.12;
+      const blockH=0.24+th+0.18;
+      if(digSlide===null||yTop+blockH>6.2)openDigestSlide(digSlide!==null);
+      digSlide.addText(pptxSanitize(title+' ('+rows.length+')',200),{x:0.5,y:yTop,w:12,h:0.2,fontSize:10,bold:true,color:'000000',fontFace:'Arial'});
+      yTop+=0.24;
+      digSlide.addTable(tableRows,{x:0.45,y:yTop,w:12.4,h:th,fontFace:'Arial',fontSize:8,border:{type:'solid',color:'CCCCCC',pt:1}});
+      yTop+=th+0.2;
+    };
     const od=[...dg.overdueWs.map(w=>({t:w.name,o:w.primaryOwner||w.owner||'',d:w.endDate,ws:true})),...dg.overdueTasks.map(t=>({t:t.title,o:t.owner||'',d:t.due,ws:false}))].sort((a,b)=>(a.d||'').localeCompare(b.d||''));
-    addDigestTable('Past due',od,headDue,r=>[{text:r.t,options:{fontFace:'Arial',fontSize:8}},{text:r.o,options:{fontFace:'Arial',fontSize:8}},{text:r.d||'—',options:{fontFace:'Arial',fontSize:8}}],6);
+    addDigestTable('Past due',od,headDue,r=>[
+      {text:r.t,options:{fontFace:'Arial',fontSize:8,color:'000000',fill:{color:cellPast}}},
+      {text:r.o,options:{fontFace:'Arial',fontSize:8,color:'000000',fill:{color:cellPast}}},
+      {text:fmtDigestDue(r.d),options:{fontFace:'Arial',fontSize:8,color:'000000',fill:{color:cellPast}}}
+    ],8);
     const soon=[...dg.dueSoonWs.map(w=>({t:w.name,o:w.primaryOwner||w.owner||'',d:w.endDate})),...dg.dueSoonTasks.map(t=>({t:t.title,o:t.owner||'',d:t.due}))].sort((a,b)=>(a.d||'').localeCompare(b.d||''));
-    addDigestTable('Due next 7 days',soon,headDue,r=>[{text:r.t,options:{fontFace:'Arial',fontSize:8}},{text:r.o,options:{fontFace:'Arial',fontSize:8}},{text:r.d||'—',options:{fontFace:'Arial',fontSize:8}}],6);
-    addDigestTable('Blocked / dependency',dg.blockedTasks,headBlk,t=>[{text:t.title||'',options:{fontFace:'Arial',fontSize:8}},{text:t.owner||'',options:{fontFace:'Arial',fontSize:8}},{text:t.blockedBy||'—',options:{fontFace:'Arial',fontSize:8}}],6);
+    addDigestTable('Due next 7 days',soon,headDue,r=>[
+      {text:r.t,options:{fontFace:'Arial',fontSize:8,color:'000000',fill:{color:cellSoon}}},
+      {text:r.o,options:{fontFace:'Arial',fontSize:8,color:'000000',fill:{color:cellSoon}}},
+      {text:fmtDigestDue(r.d),options:{fontFace:'Arial',fontSize:8,color:'000000',fill:{color:cellSoon}}}
+    ],8);
+    addDigestTable('Blocked / dependency',dg.blockedTasks,headBlk,t=>[
+      {text:t.title||'',options:{fontFace:'Arial',fontSize:8,color:'000000',fill:{color:cellBlk}}},
+      {text:t.owner||'',options:{fontFace:'Arial',fontSize:8,color:'000000',fill:{color:cellBlk}}},
+      {text:t.blockedBy||'—',options:{fontFace:'Arial',fontSize:8,color:'000000',fill:{color:cellBlk}}}
+    ],10);
     if(!dg.overdueWs.length&&!dg.overdueTasks.length&&!dg.dueSoonWs.length&&!dg.dueSoonTasks.length&&!dg.blockedTasks.length){
-      s.addText('No overdue, upcoming, or blocked items in digest window.',{x:0.5,y:1.2,w:12,h:0.4,fontSize:11,color:'666666',fontFace:'Arial'});
+      openDigestSlide(false);
+      digSlide.addText('No overdue, upcoming, or blocked items in this priorities window.',{x:0.5,y:yTop,w:12,h:0.45,fontSize:11,color:'000000',fontFace:'Arial'});
     }
-    atlasPptxFooter(s,page);
+    if(digSlide)atlasPptxDateBottom(digSlide,dg.dateStr);
   }
 
   const fileDate=new Date().toISOString().slice(0,10);
-  try{
     await pptx.writeFile({fileName:'ATLAS-Program-Report-'+fileDate+'.pptx'});
     toast('PowerPoint exported');
-  }catch(e){toast('Export failed: '+(e.message||String(e)))}
+  }catch(e){
+    console.error(e);
+    toast('Export failed: '+(e&&e.message?e.message:String(e)));
+  }
 }
 
 // ═══════════════════════════════════════════════════
