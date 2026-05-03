@@ -1665,6 +1665,7 @@ function renderPresence(active){activePresence=active||[];}
 // NAV
 // ═══════════════════════════════════════════════════
 let taskFilter='all',taskStatusFilter='open',taskOwnerFilter='',taskWsFilter='',qcType='task',taskSort='default',taskSortDir=1,taskGroupCollapsed={},taskViewMode='kanban',myWorkViewMode='kanban',dashTab='overview',govTab='risks';
+let govRiskSort='impact',govRiskSortDir=1,govDecSort='date',govDecSortDir=-1;
 
 function toggleSidebar(){
   document.body.classList.toggle('nav-collapsed');
@@ -1964,32 +1965,16 @@ function getDailyUpdateStats(){
   return {updated,waiting,total,updatedCount,topStreak,personStats};
 }
 
-function renderDashboardWidgets(){
+/** Daily Updates streak / completion tracker (Metrics page only). */
+function buildDailyUpdatesTrackerHtml(){
   const stats=getDailyUpdateStats();
-  const highPriorityWs=(D.workstreams||[]).filter(w=>w.priority==='high');
-  const highPriorityCount=highPriorityWs.length;
-  
+  if(stats.total<=0)return'';
   const pct=stats.total?Math.round(stats.updatedCount/stats.total*100):0;
   const barColor=pct>=80?'#10b981':pct>=50?'#f59e0b':'#ef4444';
-  
-  // Top 3 streaks
   const topStreaks=stats.updated.slice(0,3).map(([name,s])=>`${name.split(' ')[0]} (${s.streak})`).join(' · ');
-  
-  // Waiting names (first names only)
   const waitingNames=stats.waiting.slice(0,5).map(([name])=>name.split(' ')[0]).join(', ');
   const moreWaiting=stats.waiting.length>5?`, +${stats.waiting.length-5} more`:'';
-  
-  const highPriorityWidget=`
-  <div onclick="wsPriorityFilter='high';Object.keys(wsExpanded).forEach(k=>wsExpanded[k]=true);(D.workstreams||[]).forEach(w=>wsExpanded[w.id]=true);go('workstreams')" style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:16px 20px;cursor:pointer;transition:all .15s" onmouseenter="this.style.borderColor='#ef4444';this.style.boxShadow='0 4px 12px rgba(239,68,68,.15)'" onmouseleave="this.style.borderColor='var(--border)';this.style.boxShadow=''">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <span style="font-size:15px;font-weight:600;color:var(--fg)">High Priority Workstreams</span>
-      <span style="font-size:20px;font-weight:700;color:#ef4444">${highPriorityCount}</span>
-    </div>
-    <div style="font-size:12px;color:var(--muted)">Click to view all high priority items expanded</div>
-  </div>`;
-  
-  const dailyUpdatesWidget=stats.total>0?`
-  <div style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:16px 20px">
+  const inner=`
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:10px">
         <span style="font-size:15px;font-weight:600;color:var(--fg)">Daily Updates</span>
@@ -2003,10 +1988,8 @@ function renderDashboardWidgets(){
     <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px">
       ${topStreaks?`<div style="display:flex;align-items:center;gap:6px"><span style="color:#f59e0b">🔥</span><span style="color:var(--fg);font-weight:500">Top:</span><span style="color:var(--muted)">${topStreaks}</span></div>`:''}
       ${stats.waiting.length?`<div style="display:flex;align-items:center;gap:6px;margin-left:auto"><span style="color:#ef4444">⚠️</span><span style="color:var(--muted)">Waiting: ${waitingNames}${moreWaiting}</span></div>`:`<div style="margin-left:auto;color:#10b981;font-weight:500">✓ Everyone updated!</div>`}
-    </div>
-  </div>`:'';
-  
-  return `<div style="display:flex;gap:16px;margin-bottom:20px">${highPriorityWidget}${dailyUpdatesWidget}</div>`;
+    </div>`;
+  return`<div class="card" style="padding:20px;margin-bottom:24px">${inner}</div>`;
 }
 
 function toast(msg,undoFn=null,duration=3500){
@@ -2534,6 +2517,13 @@ function copyDailyUpdateTable(){
 }
 
 function wsNamePlain(id){const w=(D.workstreams||[]).find(x=>x.id===id);return w?w.name:''}
+/** L1 = no parent, L2 = one parent, L3 = nested (matches Metrics workstream depth). */
+function workstreamHierarchyLevel(w,wsMap){
+  if(!w||!w.parentWs)return 1;
+  const parent=wsMap.get(w.parentWs);
+  if(!parent||!parent.parentWs)return 2;
+  return 3;
+}
 function wsName(id){const w=(D.workstreams||[]).find(x=>x.id===id);return w?'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(w.color||'var(--muted)')+';margin-right:5px;vertical-align:middle;flex-shrink:0"></span>'+esc(w.name):'—'}
 function wsColor(id){const w=(D.workstreams||[]).find(x=>x.id===id)||WS_DEFS.find(x=>x.id===id);return w?w.color:'var(--muted)'}
 function wsOpts(sel){
@@ -2601,6 +2591,7 @@ const HEARTBEAT_LENS_OPTS=[
   {value:'ai-business',label:'AI for the Business'},
   {value:'grassroots',label:'Grassroots / Superworkers'},
   {value:'praxo-tech',label:'Praxo & Technical Controls'},
+  {value:'governance-compliance',label:'Governance & Compliance'},
   {value:'program-level',label:'Other / Program Level'}
 ];
 /** PPTX / AI heartbeat buckets (aligned with HEARTBEAT_LENS_OPTS values). */
@@ -2609,11 +2600,14 @@ const HEARTBEAT_PPTX_ROWS=[
   {title:'AI for the Business',key:'aiBusiness'},
   {title:'Grassroots / Superworkers',key:'grassroots'},
   {title:'Praxo & Technical Controls',key:'praxoTech'},
+  {title:'Governance & Compliance',key:'govCompliance'},
   {title:'Other / Program Level',key:'programLevel'}
 ];
 function wsMatchesLensFilter(w,filt){
   if(!filt)return true;
-  return(w.heartbeatLens||'')===filt;
+  const eff=effectiveHeartbeatLensForWorkstream(w);
+  if(filt==='__unassigned__')return eff==='';
+  return eff===filt;
 }
 function wsMatchesLifecycleFilter(w,filt){
   if(!filt)return true;
@@ -2641,6 +2635,15 @@ function getWorkstreamParentL1(w){
 }
 function isVerticalAiPipelineWs(w){
   return getWorkstreamParentL1(w)==='ai-for-business'&&getWorkstreamLevel(w)===2;
+}
+/** Lens used for dashboard counts and Workstreams lens filter when heartbeatLens is unset. */
+function effectiveHeartbeatLensForWorkstream(w){
+  if(!w)return'';
+  const hl=String(w.heartbeatLens||'').trim();
+  if(hl)return hl;
+  if(isVerticalAiPipelineWs(w))return'ai-business';
+  if(getWorkstreamParentL1(w)==='ai-platform')return'praxo-tech';
+  return'';
 }
 function verticalLifecycleIndex(v){
   const i=VERTICAL_LIFECYCLE_STAGES.findIndex(s=>s.value===v);
@@ -2740,6 +2743,16 @@ function generateDailyDigest(){
     const dt=new Date(d+'T00:00:00');
     return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});
   }
+  function digestTaskWsName(t){
+    if(!t||!t.workstream)return'—';
+    const w=wsMap.get(t.workstream);
+    return w?esc(w.name||'—'):'—';
+  }
+  function digestWsParentName(w){
+    if(!w||!w.parentWs)return'—';
+    const p=wsMap.get(w.parentWs);
+    return p?esc(p.name):'—';
+  }
   
   let html=`
 <!DOCTYPE html>
@@ -2800,25 +2813,25 @@ function generateDailyDigest(){
 
   if(overdueWs.length||overdueTasks.length){
     html+=`<div class="section"><h2>⚠️ Past Due (${overdueWs.length+overdueTasks.length})</h2>
-    <table><thead><tr><th>Item</th><th>Owner</th><th>Due</th></tr></thead><tbody>`;
+    <table><thead><tr><th>Item</th><th>Workstream</th><th>Owner</th><th>Due</th></tr></thead><tbody>`;
     overdueWs.forEach(w=>{
-      html+=`<tr class="tbl-overdue"><td><strong>${esc(w.name)}</strong></td><td class="owner">${w.primaryOwner||w.owner||'Unassigned'}</td><td class="date">${fmtDateShort(w.endDate)}</td></tr>`;
+      html+=`<tr class="tbl-overdue"><td><strong>${esc(w.name)}</strong></td><td class="owner">${digestWsParentName(w)}</td><td class="owner">${w.primaryOwner||w.owner||'Unassigned'}</td><td class="date">${fmtDateShort(w.endDate)}</td></tr>`;
     });
     overdueTasks.forEach(t=>{
-      html+=`<tr class="tbl-overdue"><td>${esc(t.title)}</td><td class="owner">${t.owner||'Unassigned'}</td><td class="date">${fmtDateShort(t.due)}</td></tr>`;
+      html+=`<tr class="tbl-overdue"><td>${esc(t.title)}</td><td class="owner">${digestTaskWsName(t)}</td><td class="owner">${t.owner||'Unassigned'}</td><td class="date">${fmtDateShort(t.due)}</td></tr>`;
     });
     html+=`</tbody></table></div>`;
   }
   
   if(dueSoonWs.length||dueSoonTasks.length){
     html+=`<div class="section"><h2>📅 Due Next 7 Days (${dueSoonWs.length+dueSoonTasks.length})</h2>
-    <table><thead><tr><th>Item</th><th>Owner</th><th>Due</th></tr></thead><tbody>`;
+    <table><thead><tr><th>Item</th><th>Workstream</th><th>Owner</th><th>Due</th></tr></thead><tbody>`;
     const combined=[...dueSoonWs.map(w=>({type:'ws',item:w,date:w.endDate})),...dueSoonTasks.map(t=>({type:'task',item:t,date:t.due}))].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
     combined.forEach(x=>{
       if(x.type==='ws'){
-        html+=`<tr class="tbl-normal"><td><strong>${esc(x.item.name)}</strong></td><td class="owner">${x.item.primaryOwner||x.item.owner||'Unassigned'}</td><td class="date">${fmtDateShort(x.date)}</td></tr>`;
+        html+=`<tr class="tbl-normal"><td><strong>${esc(x.item.name)}</strong></td><td class="owner">${digestWsParentName(x.item)}</td><td class="owner">${x.item.primaryOwner||x.item.owner||'Unassigned'}</td><td class="date">${fmtDateShort(x.date)}</td></tr>`;
       }else{
-        html+=`<tr><td>${esc(x.item.title)}</td><td class="owner">${x.item.owner||'Unassigned'}</td><td class="date">${fmtDateShort(x.date)}</td></tr>`;
+        html+=`<tr><td>${esc(x.item.title)}</td><td class="owner">${digestTaskWsName(x.item)}</td><td class="owner">${x.item.owner||'Unassigned'}</td><td class="date">${fmtDateShort(x.date)}</td></tr>`;
       }
     });
     html+=`</tbody></table></div>`;
@@ -2826,9 +2839,9 @@ function generateDailyDigest(){
   
   if(blockedTasks.length){
     html+=`<div class="section"><h2>🚫 Blocked (${blockedTasks.length})</h2>
-    <table><thead><tr><th>Item</th><th>Owner</th><th>Blocked By</th></tr></thead><tbody>`;
+    <table><thead><tr><th>Item</th><th>Workstream</th><th>Owner</th><th>Blocked By</th></tr></thead><tbody>`;
     blockedTasks.forEach(t=>{
-      html+=`<tr class="tbl-blocked"><td>${esc(t.title)}</td><td class="owner">${t.owner||'Unassigned'}</td><td class="owner">${t.blockedBy?esc(t.blockedBy):'—'}</td></tr>`;
+      html+=`<tr class="tbl-blocked"><td>${esc(t.title)}</td><td class="owner">${digestTaskWsName(t)}</td><td class="owner">${t.owner||'Unassigned'}</td><td class="owner">${t.blockedBy?esc(t.blockedBy):'—'}</td></tr>`;
     });
     html+=`</tbody></table></div>`;
   }
@@ -2877,6 +2890,137 @@ function previewDailyDigest(){
 }
 
 // ═══════════════════════════════════════════════════
+// DASHBOARD — executive snapshot (KPIs + drill-down)
+// ═══════════════════════════════════════════════════
+function renderExecutiveSnapshotHtml(){
+  const allWs=D.workstreams||[];
+  const allTasks=D.tasks||[];
+  const wsMap=new Map(allWs.map(w=>[w.id,w]));
+  const closedStatuses=['closed','value-achieved','deferred-rejected'];
+  const openWs=allWs.filter(w=>!closedStatuses.includes(normalizeWsStatus(w.status)));
+  /** Lens pills: include value-achieved so counts match Workstreams (lens filter does not hide completed workstreams). Still omit closed / deferred-rejected. */
+  const wsForLensCounts=allWs.filter(w=>{
+    const s=normalizeWsStatus(w.status);
+    return s!=='closed'&&s!=='deferred-rejected';
+  });
+  let l1=0,l2=0,l3=0;
+  openWs.forEach(w=>{
+    const lv=workstreamHierarchyLevel(w,wsMap);
+    if(lv===1)l1++;else if(lv===2)l2++;else l3++;
+  });
+  const activeWsTotal=openWs.length;
+  const openTaskCount=allTasks.filter(t=>t.status!=='done').length;
+  const blockedDepCount=allTasks.filter(t=>t.status!=='done'&&normalizeTaskStatus(t.status)==='blocked-dependency').length;
+  const allRisks=D.risks||[];
+  const totalRisks=allRisks.length;
+  const openRisks=allRisks.filter(r=>r.status!=='closed');
+  const openRiskCount=openRisks.length;
+  const lensRows=HEARTBEAT_LENS_OPTS.map(o=>({
+    value:o.value,
+    label:o.label,
+    count:wsForLensCounts.filter(w=>effectiveHeartbeatLensForWorkstream(w)===o.value).length
+  }));
+  const noLensCount=wsForLensCounts.filter(w=>effectiveHeartbeatLensForWorkstream(w)==='').length;
+  const wsLeadCounts={};
+  openWs.forEach(w=>{
+    const lead=w.primaryOwner||w.owner;
+    if(!lead||String(lead).includes('/'))return;
+    wsLeadCounts[lead]=(wsLeadCounts[lead]||0)+1;
+  });
+  const wsLeadList=Object.entries(wsLeadCounts).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const taskOwnerCounts={};
+  allTasks.filter(t=>t.status!=='done'&&t.owner&&!String(t.owner).includes('/')).forEach(t=>{
+    taskOwnerCounts[t.owner]=(taskOwnerCounts[t.owner]||0)+1;
+  });
+  const taskOwnerList=Object.entries(taskOwnerCounts).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const kpiBase='min-width:0;width:100%;border-radius:16px;padding:14px 16px;cursor:pointer;text-align:left;transition:transform .12s,box-shadow .12s;border:1px solid;box-shadow:0 1px 3px rgba(15,23,42,.06);box-sizing:border-box';
+  const kpiHIn='this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 6px 16px rgba(15,23,42,.1)\'';
+  const kpiHOut='this.style.transform=\'\';this.style.boxShadow=\'0 1px 3px rgba(15,23,42,.06)\'';
+  const kpiBlueA=kpiBase+';background:linear-gradient(145deg,#eff6ff 0%,#dbeafe 100%);border-color:#93c5fd;color:#1e3a8a';
+  const kpiBlueB=kpiBase+';background:linear-gradient(145deg,#e0f2fe 0%,#bae6fd 55%,#e0f2fe 100%);border-color:#38bdf8;color:#0c4a6e';
+  const kpiBlocked=kpiBase+';background:linear-gradient(145deg,#fef2f2 0%,#fee2e2 100%);border-color:#fca5a5;color:#991b1b';
+  const kpiRisks=kpiBase+';background:linear-gradient(145deg,#fefce8 0%,#fef9c3 100%);border-color:#fde047;color:#854d0e';
+  const lensBg=['linear-gradient(145deg,#dbeafe,#bfdbfe)','linear-gradient(145deg,#e0f2fe,#bae6fd)','linear-gradient(145deg,#dbeafe,#93c5fd)','linear-gradient(145deg,#eff6ff,#bfdbfe)','linear-gradient(145deg,#e0f2fe,#dbeafe)'];
+  const lensPill=(o,i)=>`<button type="button" style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;margin:0 8px 8px 0;border-radius:999px;border:1px solid #60a5fa;background:${lensBg[i%lensBg.length]};color:#0f172a;font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 1px 4px rgba(37,99,235,.12);transition:transform .12s,box-shadow .12s" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}" onclick="wsLensFilter='${o.value}';wsL1Filter='';go('workstreams')" title="Filter Workstreams by this lens"><span style="opacity:.85;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#1e40af">${esc(o.label)}</span><span style="font-size:15px;font-weight:800;color:#1d4ed8">${o.count}</span></button>`;
+  const lensUnassigned=noLensCount?`<button type="button" style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;margin:0 8px 8px 0;border-radius:999px;border:1px solid #7dd3fc;background:linear-gradient(145deg,#f0f9ff,#e0f2fe);color:#0c4a6e;font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 1px 4px rgba(14,165,233,.15);transition:transform .12s,box-shadow .12s" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}" onclick="wsLensFilter='__unassigned__';wsL1Filter='';go('workstreams')" title="Workstreams with no heartbeat lens set"><span style="opacity:.85;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em">Unassigned lens</span><span style="font-size:15px;font-weight:800">${noLensCount}</span></button>`:'';
+  const maxWsLead=Math.max(1,...wsLeadList.map(([,c])=>c));
+  const wsBarChart=wsLeadList.length?wsLeadList.map(([name,c])=>{
+    const pct=Math.round(c/maxWsLead*100);
+    const short=name.includes(' ')?name.split(' ')[0]:name;
+    return`<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:12px">
+      <div style="width:108px;flex-shrink:0;font-weight:600;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(name)}">${esc(short)}</div>
+      <div style="flex:1;height:24px;background:var(--bg-subtle);border-radius:999px;overflow:hidden;border:1px solid #bfdbfe">
+        <div style="width:${pct}%;min-width:${c?6:0}px;height:100%;background:linear-gradient(90deg,#60a5fa,#2563eb);border-radius:999px;transition:width .4s ease"></div>
+      </div>
+      <span style="width:28px;text-align:right;font-weight:800;color:#1d4ed8;flex-shrink:0">${c}</span>
+    </div>`;
+  }).join(''):'<div style="padding:16px;color:var(--muted);font-size:13px;border:1px dashed var(--border);border-radius:12px">No lead assignments.</div>';
+  const maxTaskOwn=Math.max(1,...taskOwnerList.map(([,c])=>c));
+  const chartH=160;
+  const taskColChart=taskOwnerList.length?`<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:4px;width:100%;height:${chartH+36}px;padding:8px 4px 0;border:1px solid #bfdbfe;border-radius:12px;background:linear-gradient(180deg,#f8fafc,#eff6ff);box-sizing:border-box">
+    ${taskOwnerList.map(([name,c])=>{
+      const barH=Math.max(c?6:0,Math.round(c/maxTaskOwn*chartH));
+      const short=name.includes(' ')?name.split(' ')[0]:name.slice(0,8);
+      return`<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">
+        <span style="font-size:11px;font-weight:800;color:#1d4ed8;margin-bottom:4px">${c}</span>
+        <div style="width:min(72px,85%);height:${barH}px;background:linear-gradient(180deg,#38bdf8,#1d4ed8);border-radius:8px 8px 2px 2px;box-shadow:0 2px 6px rgba(29,78,216,.25)"></div>
+        <div style="font-size:10px;font-weight:600;color:#475569;margin-top:8px;text-align:center;line-height:1.15;max-height:36px;overflow:hidden" title="${esc(name)}">${esc(short)}</div>
+      </div>`;
+    }).join('')}
+  </div>`:'<div style="padding:16px;color:var(--muted);font-size:13px;border:1px dashed var(--border);border-radius:12px">No open owners.</div>';
+  return`
+  <div class="ws-section" id="dashSec-exec" style="margin-bottom:20px;width:100%;box-sizing:border-box">
+    <div class="ws-section-hd" onclick="toggleWsSection('dashSec-exec')" style="background:var(--bg-card);padding:14px 18px;border-radius:var(--r-sm) var(--r-sm) 0 0;border:1px solid var(--border)"><h4 style="font-size:16px;font-weight:800;color:var(--text)">Executive snapshot</h4><span class="ws-section-arrow">&#9660;</span></div>
+    <div class="ws-section-bd" style="padding:14px 16px;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r-sm) var(--r-sm);background:var(--bg-card);width:100%;box-sizing:border-box">
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;width:100%;margin-bottom:18px;box-sizing:border-box">
+        <div role="button" tabindex="0" style="${kpiBlueA}" onclick="wsLensFilter='';wsL1Filter='';go('workstreams')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();wsLensFilter='';wsL1Filter='';go('workstreams')}">
+          <div style="font-size:11px;font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.04em">Active workstreams</div>
+          <div style="font-size:28px;font-weight:800;margin:6px 0;line-height:1">${activeWsTotal}</div>
+          <div style="font-size:12px;opacity:.8">L1: ${l1} · L2: ${l2} · L3: ${l3}</div>
+        </div>
+        <div role="button" tabindex="0" style="${kpiBlueB}" onclick="taskStatusFilter='open';taskFilter='all';taskOwnerFilter='';taskWsFilter='';taskViewMode='list';go('actionitems')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}">
+          <div style="font-size:11px;font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.04em">Open action items</div>
+          <div style="font-size:28px;font-weight:800;margin:6px 0;line-height:1">${openTaskCount}</div>
+          <div style="font-size:12px;opacity:.8">Not done</div>
+        </div>
+        <div role="button" tabindex="0" style="${kpiBlocked}" onclick="taskStatusFilter='open';taskFilter='blockeddep';taskViewMode='list';go('actionitems')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}">
+          <div style="font-size:11px;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.04em">Blocked / dependency</div>
+          <div style="font-size:28px;font-weight:800;margin:6px 0;line-height:1">${blockedDepCount}</div>
+          <div style="font-size:12px;opacity:.85">Waiting on another team</div>
+        </div>
+        <div role="button" tabindex="0" style="${kpiRisks}" onclick="govTab='risks';go('governance')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}">
+          <div style="font-size:11px;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.04em">Risks</div>
+          <div style="font-size:28px;font-weight:800;margin:6px 0;line-height:1">${totalRisks}</div>
+          <div style="font-size:12px;opacity:.85">Open: ${openRiskCount}</div>
+        </div>
+      </div>
+      <div style="margin-bottom:18px;padding:12px 14px;border-radius:14px;border:1px solid #bfdbfe;background:linear-gradient(180deg,#f8fafc,#f1f5f9);width:100%;box-sizing:border-box">
+        <div style="font-size:11px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px">Workstreams by heartbeat lens</div>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;width:100%;gap:4px">${lensRows.map((o,i)=>lensPill(o,i)).join('')}${lensUnassigned}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:18px;width:100%;align-items:stretch;box-sizing:border-box">
+        <div style="padding:12px 14px;border-radius:14px;border:1px solid #bfdbfe;background:linear-gradient(180deg,#ffffff,#f8fafc);width:100%;box-sizing:border-box">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <span style="font-size:11px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.04em">Workstreams per team member</span>
+            <button type="button" class="mbtn mb-add" style="font-size:11px;padding:4px 10px" onclick="metricsIncludeCoLead=false;go('workmetrics')">Metrics</button>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Lead only · top ${wsLeadList.length||0}</div>
+          ${wsBarChart}
+        </div>
+        <div style="padding:12px 14px;border-radius:14px;border:1px solid #bfdbfe;background:linear-gradient(180deg,#ffffff,#f8fafc);width:100%;box-sizing:border-box">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <span style="font-size:11px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.04em">Open action items by owner</span>
+            <button type="button" class="mbtn mb-add" style="font-size:11px;padding:4px 10px" onclick="go('workmetrics')">Metrics</button>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Column chart · top ${taskOwnerList.length||0}</div>
+          ${taskColChart}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
 // DASHBOARD
 // ═══════════════════════════════════════════════════
 function rDash(c){
@@ -2900,13 +3044,6 @@ function rDash(c){
   const myWsCount=ME?(D.workstreams||[]).filter(w=>{const o=w.owner||WS_DEFS.find(d=>d.id===w.id)?.owner||'';return o===ME}).length:0;
 
   c.innerHTML=`
-  <div style="padding:12px 16px;margin-bottom:20px;border-radius:var(--r-sm);background:#eff6ff;border:1px solid #3b82f6;display:flex;align-items:center;justify-content:space-between;gap:10px">
-    <div style="display:flex;align-items:center;gap:10px">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" style="width:20px;height:20px;flex-shrink:0"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-      <span style="font-size:13px;color:#1e40af;line-height:1.45"><strong>All AI Program documents must be stored in our Teams channel.</strong> <a href="https://digitalrealtyeur.sharepoint.com/sites/AITransformationProgram/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FAITransformationProgram%2FShared%20Documents%2FGeneral&viewid=be024a85%2D931b%2D4a01%2Dacac%2D217f020d89c0" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:underline;font-weight:600">Open AI Program Files →</a><span style="color:#64748b;margin:0 6px">·</span><a href="https://digitalrealtyeur.sharepoint.com/:u:/s/AITransformationProgram/IQDxyv5M0FPmTYj-Uua8GeJhAajGCYZrdWmIQzu_iudQvF4?e=hb3ASh" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:underline;font-weight:600">AI Program Repository Agent</a> <span style="color:#64748b;font-weight:500">(same source)</span></span>
-    </div>
-    <button onclick="openDailyDigestModal()" style="padding:6px 12px;font-size:11px;background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.3);border-radius:4px;cursor:pointer;white-space:nowrap;transition:all .15s" onmouseenter="this.style.background='rgba(37,99,235,.2)'" onmouseleave="this.style.background='rgba(37,99,235,.1)'">📧 Daily Digest</button>
-  </div>
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:24px">
     <div style="background:linear-gradient(135deg,#10b981 0%,#059669 100%);border-radius:var(--r-lg);padding:24px;box-shadow:0 4px 16px rgba(16,185,129,.25)">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
@@ -2953,7 +3090,14 @@ function rDash(c){
       </div>
     </div>
   </div>
-  ${renderDashboardWidgets()}
+  <div style="padding:12px 16px;margin-bottom:20px;border-radius:var(--r-sm);background:#eff6ff;border:1px solid #3b82f6;display:flex;align-items:center;justify-content:space-between;gap:10px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" style="width:20px;height:20px;flex-shrink:0"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+      <span style="font-size:13px;color:#1e40af;line-height:1.45"><strong>All AI Program documents must be stored in our Teams channel.</strong> <a href="https://digitalrealtyeur.sharepoint.com/sites/AITransformationProgram/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FAITransformationProgram%2FShared%20Documents%2FGeneral&viewid=be024a85%2D931b%2D4a01%2Dacac%2D217f020d89c0" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:underline;font-weight:600">Open AI Program Files →</a><span style="color:#64748b;margin:0 6px">·</span><a href="https://digitalrealtyeur.sharepoint.com/:u:/s/AITransformationProgram/IQDxyv5M0FPmTYj-Uua8GeJhAajGCYZrdWmIQzu_iudQvF4?e=hb3ASh" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:underline;font-weight:600">AI Program Repository Agent</a> <span style="color:#64748b;font-weight:500">(same source)</span></span>
+    </div>
+    <button onclick="openDailyDigestModal()" style="padding:6px 12px;font-size:11px;background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.3);border-radius:4px;cursor:pointer;white-space:nowrap;transition:all .15s" onmouseenter="this.style.background='rgba(37,99,235,.2)'" onmouseleave="this.style.background='rgba(37,99,235,.1)'">📧 Daily Digest</button>
+  </div>
+  ${renderExecutiveSnapshotHtml()}
   ${renderDashboardOverview(allWs,activeWs,atRiskWs,completeWs,open,overdue,dueThisWeek,allMs,msDone,msOD,msUp,myOpenTasks,myWsCount)}`;
 }
 
@@ -3989,8 +4133,8 @@ function rWorkstreamsNew(c){
   if(wsCoLeadFilter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(139,92,246,.1);color:#8b5cf6;border-radius:20px;font-size:11px;font-weight:500">Co-Lead: ${wsCoLeadFilter}<span onclick="wsCoLeadFilter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
   if(wsL1Filter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(16,185,129,.1);color:#10b981;border-radius:20px;font-size:11px;font-weight:500">${l1Workstreams.find(w=>w.id===wsL1Filter)?.name||'Parent'}<span onclick="wsL1Filter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
   if(wsPriorityFilter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(239,68,68,.1);color:#ef4444;border-radius:20px;font-size:11px;font-weight:500">Priority: ${wsPriorityFilter.charAt(0).toUpperCase()+wsPriorityFilter.slice(1)}<span onclick="wsPriorityFilter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
-  if(wsLensFilter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(14,165,233,.12);color:#0284c7;border-radius:20px;font-size:11px;font-weight:500">Lens: ${esc((HEARTBEAT_LENS_OPTS.find(o=>o.value===wsLensFilter)||{}).label||wsLensFilter)}<span onclick="wsLensFilter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
-  if(wsLifecycleFilter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(245,158,11,.12);color:#b45309;border-radius:20px;font-size:11px;font-weight:500">Lifecycle: ${esc((VERTICAL_LIFECYCLE_STAGES.find(s=>s.value===wsLifecycleFilter)||{}).label||wsLifecycleFilter)}<span onclick="wsLifecycleFilter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
+  if(wsLensFilter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(14,165,233,.12);color:#0284c7;border-radius:20px;font-size:11px;font-weight:500">Lens: ${wsLensFilter==='__unassigned__'?'No lens set':esc((HEARTBEAT_LENS_OPTS.find(o=>o.value===wsLensFilter)||{}).label||wsLensFilter)}<span onclick="wsLensFilter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
+  if(wsLifecycleFilter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(245,158,11,.12);color:#b45309;border-radius:20px;font-size:11px;font-weight:500">Vertical AI Lifecycle: ${esc((VERTICAL_LIFECYCLE_STAGES.find(s=>s.value===wsLifecycleFilter)||{}).label||wsLifecycleFilter)}<span onclick="wsLifecycleFilter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
   
   c.innerHTML=`
   <div class="page-wrap">
@@ -4049,10 +4193,11 @@ function rWorkstreamsNew(c){
         </select>
         <select style="padding:6px 10px;border-radius:6px;border:1px solid ${wsLensFilter?'#0284c7':'var(--border)'};background:${wsLensFilter?'rgba(14,165,233,.08)':'var(--bg-card)'};font-size:12px;color:var(--fg);max-width:200px" onchange="wsLensFilter=this.value;render()" title="Heartbeat lens">
           <option value="">Lens</option>
+          <option value="__unassigned__"${wsLensFilter==='__unassigned__'?' selected':''}>No lens set</option>
           ${HEARTBEAT_LENS_OPTS.map(o=>`<option value="${esc(o.value)}"${wsLensFilter===o.value?' selected':''}>${esc(o.label)}</option>`).join('')}
         </select>
-        <select style="padding:6px 10px;border-radius:6px;border:1px solid ${wsLifecycleFilter?'#b45309':'var(--border)'};background:${wsLifecycleFilter?'rgba(245,158,11,.1)':'var(--bg-card)'};font-size:12px;color:var(--fg);max-width:180px" onchange="wsLifecycleFilter=this.value;render()" title="Vertical lifecycle stage (pipeline L2)">
-          <option value="">Lifecycle</option>
+        <select style="padding:6px 10px;border-radius:6px;border:1px solid ${wsLifecycleFilter?'#b45309':'var(--border)'};background:${wsLifecycleFilter?'rgba(245,158,11,.1)':'var(--bg-card)'};font-size:12px;color:var(--fg);max-width:220px" onchange="wsLifecycleFilter=this.value;render()" title="Vertical AI lifecycle stage (AI for the Business pipeline L2)">
+          <option value="">Vertical AI Lifecycle</option>
           ${VERTICAL_LIFECYCLE_STAGES.map(s=>`<option value="${esc(s.value)}"${wsLifecycleFilter===s.value?' selected':''}>${esc(s.label)}</option>`).join('')}
         </select>
         ${filterChips.length?`<span style="color:var(--light);margin:0 4px">|</span>${filterChips.join('')}<button onclick="wsOwnerFilter='';wsCoLeadFilter='';wsL1Filter='';wsPriorityFilter='';wsLensFilter='';wsLifecycleFilter='';render()" style="padding:4px 8px;font-size:11px;background:none;border:none;color:var(--red);cursor:pointer;font-weight:500">Clear all</button>`:''}
@@ -4126,8 +4271,8 @@ function renderWsKanban(c,filteredWs,me,owners,l1Workstreams){
   const activeFiltersText=[];
   if(wsOwnerFilter)activeFiltersText.push('<span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Owner: '+(wsOwnerFilter==='__unassigned__'?'Unassigned':wsOwnerFilter)+'</span>');
   if(wsL1Filter)activeFiltersText.push('<span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">'+l1Workstreams.find(w=>w.id===wsL1Filter)?.name+'</span>');
-  if(wsLensFilter)activeFiltersText.push('<span style="background:#0284c7;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Lens: '+(HEARTBEAT_LENS_OPTS.find(o=>o.value===wsLensFilter)?.label||wsLensFilter)+'</span>');
-  if(wsLifecycleFilter)activeFiltersText.push('<span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Lifecycle: '+(VERTICAL_LIFECYCLE_STAGES.find(s=>s.value===wsLifecycleFilter)?.label||wsLifecycleFilter)+'</span>');
+  if(wsLensFilter)activeFiltersText.push('<span style="background:#0284c7;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Lens: '+(wsLensFilter==='__unassigned__'?'No lens set':(HEARTBEAT_LENS_OPTS.find(o=>o.value===wsLensFilter)?.label||wsLensFilter))+'</span>');
+  if(wsLifecycleFilter)activeFiltersText.push('<span style="background:#b45309;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">Vertical AI Lifecycle: '+(VERTICAL_LIFECYCLE_STAGES.find(s=>s.value===wsLifecycleFilter)?.label||wsLifecycleFilter)+'</span>');
 
   c.innerHTML=`
   <div class="page-wrap kb-page">
@@ -4154,10 +4299,11 @@ function renderWsKanban(c,filteredWs,me,owners,l1Workstreams){
           </select>
           <select style="padding:6px 10px;border-radius:var(--r-sm);${lensStyle};font-size:12px;min-width:140px;max-width:200px" onchange="wsLensFilter=this.value;render()" title="Heartbeat lens">
             <option value="">All lenses</option>
+            <option value="__unassigned__"${wsLensFilter==='__unassigned__'?' selected':''}>No lens set</option>
             ${HEARTBEAT_LENS_OPTS.map(o=>`<option value="${esc(o.value)}"${wsLensFilter===o.value?' selected':''}>${esc(o.label)}</option>`).join('')}
           </select>
-          <select style="padding:6px 10px;border-radius:var(--r-sm);${lcStyle};font-size:12px;min-width:130px;max-width:180px" onchange="wsLifecycleFilter=this.value;render()" title="Vertical lifecycle">
-            <option value="">All lifecycles</option>
+          <select style="padding:6px 10px;border-radius:var(--r-sm);${lcStyle};font-size:12px;min-width:160px;max-width:220px" onchange="wsLifecycleFilter=this.value;render()" title="Vertical AI lifecycle (pipeline L2)">
+            <option value="">All vertical AI lifecycles</option>
             ${VERTICAL_LIFECYCLE_STAGES.map(s=>`<option value="${esc(s.value)}"${wsLifecycleFilter===s.value?' selected':''}>${esc(s.label)}</option>`).join('')}
           </select>
           ${clearBtn}
@@ -4771,10 +4917,10 @@ function openWsEdit(id){
     <div class="fg"><label>Description</label><textarea id="ws-desc" style="min-height:60px">${w?esc(w.desc):''}</textarea></div>
     <div class="fg"><label>Business Outcome / Impact</label><textarea id="ws-businessOutcome" style="min-height:60px;font-size:12px" placeholder="1-2 sentences describing business impact">${w?esc(w.businessOutcome||''):''}</textarea></div>
     <div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)">
-      <h4 style="font-size:13px;font-weight:700;margin:0 0 8px">Vertical lifecycle &amp; heartbeat</h4>
-      <p style="font-size:12px;color:var(--muted);margin:0 0 12px">${hbHelp}Maps to the <strong>five lenses</strong> weekly heartbeat (Employee, Business, Grassroots, Praxo &amp; controls, Other / Program Level).</p>
+      <h4 style="font-size:13px;font-weight:700;margin:0 0 8px">Vertical AI Lifecycle &amp; heartbeat</h4>
+      <p style="font-size:12px;color:var(--muted);margin:0 0 12px">${hbHelp}Maps to the <strong>six lenses</strong> weekly heartbeat (Employee, Business, Grassroots, Praxo &amp; controls, Governance &amp; Compliance, Other / Program Level).</p>
       <div class="fg-row">
-        <div class="fg"><label>Vertical lifecycle stage</label><select id="ws-verticalLifecycleStage">${vStageOpts}</select></div>
+        <div class="fg"><label>Vertical AI lifecycle stage</label><select id="ws-verticalLifecycleStage">${vStageOpts}</select></div>
         <div class="fg"><label>Heartbeat lens</label><select id="ws-heartbeatLens">${lensOpts}</select></div>
       </div>
     </div>
@@ -4949,7 +5095,7 @@ function saveWs(id){
     const vls=vlsEl.value||'';
     const hl=hlEl.value||'';
     const vert=isVerticalAiPipelineWs(w);
-    if(vert&&(!vls||!hl)){toast('Vertical lifecycle stage and heartbeat lens are required for AI for the Business pipeline L2 workstreams');return}
+    if(vert&&(!vls||!hl)){toast('Vertical AI lifecycle stage and heartbeat lens are required for AI for the Business pipeline L2 workstreams');return}
     w.verticalLifecycleStage=vls||'not-started';
     w.heartbeatLens=hl||'ai-business';
   }
@@ -5094,6 +5240,7 @@ function rTasks(c){
     const saturdayStr=saturday.toISOString().slice(0,10);
     items=items.filter(t=>t.status!=='done'&&t.due&&t.due>=today()&&t.due<=saturdayStr);
   }
+  else if(taskFilter==='blockeddep')items=items.filter(t=>t.status!=='done'&&normalizeTaskStatus(t.status)==='blocked-dependency');
   
   if(taskOwnerFilter==='__unassigned__')items=items.filter(t=>!t.owner);
   else if(taskOwnerFilter)items=items.filter(t=>t.owner===taskOwnerFilter);
@@ -5117,6 +5264,7 @@ function rTasks(c){
     return D.tasks.filter(t=>t.status!=='done'&&t.due&&t.due>=today()&&t.due<=saturdayStr).length;
   })();
   const inboxCount=(D.inbox||[]).filter(x=>!x.processed).length;
+  const blockedDepCount=(D.tasks||[]).filter(t=>t.status!=='done'&&normalizeTaskStatus(t.status)==='blocked-dependency').length;
   const owners=[...new Set((D.tasks||[]).map(t=>t.owner).filter(Boolean))].sort();
   const sIco=(col)=>taskSort===col?(taskSortDir===1?' &#9650;':' &#9660;'):'';
   c.innerHTML=`
@@ -5128,6 +5276,7 @@ function rTasks(c){
       <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
       <div class="pill${taskFilter==='thisweek'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='thisweek';render()" style="${thisWeekCount?'':'opacity:.6'}">&#128197; This Week (${thisWeekCount})</div>
       <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
+      <div class="pill${taskFilter==='blockeddep'?' pill-r':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='blockeddep';render()" style="${blockedDepCount?'':'opacity:.6'}">Blocked (${blockedDepCount})</div>
       <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
       <div class="pill${taskStatusFilter==='done'?' pill-i':' pill-m'}" onclick="taskStatusFilter='done';taskFilter='all';render()" style="margin-left:auto">Done (${done})</div>
     </div>
@@ -5624,6 +5773,7 @@ function rKanban(c){
     const saturdayStr=saturday.toISOString().slice(0,10);
     items=items.filter(t=>t.status!=='done'&&t.due&&t.due>=today()&&t.due<=saturdayStr);
   }
+  else if(taskFilter==='blockeddep')items=items.filter(t=>t.status!=='done'&&normalizeTaskStatus(t.status)==='blocked-dependency');
   
   if(taskOwnerFilter==='__unassigned__')items=items.filter(t=>!t.owner);
   else if(taskOwnerFilter)items=items.filter(t=>t.owner===taskOwnerFilter);
@@ -5652,6 +5802,7 @@ function rKanban(c){
     return D.tasks.filter(t=>t.status!=='done'&&t.due&&t.due>=today()&&t.due<=saturdayStr).length;
   })();
   const inboxCount=(D.inbox||[]).filter(x=>!x.processed).length;
+  const blockedDepCount=(D.tasks||[]).filter(t=>t.status!=='done'&&normalizeTaskStatus(t.status)==='blocked-dependency').length;
   const owners=[...new Set((D.tasks||[]).map(t=>t.owner).filter(Boolean))].sort();
   const workstreams=allProgramWorkstreamsSorted();
 
@@ -5706,6 +5857,7 @@ function rKanban(c){
       <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
       <div class="pill${taskFilter==='thisweek'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='thisweek';render()" style="${thisWeekCount?'':'opacity:.6'}">&#128197; This Week (${thisWeekCount})</div>
       <div class="pill${taskFilter==='milestones'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='milestones';render()">&#9733; Milestones (${msCount})</div>
+      <div class="pill${taskFilter==='blockeddep'?' pill-r':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='blockeddep';render()" style="${blockedDepCount?'':'opacity:.6'}">Blocked (${blockedDepCount})</div>
       <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
       <div class="pill${taskStatusFilter==='done'?' pill-i':' pill-m'}" onclick="taskStatusFilter='done';taskFilter='all';render()" style="margin-left:auto">Done (${done})</div>
     </div>
@@ -6035,12 +6187,7 @@ function rWorkMetrics(c){
   const allTasks=(D.tasks||[]);
   const wsMap=new Map(allWs.map(w=>[w.id,w]));
   
-  function getWsLevel(ws){
-    if(!ws.parentWs)return 1;
-    const parent=wsMap.get(ws.parentWs);
-    if(!parent||!parent.parentWs)return 2;
-    return 3;
-  }
+  function getWsLevel(ws){return workstreamHierarchyLevel(ws,wsMap)}
   
   const closedStatuses=['closed','value-achieved','deferred-rejected'];
   const openWs=allWs.filter(w=>!closedStatuses.includes(normalizeWsStatus(w.status)));
@@ -6126,7 +6273,7 @@ function rWorkMetrics(c){
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
       <h1 style="font-size:24px;font-weight:600;color:var(--fg);margin:0">Metrics</h1>
     </div>
-    
+    ${buildDailyUpdatesTrackerHtml()}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
       <div class="card" style="padding:20px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -7143,7 +7290,7 @@ function openAtlasProgramPptxModal(){
     <p style="font-size:13px;color:var(--muted);margin:0 0 14px;line-height:1.5">Select slides to include (16:9, white background, Arial). Weekly Heartbeat uses OpenAI for a first draft when your API key is set; refine text in PowerPoint after download.</p>
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-pipeline" checked style="margin-top:3px"/> <span><strong>Vertical AI Pipeline</strong> — L2 “AI for the Business” workstreams and lifecycle bar</span></label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-heartbeat" checked style="margin-top:3px"/> <span><strong>Weekly Heartbeat (five lenses)</strong></span></label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-heartbeat" checked style="margin-top:3px"/> <span><strong>Weekly Heartbeat (six lenses)</strong></span></label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-resource" checked style="margin-top:3px"/> <span><strong>Resourcing summary</strong> — leads/co-leads and workstream counts</span></label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-health" checked style="margin-top:3px"/> <span><strong>Health / target date</strong> — red if past target date (not closed), else green</span></label>
     </div>
@@ -7182,14 +7329,14 @@ function isWsHealthPastDue(w){
   return w.targetDate<today();
 }
 function fallbackHeartbeatBullets(){
-  const out={aiEmployee:[],aiBusiness:[],grassroots:[],praxoTech:[],programLevel:[]};
-  const map={'ai-employee':'aiEmployee','ai-business':'aiBusiness','grassroots':'grassroots','praxo-tech':'praxoTech','program-level':'programLevel'};
+  const out={aiEmployee:[],aiBusiness:[],grassroots:[],praxoTech:[],govCompliance:[],programLevel:[]};
+  const map={'ai-employee':'aiEmployee','ai-business':'aiBusiness','grassroots':'grassroots','praxo-tech':'praxoTech','governance-compliance':'govCompliance','program-level':'programLevel'};
   (D.workstreams||[]).filter(isVerticalAiPipelineWs).forEach(w=>{
     const k=map[w.heartbeatLens]||'aiBusiness';
     const bit=`${w.name}: ${((w.desc||'').trim().slice(0,140))||wsStatusLabel(w.status)}${w.targetDate?' · Target '+fmtDate(w.targetDate):''}`;
     out[k].push(bit);
   });
-  ['aiEmployee','aiBusiness','grassroots','praxoTech','programLevel'].forEach(k=>{
+  ['aiEmployee','aiBusiness','grassroots','praxoTech','govCompliance','programLevel'].forEach(k=>{
     if(!out[k].length)out[k]=['No vertical workstreams tagged for this lens yet.'];
   });
   return out;
@@ -7198,7 +7345,7 @@ async function draftHeartbeatWithAi(){
   const verticals=(D.workstreams||[]).filter(isVerticalAiPipelineWs);
   if(!verticals.length)return fallbackHeartbeatBullets();
   const ctx=verticals.map(w=>`- ${w.name} | lens:${w.heartbeatLens} | lifecycle:${w.verticalLifecycleStage} | lead:${w.primaryOwner||'—'} | target:${w.targetDate||'—'} | status:${wsStatusLabel(w.status)}\n  ${(w.desc||'').trim().slice(0,320)}`).join('\n');
-  const sys=`You draft concise executive bullets for Digital Realty's AI Transformation Program. Output ONLY valid JSON (no markdown fences) with keys: aiEmployee, aiBusiness, grassroots, praxoTech, programLevel (Other / Program Level). Each value is an array of 2-4 short bullet strings (plain text). Use program data; say TBD only when nothing exists.`;
+  const sys=`You draft concise executive bullets for Digital Realty's AI Transformation Program. Output ONLY valid JSON (no markdown fences) with keys: aiEmployee, aiBusiness, grassroots, praxoTech, govCompliance (Governance & Compliance), programLevel (Other / Program Level). Each value is an array of 2-4 short bullet strings (plain text). Use program data; say TBD only when nothing exists.`;
   const raw=await callAI(sys,'Weekly heartbeat context:\n'+ctx+'\nToday: '+today(),{temperature:0.35});
   if(!raw)return null;
   let s=raw.trim();
@@ -7210,6 +7357,7 @@ async function draftHeartbeatWithAi(){
       aiBusiness:Array.isArray(j.aiBusiness)?j.aiBusiness:[],
       grassroots:Array.isArray(j.grassroots)?j.grassroots:[],
       praxoTech:Array.isArray(j.praxoTech)?j.praxoTech:[],
+      govCompliance:Array.isArray(j.govCompliance)?j.govCompliance:[],
       programLevel:Array.isArray(j.programLevel)?j.programLevel:[]
     };
   }catch(e){return null}
@@ -7364,7 +7512,7 @@ function openExecPptxSlideModal(){
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px">
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl1',saved.s1)} <span><strong>Slide 1 — Title</strong> — program title, subtitle, date</span></label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl2',saved.s2)} <span><strong>Slide 2 — Vertical AI pipeline</strong> — lifecycle bars, exec gate, above/below sections</span></label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl3',saved.s3)} <span><strong>Slide 3 — Weekly heartbeat</strong> — five lenses (AI uses your API key when set)</span></label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl3',saved.s3)} <span><strong>Slide 3 — Weekly heartbeat</strong> — six lenses (AI uses your API key when set)</span></label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl4',saved.s4)} <span><strong>Slide 4 — Workstream status</strong> — all program workstreams with Red / Yellow / Green</span></label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl5',saved.s5)} <span><strong>Slide 5 — Resource allocation</strong> — each lead/co-lead and assigned workstreams</span></label>
     </div>
@@ -7929,15 +8077,6 @@ function delDec(id){if(!confirm('Delete?'))return;D.decisions=(D.decisions||[]).
 // ═══════════════════════════════════════════════════
 const riskLevels=['low','medium','high','critical'];
 const riskStatuses=['open','mitigating','accepted','closed'];
-function rRisks(c){
-  const q=(document.getElementById('search')?.value||'').toLowerCase();
-  const items=(D.risks||[]).filter(r=>!q||r.title?.toLowerCase().includes(q)||r.mitigation?.toLowerCase().includes(q)).sort((a,b)=>{const o={critical:0,high:1,medium:2,low:3};return (o[a.impact]||2)-(o[b.impact]||2)});
-  c.innerHTML=`<div class="card"><div class="dash-hd" style="display:flex;justify-content:space-between;align-items:center">Risk Register <button class="mbtn mb-save" onclick="openRiskModal()">+ Risk</button></div>
-  <div style="padding:0 18px 14px">${items.length?`<table class="tbl"><thead><tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Status</th><th>Owner</th></tr></thead><tbody>${items.map(r=>{
-    const ic=r.impact==='critical'?'pill-r':r.impact==='high'?'pill-a':r.impact==='medium'?'pill-m':'pill-g';
-    const sc=r.status==='closed'?'pill-g':r.status==='accepted'?'pill-b':r.status==='mitigating'?'pill-a':'pill-r';
-    return `<tr style="cursor:pointer" onclick="openRiskModal('${r.id}')"><td><strong>${esc(r.title)}</strong>${r.mitigation?'<div style="font-size:11.5px;color:var(--muted);margin-top:2px">Mitigation: '+esc(r.mitigation)+'</div>':''}</td><td><span class="pill ${r.likelihood==='high'||r.likelihood==='critical'?'pill-r':r.likelihood==='medium'?'pill-a':'pill-g'}">${r.likelihood||'—'}</span></td><td><span class="pill ${ic}">${r.impact||'—'}</span></td><td><span class="pill ${sc}">${r.status}</span></td><td style="font-size:12px">${esc(r.owner||'')}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty"><h4>No risks logged</h4><p>Track regulatory, ethical, data privacy, vendor, and adoption risks.</p></div>'}</div></div>`;
-}
 function openRiskModal(id){
   const r=id?(D.risks||[]).find(x=>x.id===id):null;
   openModal(`<div class="m-hd"><h3>${r?'Edit':'New'} Risk</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
@@ -7975,10 +8114,43 @@ function saveRisk(id){
 }
 function delRisk(id){if(!confirm('Delete?'))return;D.risks=(D.risks||[]).filter(x=>x.id!==id);save();render();toast('Deleted')}
 
+function govRiskSortIco(col){return govRiskSort===col?(govRiskSortDir===1?' &#9650;':' &#9660;'):''}
+function govDecSortIco(col){return govDecSort===col?(govDecSortDir===1?' &#9650;':' &#9660;'):''}
+function sortGovRisks(col){
+  if(govRiskSort===col)govRiskSortDir*=-1;
+  else{govRiskSort=col;govRiskSortDir=1;}
+  render();
+}
+function sortGovDecisions(col){
+  if(govDecSort===col)govDecSortDir*=-1;
+  else{govDecSort=col;govDecSortDir=(col==='date'?-1:1);}
+  render();
+}
 function rGovernance(c){
   const q=(document.getElementById('search')?.value||'').toLowerCase();
-  const risks=(D.risks||[]).filter(r=>!q||r.title?.toLowerCase().includes(q)||r.mitigation?.toLowerCase().includes(q)).sort((a,b)=>{const o={critical:0,high:1,medium:2,low:3};return (o[a.impact]||2)-(o[b.impact]||2)});
-  const decisions=(D.decisions||[]).filter(d=>!q||d.title?.toLowerCase().includes(q)||d.rationale?.toLowerCase().includes(q)).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const riskImpactOrd={critical:0,high:1,medium:2,low:3};
+  const riskLikeOrd={critical:0,high:1,medium:2,low:3};
+  const risks=(D.risks||[]).filter(r=>!q||r.title?.toLowerCase().includes(q)||r.mitigation?.toLowerCase().includes(q));
+  risks.sort((a,b)=>{
+    const d=govRiskSortDir;
+    if(govRiskSort==='title')return d*(a.title||'').localeCompare(b.title||'');
+    if(govRiskSort==='likelihood')return d*((riskLikeOrd[a.likelihood]??2)-(riskLikeOrd[b.likelihood]??2));
+    if(govRiskSort==='impact')return d*((riskImpactOrd[a.impact]??2)-(riskImpactOrd[b.impact]??2));
+    if(govRiskSort==='status')return d*(a.status||'').localeCompare(b.status||'');
+    if(govRiskSort==='owner')return d*(a.owner||'').localeCompare(b.owner||'');
+    if(govRiskSort==='workstream')return d*wsNamePlain(a.workstream).localeCompare(wsNamePlain(b.workstream));
+    return 0;
+  });
+  const decisions=(D.decisions||[]).filter(d=>!q||d.title?.toLowerCase().includes(q)||d.rationale?.toLowerCase().includes(q));
+  decisions.sort((a,b)=>{
+    const d=govDecSortDir;
+    if(govDecSort==='date')return d*(a.date||'').localeCompare(b.date||'');
+    if(govDecSort==='title')return d*(a.title||'').localeCompare(b.title||'');
+    if(govDecSort==='status')return d*(a.status||'').localeCompare(b.status||'');
+    if(govDecSort==='decidedBy')return d*(a.decidedBy||'').localeCompare(b.decidedBy||'');
+    if(govDecSort==='workstream')return d*wsNamePlain(a.workstream).localeCompare(wsNamePlain(b.workstream));
+    return 0;
+  });
   const openRisks=risks.filter(r=>r.status!=='closed');
   const criticalRisks=openRisks.filter(r=>r.impact==='critical'||r.impact==='high');
   
@@ -7991,14 +8163,14 @@ function rGovernance(c){
   </div>
 
   ${govTab==='decisions'?`<div class="card"><div class="dash-hd" style="display:flex;justify-content:space-between;align-items:center">Decision Log <button class="mbtn mb-save" onclick="openDecModal()">+ Decision</button></div>
-  <div style="padding:0 18px 14px">${decisions.length?`<table class="tbl"><thead><tr><th style="white-space:nowrap;width:1%">Date</th><th>Decision</th><th>Status</th><th>Decided By</th><th>Workstream</th></tr></thead><tbody>${decisions.map(d=>{
+  <div style="padding:0 18px 14px">${decisions.length?`<table class="tbl"><thead><tr><th style="white-space:nowrap;width:1%;cursor:pointer" onclick="event.stopPropagation();sortGovDecisions('date')">Date${govDecSortIco('date')}</th><th style="cursor:pointer" onclick="event.stopPropagation();sortGovDecisions('title')">Decision${govDecSortIco('title')}</th><th style="cursor:pointer" onclick="event.stopPropagation();sortGovDecisions('status')">Status${govDecSortIco('status')}</th><th style="cursor:pointer" onclick="event.stopPropagation();sortGovDecisions('decidedBy')">Decided By${govDecSortIco('decidedBy')}</th><th style="cursor:pointer" onclick="event.stopPropagation();sortGovDecisions('workstream')">Workstream${govDecSortIco('workstream')}</th></tr></thead><tbody>${decisions.map(d=>{
     const sc=d.status==='approved'?'pill-g':d.status==='superseded'?'pill-r':d.status==='deferred'?'pill-a':'pill-m';
     return `<tr style="cursor:pointer" onclick="openDecModal('${d.id}')"><td style="font-size:12px;white-space:nowrap;vertical-align:top">${d.date?fmtDate(d.date):'—'}</td><td><strong>${esc(d.title)}</strong>${d.rationale?'<div style="font-size:11.5px;color:var(--muted);margin-top:2px">'+esc(d.rationale)+'</div>':''}</td><td><span class="pill ${sc}">${d.status}</span></td><td style="font-size:12px">${esc(d.decidedBy||'')}</td><td style="font-size:12px">${wsName(d.workstream)}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty"><h4>No decisions logged</h4><p>Track key decisions, architectural choices, and trade-offs. <button class="mbtn mb-save" style="margin-top:10px" onclick="openDecModal()">Add your first decision</button></p></div>'}</div></div>`
   :`<div class="card"><div class="dash-hd" style="display:flex;justify-content:space-between;align-items:center">Risk Register <button class="mbtn mb-save" onclick="openRiskModal()">+ Risk</button></div>
-  <div style="padding:0 18px 14px">${risks.length?`<table class="tbl"><thead><tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Status</th><th>Owner</th></tr></thead><tbody>${risks.map(r=>{
+  <div style="padding:0 18px 14px">${risks.length?`<table class="tbl"><thead><tr><th style="cursor:pointer" onclick="event.stopPropagation();sortGovRisks('title')">Risk${govRiskSortIco('title')}</th><th style="cursor:pointer" onclick="event.stopPropagation();sortGovRisks('likelihood')">Likelihood${govRiskSortIco('likelihood')}</th><th style="cursor:pointer" onclick="event.stopPropagation();sortGovRisks('impact')">Impact${govRiskSortIco('impact')}</th><th style="cursor:pointer" onclick="event.stopPropagation();sortGovRisks('status')">Status${govRiskSortIco('status')}</th><th style="cursor:pointer" onclick="event.stopPropagation();sortGovRisks('owner')">Owner${govRiskSortIco('owner')}</th><th style="cursor:pointer" onclick="event.stopPropagation();sortGovRisks('workstream')">Workstream${govRiskSortIco('workstream')}</th></tr></thead><tbody>${risks.map(r=>{
     const ic=r.impact==='critical'?'pill-r':r.impact==='high'?'pill-a':r.impact==='medium'?'pill-m':'pill-g';
     const sc=r.status==='closed'?'pill-g':r.status==='accepted'?'pill-b':r.status==='mitigating'?'pill-a':'pill-r';
-    return `<tr style="cursor:pointer" onclick="openRiskModal('${r.id}')"><td><strong>${esc(r.title)}</strong>${r.mitigation?'<div style="font-size:11.5px;color:var(--muted);margin-top:2px">Mitigation: '+esc(r.mitigation)+'</div>':''}</td><td><span class="pill ${r.likelihood==='high'||r.likelihood==='critical'?'pill-r':r.likelihood==='medium'?'pill-a':'pill-g'}">${r.likelihood||'—'}</span></td><td><span class="pill ${ic}">${r.impact||'—'}</span></td><td><span class="pill ${sc}">${r.status}</span></td><td style="font-size:12px">${esc(r.owner||'')}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty"><h4>No risks logged</h4><p>Track regulatory, ethical, data privacy, vendor, and adoption risks. <button class="mbtn mb-save" style="margin-top:10px" onclick="openRiskModal()">Add your first risk</button></p></div>'}</div></div>`}
+    return `<tr style="cursor:pointer" onclick="openRiskModal('${r.id}')"><td><strong>${esc(r.title)}</strong>${r.mitigation?'<div style="font-size:11.5px;color:var(--muted);margin-top:2px">Mitigation: '+esc(r.mitigation)+'</div>':''}</td><td><span class="pill ${r.likelihood==='high'||r.likelihood==='critical'?'pill-r':r.likelihood==='medium'?'pill-a':'pill-g'}">${r.likelihood||'—'}</span></td><td><span class="pill ${ic}">${r.impact||'—'}</span></td><td><span class="pill ${sc}">${r.status}</span></td><td style="font-size:12px">${esc(r.owner||'')}</td><td style="font-size:12px">${wsName(r.workstream)}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty"><h4>No risks logged</h4><p>Track regulatory, ethical, data privacy, vendor, and adoption risks. <button class="mbtn mb-save" style="margin-top:10px" onclick="openRiskModal()">Add your first risk</button></p></div>'}</div></div>`}
   `;
 }
 
