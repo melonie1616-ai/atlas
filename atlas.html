@@ -82,7 +82,9 @@ body.nav-collapsed .main{margin-left:54px}
 .topbar-menu{display:none;background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;margin-right:8px;transition:color .15s}
 .topbar-menu:hover{color:var(--text)}
 body.nav-collapsed .topbar-menu{display:flex}
-.side-hd .top-row{display:flex;align-items:center;gap:10px}
+.side-hd .top-row{display:flex;align-items:center;gap:10px;cursor:pointer;border-radius:var(--r-sm);padding:2px 4px;margin:-2px -4px;transition:background .15s,opacity .15s}
+.side-hd .top-row:hover{background:rgba(255,255,255,.06)}
+.side-hd .top-row:active{opacity:.88}
 .side-hd .logo{width:30px;height:30px;background:rgba(99,102,241,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:4px}
 .side-hd h1{font-size:16px;font-weight:800;color:#e8e8f0;line-height:1;letter-spacing:.4px;margin:0}
 .side-hd .sub{font-size:11px;font-weight:500;color:#a0a0c0;display:block;letter-spacing:.2px;margin-top:6px}
@@ -100,10 +102,9 @@ body.nav-collapsed .topbar-menu{display:flex}
 .ni{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:1px 0;border-radius:var(--r-sm);font-size:15px;color:#d8d8ea;cursor:pointer;transition:all .15s;position:relative;border-left:2px solid transparent}
 .ni:hover{background:rgba(255,255,255,.07);color:#f4f4ff}
 .ni.on{background:rgba(99,102,241,.12);color:#f0f0ff;font-weight:600;border-left-color:var(--accent)}
-.ni.nav-mw-week-pending{border-left:4px solid #f59e0b!important;background:linear-gradient(90deg,rgba(245,158,11,.26) 0%,rgba(245,158,11,.07) 65%)!important;box-shadow:inset 0 0 0 1px rgba(245,158,11,.4)}
-.ni.nav-mw-week-pending.on{background:linear-gradient(90deg,rgba(245,158,11,.32) 0%,rgba(245,158,11,.12) 65%)!important;border-left-color:#f59e0b!important}
-.ni.nav-mw-week-ok{border-left:4px solid #22c55e!important;background:linear-gradient(90deg,rgba(34,197,94,.18) 0%,rgba(34,197,94,.05) 65%)!important;box-shadow:inset 0 0 0 1px rgba(34,197,94,.28)}
-.ni.nav-mw-week-ok.on{background:linear-gradient(90deg,rgba(34,197,94,.24) 0%,rgba(34,197,94,.08) 65%)!important;border-left-color:#22c55e!important}
+/* My Work: week status is icon-only (no full-row highlight); nav .on is not applied on that item in go() */
+.ni.nav-mw-week-pending{border-left:2px solid transparent!important;background:transparent!important;box-shadow:none!important}
+.ni.nav-mw-week-ok{border-left:2px solid transparent!important;background:transparent!important;box-shadow:none!important}
 .nav-mw-week-ic{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;flex-shrink:0;transition:background .15s,color .15s}
 .ni.nav-mw-week-pending .nav-mw-week-ic{background:rgba(245,158,11,.42);color:#fffbeb;box-shadow:0 0 0 1px rgba(245,158,11,.5)}
 .ni.nav-mw-week-ok .nav-mw-week-ic{background:rgba(34,197,94,.4);color:#ecfdf5;box-shadow:0 0 0 1px rgba(34,197,94,.45)}
@@ -655,9 +656,9 @@ body.nav-collapsed .topbar-menu{display:flex}
 
 <nav class="side" id="sidebar">
   <div class="side-hd" style="position:relative">
-    <div class="top-row">
-      <div class="logo" style="background:transparent;padding:0"><img src="favicon.svg" alt="ATLAS" style="width:100%;height:100%;object-fit:contain"></div>
-      <h1>ATLAS</h1>
+    <div class="top-row" role="button" tabindex="0" title="Go to Dashboard" onclick="go('dashboard')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();go('dashboard')}">
+      <div class="logo" style="background:transparent;padding:0"><img src="favicon.svg" alt="" style="width:100%;height:100%;object-fit:contain"></div>
+      <h1 style="margin:0">ATLAS</h1>
     </div>
     <button class="side-collapse-btn" onclick="toggleSidebar()" title="Collapse sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg></button>
     <span class="sub">AI Transformation Program</span>
@@ -785,9 +786,23 @@ const RELEASE_NOTES=[
 ];
 const uid=()=>Math.random().toString(36).slice(2,10);
 const today=()=>new Date().toISOString().slice(0,10);
+/** Parse YYYY-MM-DD as a local calendar date (avoid UTC midnight shift from new Date('YYYY-MM-DD')). */
+function parseLocalYmd(ymd){
+  const p=String(ymd||'').trim().split('-').map(Number);
+  if(p.length!==3||!p[0]||p[1]<1||p[1]>12)return new Date();
+  return new Date(p[0],p[1]-1,p[2]);
+}
+function addLocalDays(d,n){
+  return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
+}
+function toLocalYmd(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
 const esc=s=>s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):'';
 /** My Work → This Week: AI Transformation Program site (SharePoint folder / program resources). */
 const ATLAS_AI_PROG_TEAMS_URL='https://digitalrealtyeur.sharepoint.com/:f:/s/AITransformationProgram/IgB_K6UzRpTJSardB8PtqQ5oAZ-JMWyqNSsRuyHACrl_1N0?e=YUjQng';
+const DIGEST_ATLAS_URL='https://melonie1616-ai.github.io/atlas/';
+const DIGEST_TEAMS_FILES_URL='https://digitalrealtyeur.sharepoint.com/sites/AITransformationProgram/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FAITransformationProgram%2FShared%20Documents%2FGeneral&viewid=be024a85%2D931b%2D4a01%2Dacac%2D217f020d89c0';
 const fmtDate=d=>d?new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
 function timeAgo(iso){
   if(!iso)return '';
@@ -1687,7 +1702,7 @@ function go(v){
   V=v;
   if(v==='mywork')myWorkTab='week';
   try{localStorage.setItem('atlas_view',v);}catch(e){}
-  document.querySelectorAll('.ni').forEach(n=>n.classList.toggle('on',n.dataset.v===v));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.toggle('on',n.dataset.v===v&&n.dataset.v!=='mywork'));
   document.querySelectorAll('.nav-section').forEach(sec=>{
     if(sec.querySelector('.ni.on'))sec.classList.remove('collapsed');
     const arrow=sec.querySelector('.nav-arrow');
@@ -2725,11 +2740,13 @@ const engTypeColors={'Use Case':'pill-i','Question':'pill-b','Tool Evaluation':'
 // ═══════════════════════════════════════════════════
 // DAILY DIGEST
 // ═══════════════════════════════════════════════════
-function generateDailyDigest(){
+/** @param {{forEmail?:boolean}} [opts] forEmail: omit header stat cards + Action Required (for Outlook/Teams copy & preview); dashboard modal adds those separately. */
+function generateDailyDigest(opts){
+  opts=opts||{};
+  const forEmail=!!opts.forEmail;
   const todayStr=today();
-  const todayDate=new Date(todayStr);
-  const sevenDaysOut=new Date(todayDate.getTime()+7*24*60*60*1000);
-  const sevenDaysStr=sevenDaysOut.toISOString().slice(0,10);
+  const todayDate=parseLocalYmd(todayStr);
+  const sevenDaysStr=toLocalYmd(addLocalDays(todayDate,7));
   
   const allWs=(D.workstreams||[]);
   const allTasks=(D.tasks||[]);
@@ -2748,9 +2765,6 @@ function generateDailyDigest(){
   const blockedTasks=openTasks.filter(t=>normalizeTaskStatus(t.status)==='blocked-dependency');
   
   const dateStr=todayDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  
-  const atlasUrl='https://melonie1616-ai.github.io/atlas/';
-  const teamsUrl='https://digitalrealtyeur.sharepoint.com/sites/AITransformationProgram/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FAITransformationProgram%2FShared%20Documents%2FGeneral&viewid=be024a85%2D931b%2D4a01%2Dacac%2D217f020d89c0';
   
   function fmtDateShort(d){
     if(!d)return '';
@@ -2809,21 +2823,20 @@ function generateDailyDigest(){
   <div class="header">
     <h1>📊 AI Transformation Program - Daily Update</h1>
     <p>${dateStr}</p>
-    <div class="stats">
+    ${forEmail?'':`<div class="stats">
       <div class="stat"><div class="stat-num">${overdueWs.length+overdueTasks.length}</div><div class="stat-label">OVERDUE</div></div>
       <div class="stat"><div class="stat-num">${dueSoonWs.length+dueSoonTasks.length}</div><div class="stat-label">DUE THIS WEEK</div></div>
       <div class="stat"><div class="stat-num">${blockedTasks.length}</div><div class="stat-label">BLOCKED</div></div>
-    </div>
+    </div>`}
   </div>
-  
-  <div class="cta">
+  ${forEmail?'':`<div class="cta">
     <h3>✅ Action Required</h3>
     <ul>
-      <li><strong>Update your items:</strong> Review and update Workstreams and Action Items you own. <a href="${atlasUrl}" target="_blank">Open ATLAS →</a></li>
+      <li><strong>Update your items:</strong> Review and update Workstreams and Action Items you own. <a href="${DIGEST_ATLAS_URL}" target="_blank">Open ATLAS →</a></li>
       <li><strong>Add missing work:</strong> If you're working on something NOT documented in ATLAS, please add it now.</li>
-      <li><strong>Upload documents:</strong> Move all AI Program documents to our Teams site. <a href="${teamsUrl}" target="_blank">Open AI Program Files →</a></li>
+      <li><strong>Upload documents:</strong> Move all AI Program documents to our Teams site. <a href="${DIGEST_TEAMS_FILES_URL}" target="_blank">Open AI Program Files →</a></li>
     </ul>
-  </div>`;
+  </div>`}`;
 
   if(overdueWs.length||overdueTasks.length){
     html+=`<div class="section"><h2>⚠️ Past Due (${overdueWs.length+overdueTasks.length})</h2>
@@ -2875,10 +2888,38 @@ function generateDailyDigest(){
 }
 
 function openDailyDigestModal(){
-  const html=generateDailyDigest();
+  const snap=getDailyDigestStructured();
+  const html=generateDailyDigest({forEmail:true});
+  const od=snap.overdueWs.length+snap.overdueTasks.length;
+  const due=snap.dueSoonWs.length+snap.dueSoonTasks.length;
+  const blk=snap.blockedTasks.length;
+  const dashBanner=`<div style="margin-bottom:16px;padding:14px 16px;border-radius:var(--r-md);border:1px solid var(--border-lt);background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(139,92,246,.08))">
+    <p style="font-size:12px;color:var(--muted);margin:0 0 12px;line-height:1.45">Summary for <strong style="color:var(--text)">${esc(snap.dateStr)}</strong> — shown only here. The HTML below is the <strong>email/report</strong> version (tables only; no stat cards or Action Required block).</p>
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <div style="flex:1;min-width:88px;text-align:center;padding:10px 8px;border-radius:8px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25)">
+        <div style="font-size:22px;font-weight:800;color:var(--text)">${od}</div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)">Overdue</div>
+      </div>
+      <div style="flex:1;min-width:88px;text-align:center;padding:10px 8px;border-radius:8px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25)">
+        <div style="font-size:22px;font-weight:800;color:var(--text)">${due}</div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)">Due this week</div>
+      </div>
+      <div style="flex:1;min-width:88px;text-align:center;padding:10px 8px;border-radius:8px;background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.3)">
+        <div style="font-size:22px;font-weight:800;color:var(--text)">${blk}</div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)">Blocked</div>
+      </div>
+    </div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text)">Action required</div>
+    <ul style="margin:0;padding-left:18px;font-size:13px;color:var(--muted);line-height:1.55">
+      <li><strong>Update your items:</strong> Review and update Workstreams and Action Items you own. <a href="${esc(DIGEST_ATLAS_URL)}" target="_blank" rel="noopener">Open ATLAS →</a></li>
+      <li><strong>Add missing work:</strong> If you're working on something NOT documented in ATLAS, please add it now.</li>
+      <li><strong>Upload documents:</strong> Move all AI Program documents to our Teams site. <a href="${esc(DIGEST_TEAMS_FILES_URL)}" target="_blank" rel="noopener">Open AI Program Files →</a></li>
+    </ul>
+  </div>`;
   openModal(`<div class="m-hd"><h3>Daily Digest</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
-    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Copy this HTML and paste into Outlook or Teams to share with the team.</p>
+    ${dashBanner}
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Copy the HTML below and paste into Outlook or Teams to share with the team.</p>
     <div style="display:flex;gap:8px;margin-bottom:16px">
       <button onclick="copyDailyDigest()" class="mbtn mb-save" style="flex:1">📋 Copy to Clipboard</button>
       <button onclick="previewDailyDigest()" class="mbtn mb-add" style="flex:1">👁️ Preview</button>
@@ -2897,7 +2938,7 @@ function copyDailyDigest(){
 }
 
 function previewDailyDigest(){
-  const html=generateDailyDigest();
+  const html=generateDailyDigest({forEmail:true});
   const win=window.open('','_blank','width=750,height=800');
   win.document.write(html);
   win.document.close();
@@ -2961,27 +3002,27 @@ function renderExecutiveSnapshotHtml(){
   const wsBarChart=wsLeadList.length?wsLeadList.map(([name,c])=>{
     const pct=Math.round(c/maxWsLead*100);
     const short=name.includes(' ')?name.split(' ')[0]:name;
-    return`<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:12px">
-      <div style="width:108px;flex-shrink:0;font-weight:600;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(name)}">${esc(short)}</div>
-      <div style="flex:1;height:24px;background:var(--bg-subtle);border-radius:999px;overflow:hidden;border:1px solid #bfdbfe">
-        <div style="width:${pct}%;min-width:${c?6:0}px;height:100%;background:linear-gradient(90deg,#60a5fa,#2563eb);border-radius:999px;transition:width .4s ease"></div>
+    return`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:11px">
+      <div style="width:76px;flex-shrink:0;font-weight:600;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(name)}">${esc(short)}</div>
+      <div style="flex:1;height:16px;background:rgba(255,255,255,.65);border-radius:999px;overflow:hidden;border:1px solid #ddd6fe">
+        <div style="width:${pct}%;min-width:${c?4:0}px;height:100%;background:linear-gradient(90deg,#a78bfa,#6d28d9);border-radius:999px;transition:width .4s ease"></div>
       </div>
-      <span style="width:28px;text-align:right;font-weight:800;color:#1d4ed8;flex-shrink:0">${c}</span>
+      <span style="width:22px;text-align:right;font-weight:800;color:#5b21b6;flex-shrink:0;font-size:11px">${c}</span>
     </div>`;
-  }).join(''):'<div style="padding:16px;color:var(--muted);font-size:13px;border:1px dashed var(--border);border-radius:12px">No lead assignments.</div>';
+  }).join(''):'<div style="padding:12px;color:var(--muted);font-size:12px;border:1px dashed var(--border);border-radius:10px">No lead assignments.</div>';
   const maxTaskOwn=Math.max(1,...taskOwnerList.map(([,c])=>c));
-  const chartH=160;
-  const taskColChart=taskOwnerList.length?`<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:4px;width:100%;height:${chartH+36}px;padding:8px 4px 0;border:1px solid #bfdbfe;border-radius:12px;background:linear-gradient(180deg,#f8fafc,#eff6ff);box-sizing:border-box">
+  const chartH=100;
+  const taskColChart=taskOwnerList.length?`<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:2px;width:100%;height:${chartH+28}px;padding:4px 2px 0;border:1px solid #5eead4;border-radius:10px;background:linear-gradient(180deg,#f0fdfa,#ecfdf5);box-sizing:border-box">
     ${taskOwnerList.map(([name,c])=>{
-      const barH=Math.max(c?6:0,Math.round(c/maxTaskOwn*chartH));
-      const short=name.includes(' ')?name.split(' ')[0]:name.slice(0,8);
+      const barH=Math.max(c?4:0,Math.round(c/maxTaskOwn*chartH));
+      const short=name.includes(' ')?name.split(' ')[0]:name.slice(0,7);
       return`<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">
-        <span style="font-size:11px;font-weight:800;color:#1d4ed8;margin-bottom:4px">${c}</span>
-        <div style="width:min(72px,85%);height:${barH}px;background:linear-gradient(180deg,#38bdf8,#1d4ed8);border-radius:8px 8px 2px 2px;box-shadow:0 2px 6px rgba(29,78,216,.25)"></div>
-        <div style="font-size:10px;font-weight:600;color:#475569;margin-top:8px;text-align:center;line-height:1.15;max-height:36px;overflow:hidden" title="${esc(name)}">${esc(short)}</div>
+        <span style="font-size:10px;font-weight:800;color:#0f7669;margin-bottom:2px">${c}</span>
+        <div style="width:min(100%,28px);height:${barH}px;background:linear-gradient(180deg,#2dd4bf,#0f7669);border-radius:6px 6px 2px 2px;box-shadow:0 1px 4px rgba(15,118,110,.28)"></div>
+        <div style="font-size:9px;font-weight:600;color:#115e59;margin-top:4px;text-align:center;line-height:1.1;max-height:28px;overflow:hidden" title="${esc(name)}">${esc(short)}</div>
       </div>`;
     }).join('')}
-  </div>`:'<div style="padding:16px;color:var(--muted);font-size:13px;border:1px dashed var(--border);border-radius:12px">No open owners.</div>';
+  </div>`:'<div style="padding:12px;color:var(--muted);font-size:12px;border:1px dashed var(--border);border-radius:10px">No open owners.</div>';
   return`
   <div class="ws-section" id="dashSec-exec" style="margin-bottom:20px;width:100%;box-sizing:border-box">
     <div class="ws-section-hd" onclick="toggleWsSection('dashSec-exec')" style="background:var(--bg-card);padding:14px 18px;border-radius:var(--r-sm) var(--r-sm) 0 0;border:1px solid var(--border)"><h4 style="font-size:16px;font-weight:800;color:var(--text)">Executive snapshot</h4><span class="ws-section-arrow">&#9660;</span></div>
@@ -3012,21 +3053,21 @@ function renderExecutiveSnapshotHtml(){
         <div style="font-size:11px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px">Workstreams by heartbeat lens</div>
         <div style="display:flex;flex-wrap:wrap;align-items:center;width:100%;gap:4px">${lensRows.map((o,i)=>lensPill(o,i)).join('')}${lensUnassigned}</div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:18px;width:100%;align-items:stretch;box-sizing:border-box">
-        <div style="padding:12px 14px;border-radius:14px;border:1px solid #bfdbfe;background:linear-gradient(180deg,#ffffff,#f8fafc);width:100%;box-sizing:border-box">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <span style="font-size:11px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.04em">Workstreams per team member</span>
-            <button type="button" class="mbtn mb-add" style="font-size:11px;padding:4px 10px" onclick="go('workmetrics')">Metrics</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;align-items:stretch;box-sizing:border-box">
+        <div style="padding:10px 12px;border-radius:12px;border:1px solid #ddd6fe;background:linear-gradient(180deg,#faf5ff,#f3e8ff);min-width:0;box-sizing:border-box">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px">
+            <span style="font-size:10px;font-weight:700;color:#5b21b6;text-transform:uppercase;letter-spacing:.04em;line-height:1.2">Workstreams per team member</span>
+            <button type="button" class="mbtn mb-add" style="font-size:10px;padding:3px 8px;flex-shrink:0" onclick="go('workmetrics')">Metrics</button>
           </div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Lead only · top ${wsLeadList.length||0}</div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:6px">Lead only · top ${wsLeadList.length||0}</div>
           ${wsBarChart}
         </div>
-        <div style="padding:12px 14px;border-radius:14px;border:1px solid #bfdbfe;background:linear-gradient(180deg,#ffffff,#f8fafc);width:100%;box-sizing:border-box">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <span style="font-size:11px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.04em">Open action items by owner</span>
-            <button type="button" class="mbtn mb-add" style="font-size:11px;padding:4px 10px" onclick="go('workmetrics')">Metrics</button>
+        <div style="padding:10px 12px;border-radius:12px;border:1px solid #99f6e4;background:linear-gradient(180deg,#f0fdfa,#ecfdf5);min-width:0;box-sizing:border-box">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px">
+            <span style="font-size:10px;font-weight:700;color:#0f7669;text-transform:uppercase;letter-spacing:.04em;line-height:1.2">Open action items by owner</span>
+            <button type="button" class="mbtn mb-add" style="font-size:10px;padding:3px 8px;flex-shrink:0" onclick="go('workmetrics')">Metrics</button>
           </div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Column chart · top ${taskOwnerList.length||0}</div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:6px">Column chart · top ${taskOwnerList.length||0}</div>
           ${taskColChart}
         </div>
       </div>
@@ -7277,17 +7318,22 @@ async function generateAtlasProgramPptx(opts){
     s.background={fill:'FFFFFF'};
     s.addText('Vertical AI | Pipeline',{x:0.5,y:0.35,w:12,h:0.45,fontSize:20,bold:true,color:BLACK,fontFace:'Arial'});
     s.addText(dateStr,{x:0.5,y:0.78,w:6,h:0.22,fontSize:11,color:'666666',fontFace:'Arial'});
-    if(pipeProgFallbackNote)s.addText(pipeProgFallbackNote,{x:0.5,y:0.96,w:12,h:0.24,fontSize:6.5,color:'B45309',fontFace:'Arial',wrap:true});
-    if(opts.aboveLine)s.addText(opts.aboveLine,{x:0.5,y:pipeProgFallbackNote?1.2:1.0,w:12,h:0.2,fontSize:10,color:GRAY,fontFace:'Arial'});
-    const labelW=2.85,trackL=0.5+labelW,trackW=9.5,stageN=5,segW=trackW/stageN;
+    if(pipeProgFallbackNote)s.addText(pptxSanitize(pipeProgFallbackNote,800),{x:0.5,y:0.96,w:12,h:0.24,fontSize:6.5,color:'B45309',fontFace:'Arial',wrap:true});
+    if(opts.aboveLine)s.addText(pptxSanitize(opts.aboveLine,400),{x:0.5,y:pipeProgFallbackNote?1.2:1.0,w:12,h:0.2,fontSize:10,color:GRAY,fontFace:'Arial'});
+    const slideW=13.333,leftM=0.5,labelW=2.65,noteGap=0.08,minNoteW=1.45,rightM=0.38;
+    const trackL=leftM+labelW;
+    const trackW=Math.max(5.2,slideW-trackL-noteGap-minNoteW-rightM);
+    const noteX=trackL+trackW+noteGap;
+    const noteW=Math.max(0.55,slideW-noteX-rightM);
+    const stageN=VERTICAL_LIFECYCLE_STAGES.length,segW=trackW/stageN;
     let barTop=opts.aboveLine?1.28:1.12;
     if(pipeProgFallbackNote)barTop+=0.22;
     VERTICAL_LIFECYCLE_STAGES.forEach((st,i)=>{
-      s.addText(st.label,{x:trackL+i*segW,y:barTop,w:segW,h:0.2,fontSize:8,color:BLACK,fontFace:'Arial',align:'center'});
+      s.addText(pptxSanitize(st.label,80),{x:trackL+i*segW,y:barTop,w:segW,h:0.2,fontSize:8,color:BLACK,fontFace:'Arial',align:'center'});
     });
-    const gateTxt=opts.execGate||'▼ Exec Committee Gate';
-    s.addText(gateTxt,{x:trackL+3.5*segW-0.1,y:barTop-0.12,w:segW*1.2,h:0.28,fontSize:7,color:RED,fontFace:'Arial',align:'center',bold:true});
-    if(opts.belowLine)s.addText(opts.belowLine,{x:0.5,y:barTop+0.35,w:12,h:0.18,fontSize:10,color:GRAY,fontFace:'Arial'});
+    const gateTxtProg=pptxSanitize(opts.execGate||'▼ Exec Committee Gate',400);
+    s.addText(gateTxtProg,{x:trackL+3.5*segW-0.1,y:barTop-0.12,w:segW*1.2,h:0.28,fontSize:7,color:RED,fontFace:'Arial',align:'center',bold:true});
+    if(opts.belowLine)s.addText(pptxSanitize(opts.belowLine,400),{x:0.5,y:barTop+0.35,w:12,h:0.18,fontSize:10,color:GRAY,fontFace:'Arial'});
     let rowY=barTop+0.42+(opts.belowLine?0.2:0);
     const rowMax=12;
     const slice=verticalRows.slice(0,rowMax);
@@ -7295,10 +7341,10 @@ async function generateAtlasProgramPptx(opts){
     slice.forEach(w=>{
       const vi=verticalLifecycleIndex(w.verticalLifecycleStage);
       const fillW=trackW*((vi+1)/stageN);
-      s.addText(w.name,{x:0.5,y:rowY,w:labelW-0.15,h:rowH,fontSize:slice.length>8?9:10,color:BLACK,fontFace:'Arial',bold:true,valign:'middle'});
-      s.addShape(pptx.ShapeType.rect,{x:trackL,y:rowY+0.06,w:fillW,h:0.2,fill:{color:'4472C4'},line:{color:'CCCCCC',width:0.5}});
+      s.addText(pptxSanitize(w.name,500),{x:leftM,y:rowY,w:labelW-0.12,h:rowH,fontSize:slice.length>8?9:10,color:BLACK,fontFace:'Arial',bold:true,valign:'middle'});
+      s.addShape(pptx.ShapeType.rect,{x:trackL,y:rowY+0.06,w:Math.min(trackW,Math.max(0.02,fillW)),h:0.2,fill:{color:'4472C4'},line:{color:'CCCCCC',width:1}});
       const one=atlasProgPipeAi[w.id]||((w.desc||'').trim().slice(0,100)||wsStatusLabel(w.status));
-      s.addText(one,{x:trackL+trackW+0.08,y:rowY,w:13.2-trackL-trackW-0.5,h:rowH,fontSize:8,color:GRAY,fontFace:'Arial',valign:'middle'});
+      s.addText(pptxSanitize(String(one),600),{x:noteX,y:rowY,w:noteW,h:rowH,fontSize:8,color:GRAY,fontFace:'Arial',valign:'middle',wrap:true});
       rowY+=rowH+0.06;
     });
     if(!slice.length)s.addText('No workstreams under AI for the Business matched this slide — set parent L1, depth (L2), and vertical lifecycle where applicable.',{x:0.5,y:rowY,w:12,h:0.5,fontSize:11,color:'666666',fontFace:'Arial'});
@@ -7723,9 +7769,8 @@ async function openProgramReportSlidePreview(slideNum){
 }
 function getDailyDigestStructured(){
   const todayStr=today();
-  const todayDate=new Date(todayStr);
-  const sevenDaysOut=new Date(todayDate.getTime()+7*24*60*60*1000);
-  const sevenDaysStr=sevenDaysOut.toISOString().slice(0,10);
+  const todayDate=parseLocalYmd(todayStr);
+  const sevenDaysStr=toLocalYmd(addLocalDays(todayDate,7));
   const allWs=D.workstreams||[];
   const allTasks=D.tasks||[];
   const closedStatuses=['closed','value-achieved','deferred-rejected'];
@@ -7738,6 +7783,26 @@ function getDailyDigestStructured(){
   const blockedTasks=openTasks.filter(t=>normalizeTaskStatus(t.status)==='blocked-dependency');
   const dateStr=todayDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   return{overdueWs,overdueTasks,dueSoonWs,dueSoonTasks,blockedTasks,dateStr};
+}
+/** Strip XML-incompatible control chars; optional max length for PptxGenJS / Office stability. */
+function pptxSanitize(str,maxLen){
+  if(str==null||str===undefined)return'';
+  let s=String(str).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g,'');
+  const n=maxLen==null?0:Number(maxLen);
+  if(n>0&&s.length>n)s=s.slice(0,n)+'\u2026';
+  return s;
+}
+/** Some Office builds reject tables with an odd total row count; pad with a blank row. */
+function pptxTableRowsPadEven(rows){
+  const out=rows.slice();
+  if(out.length%2===1){
+    out.push([
+      {text:' ',options:{fontFace:'Arial',fontSize:8,color:'FFFFFF'}},
+      {text:' ',options:{fontFace:'Arial',fontSize:8,color:'FFFFFF'}},
+      {text:' ',options:{fontFace:'Arial',fontSize:8,color:'FFFFFF'}}
+    ]);
+  }
+  return out;
 }
 async function exportExecPptx(opts){
   if(typeof PptxGenJS==='undefined'){toast('PptxGenJS library not loaded');return}
@@ -7757,6 +7822,10 @@ async function exportExecPptx(opts){
   const gateTxt=(opts.execGate!=null&&String(opts.execGate).trim())?String(opts.execGate).trim():((D.pptxExportLabels||{}).execGate||'▼ Exec Committee Gate');
   const aboveCap=(opts.aboveLine!=null)?String(opts.aboveLine).trim():((D.pptxExportLabels||{}).aboveLine||'');
   const belowCap=(opts.belowLine!=null)?String(opts.belowLine).trim():((D.pptxExportLabels||{}).belowLine||'');
+  const gateTxtX=pptxSanitize(gateTxt,500);
+  const aboveCapX=pptxSanitize(aboveCap,400);
+  const belowCapX=pptxSanitize(belowCap,400);
+  const pipeNoteX=pptxSanitize(pipeDeckFallbackNote,800);
   const dateStr=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
   const BLACK='000000',GRAY='333333',NAVY='00274C';
   let page=0;
@@ -7768,8 +7837,8 @@ async function exportExecPptx(opts){
     page++;
     const s=pptx.addSlide();
     s.background={fill:'FFFFFF'};
-    s.addText(er.titleText||'AI Transformation\nProgram Update',{x:0.5,y:2.15,w:12,h:1.35,fontSize:34,bold:true,color:NAVY,fontFace:'Arial',lineSpacingMultiple:1.08});
-    s.addText(er.subtitleText||'Corporate Data & AI Office',{x:0.5,y:3.75,w:10,h:0.75,fontSize:17,color:'666666',fontFace:'Arial'});
+    s.addText(pptxSanitize(er.titleText||'AI Transformation\nProgram Update',500),{x:0.5,y:2.15,w:12,h:1.35,fontSize:34,bold:true,color:NAVY,fontFace:'Arial',lineSpacingMultiple:1.08});
+    s.addText(pptxSanitize(er.subtitleText||'Corporate Data & AI Office',300),{x:0.5,y:3.75,w:10,h:0.75,fontSize:17,color:'666666',fontFace:'Arial'});
     s.addText(dateStr,{x:0.5,y:4.85,w:6,h:0.45,fontSize:13,color:'666666',fontFace:'Arial'});
     atlasPptxFooter(s,page);
   }
@@ -7781,37 +7850,42 @@ async function exportExecPptx(opts){
     s.addText('Vertical AI | Pipeline',{x:0.5,y:0.32,w:12,h:0.42,fontSize:20,bold:true,color:BLACK,fontFace:'Arial'});
     s.addText(dateStr,{x:0.5,y:0.72,w:6,h:0.2,fontSize:10,color:'666666',fontFace:'Arial'});
     let barTop=1.02;
-    if(pipeDeckFallbackNote){
-      s.addText(pipeDeckFallbackNote,{x:0.5,y:0.88,w:12,h:0.22,fontSize:6,color:'B45309',fontFace:'Arial',wrap:true});
+    if(pipeNoteX){
+      s.addText(pipeNoteX,{x:0.5,y:0.88,w:12,h:0.22,fontSize:6,color:'B45309',fontFace:'Arial',wrap:true});
       barTop=1.14;
     }
-    const labelW=2.75,trackL=0.5+labelW,trackW=9.55,stageN=VERTICAL_LIFECYCLE_STAGES.length,segW=trackW/stageN;
-    VERTICAL_LIFECYCLE_STAGES.forEach((st,i)=>{s.addText(st.label,{x:trackL+i*segW,y:barTop,w:segW,h:0.18,fontSize:7.5,color:BLACK,fontFace:'Arial',align:'center'})});
-    s.addText(gateTxt,{x:trackL+3.35*segW-0.05,y:barTop-0.1,w:segW*1.35,h:0.26,fontSize:6.5,color:'CC0000',fontFace:'Arial',align:'center',bold:true});
+    const slideW=13.333,leftM=0.5,labelW=2.65,noteGap=0.06,minNoteW=1.45,rightM=0.38;
+    const trackL=leftM+labelW;
+    const trackW=Math.max(5.2,slideW-trackL-noteGap-minNoteW-rightM);
+    const noteX=trackL+trackW+noteGap;
+    const noteW=Math.max(0.55,slideW-noteX-rightM);
+    const stageN=VERTICAL_LIFECYCLE_STAGES.length,segW=trackW/stageN;
+    VERTICAL_LIFECYCLE_STAGES.forEach((st,i)=>{s.addText(pptxSanitize(st.label,80),{x:trackL+i*segW,y:barTop,w:segW,h:0.18,fontSize:7.5,color:BLACK,fontFace:'Arial',align:'center'})});
+    s.addText(gateTxtX,{x:trackL+3.35*segW-0.05,y:barTop-0.1,w:segW*1.35,h:0.26,fontSize:6.5,color:'CC0000',fontFace:'Arial',align:'center',bold:true});
     const split=splitVerticalPipelineRows(verticalRows);
     const rowH=0.34;
     const drawRows=(rows,y0,maxY,sectionLabel,barHex)=>{
       let y=y0;
-      if(sectionLabel){s.addText(sectionLabel,{x:0.5,y:y,w:12,h:0.16,fontSize:9,bold:true,color:'555555',fontFace:'Arial'});y+=0.2}
+      if(sectionLabel){s.addText(pptxSanitize(sectionLabel,200),{x:0.5,y:y,w:12,h:0.16,fontSize:9,bold:true,color:'555555',fontFace:'Arial'});y+=0.2}
       rows.forEach(w=>{
         if(y>maxY-0.05)return;
         const vi=verticalLifecycleIndex(w.verticalLifecycleStage);
         const fillW=trackW*((vi+1)/stageN);
-        s.addText(w.name,{x:0.5,y:y,w:labelW-0.12,h:rowH,fontSize:rows.length>10?8:9,color:BLACK,fontFace:'Arial',bold:true,valign:'middle'});
-        s.addShape(pptx.ShapeType.rect,{x:trackL,y:y+0.07,w:fillW,h:0.18,fill:{color:barHex},line:{color:'CCCCCC',width:0.5}});
+        s.addText(pptxSanitize(w.name,500),{x:leftM,y:y,w:labelW-0.12,h:rowH,fontSize:rows.length>10?8:9,color:BLACK,fontFace:'Arial',bold:true,valign:'middle'});
+        s.addShape(pptx.ShapeType.rect,{x:trackL,y:y+0.07,w:Math.min(trackW,Math.max(0.02,fillW)),h:0.18,fill:{color:barHex},line:{color:'CCCCCC',width:1}});
         const note=pipelineAiSummaries[w.id]||(((w.desc||'').trim().slice(0,90))||wsStatusLabel(w.status));
-        s.addText(note,{x:trackL+trackW+0.06,y:y,w:13.2-trackL-trackW-0.55,h:rowH,fontSize:7.5,color:GRAY,fontFace:'Arial',valign:'middle'});
+        s.addText(pptxSanitize(String(note),600),{x:noteX,y:y,w:noteW,h:rowH,fontSize:7.5,color:GRAY,fontFace:'Arial',valign:'middle',wrap:true});
         y+=rowH+0.05;
       });
       return y;
     };
     let yAfterStages=barTop+0.28;
-    if(aboveCap)yAfterStages=drawRows(split.above,yAfterStages,4.15,aboveCap,'4472C4')+0.12;
+    if(aboveCapX)yAfterStages=drawRows(split.above,yAfterStages,4.15,aboveCapX,'4472C4')+0.12;
     else yAfterStages=drawRows(split.above,yAfterStages,4.15,'','4472C4')+0.08;
-    s.addShape(pptx.ShapeType.rect,{x:0.45,y:yAfterStages,w:12.4,h:0.28,fill:{color:'6D28D9'},line:{color:'6D28D9',width:0.5}});
-    s.addText('CDO delivery capacity — Above: active engagement | Below: planning & support',{x:0.55,y:yAfterStages+0.04,w:12.2,h:0.22,fontSize:8,color:'FFFFFF',fontFace:'Arial',align:'center'});
+    s.addShape(pptx.ShapeType.rect,{x:0.45,y:yAfterStages,w:12.4,h:0.28,fill:{color:'6D28D9'},line:{color:'6D28D9',width:1}});
+    s.addText(pptxSanitize('CDO delivery capacity — Above: active engagement | Below: planning & support',200),{x:0.55,y:yAfterStages+0.04,w:12.2,h:0.22,fontSize:8,color:'FFFFFF',fontFace:'Arial',align:'center',wrap:true});
     yAfterStages+=0.34;
-    if(belowCap)yAfterStages=drawRows(split.below,yAfterStages,6.85,belowCap,'94A3B8');
+    if(belowCapX)yAfterStages=drawRows(split.below,yAfterStages,6.85,belowCapX,'94A3B8');
     else yAfterStages=drawRows(split.below,yAfterStages,6.85,'','94A3B8');
     if(!verticalRows.length)s.addText('No workstreams under AI for the Business matched this slide — set parent L1, depth (L2), and vertical lifecycle on pipeline workstreams.',{x:0.5,y:1.35,w:12,h:0.45,fontSize:11,color:'666666',fontFace:'Arial'});
     atlasPptxFooter(s,page);
@@ -7831,7 +7905,7 @@ async function exportExecPptx(opts){
       s.addShape(pptx.ShapeType.rect,{x:3.52,y:y-0.02,w:9.12,h:0.88,fill:{color:'F1F5F9'},line:{color:'E2E8F0',width:0.5}});
       s.addText(r.title,{x:0.5,y:y,w:3.15,h:0.18,fontSize:10.5,bold:true,color:BLACK,fontFace:'Arial'});
       const rawLines=hb[r.key]||[];
-      const bullets=rawLines.length?rawLines.map(t=>({text:t,options:{fontSize:9.2,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'},paraSpaceAfter:2}})):[{text:'—',options:{fontSize:10,color:BLACK,fontFace:'Arial'}}];
+      const bullets=rawLines.length?rawLines.map(t=>({text:pptxSanitize(t,900),options:{fontSize:9.2,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'},paraSpaceAfter:2}})):[{text:'—',options:{fontSize:10,color:BLACK,fontFace:'Arial'}}];
       s.addText(bullets,{x:3.58,y:y+0.04,w:9.0,h:0.84,valign:'top',fontFace:'Arial'});
       y+=1.02;
     });
@@ -7844,7 +7918,7 @@ async function exportExecPptx(opts){
     s.background={fill:'FFFFFF'};
     s.addText('Workstream status',{x:0.5,y:0.32,w:12,h:0.4,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
     s.addText(dateStr+' · L1 / L2 tree: decisions, risks, blocked action items, open counts, lead & co-lead (no R/Y/G).',{x:0.5,y:0.72,w:12.2,h:0.32,fontSize:9,color:'666666',fontFace:'Arial'});
-    const body=buildWorkstreamStatusPptxLines();
+    const body=pptxSanitize(buildWorkstreamStatusPptxLines(),28000);
     s.addText(body,{x:0.45,y:1.05,w:12.4,h:5.85,fontSize:7,color:'333333',fontFace:'Arial',valign:'top',wrap:true});
     atlasPptxFooter(s,page);
   }
@@ -7870,7 +7944,7 @@ async function exportExecPptx(opts){
     const lensY=y0+gh+0.16;
     s.addShape(pptx.ShapeType.rect,{x:0.5,y:lensY,w:12.35,h:0.92,fill:{color:'F8FAFC'},line:{color:'BFDBFE',width:0.5}});
     s.addText('WORKSTREAMS BY HEARTBEAT LENS',{x:0.62,y:lensY+0.06,w:11.8,h:0.2,fontSize:8.5,bold:true,color:'334155',fontFace:'Arial'});
-    const lensLine=m.lensRows.map(o=>o.label+': '+o.count).join('   ·   ')+(m.noLens?'   ·   Unassigned lens: '+m.noLens:'');
+    const lensLine=pptxSanitize(m.lensRows.map(o=>o.label+': '+o.count).join('   ·   ')+(m.noLens?'   ·   Unassigned lens: '+m.noLens:''),2000);
     s.addText(lensLine,{x:0.62,y:lensY+0.3,w:11.8,h:0.55,fontSize:7.5,color:'1e293b',fontFace:'Arial',wrap:true});
     const chartY=lensY+1.05,halfW=6.05;
     const maxWsLead=Math.max(1,...m.wsLeadList.map(([,c])=>c));
@@ -7878,7 +7952,7 @@ async function exportExecPptx(opts){
     let by=chartY+0.22;
     m.wsLeadList.slice(0,8).forEach(([name,c])=>{
       const pct=Math.round(c/maxWsLead*100);
-      const short=(name.split(' ')[0]||name).slice(0,10);
+      const short=pptxSanitize((name.split(' ')[0]||name).slice(0,10),40);
       s.addText(short,{x:0.5,y:by,w:0.95,h:0.15,fontSize:7.5,fontFace:'Arial'});
       s.addShape(pptx.ShapeType.rect,{x:1.48,y:by+0.03,w:Math.max(0.15,4.2*pct/100),h:0.11,fill:{color:'2563EB'}});
       s.addText(String(c),{x:5.85,y:by,w:0.45,h:0.15,fontSize:7.5,bold:true,fontFace:'Arial',align:'right'});
@@ -7888,10 +7962,10 @@ async function exportExecPptx(opts){
     s.addText('OPEN ACTION ITEMS BY OWNER (top '+m.taskOwnerList.length+')',{x:6.65,y:chartY,w:halfW,h:0.18,fontSize:8,bold:true,color:'334155',fontFace:'Arial'});
     const colW=0.5,bx0=6.68,barTop=chartY+0.24;
     m.taskOwnerList.slice(0,10).forEach(([name,c],i)=>{
-      const barH=Math.max(c?0.06:0,(c/maxT)*0.75);
+      const barH=c?Math.max(0.08,(c/maxT)*0.75):0;
       s.addText(String(c),{x:bx0+i*colW,y:barTop,w:colW,h:0.12,fontSize:6.5,bold:true,align:'center',fontFace:'Arial'});
-      s.addShape(pptx.ShapeType.rect,{x:bx0+i*colW+0.1,y:barTop+0.14+(0.75-barH),w:0.3,h:barH,fill:{color:'1D4ED8'}});
-      const short=((name.split(' ')[0]||name).slice(0,5));
+      if(barH>0)s.addShape(pptx.ShapeType.rect,{x:bx0+i*colW+0.1,y:barTop+0.14+(0.75-barH),w:0.3,h:barH,fill:{color:'1D4ED8'}});
+      const short=pptxSanitize(((name.split(' ')[0]||name).slice(0,5)),32);
       s.addText(short,{x:bx0+i*colW,y:barTop+0.92,w:colW,h:0.22,fontSize:6,align:'center',fontFace:'Arial',wrap:true});
     });
     atlasPptxFooter(s,page);
@@ -7903,17 +7977,18 @@ async function exportExecPptx(opts){
     s.background={fill:'FFFFFF'};
     const dg=getDailyDigestStructured();
     s.addText('Daily Digest',{x:0.5,y:0.32,w:12,h:0.4,fontSize:18,bold:true,color:BLACK,fontFace:'Arial'});
-    s.addText(dg.dateStr,{x:0.5,y:0.72,w:12,h:0.2,fontSize:10,color:'666666',fontFace:'Arial'});
+    s.addText(pptxSanitize(dg.dateStr,120),{x:0.5,y:0.72,w:12,h:0.2,fontSize:10,color:'666666',fontFace:'Arial'});
     const headDue=[{text:'Item',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}},{text:'Owner',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}},{text:'Due',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}}];
     const headBlk=[{text:'Item',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}},{text:'Owner',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}},{text:'Blocked by',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}}];
     let y=1.05;
     function addDigestTable(title,rows,headRow,mapFn,maxR){
       if(!rows.length)return;
-      s.addText(title+' ('+rows.length+')',{x:0.5,y:y,w:12,h:0.16,fontSize:9,bold:true,color:'334155',fontFace:'Arial'});
+      s.addText(pptxSanitize(title+' ('+rows.length+')',200),{x:0.5,y:y,w:12,h:0.16,fontSize:9,bold:true,color:'334155',fontFace:'Arial'});
       y+=0.2;
-      const slice=rows.slice(0,maxR).map(mapFn);
-      s.addTable([headRow,...slice],{x:0.45,y:y,w:12.4,fontFace:'Arial',fontSize:8,border:{type:'solid',color:'CCCCCC',pt:0.5}});
-      y+=0.28+Math.min(maxR,slice.length)*0.16;
+      const slice=rows.slice(0,maxR).map(mapFn).map(row=>row.map(cell=>({text:pptxSanitize(cell.text,2000)||' ',options:cell.options||{fontFace:'Arial',fontSize:8}})));
+      const tableRows=pptxTableRowsPadEven([headRow,...slice]);
+      s.addTable(tableRows,{x:0.45,y:y,w:12.4,fontFace:'Arial',fontSize:8,border:{type:'solid',color:'CCCCCC',pt:1}});
+      y+=0.28+(tableRows.length-1)*0.16;
     }
     const od=[...dg.overdueWs.map(w=>({t:w.name,o:w.primaryOwner||w.owner||'',d:w.endDate,ws:true})),...dg.overdueTasks.map(t=>({t:t.title,o:t.owner||'',d:t.due,ws:false}))].sort((a,b)=>(a.d||'').localeCompare(b.d||''));
     addDigestTable('Past due',od,headDue,r=>[{text:r.t,options:{fontFace:'Arial',fontSize:8}},{text:r.o,options:{fontFace:'Arial',fontSize:8}},{text:r.d||'—',options:{fontFace:'Arial',fontSize:8}}],6);
