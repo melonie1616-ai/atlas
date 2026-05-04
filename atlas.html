@@ -683,6 +683,10 @@ label.ws-cdo-opt:has(input:checked){border-color:var(--accent);background:rgba(9
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       Dashboard
     </div>
+    <div class="ni" data-v="reports" onclick="go('reports')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Reports
+    </div>
     <div class="ni" id="nav-mywork" data-v="mywork" onclick="go('mywork')" title="">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6"/><path d="M9 16h4"/></svg>
       <span class="nav-mw-week-ic" aria-hidden="true"></span>
@@ -1726,7 +1730,7 @@ function go(v){
   });
   const titles={dashboard:'Dashboard',workstreams:'Workstreams',actionitems:'Action Items',engagements:'Engagements',
     tasks:'Action Items',mywork:'My Work',people:'Team Directory',
-    report:'Report Out',ask:'Ask AI',decisions:'Decision Log',
+    report:'Report Out',reports:'Reports',ask:'Ask AI',decisions:'Decision Log',
     risks:'Risk Register',governance:'Decisions & Risks',ado:'ADO Sync'};
   if(v==='mywork'&&ME){document.getElementById('viewTitle').textContent=ME;}
   else{document.getElementById('viewTitle').textContent=titles[v]||v;}
@@ -1809,7 +1813,7 @@ function render(){
   if(taskFilter==='priorities')taskFilter='all';
   if(taskFilter==='milestones')taskFilter='all';
   ({dashboard:rDash,workstreams:rWorkstreamsNew,actionitems:rActionItemsNew,
-    tasks:rTasks,extract:rExtract,mywork:rMyWork,people:rPeople,report:rReport,ask:rAsk,
+    tasks:rTasks,extract:rExtract,mywork:rMyWork,people:rPeople,report:rReport,reports:rReports,ask:rAsk,
     decisions:rDecisions,risks:rRisks,governance:rGovernance,ado:rAdo,metrics:rMetrics,workmetrics:rWorkMetrics  })[V]?.(c);
   badges();updateMyWorkNavHighlight();
 }
@@ -2612,14 +2616,22 @@ const HEARTBEAT_LENS_OPTS=[
 /** Hex without # — PPTX `chartColors` and Program Snapshot lens pie (same order as HEARTBEAT_LENS_OPTS). No red; distinct hues; AI for the Employee = dark blue. */
 const HEARTBEAT_LENS_PIE_COLORS_HEX=['1E3A8A','2563EB','16A34A','EA580C','9333EA','0891B2'];
 const HEARTBEAT_LENS_PIE_COLOR_UNASSIGNED_HEX='E2E8F0';
-/** @returns {{value:string,label:string,count:number,colorHex:string}[]} */
-function heartbeatLensPiePiecesFromRows(lensRows,noLensCount){
+/** @returns {{value:string,label:string,count:number,colorHex:string}[]} Colors follow fixed lens order; segments sorted by count descending for legend and pie. */
+function getSortedHeartbeatLensPieSegments(lensRows,noLensCount){
   const pieces=[];
-  lensRows.forEach((o,i)=>{
-    if(o.count>0)pieces.push({value:o.value,label:o.label,count:o.count,colorHex:'#'+HEARTBEAT_LENS_PIE_COLORS_HEX[i%HEARTBEAT_LENS_PIE_COLORS_HEX.length]});
+  lensRows.forEach((o,idx)=>{
+    if(!o||o.count<=0)return;
+    const value=o.value!=null?o.value:(HEARTBEAT_LENS_OPTS[idx]||{}).value;
+    const ix=value!=null?HEARTBEAT_LENS_OPTS.findIndex(x=>x.value===value):-1;
+    const ci=ix>=0?ix:idx;
+    pieces.push({value:value||'',label:o.label,count:o.count,colorHex:'#'+HEARTBEAT_LENS_PIE_COLORS_HEX[ci%HEARTBEAT_LENS_PIE_COLORS_HEX.length]});
   });
   if(noLensCount>0)pieces.push({value:'__unassigned__',label:'Unassigned lens',count:noLensCount,colorHex:'#'+HEARTBEAT_LENS_PIE_COLOR_UNASSIGNED_HEX});
+  pieces.sort((a,b)=>b.count-a.count||String(a.label).localeCompare(String(b.label)));
   return pieces;
+}
+function heartbeatLensPiePiecesFromRows(lensRows,noLensCount){
+  return getSortedHeartbeatLensPieSegments(lensRows,noLensCount);
 }
 function heartbeatLensPieBackgroundCss(pieces){
   const t=pieces.reduce((a,p)=>a+p.count,0);
@@ -2995,13 +3007,11 @@ function copyDailyDigest(){
 }
 
 function previewDailyDigest(){
-  const html=generateDailyDigest({forEmail:true});
-  const dataUrl='data:text/html;charset=utf-8,'+encodeURIComponent(html);
-  openModal(`<div class="m-hd" style="align-items:flex-start"><div><h3 style="margin:0">Preview — Slide 6</h3><p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">Daily Priorities</p></div><button class="m-close" onclick="closeModal()">&times;</button></div>
-  <div class="m-bd" style="padding:0 24px 18px">
-    <iframe title="Daily Priorities preview" src="${dataUrl}" style="width:100%;height:min(72vh,820px);min-height:380px;border:1px solid var(--border-lt);border-radius:var(--r-sm);display:block;background:#fff;box-sizing:border-box"></iframe>
-  </div>`);
-  document.getElementById('modal').classList.add('modal-wide');
+  buildProgramReportSlidePreviewBodyHtml(6).then(body=>{
+    openModal(`<div class="m-hd" style="align-items:flex-start"><div><h3 style="margin:0">Preview — Slide 6</h3><p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">Daily Priorities</p></div><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd" style="padding:0 24px 18px">${body}</div>`);
+    document.getElementById('modal').classList.add('modal-wide');
+  }).catch(e=>{console.error(e);toast('Could not load Daily Priorities preview');});
 }
 
 // ═══════════════════════════════════════════════════
@@ -3025,6 +3035,7 @@ function renderExecutiveSnapshotHtml(){
   });
   const activeWsTotal=openWs.length;
   const openTaskCount=allTasks.filter(t=>t.status!=='done').length;
+  const pastDueCount=allTasks.filter(t=>t.status!=='done'&&t.due&&t.due<today()).length;
   const blockedDepCount=allTasks.filter(t=>t.status!=='done'&&normalizeTaskStatus(t.status)==='blocked-dependency').length;
   const allRisks=D.risks||[];
   const totalRisks=allRisks.length;
@@ -3048,11 +3059,12 @@ function renderExecutiveSnapshotHtml(){
     taskOwnerCounts[t.owner]=(taskOwnerCounts[t.owner]||0)+1;
   });
   const taskOwnerList=Object.entries(taskOwnerCounts).sort((a,b)=>b[1]-a[1]).slice(0,12);
-  const kpiSm='min-width:0;width:100%;border-radius:12px;padding:9px 10px;cursor:pointer;text-align:left;transition:transform .12s,box-shadow .12s;border:1px solid;box-shadow:0 1px 3px rgba(15,23,42,.06);box-sizing:border-box';
+  const kpiSm='min-width:0;width:100%;border-radius:14px;padding:12px 14px;cursor:pointer;text-align:left;transition:transform .12s,box-shadow .12s;border:1px solid;box-shadow:0 1px 3px rgba(15,23,42,.06);box-sizing:border-box';
   const kpiHIn='this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 6px 16px rgba(15,23,42,.1)\'';
   const kpiHOut='this.style.transform=\'\';this.style.boxShadow=\'0 1px 3px rgba(15,23,42,.06)\'';
   const kpiBlueAsm=kpiSm+';background:linear-gradient(145deg,#eff6ff 0%,#dbeafe 100%);border-color:#93c5fd;color:#1e3a8a';
   const kpiBlueBsm=kpiSm+';background:linear-gradient(145deg,#e0f2fe 0%,#bae6fd 55%,#e0f2fe 100%);border-color:#38bdf8;color:#0c4a6e';
+  const kpiPastDuesm=kpiSm+';background:linear-gradient(145deg,#fff1f2 0%,#ffe4e6 100%);border-color:#fda4af;color:#9f1239';
   const kpiBlockedsm=kpiSm+';background:linear-gradient(145deg,#fef2f2 0%,#fee2e2 100%);border-color:#fca5a5;color:#991b1b';
   const kpiRiskssm=kpiSm+';background:linear-gradient(145deg,#fefce8 0%,#fef9c3 100%);border-color:#fde047;color:#854d0e';
   const piePieces=heartbeatLensPiePiecesFromRows(lensRows,noLensCount);
@@ -3092,29 +3104,34 @@ function renderExecutiveSnapshotHtml(){
     <div class="ws-section-hd" onclick="toggleWsSection('dashSec-exec')" style="background:var(--bg-card);padding:14px 18px;border-radius:var(--r-sm) var(--r-sm) 0 0;border:1px solid var(--border)"><h4 style="font-size:16px;font-weight:800;color:var(--text)">Program Snapshot</h4><span class="ws-section-arrow">&#9660;</span></div>
     <div class="ws-section-bd" style="padding:14px 16px;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r-sm) var(--r-sm);background:var(--bg-card);width:100%;box-sizing:border-box">
       <div style="display:flex;flex-wrap:wrap;gap:14px;width:100%;margin-bottom:18px;align-items:stretch;box-sizing:border-box">
-        <div style="flex:0 1 380px;max-width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-content:start">
+        <div style="flex:1 1 calc(50% - 7px);min-width:min(100%,300px);max-width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-content:start">
         <div role="button" tabindex="0" style="${kpiBlueAsm}" onclick="wsLensFilter='';wsL1Filter='';go('workstreams')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();wsLensFilter='';wsL1Filter='';go('workstreams')}">
-          <div style="font-size:9px;font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.04em">Active workstreams</div>
-          <div style="font-size:20px;font-weight:800;margin:4px 0;line-height:1">${activeWsTotal}</div>
-          <div style="font-size:11px;opacity:.8">L1: ${l1} · L2: ${l2} · L3: ${l3}</div>
+          <div style="font-size:10px;font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.04em">Active workstreams</div>
+          <div style="font-size:24px;font-weight:800;margin:6px 0;line-height:1">${activeWsTotal}</div>
+          <div style="font-size:12px;opacity:.8">L1: ${l1} · L2: ${l2} · L3: ${l3}</div>
         </div>
         <div role="button" tabindex="0" style="${kpiBlueBsm}" onclick="taskStatusFilter='open';taskFilter='all';taskOwnerFilter='';taskWsFilter='';taskViewMode='list';go('actionitems')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}">
-          <div style="font-size:9px;font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.04em">Open action items</div>
-          <div style="font-size:20px;font-weight:800;margin:4px 0;line-height:1">${openTaskCount}</div>
-          <div style="font-size:11px;opacity:.8">Not done</div>
+          <div style="font-size:10px;font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.04em">Open action items</div>
+          <div style="font-size:24px;font-weight:800;margin:6px 0;line-height:1">${openTaskCount}</div>
+          <div style="font-size:12px;opacity:.8">Not done</div>
+        </div>
+        <div role="button" tabindex="0" style="${kpiPastDuesm}" onclick="taskStatusFilter='open';taskFilter='overdue';taskOwnerFilter='';taskWsFilter='';taskViewMode='list';go('actionitems')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}">
+          <div style="font-size:10px;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:.04em">Past due</div>
+          <div style="font-size:24px;font-weight:800;margin:6px 0;line-height:1">${pastDueCount}</div>
+          <div style="font-size:12px;opacity:.88">Due before today</div>
         </div>
         <div role="button" tabindex="0" style="${kpiBlockedsm}" onclick="taskStatusFilter='open';taskFilter='blockeddep';taskViewMode='list';go('actionitems')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}">
-          <div style="font-size:9px;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.04em">Blocked / dependency</div>
-          <div style="font-size:20px;font-weight:800;margin:4px 0;line-height:1">${blockedDepCount}</div>
-          <div style="font-size:11px;opacity:.85">Waiting on another team</div>
+          <div style="font-size:10px;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.04em">Blocked / dependency</div>
+          <div style="font-size:24px;font-weight:800;margin:6px 0;line-height:1">${blockedDepCount}</div>
+          <div style="font-size:12px;opacity:.85">Waiting on another team</div>
         </div>
         <div role="button" tabindex="0" style="${kpiRiskssm}" onclick="govTab='risks';go('governance')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}">
-          <div style="font-size:9px;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.04em">Risks</div>
-          <div style="font-size:20px;font-weight:800;margin:4px 0;line-height:1">${totalRisks}</div>
-          <div style="font-size:11px;opacity:.85">Open: ${openRiskCount}</div>
+          <div style="font-size:10px;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.04em">Risks</div>
+          <div style="font-size:24px;font-weight:800;margin:6px 0;line-height:1">${totalRisks}</div>
+          <div style="font-size:12px;opacity:.85">Open: ${openRiskCount}</div>
         </div>
         </div>
-        <div style="flex:1 1 280px;min-width:min(100%,260px);padding:12px 14px;border-radius:14px;border:1px solid #bfdbfe;background:linear-gradient(180deg,#f8fafc,#f1f5f9);box-sizing:border-box;display:flex;flex-direction:column;gap:10px">
+        <div style="flex:1 1 calc(50% - 7px);min-width:min(100%,260px);max-width:100%;padding:12px 14px;border-radius:14px;border:1px solid #bfdbfe;background:linear-gradient(180deg,#f8fafc,#f1f5f9);box-sizing:border-box;display:flex;flex-direction:column;gap:10px">
           <div style="font-size:11px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.04em">Workstreams by heartbeat lens</div>
           <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px 18px;min-height:0">
             ${piePieces.length?'<div role="img" aria-label="'+esc(ariaPie)+'" style="width:min(200px,40vw);height:min(200px,40vw);flex-shrink:0;border-radius:50%;background:'+pieBg+';box-shadow:0 4px 18px rgba(15,23,42,.1);border:2px solid #e2e8f0"></div>':''}
@@ -3195,7 +3212,7 @@ function rDash(c){
         <button onclick="go('actionitems')" style="flex:1;padding:12px 16px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:var(--r-sm);font-size:13px;font-weight:600;color:#fff;cursor:pointer;transition:all .15s" onmouseenter="this.style.background='rgba(255,255,255,.3)';this.style.transform='translateY(-1px)'" onmouseleave="this.style.background='rgba(255,255,255,.2)';this.style.transform=''">Manage Action Items</button>
       </div>
     </div>
-    <div style="background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);border-radius:var(--r-lg);padding:24px;box-shadow:0 4px 16px rgba(245,158,11,.25);cursor:pointer" onclick="openExecPptxSlideModal()" title="Choose slides and download executive PowerPoint" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openExecPptxSlideModal()}">
+    <div style="background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);border-radius:var(--r-lg);padding:24px;box-shadow:0 4px 16px rgba(245,158,11,.25);cursor:pointer" onclick="go('reports')" title="Program report: preview slides and build PowerPoint" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();go('reports')}">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
         <div style="width:48px;height:48px;background:rgba(255,255,255,.2);border-radius:12px;display:flex;align-items:center;justify-content:center">
           <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:28px;height:28px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -6843,9 +6860,9 @@ function rReport(c){
     return `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <p style="margin:0;font-size:13px;color:var(--muted)">Build your executive report below, then export to PowerPoint. All fields auto-save.</p>
-      <button class="tb-btn" style="background:#00274C;color:#fff;font-size:13px;padding:8px 16px;font-weight:700;border-radius:var(--r-sm)" onclick="openExecPptxSlideModal()">
+      <button class="tb-btn" style="background:#00274C;color:#fff;font-size:13px;padding:8px 16px;font-weight:700;border-radius:var(--r-sm)" onclick="go('reports')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Export to PowerPoint
+        Program report
       </button>
     </div>
     <div class="ws-section" id="execSec-1" style="margin-bottom:14px">
@@ -7380,7 +7397,7 @@ async function draftHeartbeatWithAi(){
   try{
     const snap=getSnapshotMetricsForDeck();
     const lensLine=snap.lensRows.map(o=>o.label+': '+o.count).join('; ');
-    snapTxt=`\nPROGRAM COUNTS (use in bullets when useful): ${snap.openTaskCount} open action items; ${snap.blockedDepCount} blocked/dependency; ${snap.activeWsTotal} active workstreams (Level 1: ${snap.l1}, Level 2: ${snap.l2}, Level 3: ${snap.l3}); ${snap.totalRisks} risks (${snap.openRiskCount} open). By heartbeat lens (workstream counts): ${lensLine}`+(snap.noLens?`; unassigned lens: ${snap.noLens}`:'')+'.';
+    snapTxt=`\nPROGRAM COUNTS (use in bullets when useful): ${snap.openTaskCount} open action items; ${snap.pastDueCount} past due; ${snap.blockedDepCount} blocked/dependency; ${snap.activeWsTotal} active workstreams (Level 1: ${snap.l1}, Level 2: ${snap.l2}, Level 3: ${snap.l3}); ${snap.totalRisks} risks (${snap.openRiskCount} open). By heartbeat lens (workstream counts): ${lensLine}`+(snap.noLens?`; unassigned lens: ${snap.noLens}`:'')+'.';
   }catch(e){}
   const openTasks=(D.tasks||[]).filter(t=>t.status!=='done');
   const taskLines=openTasks.slice(0,18).map(t=>{
@@ -7432,7 +7449,7 @@ async function generateAtlasProgramPptx(opts){
   if(typeof PptxGenJS==='undefined'){toast('PptxGenJS library not loaded');return}
   const noneSelected=!opts.pipeline&&!opts.heartbeat&&!opts.resourcing&&!opts.health;
   if(noneSelected){toast('No slides selected');return}
-  toast('Building presentation…');
+  toast('Building presentation…',null,180000);
   const pptx=new PptxGenJS();
   pptx.defineLayout({name:'ATLAS16',width:13.333,height:7.5});
   pptx.layout='ATLAS16';
@@ -7450,36 +7467,8 @@ async function generateAtlasProgramPptx(opts){
     page++;
     const s=pptx.addSlide();
     s.background={fill:'FFFFFF'};
-    s.addText('Vertical AI | Pipeline',{x:0.5,y:0.35,w:12,h:0.45,fontSize:32,bold:true,color:BLACK,fontFace:'Arial'});
-    if(pipeProgFallbackNote)s.addText(pptxSanitize(pipeProgFallbackNote,800),{x:0.5,y:0.78,w:12,h:0.24,fontSize:6.5,color:BLACK,fontFace:'Arial',wrap:true});
-    const slideW=13.333,leftM=0.5,labelW=2.15,colGap=0.08,updateW=2.85,barLeadGap=0.06,rightM=0.38;
-    const updateX=leftM+labelW+colGap;
-    const trackL=updateX+updateW+barLeadGap;
-    const trackW=Math.max(5.0,slideW-trackL-rightM);
-    const stageN=VERTICAL_LIFECYCLE_STAGES.length,segW=trackW/stageN;
-    let barTop=0.94;
-    if(pipeProgFallbackNote)barTop+=0.22;
-    VERTICAL_LIFECYCLE_STAGES.forEach((st,i)=>{
-      s.addText(pptxSanitize(st.label,80),{x:trackL+i*segW,y:barTop,w:segW,h:0.26,fontSize:12,bold:true,color:BLACK,fontFace:'Arial',align:'center'});
-    });
-    const gateTxtProg=pptxSanitize(opts.execGate||'▼ Exec Committee Gate',400);
-    s.addText(gateTxtProg,{x:trackL+3.5*segW-0.1,y:barTop-0.2,w:segW*1.2,h:0.34,fontSize:12,color:'CC0000',fontFace:'Arial',align:'center',bold:true});
-    let rowY=barTop+0.42;
-    const rowMax=12;
-    const slice=verticalRows.slice(0,rowMax);
-    const rowH=slice.length>8?0.32:0.38;
-    slice.forEach(w=>{
-      const vi=verticalLifecycleIndex(w.verticalLifecycleStage);
-      const fillW=trackW*((vi+1)/stageN);
-      s.addText(pptxSanitize(w.name,500),{x:leftM,y:rowY,w:labelW-0.06,h:rowH,fontSize:slice.length>8?9:10,color:BLACK,fontFace:'Arial',bold:true,valign:'middle'});
-      const one=atlasProgPipeAi[w.id]||((w.desc||'').trim().slice(0,200)||wsStatusLabel(w.status));
-      s.addText(pptxSanitize(String(one),600),{x:updateX,y:rowY,w:updateW,h:rowH,fontSize:8,color:BLACK,fontFace:'Arial',valign:'middle',wrap:true});
-      s.addShape(pptx.ShapeType.rect,{x:trackL,y:rowY+0.06,w:Math.min(trackW,Math.max(0.02,fillW)),h:0.2,fill:{color:'4472C4'},line:{color:'CCCCCC',width:1}});
-      rowY+=rowH+0.06;
-    });
-    if(!slice.length)s.addText('No workstreams under AI for the Business matched this slide — set parent L1, depth (L2), and vertical lifecycle where applicable.',{x:0.5,y:rowY,w:12,h:0.5,fontSize:11,color:BLACK,fontFace:'Arial'});
-    else if(verticalRows.length>rowMax)s.addText('('+verticalRows.length+' verticals — showing first '+rowMax+')',{x:0.5,y:6.85,w:12,h:0.2,fontSize:9,color:BLACK,fontFace:'Arial'});
-    atlasPptxDateBottom(s,dateStr);
+    const gateTxtProg=pptxSanitize(opts.execGate||((D.pptxExportLabels||{}).execGate)||'▼ Exec Committee Gate',500);
+    pptxPopulateVerticalAiPipelineSlide(pptx,s,verticalRows,atlasProgPipeAi,pipeProgFallbackNote,gateTxtProg,dateStr);
   }
   let hb=null;
   if(opts.heartbeat){
@@ -7490,19 +7479,7 @@ async function generateAtlasProgramPptx(opts){
     page++;
     const s=pptx.addSlide();
     s.background={fill:'FFFFFF'};
-    s.addText('AI Program Update | Weekly Heartbeat',{x:0.5,y:0.35,w:12,h:0.42,fontSize:32,bold:true,color:BLACK,fontFace:'Arial'});
-    let y=1.02;
-    HEARTBEAT_PPTX_ROWS.forEach(r=>{
-      s.addShape(pptx.ShapeType.rect,{x:3.52,y:y-0.02,w:9.12,h:0.98,fill:{color:'F1F5F9'},line:{color:'E2E8F0',width:0.5}});
-      s.addText(r.title,{x:0.5,y:y,w:3.15,h:0.22,fontSize:10.5,bold:true,color:BLACK,fontFace:'Arial'});
-      const rawLines=hb[r.key]||[];
-      const bullets=rawLines.length
-        ?rawLines.map(t=>({text:pptxSanitize(String(t),2000),options:{fontSize:9.2,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'},paraSpaceAfter:2}}))
-        :[{text:'—',options:{fontSize:10,color:BLACK,fontFace:'Arial'}}];
-      s.addText(bullets,{x:3.58,y:y+0.04,w:9.0,h:0.9,valign:'top',fontFace:'Arial',wrap:true});
-      y+=1.0;
-    });
-    atlasPptxDateBottom(s,dateStr);
+    pptxPopulateWeeklyHeartbeatSlide(pptx,s,hb,dateStr);
   }
   const allProgWs=allProgramWorkstreamsSorted();
   if(opts.resourcing){
@@ -7558,7 +7535,7 @@ function parseBullets(text){
   return (text||'').split('\n').map(l=>l.replace(/^[\s]*[•\-\*]\s*/,'')).filter(l=>l.trim());
 }
 
-const EXEC_PPTX_SLIDES_KEY='atlas_report_deck_slides_v3';
+const EXEC_PPTX_SLIDES_KEY='atlas_report_deck_slides_v4';
 /** Minimum rows per Workstream Status slide; chunk step grows so the section stays within WS_STATUS_PPTX_MAX_SLIDES. */
 const WS_STATUS_PPTX_ROWS_PER_SLIDE=7;
 /** Workstream Status (Slide 4) may not span more than this many slides in the program report PPTX. */
@@ -7567,10 +7544,9 @@ function openExecPptxSlideModal(){
   if(typeof PptxGenJS==='undefined'){toast('PptxGenJS library not loaded');return}
   const lb=D.pptxExportLabels||{};
   const eg=lb.execGate!=null?String(lb.execGate):'▼ Exec Committee Gate';
-  let saved={s1:true,s2:true,s3:true,s4:true,s5:true,s6:true};
-  try{const raw=localStorage.getItem(EXEC_PPTX_SLIDES_KEY);if(raw){const j=JSON.parse(raw);if(j&&typeof j==='object')saved={...saved,...j}}}catch(e){}
+  const saved={s1:false,s2:false,s3:false,s4:false,s5:false,s6:false,s7:false};
   const chk=(id,on)=>`<input type="checkbox" id="${id}" ${on?'checked':''} style="margin-top:3px"/>`;
-  const prev=(n)=>n<=5?`<button type="button" class="mbtn" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0;white-space:nowrap" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=function(){openExecPptxSlideModal()};openProgramReportSlidePreview(${n})">Content preview</button>`:`<button type="button" class="mbtn" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0;white-space:nowrap" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=null;previewDailyDigest()">Content preview</button>`;
+  const prev=(n)=>n<=5?`<button type="button" class="mbtn" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0;white-space:nowrap" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=function(){openExecPptxSlideModal()};openProgramReportSlidePreview(${n})">Content preview</button>`:n===6?`<button type="button" class="mbtn" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0;white-space:nowrap" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=null;previewDailyDigest()">Content preview</button>`:`<button type="button" class="mbtn" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0;white-space:nowrap" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=function(){openExecPptxSlideModal()};openProgramReportSlidePreview(${n})">Content preview</button>`;
   openModal(`<div class="m-hd"><h3>Export program report (PowerPoint)</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
     <p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.5">White 16:9 deck. Slide 2: AI summarizes each L2 vertical from the <strong>last 7 calendar days</strong> (≤20 words each) when your API key is set. Use <strong>Content preview</strong> to check layout before exporting.</p>
@@ -7588,6 +7564,7 @@ function openExecPptxSlideModal(){
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl4',saved.s4)} <span style="flex:1;min-width:0"><strong>Slide 4 — Workstream status</strong> — L1/L2 table (preview); export uses <strong>at most ${WS_STATUS_PPTX_MAX_SLIDES} slides</strong> (~${WS_STATUS_PPTX_ROWS_PER_SLIDE}+ rows each when short; more rows per slide when the tree is long)</span>${prev(4)}</label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl5',saved.s5)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 5 — Program Snapshot</strong> — same metrics as Program Snapshot on the dashboard</span>${prev(5)}</label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl6',saved.s6)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 6 — Daily Priorities</strong> — overdue, due soon, blocked (same logic as on the dashboard)</span>${prev(6)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl7',saved.s7)} <span style="flex:1;min-width:0"><strong>Slides 7+ — Lens Quad Update</strong> — one slide per heartbeat lens.</span>${prev(7)}</label>
     </div>
   </div>
   <div class="m-ft">
@@ -7597,11 +7574,11 @@ function openExecPptxSlideModal(){
   document.getElementById('modal').classList.add('modal-wide');
 }
 async function runExecPptxFromSlideModal(){
-  const ids=['exec-pptx-sl1','exec-pptx-sl2','exec-pptx-sl3','exec-pptx-sl4','exec-pptx-sl5','exec-pptx-sl6'];
-  const keys=['s1','s2','s3','s4','s5','s6'];
+  const ids=['exec-pptx-sl1','exec-pptx-sl2','exec-pptx-sl3','exec-pptx-sl4','exec-pptx-sl5','exec-pptx-sl6','exec-pptx-sl7'];
+  const keys=['s1','s2','s3','s4','s5','s6','s7'];
   const opts={};
   ids.forEach((id,i)=>{const el=document.getElementById(id);opts[keys[i]]=!!(el&&el.checked)});
-  if(!opts.s1&&!opts.s2&&!opts.s3&&!opts.s4&&!opts.s5&&!opts.s6){toast('Select at least one slide');return}
+  if(!opts.s1&&!opts.s2&&!opts.s3&&!opts.s4&&!opts.s5&&!opts.s6&&!opts.s7){toast('Select at least one slide');return}
   opts.execGate=(document.getElementById('rptdeck-gate')?.value||'').trim();
   opts.aboveLine='';
   opts.belowLine='';
@@ -7610,7 +7587,7 @@ async function runExecPptxFromSlideModal(){
   D.pptxExportLabels.aboveLine='';
   D.pptxExportLabels.belowLine='';
   save();
-  try{localStorage.setItem(EXEC_PPTX_SLIDES_KEY,JSON.stringify({s1:opts.s1,s2:opts.s2,s3:opts.s3,s4:opts.s4,s5:opts.s5,s6:opts.s6}))}catch(e){}
+  try{localStorage.setItem(EXEC_PPTX_SLIDES_KEY,JSON.stringify({s1:opts.s1,s2:opts.s2,s3:opts.s3,s4:opts.s4,s5:opts.s5,s6:opts.s6,s7:opts.s7}))}catch(e){}
   closeModal();
   await exportExecPptx(opts);
 }
@@ -7639,6 +7616,204 @@ function splitVerticalPipelineRows(verticalRows){
   return{above:[...explicitAbove,...auto.above],below:[...explicitBelow,...auto.below]};
 }
 function programReportLast7DayRange(){return{start:addDaysIso(today(),-6),end:today()};}
+/** Inclusive 14 calendar days of ATLAS activity for Lens Quad “Accomplishments”. */
+function programReportLast14DayRange(){return{start:addDaysIso(today(),-13),end:today()};}
+/** All workstream ids whose effective heartbeat lens matches (includes L2/L3 under program tree). */
+function getWorkstreamIdsInHeartbeatLens(lensValue){
+  const ids=new Set();
+  ensureWorkstreamReportingFields();
+  allProgramWorkstreamsSorted().forEach(w=>{
+    if(effectiveHeartbeatLensForWorkstream(w)===lensValue)ids.add(w.id);
+  });
+  return ids;
+}
+/** Top-level (L1) workstream ids in this heartbeat lens — used for Watch List risks. */
+function getL1WorkstreamIdsInHeartbeatLens(lensValue){
+  const out=[];
+  (D.workstreams||[]).forEach(w=>{
+    if(w.parentWs)return;
+    if(effectiveHeartbeatLensForWorkstream(w)===lensValue)out.push(w.id);
+  });
+  return out;
+}
+/**
+ * Flat ATLAS activity lines for any workstream in the lens (last 14 days): tasks touched, decisions dated,
+ * risks updated, workstream recent accomplishments — avoids double-counting from tree walks.
+ */
+function buildLensFlatActivityLines14d(lensValue){
+  const{start,end}=programReportLast14DayRange();
+  const wsIds=getWorkstreamIdsInHeartbeatLens(lensValue);
+  const lines=[];
+  (D.tasks||[]).forEach(t=>{
+    if(!t.workstream||!wsIds.has(t.workstream))return;
+    if(!taskTouchedInProgramReportWindow(t,start,end))return;
+    const tl=(t.title||'Untitled').replace(/\s+/g,' ').trim();
+    const ws=(D.workstreams||[]).find(x=>x.id===t.workstream);
+    const pref=ws?'['+ws.name+'] ':'';
+    lines.push('- '+pref+'Action: '+tl.slice(0,100)+' ('+taskStatusLabel(t.status)+')');
+  });
+  (D.decisions||[]).forEach(d=>{
+    if(!d.workstream||!wsIds.has(d.workstream))return;
+    const dd=String(d.date||d.created||'').slice(0,10);
+    if(!dayStrInRange(dd,start,end))return;
+    lines.push('- Decision: '+((d.title||'').replace(/\s+/g,' ')).slice(0,120));
+  });
+  (D.risks||[]).forEach(r=>{
+    if(!r.workstream||!wsIds.has(r.workstream))return;
+    const rd=String(r.updatedAt||r.created||'').slice(0,10);
+    if(!dayStrInRange(rd,start,end))return;
+    lines.push('- Risk activity: '+((r.title||'').replace(/\s+/g,' ')).slice(0,120));
+  });
+  (D.workstreams||[]).forEach(w=>{
+    if(!wsIds.has(w.id))return;
+    const wu=(w.updatedAt||'').slice(0,10);
+    if(dayStrInRange(wu,start,end)&&(w.recentAccomplishments||'').trim()){
+      lines.push('- '+w.name+': '+((w.recentAccomplishments||'').replace(/\s+/g,' ')).slice(0,200));
+    }
+  });
+  return lines.slice(0,120);
+}
+/** Open action items with a **due/target date** for the lens, ascending by due (Lens Quad Look Ahead + AI context). */
+function getOpenTasksForLensSortedByDue(lensValue){
+  const wsIds=getWorkstreamIdsInHeartbeatLens(lensValue);
+  const tasks=(D.tasks||[]).filter(t=>
+    t.status!=='done'&&t.workstream&&wsIds.has(t.workstream)&&String(t.due||'').trim()!==''
+  );
+  tasks.sort((a,b)=>{
+    const da=String(a.due||'').trim();
+    const db=String(b.due||'').trim();
+    const c=da.localeCompare(db);
+    return c!==0?c:(a.title||'').localeCompare(b.title||'');
+  });
+  return tasks;
+}
+/**
+ * Lens Quad — Milestones quadrant: up to 5 action items that are Not Started, Open, or Blocked/Dependency only,
+ * sorted by target date ascending (undated items after dated). Aligns with program report PPTX slide 7+.
+ */
+function getLensQuadMilestoneTasks(lensValue){
+  const wsIds=getWorkstreamIdsInHeartbeatLens(lensValue);
+  const allowed=new Set(['not-started','open','blocked-dependency']);
+  const tasks=(D.tasks||[]).filter(t=>{
+    if(t.status==='done'||!t.workstream||!wsIds.has(t.workstream))return false;
+    return allowed.has(normalizeTaskStatus(t.status));
+  });
+  tasks.sort((a,b)=>{
+    const da=String(a.due||'').trim();
+    const db=String(b.due||'').trim();
+    if(da&&db){
+      const c=da.localeCompare(db);
+      if(c!==0)return c;
+    }else if(da&&!db)return -1;
+    else if(!da&&db)return 1;
+    return(a.title||'').localeCompare(b.title||'');
+  });
+  return tasks.slice(0,5);
+}
+/** Open risks whose workstream is an L1 row in this lens (Watch List). */
+function getOpenRisksForL1WorkstreamsInLens(lensValue){
+  const l1=new Set(getL1WorkstreamIdsInHeartbeatLens(lensValue));
+  return(D.risks||[]).filter(r=>r.workstream&&l1.has(r.workstream)&&String(r.status||'').toLowerCase()!=='closed').sort((a,b)=>(a.title||'').localeCompare(b.title||''));
+}
+async function aiLensQuadAccomplishmentsFromActivity(lensLabel,activityLines){
+  if(!activityLines.length)return['No ATLAS-dated activity in the last 14 days for this lens.'];
+  if(!OPENAI_KEY)return activityLines.slice(0,8).map(l=>String(l||'').replace(/^-\s*/,'').trim().slice(0,220)).filter(Boolean);
+  const ctx=activityLines.join('\n').slice(0,12000);
+  const sys='You write the "Accomplishments" quadrant for an executive program slide (heartbeat lens: '+lensLabel+'). Output ONLY valid JSON: {"bullets":["..."]}. Provide 3–6 bullets summarizing real progress from the ATLAS activity lines (last 14 days). Each bullet is one plain-text sentence, at most 180 characters. Do not invent facts. If lines are thin, still give professional bullets grounded in what is present.';
+  const raw=await callAI(sys,'ACTIVITY (last 14 days):\n'+ctx+'\n\nToday: '+today(),{temperature:0.35,max_tokens:900});
+  if(!raw)return activityLines.slice(0,6).map(l=>String(l||'').replace(/^-\s*/,'').trim().slice(0,220));
+  let s=raw.trim();
+  if(s.startsWith('```'))s=s.replace(/^```[a-z]*\n?/i,'').replace(/\n?```$/,'');
+  try{
+    const j=JSON.parse(s);
+    const arr=Array.isArray(j.bullets)?j.bullets:[];
+    const clean=arr.map(x=>String(x||'').trim()).filter(Boolean).slice(0,8);
+    return clean.length?clean:['No summary produced — see raw ATLAS activity in the app.'];
+  }catch(e){
+    return activityLines.slice(0,6).map(l=>String(l||'').replace(/^-\s*/,'').trim().slice(0,220));
+  }
+}
+async function aiLensQuadLookAheadFromTasks(lensLabel,tasks){
+  if(!tasks.length)return['No open action items with target dates for this lens.'];
+  if(!OPENAI_KEY)return tasks.slice(0,10).map(t=>{
+    const ti=((t.title||'').trim().slice(0,160));
+    const du=t.due?String(t.due).slice(0,10):'';
+    return pptxSanitize(ti+(du?' · due '+du:''),300);
+  });
+  const ctx=tasks.slice(0,45).map(t=>{
+    const ws=(D.workstreams||[]).find(w=>w.id===t.workstream);
+    return'- '+((t.title||'').trim().slice(0,140))+' | status: '+taskStatusLabel(t.status)+' | due: '+(t.due||'—')+' | workstream: '+(ws?ws.name:'(none)');
+  }).join('\n');
+  const sys='You write the "Look Ahead (Next 1-2 Weeks)" quadrant for heartbeat lens "'+lensLabel+'". Output ONLY valid JSON: {"bullets":["..."]}. Provide 3–6 bullets summarizing priorities, momentum, and near-term focus from the open action items — synthesize, do not list every task. Each bullet one plain-text sentence, max 200 characters. Ground only in the data provided.';
+  const raw=await callAI(sys,'OPEN ACTION ITEMS:\n'+ctx+'\n\nToday: '+today(),{temperature:0.38,max_tokens:900});
+  if(!raw)return tasks.slice(0,8).map(t=>pptxSanitize(((t.title||'').trim()+(t.due?' · '+String(t.due).slice(0,10):'')),280));
+  let s=raw.trim();
+  if(s.startsWith('```'))s=s.replace(/^```[a-z]*\n?/i,'').replace(/\n?```$/,'');
+  try{
+    const j=JSON.parse(s);
+    const arr=Array.isArray(j.bullets)?j.bullets:[];
+    const clean=arr.map(x=>String(x||'').trim()).filter(Boolean).slice(0,8);
+    return clean.length?clean:tasks.slice(0,6).map(t=>pptxSanitize((t.title||'').trim(),200));
+  }catch(e){
+    return tasks.slice(0,8).map(t=>pptxSanitize(((t.title||'').trim()+(t.due?' · due '+String(t.due).slice(0,10):'')),280));
+  }
+}
+/** HTML card matching one Heartbeat Lens PPTX slide (2×2 quad) — used by slide 7 preview. */
+function renderLensQuadPreviewCard(lensLabel,accomBullets,lookAheadBullets,milestoneTasks,watchRiskTitles,dateStr){
+  const acLi=(accomBullets||[]).length?(accomBullets||[]).map(b=>'<li style="margin:3px 0;font-size:11px;line-height:1.35;color:var(--fg)">'+esc(String(b))+'</li>').join(''):'<li style="font-size:11px;color:var(--muted)">No ATLAS-dated activity in the last 14 days for this lens.</li>';
+  const lkLi=(lookAheadBullets||[]).length?(lookAheadBullets||[]).map(b=>'<li style="margin:3px 0;font-size:11px;line-height:1.35;color:var(--fg)">'+esc(String(b))+'</li>').join(''):'<li style="font-size:11px;color:var(--muted)">No open action items with target dates for this lens.</li>';
+  let mtHtml='';
+  if((milestoneTasks||[]).length){
+    mtHtml='<table class="tbl" style="width:100%;font-size:11px;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:4px 6px;border:1px solid var(--border-lt)">Name</th><th style="padding:4px 6px;border:1px solid var(--border-lt)">Status</th><th style="padding:4px 6px;border:1px solid var(--border-lt)">Target Date</th></tr></thead><tbody>'+
+      milestoneTasks.map(t=>'<tr><td style="padding:4px 6px;border:1px solid var(--border-lt)">'+esc((t.title||'').slice(0,200))+'</td><td style="padding:4px 6px;border:1px solid var(--border-lt)">'+esc(taskStatusLabel(t.status))+'</td><td style="padding:4px 6px;border:1px solid var(--border-lt)">'+(t.due?esc(fmtDate(t.due)):'—')+'</td></tr>').join('')+'</tbody></table>';
+  }else{
+    mtHtml='<p style="margin:0;font-size:11px;color:var(--muted)">No Not Started, Open, or Blocked/Dependency action items for this lens.</p>';
+  }
+  const wrLi=(watchRiskTitles||[]).length?watchRiskTitles.map(t=>'<li style="margin:3px 0;font-size:11px;line-height:1.35">'+esc(String(t))+'</li>').join(''):'<li style="font-size:11px;color:var(--muted)">No open risks on L1 workstreams for this lens.</li>';
+  return `<div style="margin-bottom:24px;border:1px solid var(--border-lt);border-radius:12px;overflow:hidden;background:var(--bg-card)">
+    <div style="padding:12px 16px;background:var(--bg-subtle);border-bottom:1px solid var(--border-lt)">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">AI Program Update | Heartbeat Lens</div>
+      <div style="font-size:17px;font-weight:800;color:var(--text);margin-top:4px">${esc(lensLabel)}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px;align-items:start">
+      <div style="border:1px solid #CBD5E1;border-radius:8px;padding:10px;background:#F8FAFC;min-height:120px">
+        <div style="font-weight:800;font-size:12px;margin-bottom:8px;color:var(--text)">Accomplishments</div>
+        <ul style="margin:0;padding-left:18px">${acLi}</ul>
+      </div>
+      <div style="border:1px solid #CBD5E1;border-radius:8px;padding:10px;background:#F8FAFC;min-height:120px">
+        <div style="font-weight:800;font-size:12px;margin-bottom:8px;color:var(--text)">Look Ahead (Next 1-2 Weeks)</div>
+        <ul style="margin:0;padding-left:18px">${lkLi}</ul>
+      </div>
+      <div style="border:1px solid #CBD5E1;border-radius:8px;padding:10px;background:#F8FAFC;min-height:120px">
+        <div style="font-weight:800;font-size:12px;margin-bottom:8px;color:var(--text)">Milestones</div>
+        ${mtHtml}
+      </div>
+      <div style="border:1px solid #CBD5E1;border-radius:8px;padding:10px;background:#F8FAFC;min-height:120px">
+        <div style="font-weight:800;font-size:12px;margin-bottom:8px;color:var(--text)">Watch List</div>
+        <ul style="margin:0;padding-left:18px">${wrLi}</ul>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);padding:8px 14px;border-top:1px solid var(--border-lt);text-align:right">${esc(dateStr)}</div>
+  </div>`;
+}
+async function buildHeartbeatLensQuadPreviewHtml(){
+  const dateStr=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  ensureWorkstreamReportingFields();
+  const parts=[];
+  for(const lensOpt of HEARTBEAT_LENS_OPTS){
+    const activity=buildLensFlatActivityLines14d(lensOpt.value);
+    const tasksForLookAhead=getOpenTasksForLensSortedByDue(lensOpt.value);
+    const milestoneTasks=getLensQuadMilestoneTasks(lensOpt.value);
+    const risks=getOpenRisksForL1WorkstreamsInLens(lensOpt.value);
+    const accom=await aiLensQuadAccomplishmentsFromActivity(lensOpt.label,activity);
+    const look=await aiLensQuadLookAheadFromTasks(lensOpt.label,tasksForLookAhead);
+    parts.push(renderLensQuadPreviewCard(lensOpt.label,accom,look,milestoneTasks,risks.map(r=>(r.title||'').trim()).filter(Boolean),dateStr));
+  }
+  return `<div style="font-size:13px;line-height:1.5;color:var(--fg)">
+    <p style="margin:0 0 18px;color:var(--muted);line-height:1.45">Preview of the <strong>${HEARTBEAT_LENS_OPTS.length}</strong> Heartbeat Lens slides exported for <strong>Slides 7+</strong>. Quadrants match the PowerPoint deck.</p>
+    ${parts.join('')}
+  </div>`;
+}
 function collectDescendantWorkstreamIds(rootId){
   const out=new Set([rootId]);
   let added=true;
@@ -7773,15 +7948,15 @@ function buildWorkstreamStatusPptxTableRowCells(){
     const hasRisk=r.g.rk&&r.g.rk.length>0;
     const shade=hasBlocked?{fill:{color:'FEF2F2'}}:hasRisk?{fill:{color:'FEF9C3'}}:{};
     return[
-      {text:ws,options:{fontFace:'Arial',fontSize:6.5,color:'000000',bold:r.type==='l1',...shade}},
-      {text:pptxSanitize(lens||'—',120),options:{fontFace:'Arial',fontSize:6,color:'000000',...shade}},
-      {text:r.type==='l1'?'L1':'L2',options:{fontFace:'Arial',fontSize:6.5,color:'000000',bold:true,...shade}},
-      {text:pptxSanitize(lead||'—',90),options:{fontFace:'Arial',fontSize:6.5,color:'000000',...shade}},
-      {text:pptxSanitize(co||'—',90),options:{fontFace:'Arial',fontSize:6.5,color:'000000',...shade}},
-      {text:String(r.open),options:{fontFace:'Arial',fontSize:6.5,color:'000000',...shade}},
-      {text:String(blk),options:{fontFace:'Arial',fontSize:6.5,color:'000000',...shade}},
-      {text:joinTitles(r.g.rk,4),options:{fontFace:'Arial',fontSize:6,color:'000000',...shade}},
-      {text:joinTitles(r.g.dec,4),options:{fontFace:'Arial',fontSize:6,color:'000000',...shade}}
+      {text:ws,options:{fontFace:'Arial',fontSize:9,color:'000000',bold:r.type==='l1',...shade}},
+      {text:pptxSanitize(lens||'—',120),options:{fontFace:'Arial',fontSize:8.5,color:'000000',...shade}},
+      {text:r.type==='l1'?'L1':'L2',options:{fontFace:'Arial',fontSize:9,color:'000000',bold:true,...shade}},
+      {text:pptxSanitize(lead||'—',90),options:{fontFace:'Arial',fontSize:9,color:'000000',...shade}},
+      {text:pptxSanitize(co||'—',90),options:{fontFace:'Arial',fontSize:9,color:'000000',...shade}},
+      {text:String(r.open),options:{fontFace:'Arial',fontSize:9,color:'000000',...shade}},
+      {text:String(blk),options:{fontFace:'Arial',fontSize:9,color:'000000',...shade}},
+      {text:joinTitles(r.g.rk,4),options:{fontFace:'Arial',fontSize:8.5,color:'000000',...shade}},
+      {text:joinTitles(r.g.dec,4),options:{fontFace:'Arial',fontSize:8.5,color:'000000',...shade}}
     ];
   });
 }
@@ -7865,11 +8040,12 @@ function getSnapshotMetricsForDeck(){
   });
   const activeWsTotal=openWs.length;
   const openTaskCount=allTasks.filter(t=>t.status!=='done').length;
+  const pastDueCount=allTasks.filter(t=>t.status!=='done'&&t.due&&t.due<today()).length;
   const blockedDepCount=allTasks.filter(t=>t.status!=='done'&&normalizeTaskStatus(t.status)==='blocked-dependency').length;
   const allRisks=D.risks||[];
   const totalRisks=allRisks.length;
   const openRiskCount=allRisks.filter(r=>r.status!=='closed').length;
-  const lensRows=HEARTBEAT_LENS_OPTS.map(o=>({label:o.label,count:wsForLensCounts.filter(w=>effectiveHeartbeatLensForWorkstream(w)===o.value).length}));
+  const lensRows=HEARTBEAT_LENS_OPTS.map(o=>({value:o.value,label:o.label,count:wsForLensCounts.filter(w=>effectiveHeartbeatLensForWorkstream(w)===o.value).length}));
   const noLens=wsForLensCounts.filter(w=>effectiveHeartbeatLensForWorkstream(w)==='').length;
   const wsLeadCounts={};
   openWs.forEach(w=>{
@@ -7883,27 +8059,21 @@ function getSnapshotMetricsForDeck(){
     taskOwnerCounts[t.owner]=(taskOwnerCounts[t.owner]||0)+1;
   });
   const taskOwnerList=Object.entries(taskOwnerCounts).sort((a,b)=>b[1]-a[1]).slice(0,11);
-  return{activeWsTotal,l1,l2,l3,openTaskCount,blockedDepCount,totalRisks,openRiskCount,lensRows,noLens,wsLeadList,taskOwnerList};
+  return{activeWsTotal,l1,l2,l3,openTaskCount,pastDueCount,blockedDepCount,totalRisks,openRiskCount,lensRows,noLens,wsLeadList,taskOwnerList};
 }
-async function openProgramReportSlidePreview(slideNum){
+/** HTML body for program report slide preview (modal + Reports page). */
+async function buildProgramReportSlidePreviewBodyHtml(slideNum){
   const er=getExecReport();
   const dateStr=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
   const gateTxt=(D.pptxExportLabels||{}).execGate||'▼ Exec Committee Gate';
   if(slideNum===1){
-    openModal(`<div class="m-hd"><h3>Preview — Slide 1</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
-    <div class="m-bd" style="min-height:200px;padding:32px;background:#fff;border:1px solid var(--border);border-radius:12px;text-align:center">
+    return `<div style="min-height:200px;padding:32px;background:#fff;border:1px solid var(--border);border-radius:12px;text-align:center">
       <div style="font-size:28px;font-weight:800;color:#00274C;line-height:1.2">${esc(er.titleText||'AI Transformation Program Update')}</div>
       <div style="font-size:16px;color:#64748b;margin-top:16px">${esc(er.subtitleText||'Corporate Data & AI Office')}</div>
       <div style="font-size:14px;color:#94a3b8;margin-top:24px">${esc(dateStr)}</div>
-    </div>`);
-    document.getElementById('modal').classList.add('modal-wide');
-    return;
+    </div>`;
   }
   if(slideNum===2){
-    openModal(`<div class="m-hd"><h3>Preview — Slide 2 (loading summaries…)</h3><button class="m-close" onclick="closeModal()">&times;</button></div><div class="m-bd" id="pptx-prev-2"><p style="color:var(--muted)">…</p></div>`);
-    document.getElementById('modal').classList.add('modal-wide');
-    const el=document.getElementById('pptx-prev-2');
-    const hd=document.querySelector('.m-hd h3');
     const pipeGridCols='minmax(120px,15%) minmax(200px,38%) minmax(180px,1fr)';
     try{
       const {rows:verticalRows,fallbackNote}=verticalAiPipelineWorkstreamsForDeck();
@@ -7913,7 +8083,7 @@ async function openProgramReportSlidePreview(slideNum){
         const vi=verticalLifecycleIndex(w.verticalLifecycleStage);
         const pct=((vi+1)/VERTICAL_LIFECYCLE_STAGES.length)*100;
         const note=sum[w.id]||((w.desc||'').trim().slice(0,180)||wsStatusLabel(w.status));
-        return`<div style="display:grid;grid-template-columns:${pipeGridCols};gap:8px 14px;align-items:center;margin-bottom:8px;font-size:12px">
+        return`<div style="display:grid;grid-template-columns:${pipeGridCols};gap:8px 14px;align-items:center;margin-bottom:16px;font-size:12px">
         <strong style="min-width:0">${esc(w.name)}</strong>
         <span style="color:var(--muted);font-size:11px;line-height:1.35;min-width:0;white-space:normal;word-break:break-word">${esc(note)}</span>
         <div style="min-width:0;height:10px;background:#e2e8f0;border-radius:6px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:6px"></div></div>
@@ -7928,55 +8098,175 @@ async function openProgramReportSlidePreview(slideNum){
       const pipelineBody=verticalRows.length?('<div style="color:#dc2626;font-size:12px;font-weight:700;margin-bottom:6px;text-align:center">'+esc(gateTxt)+'</div>'+
         stageRow+
         rowHtml(split.above,'#2563eb')+
-        '<div style="margin:12px 0;padding:8px;background:#6D28D9;color:#fff;border-radius:6px;text-align:center;font-size:11px;font-weight:700">CDO delivery capacity — Above: active engagement | Below: planning &amp; support</div>'+
+        '<div style="margin:12px 0;padding:9px 10px;background:#4C1D95;color:#fff;border-radius:8px;text-align:center;font-size:11px;font-weight:700;line-height:1.35">CDO delivery capacity — Above: active engagement | Below: planning &amp; support</div>'+
         rowHtml(split.below,'#94a3b8')):'';
-      if(el){
-        el.innerHTML='<div style="font-size:18px;font-weight:800;margin-bottom:8px">Vertical AI | Pipeline</div>'+
+      return '<div style="font-size:18px;font-weight:800;margin-bottom:8px">Vertical AI | Pipeline</div>'+
         '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">'+esc(dateStr)+' · Status: ≤20 words from last 7 days (AI)</div>'+
         fbBanner+emptyBanner+pipelineBody;
-      }
     }catch(e){
       console.error(e);
-      if(el)el.innerHTML='<p style="color:#dc2626">Could not build pipeline preview. See the browser console for details.</p>';
+      return '<p style="color:#dc2626">Could not build pipeline preview. See the browser console for details.</p>';
     }
-    if(hd)hd.textContent='Preview — Slide 2';
-    return;
   }
   if(slideNum===3){
-    openModal(`<div class="m-hd" style="align-items:flex-start"><div><h3 style="margin:0">Preview — Slide 3</h3><p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">Weekly Heartbeat</p></div><button class="m-close" onclick="closeModal()">&times;</button></div><div class="m-bd" id="pptx-prev-3"><p style="color:var(--muted)">Loading…</p></div>`);
-    document.getElementById('modal').classList.add('modal-wide');
     const hb=OPENAI_KEY?(await draftHeartbeatWithAi())||fallbackHeartbeatBullets():fallbackHeartbeatBullets();
-    const el=document.getElementById('pptx-prev-3');
-    if(el){
-      el.innerHTML=HEARTBEAT_PPTX_ROWS.map(r=>{
-        const lines=(hb[r.key]||[]).map(t=>'<li style="margin:4px 0">'+esc(t)+'</li>').join('')||'<li>—</li>';
-        return`<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;margin-bottom:14px;align-items:start">
+    return HEARTBEAT_PPTX_ROWS.map(r=>{
+      const lineList=expandHeartbeatLinesForBullets(hb[r.key]);
+      const lines=lineList.length?lineList.map(t=>'<li style="margin:2px 0">'+esc(t)+'</li>').join(''):'<li>—</li>';
+      return`<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;margin-bottom:14px;align-items:start">
           <strong style="font-size:13px">${esc(r.title)}</strong>
-          <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:12px"><ul style="margin:0;padding-left:18px;font-size:12px">${lines}</ul></div>
+          <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:12px"><ul style="margin:0;padding-left:18px;font-size:10px;line-height:1.4">${lines}</ul></div>
         </div>`;
-      }).join('');
-    }
-    return;
+    }).join('');
   }
   if(slideNum===4){
-    const body=renderWorkstreamStatusPreviewTableHtml();
-    openModal(`<div class="m-hd" style="align-items:flex-start"><div><h3 style="margin:0">Preview — Slide 4</h3><p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">Workstream Status</p></div><button class="m-close" onclick="closeModal()">&times;</button></div>
-    <div class="m-bd" style="max-height:70vh;overflow:auto;padding-top:4px">${body}</div>`);
-    const _mws=document.getElementById('modal');
-    _mws.classList.add('modal-wide','modal-ws-status-preview');
-    return;
+    return renderWorkstreamStatusPreviewTableHtml();
   }
   if(slideNum===5){
-    openModal(`<div class="m-hd" style="align-items:flex-start"><div><h3 style="margin:0">Preview — Slide 5</h3><p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">Program Snapshot</p></div><button class="m-close" onclick="closeModal()">&times;</button></div>
-    <div class="m-bd" style="max-height:75vh;overflow:auto">${renderExecutiveSnapshotHtml()}</div>`);
-    document.getElementById('modal').classList.add('modal-wide');
-    return;
+    return renderExecutiveSnapshotHtml();
   }
   if(slideNum===6){
-    previewDailyDigest();
-    return;
+    const html=generateDailyDigest({forEmail:true});
+    const dataUrl='data:text/html;charset=utf-8,'+encodeURIComponent(html);
+    return `<iframe title="Daily Priorities preview" src="${dataUrl}" style="width:100%;height:min(72vh,820px);min-height:380px;border:1px solid var(--border-lt);border-radius:var(--r-sm);display:block;background:#fff;box-sizing:border-box"></iframe>`;
   }
-  toast('Unknown slide');
+  if(slideNum===7){
+    return await buildHeartbeatLensQuadPreviewHtml();
+  }
+  return '<p style="color:var(--muted)">Unknown slide</p>';
+}
+async function openProgramReportSlidePreview(slideNum){
+  if(slideNum<1||slideNum>7){toast('Unknown slide');return;}
+  const body=await buildProgramReportSlidePreviewBodyHtml(slideNum);
+  let sub='';
+  if(slideNum===3)sub='<p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">Weekly Heartbeat</p>';
+  if(slideNum===4)sub='<p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">Workstream Status</p>';
+  if(slideNum===5)sub='<p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">Program Snapshot</p>';
+  if(slideNum===6)sub='<p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">Daily Priorities</p>';
+  if(slideNum===7)sub='<p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">6 slides in the export (one per lens)</p>';
+  const h3=slideNum===7?'Preview — Heartbeat Lens (quad)':'Preview — Slide '+slideNum;
+  const hdrAlign=slideNum===1?'':' style="align-items:flex-start"';
+  const hdrInner=slideNum===1?'<h3>'+h3+'</h3>':'<div><h3 style="margin:0">'+h3+'</h3>'+sub+'</div>';
+  let mBdStyle='';
+  if(slideNum===4)mBdStyle='max-height:70vh;overflow:auto;padding-top:4px';
+  else if(slideNum===5)mBdStyle='max-height:75vh;overflow:auto';
+  else if(slideNum===6)mBdStyle='padding:0 24px 18px';
+  else if(slideNum===7)mBdStyle='max-height:78vh;overflow:auto;font-size:13px;line-height:1.55;color:var(--fg)';
+  const footer=slideNum===7?'<div class="m-ft"><button class="mbtn mb-cancel" onclick="closeModal()">Close</button></div>':'';
+  openModal('<div class="m-hd"'+hdrAlign+'>'+hdrInner+'<button class="m-close" onclick="closeModal()">&times;</button></div><div class="m-bd" style="'+mBdStyle+'">'+body+'</div>'+footer);
+  const _m=document.getElementById('modal');
+  _m.classList.add('modal-wide');
+  if(slideNum===4)_m.classList.add('modal-ws-status-preview');
+}
+function wrapReportsPreviewSection(slideNum,innerBodyHtml){
+  const meta={
+    1:{num:'1',label:'Slide 1 — Title',desc:'Program title, subtitle, and date.'},
+    2:{num:'2',label:'Slide 2 — Vertical AI pipeline',desc:'L2 under AI for the Business; AI status (7 days, ≤20 words).'},
+    3:{num:'3',label:'Slide 3 — Weekly heartbeat',desc:'All program workstreams by effective lens (AI summary when API key set).'},
+    4:{num:'4',label:'Slide 4 — Workstream status',desc:'L1/L2 table; export uses at most '+WS_STATUS_PPTX_MAX_SLIDES+' slides (~'+WS_STATUS_PPTX_ROWS_PER_SLIDE+'+ rows each when short; more rows per slide when the tree is long).'},
+    5:{num:'5',label:'Slide 5 — Program Snapshot',desc:'Same metrics as Program Snapshot on the dashboard.'},
+    6:{num:'6',label:'Slide 6 — Daily Priorities',desc:'Overdue, due soon, blocked (same logic as on the dashboard).'},
+    7:{num:'7+',label:'Slides 7+ — Lens Quad Update',desc:'One slide per heartbeat lens — live 2×2 preview below when you generate content.'}
+  };
+  const m=meta[slideNum]||{num:String(slideNum),label:'Slide '+slideNum,desc:''};
+  return '<section class="reports-prev-block" style="margin-bottom:28px;padding:22px 24px;background:var(--bg-card);border:1px solid var(--border-lt);border-radius:var(--r-lg)">'+
+    '<div style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border-lt)">'+
+    '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Slide '+m.num+'</div>'+
+    '<div style="font-size:17px;font-weight:800;color:var(--text);margin-top:4px">'+m.label+'</div>'+
+    '<div style="font-size:13px;color:var(--muted);margin-top:6px;line-height:1.45">'+m.desc+'</div></div>'+
+    '<div class="reports-prev-body">'+innerBodyHtml+'</div></section>';
+}
+async function runReportsPageContentPreview(){
+  const panel=document.getElementById('reports-preview-inner');
+  const wrap=document.getElementById('reports-preview-wrap');
+  if(!panel||!wrap)return;
+  const ids=['rep-pptx-sl1','rep-pptx-sl2','rep-pptx-sl3','rep-pptx-sl4','rep-pptx-sl5','rep-pptx-sl6','rep-pptx-sl7'];
+  const sel=[];
+  ids.forEach((id,i)=>{if(document.getElementById(id)?.checked)sel.push(i+1)});
+  if(!sel.length){toast('Select at least one slide to preview');return}
+  panel.innerHTML='<p style="color:var(--muted);padding:12px">Building previews…</p>';
+  wrap.style.display='block';
+  let html='';
+  for(const n of sel){
+    try{
+      const body=await buildProgramReportSlidePreviewBodyHtml(n);
+      html+=wrapReportsPreviewSection(n,body);
+    }catch(e){
+      console.error(e);
+      html+=wrapReportsPreviewSection(n,'<p style="color:#dc2626">Could not build this preview.</p>');
+    }
+  }
+  panel.innerHTML=html;
+  wrap.scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function runReportsPagePreviewOne(slideNum){
+  const panel=document.getElementById('reports-preview-inner');
+  const wrap=document.getElementById('reports-preview-wrap');
+  if(!panel||!wrap)return;
+  panel.innerHTML='<p style="color:var(--muted);padding:12px">Loading preview…</p>';
+  wrap.style.display='block';
+  try{
+    const body=await buildProgramReportSlidePreviewBodyHtml(slideNum);
+    panel.innerHTML=wrapReportsPreviewSection(slideNum,body);
+  }catch(e){
+    console.error(e);
+    panel.innerHTML=wrapReportsPreviewSection(slideNum,'<p style="color:#dc2626">Could not build this preview.</p>');
+  }
+  wrap.scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function runReportsPageBuildPptx(){
+  if(typeof PptxGenJS==='undefined'){toast('PptxGenJS library not loaded');return}
+  const ids=['rep-pptx-sl1','rep-pptx-sl2','rep-pptx-sl3','rep-pptx-sl4','rep-pptx-sl5','rep-pptx-sl6','rep-pptx-sl7'];
+  const keys=['s1','s2','s3','s4','s5','s6','s7'];
+  const opts={};
+  ids.forEach((id,i)=>{const el=document.getElementById(id);opts[keys[i]]=!!(el&&el.checked)});
+  if(!opts.s1&&!opts.s2&&!opts.s3&&!opts.s4&&!opts.s5&&!opts.s6&&!opts.s7){toast('Select at least one slide');return}
+  opts.execGate=(document.getElementById('reports-pptx-gate')?.value||'').trim();
+  opts.aboveLine='';
+  opts.belowLine='';
+  if(!D.pptxExportLabels)D.pptxExportLabels={};
+  D.pptxExportLabels.execGate=opts.execGate;
+  D.pptxExportLabels.aboveLine='';
+  D.pptxExportLabels.belowLine='';
+  save();
+  try{localStorage.setItem(EXEC_PPTX_SLIDES_KEY,JSON.stringify({s1:opts.s1,s2:opts.s2,s3:opts.s3,s4:opts.s4,s5:opts.s5,s6:opts.s6,s7:opts.s7}))}catch(e){}
+  await exportExecPptx(opts);
+}
+function rReports(c){
+  const lb=D.pptxExportLabels||{};
+  const eg=lb.execGate!=null?String(lb.execGate):'▼ Exec Committee Gate';
+  const chk=(id)=>`<input type="checkbox" id="${id}" style="margin-top:3px"/>`;
+  const prev=(n)=>`<button type="button" class="mbtn" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0;white-space:nowrap" onclick="event.preventDefault();runReportsPagePreviewOne(${n})">Content preview</button>`;
+  c.innerHTML=`
+  <div class="card" style="margin-bottom:20px;padding:22px 24px">
+    <h2 style="margin:0 0 8px;font-size:20px;font-weight:800">Program report</h2>
+    <p style="margin:0 0 18px;font-size:13px;color:var(--muted);line-height:1.5">White 16:9 deck. Select slides, run <strong>Generate content preview</strong> to review on this page, then <strong>Build PowerPoint</strong> when ready. Slide 2: AI summarizes each L2 vertical from the <strong>last 7 calendar days</strong> (≤20 words each) when your API key is set.</p>
+    <div class="fg" style="margin-bottom:8px"><label style="font-size:11px;font-weight:700">Exec Committee gate (shown on pipeline slide)</label><input id="reports-pptx-gate" value="${esc(eg)}" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px" onchange="if(!D.pptxExportLabels)D.pptxExportLabels={};D.pptxExportLabels.execGate=this.value.trim();save();"></div>
+    <p style="font-size:11px;color:var(--muted);margin:0 0 14px;line-height:1.45">Which verticals appear above vs below the CDO divider on slide 2 is set on each <strong>AI for the Business</strong> L2 workstream (<strong>Edit workstream → CDO delivery line</strong>). <strong>Auto</strong> uses lifecycle (Executing / Roadmapping = above).</p>
+    <p style="font-size:12px;font-weight:700;margin:0 0 8px">Slides to include</p>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+      <button type="button" class="mbtn" style="font-size:11px;padding:4px 10px" onclick="document.querySelectorAll('[id^=rep-pptx-sl]').forEach(x=>{x.checked=true})">Select all</button>
+      <button type="button" class="mbtn" style="font-size:11px;padding:4px 10px" onclick="document.querySelectorAll('[id^=rep-pptx-sl]').forEach(x=>{x.checked=false})">Clear all</button>
+      <span style="flex:1"></span>
+      <button type="button" class="tb-btn" style="font-size:13px;padding:8px 14px;font-weight:700" onclick="runReportsPageContentPreview()">Generate content preview</button>
+      <button type="button" class="tb-btn" style="background:#00274C;color:#fff;font-size:13px;padding:8px 14px;font-weight:700;border-radius:var(--r-sm)" onclick="runReportsPageBuildPptx()">Build PowerPoint</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('rep-pptx-sl1')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 1 — Title</strong> — program title, subtitle, date</span>${prev(1)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('rep-pptx-sl2')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 2 — Vertical AI pipeline</strong> — L2 under AI for the Business; AI status (7 days, ≤20 words)</span>${prev(2)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('rep-pptx-sl3')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 3 — Weekly heartbeat</strong> — all program workstreams by effective lens (AI summary when API key set)</span>${prev(3)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('rep-pptx-sl4')} <span style="flex:1;min-width:0"><strong>Slide 4 — Workstream status</strong> — L1/L2 table (preview); export uses <strong>at most ${WS_STATUS_PPTX_MAX_SLIDES} slides</strong> (~${WS_STATUS_PPTX_ROWS_PER_SLIDE}+ rows each when short; more rows per slide when the tree is long)</span>${prev(4)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('rep-pptx-sl5')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 5 — Program Snapshot</strong> — same metrics as Program Snapshot on the dashboard</span>${prev(5)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('rep-pptx-sl6')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 6 — Daily Priorities</strong> — overdue, due soon, blocked (same logic as on the dashboard)</span>${prev(6)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('rep-pptx-sl7')} <span style="flex:1;min-width:0"><strong>Slides 7+ — Lens Quad Update</strong> — one slide per heartbeat lens.</span>${prev(7)}</label>
+    </div>
+  </div>
+  <div id="reports-preview-wrap" style="display:none;margin-bottom:24px">
+    <div class="card" style="padding:22px 24px">
+      <h3 style="margin:0 0 14px;font-size:16px;font-weight:800">Content preview</h3>
+      <div id="reports-preview-inner"></div>
+    </div>
+  </div>`;
 }
 function getDailyDigestStructured(){
   const todayStr=today();
@@ -8008,17 +8298,168 @@ function pptxTableRowsPadEven(rows,colCount){
   const out=rows.slice();
   const n=colCount==null||colCount===undefined?3:Math.max(1,Math.floor(Number(colCount)));
   if(out.length%2===1){
-    const pad=Array.from({length:n},()=>({text:' ',options:{fontFace:'Arial',fontSize:8,color:'FFFFFF'}}));
+    const pad=Array.from({length:n},()=>({text:' ',options:{fontFace:'Arial',fontSize:9,color:'FFFFFF'}}));
     out.push(pad);
   }
   return out;
 }
+/** Flatten heartbeat lens strings into separate bullet lines (split on newlines). */
+function expandHeartbeatLinesForBullets(lensArr){
+  const out=[];
+  (lensArr||[]).forEach(t=>{
+    String(t).split(/\r?\n+/).forEach(line=>{
+      const s=line.replace(/\u00a0/g,' ').trim();
+      if(s)out.push(s);
+    });
+  });
+  return out;
+}
+/**
+ * Vertical AI | Pipeline — matches `openProgramReportSlidePreview` slide 2 (split above/below CDO, gate band).
+ * Shared by `exportExecPptx` (slide 2) and `generateAtlasProgramPptx` so both downloads stay aligned.
+ */
+function pptxPopulateVerticalAiPipelineSlide(pptxGen,s,verticalRows,pipelineAiSummaries,pipeDeckFallbackNote,gateDisplayText,dateStr){
+  const BLACK='000000';
+  const pipeNoteX=pptxSanitize(pipeDeckFallbackNote,800);
+  s.addText('Vertical AI | Pipeline',{x:0.5,y:0.32,w:12,h:0.42,fontSize:32,bold:true,color:BLACK,fontFace:'Arial'});
+  let barTop=1.22;
+  if(pipeNoteX){
+    s.addText(pipeNoteX,{x:0.5,y:0.84,w:12,h:0.22,fontSize:6,color:BLACK,fontFace:'Arial',wrap:true});
+    barTop=1.36;
+  }
+  const slideW=13.333,leftM=0.5,labelW=2.15,colGap=0.08,updateW=2.85,barLeadGap=0.06,rightM=0.38;
+  const updateX=leftM+labelW+colGap;
+  const trackL=updateX+updateW+barLeadGap;
+  const trackW=Math.max(5.0,slideW-trackL-rightM);
+  const stageN=VERTICAL_LIFECYCLE_STAGES.length,segW=trackW/stageN;
+  const rmIx=VERTICAL_LIFECYCLE_STAGES.findIndex(st=>st.value==='roadmapping');
+  const gateIxRm=rmIx>=0?rmIx:3;
+  const gateX=trackL+gateIxRm*segW+segW*0.22;
+  const gateW=segW*1.56;
+  VERTICAL_LIFECYCLE_STAGES.forEach((st,i)=>{s.addText(pptxSanitize(st.label,80),{x:trackL+i*segW,y:barTop,w:segW,h:0.26,fontSize:12,bold:true,color:BLACK,fontFace:'Arial',align:'center'})});
+  s.addText(gateDisplayText,{x:gateX,y:barTop-0.4,w:gateW,h:0.32,fontSize:10,color:'CC0000',fontFace:'Arial',align:'center',bold:true,wrap:true});
+  const split=splitVerticalPipelineRows(verticalRows);
+  const rowH=0.46;
+  const rowGap=0.2;
+  const drawRows=(rows,y0,maxY,sectionLabel,barHex)=>{
+    let y=y0;
+    if(sectionLabel){s.addText(pptxSanitize(sectionLabel,200),{x:0.5,y:y,w:12,h:0.16,fontSize:9,bold:true,color:BLACK,fontFace:'Arial'});y+=0.2}
+    rows.forEach(w=>{
+      if(y>maxY-0.05)return;
+      const vi=verticalLifecycleIndex(w.verticalLifecycleStage);
+      const fillW=trackW*((vi+1)/stageN);
+      s.addText(pptxSanitize(w.name,500),{x:leftM,y:y,w:labelW-0.06,h:rowH,fontSize:12,color:BLACK,fontFace:'Arial',bold:true,valign:'middle',wrap:true});
+      const note=pipelineAiSummaries[w.id]||(((w.desc||'').trim().slice(0,180))||wsStatusLabel(w.status));
+      s.addText(pptxSanitize(String(note),600),{x:updateX,y:y,w:updateW,h:rowH,fontSize:10,color:BLACK,fontFace:'Arial',valign:'middle',wrap:true});
+      s.addShape(pptxGen.ShapeType.rect,{x:trackL,y:y+0.1,w:Math.min(trackW,Math.max(0.02,fillW)),h:0.2,fill:{color:barHex},line:{color:'CCCCCC',width:1},rectRadius:0.05});
+      y+=rowH+rowGap;
+    });
+    return y;
+  };
+  let yAfterStages=barTop+0.32;
+  yAfterStages=drawRows(split.above,yAfterStages,4.05,'','4472C4')+0.22;
+  s.addShape(pptxGen.ShapeType.rect,{x:0.45,y:yAfterStages,w:12.4,h:0.32,fill:{color:'4C1D95'},line:{color:'6B21A8',width:0.5},rectRadius:0.1});
+  s.addText(pptxSanitize('CDO delivery capacity — Above: active engagement | Below: planning & support',200),{x:0.55,y:yAfterStages+0.05,w:12.2,h:0.24,fontSize:9.5,color:'FFFFFF',fontFace:'Arial',align:'center',wrap:true,bold:true});
+  yAfterStages+=0.5;
+  yAfterStages=drawRows(split.below,yAfterStages,6.75,'','94A3B8');
+  if(!verticalRows.length)s.addText('No workstreams under AI for the Business matched this slide — set parent L1, depth (L2), and vertical lifecycle on pipeline workstreams.',{x:0.5,y:1.35,w:12,h:0.45,fontSize:11,color:BLACK,fontFace:'Arial'});
+  atlasPptxDateBottom(s,dateStr);
+}
+/** Weekly Heartbeat slide body — shared by program report export and “Export program PowerPoint”. */
+function pptxPopulateWeeklyHeartbeatSlide(pptxGen,s,hb,dateStr){
+  const BLACK='000000';
+  s.addText('AI Program Update | Weekly Heartbeat',{x:0.5,y:0.32,w:12,h:0.4,fontSize:32,bold:true,color:BLACK,fontFace:'Arial'});
+  let y=1.02;
+  const hbBoxH=0.76;
+  const hbLensLeft=0.45,hbLensW=2.38,hbGap=0.1,hbBoxX=hbLensLeft+hbLensW+hbGap,hbBoxW=13.333-hbBoxX-0.42;
+  HEARTBEAT_PPTX_ROWS.forEach(r=>{
+    s.addShape(pptxGen.ShapeType.rect,{x:hbBoxX,y:y-0.02,w:hbBoxW,h:hbBoxH,fill:{color:'F1F5F9'},line:{color:'E2E8F0',width:0.5}});
+    s.addText(r.title,{x:hbLensLeft,y:y,w:hbLensW,h:hbBoxH+0.06,fontSize:14,bold:true,color:BLACK,fontFace:'Arial',wrap:true,valign:'top'});
+    const lineList=expandHeartbeatLinesForBullets(hb[r.key]);
+    const bullets=lineList.length
+      ?lineList.map(t=>({text:pptxSanitize(String(t),2000),options:{fontSize:10,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'},paraSpaceAfter:4}}))
+      :[{text:'—',options:{fontSize:10,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'}}}];
+    s.addText(bullets,{x:hbBoxX+0.06,y:y+0.04,w:hbBoxW-0.12,h:hbBoxH-0.08,valign:'top',fontFace:'Arial',wrap:true});
+    y+=hbBoxH+0.14;
+  });
+  atlasPptxDateBottom(s,dateStr);
+}
+/**
+ * 2×2 Heartbeat Lens slide — Accomplishments | Look Ahead | Milestones (Not Started / Open / Blocked·Dependency, max 5, by date) | Watch List (L1 risks).
+ * @param {{lensLabel:string,accomBullets:string[],lookAheadBullets:string[],milestoneTasks:object[],watchRiskTitles:string[]}} payload
+ */
+function pptxPopulateLensQuadSlide(pptxGen,s,payload,dateStr){
+  const BLACK='000000';
+  const fillQuad='F8FAFC';
+  const borderQuad='CBD5E1';
+  const pad=0.45;
+  const gap=0.12;
+  const innerW=13.333-2*pad;
+  const colW=(innerW-gap)/2;
+  const gridTop=0.92;
+  const gridBot=6.58;
+  const gridH=gridBot-gridTop;
+  const rowHQ=(gridH-gap)/2;
+  const lensTitle=payload.lensLabel||'';
+  s.addText('AI Program Update | Heartbeat Lens',{x:pad,y:0.24,w:12.3,h:0.36,fontSize:28,bold:true,color:BLACK,fontFace:'Arial'});
+  s.addText(lensTitle,{x:pad,y:0.58,w:12.4,h:0.28,fontSize:13,color:'334155',fontFace:'Arial',bold:true});
+  const tl={x:pad,y:gridTop,w:colW,h:rowHQ};
+  const tr={x:pad+colW+gap,y:gridTop,w:colW,h:rowHQ};
+  const bl={x:pad,y:gridTop+rowHQ+gap,w:colW,h:rowHQ};
+  const br={x:pad+colW+gap,y:gridTop+rowHQ+gap,w:colW,h:rowHQ};
+  [tl,tr,bl,br].forEach(b=>{
+    s.addShape(pptxGen.ShapeType.rect,{x:b.x,y:b.y,w:b.w,h:b.h,fill:{color:fillQuad},line:{color:borderQuad,width:0.75},rectRadius:0.12});
+  });
+  const hdr=(box,title)=>{
+    s.addText(title,{x:box.x+0.1,y:box.y+0.08,w:box.w-0.2,h:0.34,fontSize:14,bold:true,color:BLACK,fontFace:'Arial',wrap:true});
+  };
+  hdr(tl,'Accomplishments');
+  hdr(tr,'Look Ahead (Next 1-2 Weeks)');
+  hdr(bl,'Milestones');
+  hdr(br,'Watch List');
+  const innerPad=0.12;
+  const cTop=0.38;
+  const ac=payload.accomBullets||[];
+  const acTxt=ac.length
+    ?ac.map(t=>({text:pptxSanitize(String(t),2000),options:{fontSize:9,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'},paraSpaceAfter:3}}))
+    :[{text:'No ATLAS-dated activity in the last 14 days for this lens.',options:{fontSize:9,color:'475569',fontFace:'Arial',bullet:{type:'bullet'}}}];
+  s.addText(acTxt,{x:tl.x+innerPad,y:tl.y+cTop,w:tl.w-2*innerPad,h:tl.h-cTop-innerPad,valign:'top',fontFace:'Arial',wrap:true});
+  const lk=payload.lookAheadBullets||[];
+  const lkTxt=lk.length
+    ?lk.map(t=>({text:pptxSanitize(String(t),2000),options:{fontSize:9,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'},paraSpaceAfter:3}}))
+    :[{text:'No open action items with target dates for this lens.',options:{fontSize:9,color:'475569',fontFace:'Arial',bullet:{type:'bullet'}}}];
+  s.addText(lkTxt,{x:tr.x+innerPad,y:tr.y+cTop,w:tr.w-2*innerPad,h:tr.h-cTop-innerPad,valign:'top',fontFace:'Arial',wrap:true});
+  const mt=payload.milestoneTasks||[];
+  const headM=[
+    {text:'Name',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}},
+    {text:'Status',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}},
+    {text:'Target Date',options:{bold:true,fontFace:'Arial',fontSize:8,color:BLACK}}
+  ];
+  const sliceM=mt.slice(0,5);
+  if(sliceM.length){
+    const bodyM=sliceM.map(t=>[
+      {text:pptxSanitize((t.title||'').slice(0,200),800),options:{fontFace:'Arial',fontSize:8,color:BLACK}},
+      {text:pptxSanitize(taskStatusLabel(t.status),80),options:{fontFace:'Arial',fontSize:8,color:BLACK}},
+      {text:pptxSanitize(t.due?String(t.due).slice(0,10):'—',40),options:{fontFace:'Arial',fontSize:8,color:BLACK}}
+    ]);
+    const tw=bl.w-2*innerPad;
+    s.addTable(pptxTableRowsPadEven([headM,...bodyM],3),{x:bl.x+innerPad,y:bl.y+cTop,w:tw,h:Math.min(bl.h-cTop-innerPad,2.25),fontFace:'Arial',fontSize:8,colW:[tw*0.5,tw*0.28,tw*0.22],border:{type:'solid',color:'CCCCCC',pt:0.5},margin:[3,4,3,4]});
+  }else{
+    s.addText('No Not Started, Open, or Blocked/Dependency action items in this lens.',{x:bl.x+innerPad,y:bl.y+cTop,w:bl.w-2*innerPad,h:0.55,fontSize:9,color:'475569',fontFace:'Arial',wrap:true});
+  }
+  const wr=payload.watchRiskTitles||[];
+  const wrTxt=wr.length
+    ?wr.map(t=>({text:pptxSanitize(String(t),2000),options:{fontSize:9,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'},paraSpaceAfter:3}}))
+    :[{text:'No open risks on L1 workstreams for this lens.',options:{fontSize:9,color:'475569',fontFace:'Arial',bullet:{type:'bullet'}}}];
+  s.addText(wrTxt,{x:br.x+innerPad,y:br.y+cTop,w:br.w-2*innerPad,h:br.h-cTop-innerPad,valign:'top',fontFace:'Arial',wrap:true});
+  atlasPptxDateBottom(s,dateStr);
+}
 async function exportExecPptx(opts){
   if(typeof PptxGenJS==='undefined'){toast('PptxGenJS library not loaded');return}
-  const defSlides={s1:true,s2:true,s3:true,s4:true,s5:true,s6:true};
+  const defSlides={s1:true,s2:true,s3:true,s4:true,s5:true,s6:true,s7:false};
   opts={...defSlides,...(opts||{})};
-  if(!opts.s1&&!opts.s2&&!opts.s3&&!opts.s4&&!opts.s5&&!opts.s6){toast('Select at least one slide');return}
-  toast('Building presentation…');
+  if(!opts.s1&&!opts.s2&&!opts.s3&&!opts.s4&&!opts.s5&&!opts.s6&&!opts.s7){toast('Select at least one slide');return}
+  toast('Building presentation…',null,180000);
   try{
   const er=getExecReport();
   const allProgWs=allProgramWorkstreamsSorted();
@@ -8031,7 +8472,6 @@ async function exportExecPptx(opts){
   }
   const gateTxt=(opts.execGate!=null&&String(opts.execGate).trim())?String(opts.execGate).trim():((D.pptxExportLabels||{}).execGate||'▼ Exec Committee Gate');
   const gateTxtX=pptxSanitize(gateTxt,500);
-  const pipeNoteX=pptxSanitize(pipeDeckFallbackNote,800);
   const dateStr=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
   const BLACK='000000';
   let page=0;
@@ -8052,44 +8492,7 @@ async function exportExecPptx(opts){
     page++;
     const s=pptx.addSlide();
     s.background={fill:'FFFFFF'};
-    s.addText('Vertical AI | Pipeline',{x:0.5,y:0.32,w:12,h:0.42,fontSize:32,bold:true,color:BLACK,fontFace:'Arial'});
-    let barTop=1.02;
-    if(pipeNoteX){
-      s.addText(pipeNoteX,{x:0.5,y:0.88,w:12,h:0.22,fontSize:6,color:BLACK,fontFace:'Arial',wrap:true});
-      barTop=1.14;
-    }
-    const slideW=13.333,leftM=0.5,labelW=2.15,colGap=0.08,updateW=2.85,barLeadGap=0.06,rightM=0.38;
-    const updateX=leftM+labelW+colGap;
-    const trackL=updateX+updateW+barLeadGap;
-    const trackW=Math.max(5.0,slideW-trackL-rightM);
-    const stageN=VERTICAL_LIFECYCLE_STAGES.length,segW=trackW/stageN;
-    VERTICAL_LIFECYCLE_STAGES.forEach((st,i)=>{s.addText(pptxSanitize(st.label,80),{x:trackL+i*segW,y:barTop,w:segW,h:0.26,fontSize:12,bold:true,color:BLACK,fontFace:'Arial',align:'center'})});
-    s.addText(gateTxtX,{x:trackL+3.35*segW-0.05,y:barTop-0.2,w:segW*1.35,h:0.34,fontSize:12,color:'CC0000',fontFace:'Arial',align:'center',bold:true});
-    const split=splitVerticalPipelineRows(verticalRows);
-    const rowH=0.34;
-    const drawRows=(rows,y0,maxY,sectionLabel,barHex)=>{
-      let y=y0;
-      if(sectionLabel){s.addText(pptxSanitize(sectionLabel,200),{x:0.5,y:y,w:12,h:0.16,fontSize:9,bold:true,color:BLACK,fontFace:'Arial'});y+=0.2}
-      rows.forEach(w=>{
-        if(y>maxY-0.05)return;
-        const vi=verticalLifecycleIndex(w.verticalLifecycleStage);
-        const fillW=trackW*((vi+1)/stageN);
-        s.addText(pptxSanitize(w.name,500),{x:leftM,y:y,w:labelW-0.06,h:rowH,fontSize:rows.length>10?8:9,color:BLACK,fontFace:'Arial',bold:true,valign:'middle'});
-        const note=pipelineAiSummaries[w.id]||(((w.desc||'').trim().slice(0,180))||wsStatusLabel(w.status));
-        s.addText(pptxSanitize(String(note),600),{x:updateX,y:y,w:updateW,h:rowH,fontSize:7.5,color:BLACK,fontFace:'Arial',valign:'middle',wrap:true});
-        s.addShape(pptx.ShapeType.rect,{x:trackL,y:y+0.07,w:Math.min(trackW,Math.max(0.02,fillW)),h:0.18,fill:{color:barHex},line:{color:'CCCCCC',width:1}});
-        y+=rowH+0.05;
-      });
-      return y;
-    };
-    let yAfterStages=barTop+0.32;
-    yAfterStages=drawRows(split.above,yAfterStages,4.15,'','4472C4')+0.1;
-    s.addShape(pptx.ShapeType.rect,{x:0.45,y:yAfterStages,w:12.4,h:0.28,fill:{color:'F3F4F6'},line:{color:'CCCCCC',width:1}});
-    s.addText(pptxSanitize('CDO delivery capacity — Above: active engagement | Below: planning & support',200),{x:0.55,y:yAfterStages+0.04,w:12.2,h:0.22,fontSize:8,color:BLACK,fontFace:'Arial',align:'center',wrap:true});
-    yAfterStages+=0.34;
-    yAfterStages=drawRows(split.below,yAfterStages,6.85,'','94A3B8');
-    if(!verticalRows.length)s.addText('No workstreams under AI for the Business matched this slide — set parent L1, depth (L2), and vertical lifecycle on pipeline workstreams.',{x:0.5,y:1.35,w:12,h:0.45,fontSize:11,color:BLACK,fontFace:'Arial'});
-    atlasPptxDateBottom(s,dateStr);
+    pptxPopulateVerticalAiPipelineSlide(pptx,s,verticalRows,pipelineAiSummaries,pipeDeckFallbackNote,gateTxtX,dateStr);
   }
 
   let hb=null;
@@ -8099,32 +8502,22 @@ async function exportExecPptx(opts){
     page++;
     const s=pptx.addSlide();
     s.background={fill:'FFFFFF'};
-    s.addText('AI Program Update | Weekly Heartbeat',{x:0.5,y:0.32,w:12,h:0.4,fontSize:32,bold:true,color:BLACK,fontFace:'Arial'});
-    let y=1.02;
-    HEARTBEAT_PPTX_ROWS.forEach(r=>{
-      s.addShape(pptx.ShapeType.rect,{x:3.52,y:y-0.02,w:9.12,h:0.98,fill:{color:'F1F5F9'},line:{color:'E2E8F0',width:0.5}});
-      s.addText(r.title,{x:0.5,y:y,w:3.15,h:0.22,fontSize:10.5,bold:true,color:BLACK,fontFace:'Arial'});
-      const rawLines=hb[r.key]||[];
-      const bullets=rawLines.length?rawLines.map(t=>({text:pptxSanitize(String(t),2000),options:{fontSize:9.2,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'},paraSpaceAfter:2}})):[{text:'—',options:{fontSize:10,color:BLACK,fontFace:'Arial'}}];
-      s.addText(bullets,{x:3.58,y:y+0.04,w:9.0,h:0.9,valign:'top',fontFace:'Arial',wrap:true});
-      y+=1.0;
-    });
-    atlasPptxDateBottom(s,dateStr);
+    pptxPopulateWeeklyHeartbeatSlide(pptx,s,hb,dateStr);
   }
 
   if(opts.s4){
     const wsHead=[
-      {text:'Workstream',options:{bold:true,fontFace:'Arial',fontSize:7,color:BLACK}},
-      {text:'Lens',options:{bold:true,fontFace:'Arial',fontSize:7,color:BLACK}},
-      {text:'Lv',options:{bold:true,fontFace:'Arial',fontSize:7,color:BLACK}},
-      {text:'Lead',options:{bold:true,fontFace:'Arial',fontSize:7,color:BLACK}},
-      {text:'Co-Lead',options:{bold:true,fontFace:'Arial',fontSize:7,color:BLACK}},
-      {text:'Open action items',options:{bold:true,fontFace:'Arial',fontSize:7,color:BLACK}},
-      {text:'Blocked Action Items / Dependencies',options:{bold:true,fontFace:'Arial',fontSize:6.5,color:BLACK}},
-      {text:'Risks',options:{bold:true,fontFace:'Arial',fontSize:7,color:BLACK}},
-      {text:'Decisions',options:{bold:true,fontFace:'Arial',fontSize:7,color:BLACK}}
+      {text:'Workstream',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},
+      {text:'Lens',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},
+      {text:'Lv',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},
+      {text:'Lead',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},
+      {text:'Co-Lead',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},
+      {text:'Open action items',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},
+      {text:'Blocked Action Items / Dependencies',options:{bold:true,fontFace:'Arial',fontSize:9.5,color:BLACK}},
+      {text:'Risks',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}},
+      {text:'Decisions',options:{bold:true,fontFace:'Arial',fontSize:10,color:BLACK}}
     ];
-    const wsColW=[2.1,1.38,0.36,1.12,1.12,0.56,1.35,2.32,2.09];
+    const wsColW=[2.1,1.38,0.36,1.12,1.12,0.92,1.35,1.96,2.09];
     const wsBody=buildWorkstreamStatusPptxTableRowCells();
     const wsN=wsBody.length;
     const wsRowStep=wsN?Math.max(WS_STATUS_PPTX_ROWS_PER_SLIDE,Math.ceil(wsN/WS_STATUS_PPTX_MAX_SLIDES)):WS_STATUS_PPTX_ROWS_PER_SLIDE;
@@ -8136,13 +8529,12 @@ async function exportExecPptx(opts){
       const s=pptx.addSlide();
       s.background={fill:'FFFFFF'};
       const parts=wsChunks.length>1?' ('+(wi+1)+' of '+wsChunks.length+')':'';
-      s.addText('Workstream status'+parts,{x:0.5,y:0.32,w:12,h:0.4,fontSize:30,bold:true,color:BLACK,fontFace:'Arial'});
-      s.addText('L1 / L2 tree — same columns as ATLAS preview; at most '+WS_STATUS_PPTX_MAX_SLIDES+' slides (up to '+wsRowStep+' rows per slide; '+wsN+' rows total).',{x:0.5,y:0.72,w:12.2,h:0.34,fontSize:8.5,color:BLACK,fontFace:'Arial',wrap:true});
+      s.addText('AI Program Update | Workstream Status'+parts,{x:0.5,y:0.28,w:12,h:0.44,fontSize:32,bold:true,color:BLACK,fontFace:'Arial'});
       if(chunk.length){
         const tableRows=pptxTableRowsPadEven([wsHead,...chunk],9);
-        s.addTable(tableRows,{x:0.45,y:1.02,w:12.4,colW:wsColW,fontFace:'Arial',fontSize:6.5,border:{type:'solid',color:'CCCCCC',pt:1}});
+        s.addTable(tableRows,{x:0.45,y:0.86,w:12.4,colW:wsColW,fontFace:'Arial',fontSize:9,border:{type:'solid',color:'CCCCCC',pt:1},margin:[6,7,6,7]});
       }else{
-        s.addText('No workstreams defined.',{x:0.5,y:1.35,w:12,h:0.45,fontSize:11,color:BLACK,fontFace:'Arial'});
+        s.addText('No workstreams defined.',{x:0.5,y:1.05,w:12,h:0.45,fontSize:11,color:BLACK,fontFace:'Arial'});
       }
       atlasPptxDateBottom(s,dateStr);
     });
@@ -8153,40 +8545,49 @@ async function exportExecPptx(opts){
     const s=pptx.addSlide();
     s.background={fill:'FFFFFF'};
     const m=getSnapshotMetricsForDeck();
-    s.addText('Program Snapshot',{x:0.5,y:0.14,w:12.2,h:0.38,fontSize:26,bold:true,color:BLACK,fontFace:'Arial'});
-    const snapTop=0.58;
+    s.addText('AI Program Update | Program Snapshot',{x:0.5,y:0.28,w:12.2,h:0.44,fontSize:32,bold:true,color:BLACK,fontFace:'Arial'});
+    const snapTop=0.82;
     const topPanelH=2.95;
-    const leftPanelX=0.45;
-    const leftPanelW=5.38;
-    const piePanelX=leftPanelX+leftPanelW+0.14;
-    const piePanelW=13.333-0.45-piePanelX;
+    const leftMargin=0.45,rightMargin=0.45,midGap=0.14;
+    const contentW=13.333-leftMargin-rightMargin;
+    const leftPanelW=(contentW-midGap)/2;
+    const piePanelW=leftPanelW;
+    const leftPanelX=leftMargin;
+    const piePanelX=leftPanelX+leftPanelW+midGap;
     s.addShape(pptx.ShapeType.rect,{x:leftPanelX,y:snapTop,w:leftPanelW,h:topPanelH,fill:{color:'F1F5F9'},line:{color:'CBD5E1',width:0.75},rectRadius:0.14});
     s.addShape(pptx.ShapeType.rect,{x:piePanelX,y:snapTop,w:piePanelW,h:topPanelH,fill:{color:'F8FAFC'},line:{color:'BFDBFE',width:0.75},rectRadius:0.14});
-    const kpiColGap=0.12;
     const innerPad=0.12;
-    const kpiColW=(leftPanelW-innerPad*2-kpiColGap)/2;
-    const rowH=1.28;
-    const rowGap=0.11;
+    const kpiColGap=0.08;
+    const kpiCols=3;
+    const kpiColW=(leftPanelW-innerPad*2-kpiColGap*(kpiCols-1))/kpiCols;
+    const rowH=1.14;
+    const rowGap=0.09;
     const x0=leftPanelX+innerPad;
     const yTop=snapTop+innerPad;
+    const x1=x0+kpiColW+kpiColGap;
+    const x2=x0+(kpiColW+kpiColGap)*2;
+    const yRow2=yTop+rowH+rowGap;
     const kpiBoxSm=(x,y,w,h,title,big,sub,fill,border)=>{
       s.addShape(pptx.ShapeType.rect,{x,y,w,h,fill:{color:fill},line:{color:border,width:0.75},rectRadius:0.1});
-      s.addText(title,{x:x+0.08,y:y+0.06,w:w-0.16,h:0.32,fontSize:8.5,bold:true,color:BLACK,fontFace:'Arial',wrap:false});
-      s.addText(big,{x:x+0.08,y:y+0.38,w:w-0.16,h:0.5,fontSize:20,bold:true,color:BLACK,fontFace:'Arial',wrap:false});
-      if(sub)s.addText(sub,{x:x+0.08,y:y+0.88,w:w-0.16,h:0.36,fontSize:9,color:BLACK,fontFace:'Arial',wrap:false});
+      s.addText(title,{x:x+0.06,y:y+0.05,w:w-0.12,h:0.34,fontSize:7.5,bold:true,color:BLACK,fontFace:'Arial',wrap:true});
+      s.addText(big,{x:x+0.06,y:y+0.38,w:w-0.12,h:0.46,fontSize:18,bold:true,color:BLACK,fontFace:'Arial',wrap:false});
+      if(sub)s.addText(sub,{x:x+0.06,y:y+0.84,w:w-0.12,h:0.32,fontSize:8.5,color:BLACK,fontFace:'Arial',wrap:true});
     };
     kpiBoxSm(x0,yTop,kpiColW,rowH,'ACTIVE WORKSTREAMS',String(m.activeWsTotal),'L1: '+m.l1+' · L2: '+m.l2+' · L3: '+m.l3,'EFF6FF','93C5FD');
-    kpiBoxSm(x0+kpiColW+kpiColGap,yTop,kpiColW,rowH,'OPEN ACTION ITEMS',String(m.openTaskCount),'Not done','E0F2FE','38BDF8');
-    kpiBoxSm(x0,yTop+rowH+rowGap,kpiColW,rowH,'BLOCKED / DEPENDENCY',String(m.blockedDepCount),'Waiting on another team','FEF2F2','FCA5A5');
-    kpiBoxSm(x0+kpiColW+kpiColGap,yTop+rowH+rowGap,kpiColW,rowH,'RISKS',String(m.totalRisks),'Open: '+m.openRiskCount,'FEFCE8','FDE047');
+    kpiBoxSm(x1,yTop,kpiColW,rowH,'OPEN ACTION ITEMS',String(m.openTaskCount),'Not done','E0F2FE','38BDF8');
+    kpiBoxSm(x2,yTop,kpiColW,rowH,'PAST DUE',String(m.pastDueCount),'Due before today','FFF1F2','FDA4AF');
+    kpiBoxSm(x0,yRow2,kpiColW,rowH,'BLOCKED / DEPENDENCY',String(m.blockedDepCount),'Waiting on another team','FEF2F2','FCA5A5');
+    kpiBoxSm(x1,yRow2,kpiColW,rowH,'RISKS',String(m.totalRisks),'Open: '+m.openRiskCount,'FEFCE8','FDE047');
     s.addText('WORKSTREAMS BY HEARTBEAT LENS',{x:piePanelX+0.14,y:snapTop+0.1,w:piePanelW-0.28,h:0.3,fontSize:11,bold:true,color:'334155',fontFace:'Arial',wrap:false});
     const pieLabels=[];
     const pieVals=[];
     const pieCols=[];
-    m.lensRows.forEach((r,i)=>{
-      if(r.count>0){pieLabels.push(pptxSanitize(r.label,52));pieVals.push(r.count);pieCols.push(HEARTBEAT_LENS_PIE_COLORS_HEX[i%HEARTBEAT_LENS_PIE_COLORS_HEX.length]);}
+    const lensPieSegs=getSortedHeartbeatLensPieSegments(m.lensRows,m.noLens);
+    lensPieSegs.forEach(seg=>{
+      pieLabels.push(pptxSanitize(seg.label,52));
+      pieVals.push(seg.count);
+      pieCols.push(seg.colorHex.replace(/^#/,''));
     });
-    if(m.noLens>0){pieLabels.push('Unassigned lens');pieVals.push(m.noLens);pieCols.push(HEARTBEAT_LENS_PIE_COLOR_UNASSIGNED_HEX);}
     const pieCx=piePanelX+0.12;
     const pieCy=snapTop+0.38;
     const pieW=piePanelW-0.24;
@@ -8269,61 +8670,96 @@ async function exportExecPptx(opts){
       }catch(e){return String(d).slice(0,12)}
     };
     const headDue=[
-      {text:'Item',options:{bold:true,fontFace:'Arial',fontSize:8,color:'000000',fill:{color:headFill}}},
-      {text:'Owner',options:{bold:true,fontFace:'Arial',fontSize:8,color:'000000',fill:{color:headFill}}},
-      {text:'Due',options:{bold:true,fontFace:'Arial',fontSize:8,color:'000000',fill:{color:headFill}}}
+      {text:'Item',options:{bold:true,fontFace:'Arial',fontSize:9,color:'000000',fill:{color:headFill}}},
+      {text:'Owner',options:{bold:true,fontFace:'Arial',fontSize:9,color:'000000',fill:{color:headFill}}},
+      {text:'Due',options:{bold:true,fontFace:'Arial',fontSize:9,color:'000000',fill:{color:headFill}}}
     ];
     const headBlk=[
-      {text:'Item',options:{bold:true,fontFace:'Arial',fontSize:8,color:'000000',fill:{color:headFill}}},
-      {text:'Owner',options:{bold:true,fontFace:'Arial',fontSize:8,color:'000000',fill:{color:headFill}}},
-      {text:'Blocked by',options:{bold:true,fontFace:'Arial',fontSize:8,color:'000000',fill:{color:headFill}}}
+      {text:'Item',options:{bold:true,fontFace:'Arial',fontSize:9,color:'000000',fill:{color:headFill}}},
+      {text:'Owner',options:{bold:true,fontFace:'Arial',fontSize:9,color:'000000',fill:{color:headFill}}},
+      {text:'Blocked by',options:{bold:true,fontFace:'Arial',fontSize:9,color:'000000',fill:{color:headFill}}}
     ];
-    const rowH=0.27;
+    const rowH=0.29;
     let digSlide=null;
-    let yTop=0.95;
     const openDigestSlide=(continued)=>{
       if(digSlide)atlasPptxDateBottom(digSlide,dg.dateStr);
       page++;
       digSlide=pptx.addSlide();
       digSlide.background={fill:'FFFFFF'};
-      digSlide.addText(continued?'Daily Priorities (continued)':'Daily Priorities',{x:0.5,y:0.28,w:12,h:0.38,fontSize:30,bold:true,color:'000000',fontFace:'Arial'});
-      digSlide.addText(pptxSanitize(dg.dateStr,140),{x:0.5,y:0.66,w:12,h:0.24,fontSize:11,color:'475569',fontFace:'Arial'});
-      yTop=0.96;
+      digSlide.addText(continued?'AI Program Update | Daily Priorities (continued)':'AI Program Update | Daily Priorities',{x:0.5,y:0.26,w:12,h:0.42,fontSize:32,bold:true,color:'000000',fontFace:'Arial'});
     };
-    const addDigestTable=(title,rows,headRow,mapFn,maxR)=>{
-      if(!rows.length)return;
-      const slice=rows.slice(0,maxR).map(mapFn).map(row=>row.map(cell=>({text:pptxSanitize(cell.text,2000)||' ',options:cell.options||{fontFace:'Arial',fontSize:8,color:'000000'}})));
-      const tableRows=pptxTableRowsPadEven([headRow,...slice],3);
-      const th=0.1+tableRows.length*rowH+0.12;
-      const blockH=0.24+th+0.18;
-      if(digSlide===null||yTop+blockH>6.2)openDigestSlide(digSlide!==null);
-      digSlide.addText(pptxSanitize(title+' ('+rows.length+')',200),{x:0.5,y:yTop,w:12,h:0.2,fontSize:10,bold:true,color:'000000',fontFace:'Arial'});
-      yTop+=0.24;
-      digSlide.addTable(tableRows,{x:0.45,y:yTop,w:12.4,h:th,fontFace:'Arial',fontSize:8,border:{type:'solid',color:'CCCCCC',pt:1}});
-      yTop+=th+0.2;
-    };
+    const mapDueRows=(slice,cell)=>slice.map(r=>[
+      {text:pptxSanitize(r.t,2000)||' ',options:{fontFace:'Arial',fontSize:9,color:'000000',fill:{color:cell}}},
+      {text:pptxSanitize(r.o,400)||' ',options:{fontFace:'Arial',fontSize:9,color:'000000',fill:{color:cell}}},
+      {text:fmtDigestDue(r.d),options:{fontFace:'Arial',fontSize:9,color:'000000',fill:{color:cell}}}
+    ]);
+    const mapBlkRows=(slice,cell)=>slice.map(t=>[
+      {text:pptxSanitize(t.title||'',2000)||' ',options:{fontFace:'Arial',fontSize:9,color:'000000',fill:{color:cell}}},
+      {text:pptxSanitize(t.owner||'',400)||' ',options:{fontFace:'Arial',fontSize:9,color:'000000',fill:{color:cell}}},
+      {text:pptxSanitize(t.blockedBy||'—',200)||' ',options:{fontFace:'Arial',fontSize:9,color:'000000',fill:{color:cell}}}
+    ]);
+    const tableTotalH=(nData)=>Math.min(5.2,0.16+(1+nData)*rowH+0.12);
     const od=[...dg.overdueWs.map(w=>({t:w.name,o:w.primaryOwner||w.owner||'',d:w.endDate,ws:true})),...dg.overdueTasks.map(t=>({t:t.title,o:t.owner||'',d:t.due,ws:false}))].sort((a,b)=>(a.d||'').localeCompare(b.d||''));
-    addDigestTable('Past due',od,headDue,r=>[
-      {text:r.t,options:{fontFace:'Arial',fontSize:8,color:'000000',fill:{color:cellPast}}},
-      {text:r.o,options:{fontFace:'Arial',fontSize:8,color:'000000',fill:{color:cellPast}}},
-      {text:fmtDigestDue(r.d),options:{fontFace:'Arial',fontSize:8,color:'000000',fill:{color:cellPast}}}
-    ],8);
     const soon=[...dg.dueSoonWs.map(w=>({t:w.name,o:w.primaryOwner||w.owner||'',d:w.endDate})),...dg.dueSoonTasks.map(t=>({t:t.title,o:t.owner||'',d:t.due}))].sort((a,b)=>(a.d||'').localeCompare(b.d||''));
-    addDigestTable('Due next 7 days',soon,headDue,r=>[
-      {text:r.t,options:{fontFace:'Arial',fontSize:8,color:'000000',fill:{color:cellSoon}}},
-      {text:r.o,options:{fontFace:'Arial',fontSize:8,color:'000000',fill:{color:cellSoon}}},
-      {text:fmtDigestDue(r.d),options:{fontFace:'Arial',fontSize:8,color:'000000',fill:{color:cellSoon}}}
-    ],8);
-    addDigestTable('Blocked / dependency',dg.blockedTasks,headBlk,t=>[
-      {text:t.title||'',options:{fontFace:'Arial',fontSize:8,color:'000000',fill:{color:cellBlk}}},
-      {text:t.owner||'',options:{fontFace:'Arial',fontSize:8,color:'000000',fill:{color:cellBlk}}},
-      {text:t.blockedBy||'—',options:{fontFace:'Arial',fontSize:8,color:'000000',fill:{color:cellBlk}}}
-    ],10);
-    if(!dg.overdueWs.length&&!dg.overdueTasks.length&&!dg.dueSoonWs.length&&!dg.dueSoonTasks.length&&!dg.blockedTasks.length){
+    const blk=dg.blockedTasks||[];
+    const hasAny=od.length||soon.length||blk.length;
+    const maxPast=10,maxBlk=10,maxSoon=16;
+    if(!hasAny){
       openDigestSlide(false);
-      digSlide.addText('No overdue, upcoming, or blocked items in this priorities window.',{x:0.5,y:yTop,w:12,h:0.45,fontSize:11,color:'000000',fontFace:'Arial'});
+      digSlide.addText('No overdue, upcoming, or blocked items in this priorities window.',{x:0.5,y:1.05,w:12,h:0.45,fontSize:11,color:'000000',fontFace:'Arial'});
+    }else{
+      const slide1Need=od.length||blk.length;
+      if(slide1Need)openDigestSlide(false);
+      else if(soon.length)openDigestSlide(false);
+      const xL=0.45,wHalf=6.05,gap=0.13,xR=xL+wHalf+gap;
+      const y0=1.0;
+      if(od.length){
+        const odS=od.slice(0,maxPast);
+        const trP=pptxTableRowsPadEven([headDue,...mapDueRows(odS,cellPast)],3);
+        const thP=tableTotalH(odS.length);
+        digSlide.addText(pptxSanitize('Past due ('+od.length+')',200),{x:xL,y:y0,w:wHalf,h:0.22,fontSize:11,bold:true,color:'000000',fontFace:'Arial'});
+        digSlide.addTable(trP,{x:xL,y:y0+0.26,w:wHalf,h:thP,fontFace:'Arial',fontSize:9,border:{type:'solid',color:'CCCCCC',pt:1}});
+      }
+      if(blk.length){
+        const blkS=blk.slice(0,maxBlk);
+        const trB=pptxTableRowsPadEven([headBlk,...mapBlkRows(blkS,cellBlk)],3);
+        const thB=tableTotalH(blkS.length);
+        digSlide.addText(pptxSanitize('Blocked / dependency ('+blk.length+')',200),{x:xR,y:y0,w:wHalf,h:0.22,fontSize:11,bold:true,color:'000000',fontFace:'Arial'});
+        digSlide.addTable(trB,{x:xR,y:y0+0.26,w:wHalf,h:thB,fontFace:'Arial',fontSize:9,border:{type:'solid',color:'CCCCCC',pt:1}});
+      }
+      if(soon.length){
+        if(slide1Need)openDigestSlide(true);
+        const soonS=soon.slice(0,maxSoon);
+        const trS=pptxTableRowsPadEven([headDue,...mapDueRows(soonS,cellSoon)],3);
+        const thS=tableTotalH(soonS.length);
+        const y1=1.0;
+        digSlide.addText(pptxSanitize('Due next 7 days ('+soon.length+')',200),{x:0.45,y:y1,w:12.4,h:0.24,fontSize:12,bold:true,color:'000000',fontFace:'Arial'});
+        digSlide.addTable(trS,{x:0.45,y:y1+0.28,w:12.4,h:thS,fontFace:'Arial',fontSize:9,border:{type:'solid',color:'CCCCCC',pt:1}});
+      }
     }
     if(digSlide)atlasPptxDateBottom(digSlide,dg.dateStr);
+  }
+
+  if(opts.s7){
+    ensureWorkstreamReportingFields();
+    for(const lensOpt of HEARTBEAT_LENS_OPTS){
+      const activity=buildLensFlatActivityLines14d(lensOpt.value);
+      const tasksForLookAhead=getOpenTasksForLensSortedByDue(lensOpt.value);
+      const milestoneTasks=getLensQuadMilestoneTasks(lensOpt.value);
+      const risks=getOpenRisksForL1WorkstreamsInLens(lensOpt.value);
+      const accom=await aiLensQuadAccomplishmentsFromActivity(lensOpt.label,activity);
+      const look=await aiLensQuadLookAheadFromTasks(lensOpt.label,tasksForLookAhead);
+      page++;
+      const s=pptx.addSlide();
+      s.background={fill:'FFFFFF'};
+      pptxPopulateLensQuadSlide(pptx,s,{
+        lensLabel:lensOpt.label,
+        accomBullets:accom,
+        lookAheadBullets:look,
+        milestoneTasks:milestoneTasks,
+        watchRiskTitles:risks.map(r=>(r.title||'').trim()).filter(Boolean)
+      },dateStr);
+    }
   }
 
   const fileDate=new Date().toISOString().slice(0,10);
