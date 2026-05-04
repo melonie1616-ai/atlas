@@ -1612,6 +1612,10 @@ function scheduleFirebaseRender(){
       _pendingFirebaseRender=true;
       return;
     }
+    if(V==='reports'){
+      _pendingFirebaseRender=true;
+      return;
+    }
     render();
   },150);
 }
@@ -1623,6 +1627,7 @@ function endReportsAsyncOp(){
 function flushPendingFirebaseRender(){
   if(!_pendingFirebaseRender||_reportsPreviewBusy>0)return;
   _pendingFirebaseRender=false;
+  if(V==='reports')return;
   render();
 }
 function connectFirebase(onReady){
