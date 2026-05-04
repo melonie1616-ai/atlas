@@ -2609,6 +2609,31 @@ const HEARTBEAT_LENS_OPTS=[
   {value:'governance-compliance',label:'Governance & Compliance'},
   {value:'program-level',label:'Other / Program Level'}
 ];
+/** Hex without # — PPTX `chartColors` and Program Snapshot lens pie (same order as HEARTBEAT_LENS_OPTS). No red; distinct hues; AI for the Employee = dark blue. */
+const HEARTBEAT_LENS_PIE_COLORS_HEX=['1E3A8A','2563EB','16A34A','EA580C','9333EA','0891B2'];
+const HEARTBEAT_LENS_PIE_COLOR_UNASSIGNED_HEX='E2E8F0';
+/** @returns {{value:string,label:string,count:number,colorHex:string}[]} */
+function heartbeatLensPiePiecesFromRows(lensRows,noLensCount){
+  const pieces=[];
+  lensRows.forEach((o,i)=>{
+    if(o.count>0)pieces.push({value:o.value,label:o.label,count:o.count,colorHex:'#'+HEARTBEAT_LENS_PIE_COLORS_HEX[i%HEARTBEAT_LENS_PIE_COLORS_HEX.length]});
+  });
+  if(noLensCount>0)pieces.push({value:'__unassigned__',label:'Unassigned lens',count:noLensCount,colorHex:'#'+HEARTBEAT_LENS_PIE_COLOR_UNASSIGNED_HEX});
+  return pieces;
+}
+function heartbeatLensPieBackgroundCss(pieces){
+  const t=pieces.reduce((a,p)=>a+p.count,0);
+  if(!t)return'linear-gradient(135deg,#f1f5f9,#e2e8f0)';
+  if(pieces.length===1)return pieces[0].colorHex;
+  let sum=0;
+  const stops=pieces.map(p=>{
+    const a0=(sum/t)*360;
+    sum+=p.count;
+    const a1=(sum/t)*360;
+    return p.colorHex+' '+a0+'deg '+a1+'deg';
+  });
+  return'conic-gradient('+stops.join(',')+')';
+}
 /** PPTX / AI heartbeat buckets (aligned with HEARTBEAT_LENS_OPTS values). */
 const HEARTBEAT_PPTX_ROWS=[
   {title:'AI for the Employee',key:'aiEmployee'},
@@ -3023,16 +3048,20 @@ function renderExecutiveSnapshotHtml(){
     taskOwnerCounts[t.owner]=(taskOwnerCounts[t.owner]||0)+1;
   });
   const taskOwnerList=Object.entries(taskOwnerCounts).sort((a,b)=>b[1]-a[1]).slice(0,12);
-  const kpiBase='min-width:0;width:100%;border-radius:16px;padding:14px 16px;cursor:pointer;text-align:left;transition:transform .12s,box-shadow .12s;border:1px solid;box-shadow:0 1px 3px rgba(15,23,42,.06);box-sizing:border-box';
+  const kpiSm='min-width:0;width:100%;border-radius:12px;padding:9px 10px;cursor:pointer;text-align:left;transition:transform .12s,box-shadow .12s;border:1px solid;box-shadow:0 1px 3px rgba(15,23,42,.06);box-sizing:border-box';
   const kpiHIn='this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 6px 16px rgba(15,23,42,.1)\'';
   const kpiHOut='this.style.transform=\'\';this.style.boxShadow=\'0 1px 3px rgba(15,23,42,.06)\'';
-  const kpiBlueA=kpiBase+';background:linear-gradient(145deg,#eff6ff 0%,#dbeafe 100%);border-color:#93c5fd;color:#1e3a8a';
-  const kpiBlueB=kpiBase+';background:linear-gradient(145deg,#e0f2fe 0%,#bae6fd 55%,#e0f2fe 100%);border-color:#38bdf8;color:#0c4a6e';
-  const kpiBlocked=kpiBase+';background:linear-gradient(145deg,#fef2f2 0%,#fee2e2 100%);border-color:#fca5a5;color:#991b1b';
-  const kpiRisks=kpiBase+';background:linear-gradient(145deg,#fefce8 0%,#fef9c3 100%);border-color:#fde047;color:#854d0e';
-  const lensBg=['linear-gradient(145deg,#dbeafe,#bfdbfe)','linear-gradient(145deg,#e0f2fe,#bae6fd)','linear-gradient(145deg,#dbeafe,#93c5fd)','linear-gradient(145deg,#eff6ff,#bfdbfe)','linear-gradient(145deg,#e0f2fe,#dbeafe)'];
-  const lensPill=(o,i)=>`<button type="button" style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;margin:0 8px 8px 0;border-radius:999px;border:1px solid #60a5fa;background:${lensBg[i%lensBg.length]};color:#0f172a;font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 1px 4px rgba(37,99,235,.12);transition:transform .12s,box-shadow .12s" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}" onclick="wsLensFilter='${o.value}';wsL1Filter='';go('workstreams')" title="Filter Workstreams by this lens"><span style="opacity:.85;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#1e40af">${esc(o.label)}</span><span style="font-size:15px;font-weight:800;color:#1d4ed8">${o.count}</span></button>`;
-  const lensUnassigned=noLensCount?`<button type="button" style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;margin:0 8px 8px 0;border-radius:999px;border:1px solid #7dd3fc;background:linear-gradient(145deg,#f0f9ff,#e0f2fe);color:#0c4a6e;font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 1px 4px rgba(14,165,233,.15);transition:transform .12s,box-shadow .12s" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}" onclick="wsLensFilter='__unassigned__';wsL1Filter='';go('workstreams')" title="Workstreams with no heartbeat lens set"><span style="opacity:.85;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em">Unassigned lens</span><span style="font-size:15px;font-weight:800">${noLensCount}</span></button>`:'';
+  const kpiBlueAsm=kpiSm+';background:linear-gradient(145deg,#eff6ff 0%,#dbeafe 100%);border-color:#93c5fd;color:#1e3a8a';
+  const kpiBlueBsm=kpiSm+';background:linear-gradient(145deg,#e0f2fe 0%,#bae6fd 55%,#e0f2fe 100%);border-color:#38bdf8;color:#0c4a6e';
+  const kpiBlockedsm=kpiSm+';background:linear-gradient(145deg,#fef2f2 0%,#fee2e2 100%);border-color:#fca5a5;color:#991b1b';
+  const kpiRiskssm=kpiSm+';background:linear-gradient(145deg,#fefce8 0%,#fef9c3 100%);border-color:#fde047;color:#854d0e';
+  const piePieces=heartbeatLensPiePiecesFromRows(lensRows,noLensCount);
+  const pieBg=heartbeatLensPieBackgroundCss(piePieces);
+  const ariaPie=piePieces.length?piePieces.map(p=>p.label+' '+p.count).join(', '):'No lens segments';
+  const legendHtml=piePieces.length?piePieces.map(p=>'<button type="button" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:6px 8px;margin:0;border-radius:8px;border:1px solid transparent;background:rgba(255,255,255,.5);cursor:pointer;font-size:11px;font-weight:600;color:var(--fg);transition:background .15s,transform .12s" onmouseenter="'+kpiHIn+'" onmouseleave="'+kpiHOut+'" onclick=\'wsLensFilter='+JSON.stringify(p.value)+';wsL1Filter="";go("workstreams")\' title="Filter Workstreams by this lens">'+
+    '<span style="width:10px;height:10px;border-radius:2px;flex-shrink:0;background:'+p.colorHex+';border:1px solid rgba(15,23,42,.12)"></span>'+
+    '<span style="flex:1;min-width:0;line-height:1.25">'+esc(p.label)+'</span>'+
+    '<span style="font-variant-numeric:tabular-nums;font-weight:800;color:#1e40af">'+p.count+'</span></button>').join(''):'<div style="padding:8px 4px;color:var(--muted);font-size:12px;line-height:1.4">No workstreams counted in lens buckets (assign heartbeat lenses on workstreams).</div>';
   const maxWsLead=Math.max(1,...wsLeadList.map(([,c])=>c));
   const wsBarChart=wsLeadList.length?wsLeadList.map(([name,c])=>{
     const pct=Math.round(c/maxWsLead*100);
@@ -3062,31 +3091,36 @@ function renderExecutiveSnapshotHtml(){
   <div class="ws-section" id="dashSec-exec" style="margin-bottom:20px;width:100%;box-sizing:border-box">
     <div class="ws-section-hd" onclick="toggleWsSection('dashSec-exec')" style="background:var(--bg-card);padding:14px 18px;border-radius:var(--r-sm) var(--r-sm) 0 0;border:1px solid var(--border)"><h4 style="font-size:16px;font-weight:800;color:var(--text)">Program Snapshot</h4><span class="ws-section-arrow">&#9660;</span></div>
     <div class="ws-section-bd" style="padding:14px 16px;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r-sm) var(--r-sm);background:var(--bg-card);width:100%;box-sizing:border-box">
-      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;width:100%;margin-bottom:18px;box-sizing:border-box">
-        <div role="button" tabindex="0" style="${kpiBlueA}" onclick="wsLensFilter='';wsL1Filter='';go('workstreams')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();wsLensFilter='';wsL1Filter='';go('workstreams')}">
-          <div style="font-size:11px;font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.04em">Active workstreams</div>
-          <div style="font-size:28px;font-weight:800;margin:6px 0;line-height:1">${activeWsTotal}</div>
-          <div style="font-size:12px;opacity:.8">L1: ${l1} · L2: ${l2} · L3: ${l3}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:14px;width:100%;margin-bottom:18px;align-items:stretch;box-sizing:border-box">
+        <div style="flex:0 1 380px;max-width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-content:start">
+        <div role="button" tabindex="0" style="${kpiBlueAsm}" onclick="wsLensFilter='';wsL1Filter='';go('workstreams')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();wsLensFilter='';wsL1Filter='';go('workstreams')}">
+          <div style="font-size:9px;font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.04em">Active workstreams</div>
+          <div style="font-size:20px;font-weight:800;margin:4px 0;line-height:1">${activeWsTotal}</div>
+          <div style="font-size:11px;opacity:.8">L1: ${l1} · L2: ${l2} · L3: ${l3}</div>
         </div>
-        <div role="button" tabindex="0" style="${kpiBlueB}" onclick="taskStatusFilter='open';taskFilter='all';taskOwnerFilter='';taskWsFilter='';taskViewMode='list';go('actionitems')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}">
-          <div style="font-size:11px;font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.04em">Open action items</div>
-          <div style="font-size:28px;font-weight:800;margin:6px 0;line-height:1">${openTaskCount}</div>
-          <div style="font-size:12px;opacity:.8">Not done</div>
+        <div role="button" tabindex="0" style="${kpiBlueBsm}" onclick="taskStatusFilter='open';taskFilter='all';taskOwnerFilter='';taskWsFilter='';taskViewMode='list';go('actionitems')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}">
+          <div style="font-size:9px;font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.04em">Open action items</div>
+          <div style="font-size:20px;font-weight:800;margin:4px 0;line-height:1">${openTaskCount}</div>
+          <div style="font-size:11px;opacity:.8">Not done</div>
         </div>
-        <div role="button" tabindex="0" style="${kpiBlocked}" onclick="taskStatusFilter='open';taskFilter='blockeddep';taskViewMode='list';go('actionitems')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}">
-          <div style="font-size:11px;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.04em">Blocked / dependency</div>
-          <div style="font-size:28px;font-weight:800;margin:6px 0;line-height:1">${blockedDepCount}</div>
-          <div style="font-size:12px;opacity:.85">Waiting on another team</div>
+        <div role="button" tabindex="0" style="${kpiBlockedsm}" onclick="taskStatusFilter='open';taskFilter='blockeddep';taskViewMode='list';go('actionitems')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}">
+          <div style="font-size:9px;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.04em">Blocked / dependency</div>
+          <div style="font-size:20px;font-weight:800;margin:4px 0;line-height:1">${blockedDepCount}</div>
+          <div style="font-size:11px;opacity:.85">Waiting on another team</div>
         </div>
-        <div role="button" tabindex="0" style="${kpiRisks}" onclick="govTab='risks';go('governance')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}">
-          <div style="font-size:11px;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.04em">Risks</div>
-          <div style="font-size:28px;font-weight:800;margin:6px 0;line-height:1">${totalRisks}</div>
-          <div style="font-size:12px;opacity:.85">Open: ${openRiskCount}</div>
+        <div role="button" tabindex="0" style="${kpiRiskssm}" onclick="govTab='risks';go('governance')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}">
+          <div style="font-size:9px;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.04em">Risks</div>
+          <div style="font-size:20px;font-weight:800;margin:4px 0;line-height:1">${totalRisks}</div>
+          <div style="font-size:11px;opacity:.85">Open: ${openRiskCount}</div>
         </div>
-      </div>
-      <div style="margin-bottom:18px;padding:12px 14px;border-radius:14px;border:1px solid #bfdbfe;background:linear-gradient(180deg,#f8fafc,#f1f5f9);width:100%;box-sizing:border-box">
-        <div style="font-size:11px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px">Workstreams by heartbeat lens</div>
-        <div style="display:flex;flex-wrap:wrap;align-items:center;width:100%;gap:4px">${lensRows.map((o,i)=>lensPill(o,i)).join('')}${lensUnassigned}</div>
+        </div>
+        <div style="flex:1 1 280px;min-width:min(100%,260px);padding:12px 14px;border-radius:14px;border:1px solid #bfdbfe;background:linear-gradient(180deg,#f8fafc,#f1f5f9);box-sizing:border-box;display:flex;flex-direction:column;gap:10px">
+          <div style="font-size:11px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.04em">Workstreams by heartbeat lens</div>
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px 18px;min-height:0">
+            ${piePieces.length?'<div role="img" aria-label="'+esc(ariaPie)+'" style="width:min(200px,40vw);height:min(200px,40vw);flex-shrink:0;border-radius:50%;background:'+pieBg+';box-shadow:0 4px 18px rgba(15,23,42,.1);border:2px solid #e2e8f0"></div>':''}
+            <div style="flex:1;min-width:140px;display:flex;flex-direction:column;gap:4px;max-height:240px;overflow-y:auto">${legendHtml}</div>
+          </div>
+        </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;align-items:stretch;box-sizing:border-box">
         <div style="padding:10px 12px;border-radius:12px;border:1px solid #ddd6fe;background:linear-gradient(180deg,#faf5ff,#f3e8ff);min-width:0;box-sizing:border-box">
@@ -8119,46 +8153,105 @@ async function exportExecPptx(opts){
     const s=pptx.addSlide();
     s.background={fill:'FFFFFF'};
     const m=getSnapshotMetricsForDeck();
-    s.addText('Program Snapshot',{x:0.5,y:0.28,w:12,h:0.38,fontSize:32,bold:true,color:BLACK,fontFace:'Arial'});
-    const y0=0.9,gw=2.96,gh=1.55,gap=0.13;
-    const kpiBox=(x,y,w,h,title,big,sub,fill,border)=>{
-      s.addShape(pptx.ShapeType.rect,{x,y,w,h,fill:{color:fill},line:{color:border,width:0.5}});
-      s.addText(title,{x:x+0.1,y:y+0.06,w:w-0.2,h:0.4,fontSize:11,bold:true,color:BLACK,fontFace:'Arial'});
-      s.addText(big,{x:x+0.1,y:y+0.48,w:w-0.2,h:0.5,fontSize:26,bold:true,color:BLACK,fontFace:'Arial'});
-      if(sub)s.addText(sub,{x:x+0.1,y:y+1.0,w:w-0.2,h:0.48,fontSize:9.5,color:BLACK,fontFace:'Arial',wrap:true});
+    s.addText('Program Snapshot',{x:0.5,y:0.14,w:12.2,h:0.38,fontSize:26,bold:true,color:BLACK,fontFace:'Arial'});
+    const snapTop=0.58;
+    const topPanelH=2.95;
+    const leftPanelX=0.45;
+    const leftPanelW=5.38;
+    const piePanelX=leftPanelX+leftPanelW+0.14;
+    const piePanelW=13.333-0.45-piePanelX;
+    s.addShape(pptx.ShapeType.rect,{x:leftPanelX,y:snapTop,w:leftPanelW,h:topPanelH,fill:{color:'F1F5F9'},line:{color:'CBD5E1',width:0.75},rectRadius:0.14});
+    s.addShape(pptx.ShapeType.rect,{x:piePanelX,y:snapTop,w:piePanelW,h:topPanelH,fill:{color:'F8FAFC'},line:{color:'BFDBFE',width:0.75},rectRadius:0.14});
+    const kpiColGap=0.12;
+    const innerPad=0.12;
+    const kpiColW=(leftPanelW-innerPad*2-kpiColGap)/2;
+    const rowH=1.28;
+    const rowGap=0.11;
+    const x0=leftPanelX+innerPad;
+    const yTop=snapTop+innerPad;
+    const kpiBoxSm=(x,y,w,h,title,big,sub,fill,border)=>{
+      s.addShape(pptx.ShapeType.rect,{x,y,w,h,fill:{color:fill},line:{color:border,width:0.75},rectRadius:0.1});
+      s.addText(title,{x:x+0.08,y:y+0.06,w:w-0.16,h:0.32,fontSize:8.5,bold:true,color:BLACK,fontFace:'Arial',wrap:false});
+      s.addText(big,{x:x+0.08,y:y+0.38,w:w-0.16,h:0.5,fontSize:20,bold:true,color:BLACK,fontFace:'Arial',wrap:false});
+      if(sub)s.addText(sub,{x:x+0.08,y:y+0.88,w:w-0.16,h:0.36,fontSize:9,color:BLACK,fontFace:'Arial',wrap:false});
     };
-    kpiBox(0.5,y0,gw,gh,'ACTIVE WORKSTREAMS',String(m.activeWsTotal),'Level 1: '+m.l1+' | Level 2: '+m.l2+' | Level 3: '+m.l3,'EFF6FF','93C5FD');
-    kpiBox(0.5+gw+gap,y0,gw,gh,'OPEN ACTION ITEMS',String(m.openTaskCount),'Not done','E0F2FE','38BDF8');
-    kpiBox(0.5+2*(gw+gap),y0,gw,gh,'BLOCKED / DEPENDENCY',String(m.blockedDepCount),'Waiting on another team','FEF2F2','FCA5A5');
-    kpiBox(0.5+3*(gw+gap),y0,gw,gh,'RISKS',String(m.totalRisks),'Open: '+m.openRiskCount,'FEFCE8','FDE047');
-    const lensY=y0+gh+0.2;
-    s.addShape(pptx.ShapeType.rect,{x:0.5,y:lensY,w:12.35,h:1.05,fill:{color:'F8FAFC'},line:{color:'BFDBFE',width:0.5}});
-    s.addText('WORKSTREAMS BY HEARTBEAT LENS',{x:0.62,y:lensY+0.08,w:11.8,h:0.28,fontSize:12,bold:true,color:BLACK,fontFace:'Arial'});
-    const lensLine=pptxSanitize(m.lensRows.map(o=>o.label+': '+o.count).join('   ·   ')+(m.noLens?'   ·   Unassigned lens: '+m.noLens:''),2000);
-    s.addText(lensLine,{x:0.62,y:lensY+0.36,w:11.8,h:0.62,fontSize:8.5,color:BLACK,fontFace:'Arial',wrap:true});
-    const chartY=lensY+1.22,halfW=6.2;
+    kpiBoxSm(x0,yTop,kpiColW,rowH,'ACTIVE WORKSTREAMS',String(m.activeWsTotal),'L1: '+m.l1+' · L2: '+m.l2+' · L3: '+m.l3,'EFF6FF','93C5FD');
+    kpiBoxSm(x0+kpiColW+kpiColGap,yTop,kpiColW,rowH,'OPEN ACTION ITEMS',String(m.openTaskCount),'Not done','E0F2FE','38BDF8');
+    kpiBoxSm(x0,yTop+rowH+rowGap,kpiColW,rowH,'BLOCKED / DEPENDENCY',String(m.blockedDepCount),'Waiting on another team','FEF2F2','FCA5A5');
+    kpiBoxSm(x0+kpiColW+kpiColGap,yTop+rowH+rowGap,kpiColW,rowH,'RISKS',String(m.totalRisks),'Open: '+m.openRiskCount,'FEFCE8','FDE047');
+    s.addText('WORKSTREAMS BY HEARTBEAT LENS',{x:piePanelX+0.14,y:snapTop+0.1,w:piePanelW-0.28,h:0.3,fontSize:11,bold:true,color:'334155',fontFace:'Arial',wrap:false});
+    const pieLabels=[];
+    const pieVals=[];
+    const pieCols=[];
+    m.lensRows.forEach((r,i)=>{
+      if(r.count>0){pieLabels.push(pptxSanitize(r.label,52));pieVals.push(r.count);pieCols.push(HEARTBEAT_LENS_PIE_COLORS_HEX[i%HEARTBEAT_LENS_PIE_COLORS_HEX.length]);}
+    });
+    if(m.noLens>0){pieLabels.push('Unassigned lens');pieVals.push(m.noLens);pieCols.push(HEARTBEAT_LENS_PIE_COLOR_UNASSIGNED_HEX);}
+    const pieCx=piePanelX+0.12;
+    const pieCy=snapTop+0.38;
+    const pieW=piePanelW-0.24;
+    const pieH=topPanelH-0.5;
+    if(pieLabels.length){
+      s.addChart(pptx.charts.PIE,[{name:'Heartbeat lens',labels:pieLabels,values:pieVals}],{
+        x:pieCx,y:pieCy,w:pieW,h:pieH,
+        chartColors:pieCols,
+        chartArea:{fill:{color:'FFFFFF'},roundedCorners:true},
+        plotArea:{fill:{color:'FFFFFF'}},
+        showLegend:true,
+        legendPos:'r',
+        legendFontSize:10,
+        legendColor:'1E293B',
+        showPercent:true,
+        showValue:true,
+        dataLabelFontSize:9,
+        dataLabelColor:'1E293B',
+        showTitle:false
+      });
+    }else{
+      s.addShape(pptx.ShapeType.rect,{x:pieCx,y:pieCy,w:pieW,h:pieH,fill:{color:'FFFFFF'},line:{color:'BFDBFE',width:0.5},rectRadius:0.08});
+      s.addText('No workstreams counted in heartbeat lens buckets.',{x:pieCx+0.2,y:pieCy+0.75,w:pieW-0.4,h:0.65,fontSize:11,color:BLACK,fontFace:'Arial',wrap:true});
+    }
+    const topRowBottom=snapTop+topPanelH;
+    const chartY=topRowBottom+0.2;
+    const bottomGap=0.14;
+    const halfW=(13.333-0.45*2-bottomGap)/2;
+    const leftBx=0.45;
+    const rightBx=leftBx+halfW+bottomGap;
+    const bottomPanelH=2.78;
     const maxWsLead=Math.max(1,...m.wsLeadList.map(([,c])=>c));
-    s.addShape(pptx.ShapeType.rect,{x:0.48,y:chartY-0.02,w:halfW+0.08,h:0.28,fill:{color:'EDE9FE'},line:{color:'DDD6FE',width:0.5}});
-    s.addText('WORKSTREAMS PER TEAM MEMBER (lead · top '+m.wsLeadList.length+')',{x:0.52,y:chartY,w:halfW,h:0.24,fontSize:11,bold:true,color:BLACK,fontFace:'Arial'});
-    let by=chartY+0.3;
-    m.wsLeadList.slice(0,8).forEach(([name,c])=>{
+    s.addShape(pptx.ShapeType.rect,{x:leftBx,y:chartY,w:halfW,h:bottomPanelH,fill:{color:'FAF5FF'},line:{color:'DDD6FE',width:0.75},rectRadius:0.14});
+    s.addText('WORKSTREAMS PER TEAM MEMBER',{x:leftBx+0.14,y:chartY+0.1,w:halfW-0.28,h:0.32,fontSize:12,bold:true,color:'5B21B6',fontFace:'Arial',wrap:false});
+    s.addText('Lead only · top '+m.wsLeadList.length,{x:leftBx+0.14,y:chartY+0.4,w:halfW-0.28,h:0.22,fontSize:9.5,color:'64748B',fontFace:'Arial',wrap:false});
+    const barRowH=0.275;
+    let by=chartY+0.66;
+    const nameColW=1.14;
+    const barTrackL=leftBx+0.14+nameColW;
+    const barTrackW=halfW-0.14-nameColW-0.5;
+    m.wsLeadList.slice(0,7).forEach(([name,c])=>{
       const pct=Math.round(c/maxWsLead*100);
-      const short=pptxSanitize((name.split(' ')[0]||name).slice(0,12),44);
-      s.addText(short,{x:0.5,y:by,w:1.05,h:0.17,fontSize:8,color:BLACK,fontFace:'Arial'});
-      s.addShape(pptx.ShapeType.rect,{x:1.58,y:by+0.03,w:Math.max(0.18,4.35*pct/100),h:0.14,fill:{color:'6D28D9'}});
-      s.addText(String(c),{x:6.05,y:by,w:0.5,h:0.17,fontSize:8,bold:true,color:BLACK,fontFace:'Arial',align:'right'});
-      by+=0.23;
+      const short=pptxSanitize((String(name||'').trim().split(/\s+/)[0]||'—').slice(0,22),44);
+      s.addText(short,{x:leftBx+0.14,y:by,w:nameColW,h:0.24,fontSize:9.5,bold:true,color:BLACK,fontFace:'Arial',wrap:false});
+      s.addShape(pptx.ShapeType.rect,{x:barTrackL,y:by+0.05,w:Math.max(0.22,barTrackW*pct/100),h:0.17,fill:{color:'6D28D9'},rectRadius:0.04});
+      s.addText(String(c),{x:leftBx+halfW-0.52,y:by,w:0.4,h:0.24,fontSize:10,bold:true,color:'5B21B6',fontFace:'Arial',align:'right',wrap:false});
+      by+=barRowH;
     });
     const maxT=Math.max(1,...m.taskOwnerList.map(([,c])=>c));
-    s.addShape(pptx.ShapeType.rect,{x:6.52,y:chartY-0.02,w:halfW+0.1,h:0.28,fill:{color:'ECFDF5'},line:{color:'BBF7D0',width:0.5}});
-    s.addText('OPEN ACTION ITEMS BY OWNER (top '+m.taskOwnerList.length+')',{x:6.58,y:chartY,w:halfW,h:0.24,fontSize:11,bold:true,color:BLACK,fontFace:'Arial'});
-    const colW=0.54,bx0=6.58,barTop=chartY+0.32,maxBarStack=0.95;
-    m.taskOwnerList.slice(0,10).forEach(([name,c],i)=>{
-      const barH=c?Math.max(0.1,(c/maxT)*maxBarStack):0;
-      s.addText(String(c),{x:bx0+i*colW,y:barTop,w:colW,h:0.14,fontSize:7,bold:true,color:BLACK,align:'center',fontFace:'Arial'});
-      if(barH>0)s.addShape(pptx.ShapeType.rect,{x:bx0+i*colW+0.12,y:barTop+0.16+(maxBarStack-barH),w:0.32,h:barH,fill:{color:'16A34A'}});
-      const short=pptxSanitize(((name.split(' ')[0]||name).slice(0,6)),36);
-      s.addText(short,{x:bx0+i*colW,y:barTop+0.18+maxBarStack+0.06,w:colW,h:0.28,fontSize:6.5,color:BLACK,align:'center',fontFace:'Arial',wrap:true});
+    s.addShape(pptx.ShapeType.rect,{x:rightBx,y:chartY,w:halfW,h:bottomPanelH,fill:{color:'F0FDFA'},line:{color:'99F6E4',width:0.75},rectRadius:0.14});
+    s.addText('OPEN ACTION ITEMS BY OWNER',{x:rightBx+0.14,y:chartY+0.1,w:halfW-0.28,h:0.32,fontSize:12,bold:true,color:'0F7669',fontFace:'Arial',wrap:false});
+    s.addText('Column chart · top '+m.taskOwnerList.length,{x:rightBx+0.14,y:chartY+0.4,w:halfW-0.28,h:0.22,fontSize:9.5,color:'64748B',fontFace:'Arial',wrap:false});
+    const maxBarStack=0.92;
+    const ownMax=8;
+    const ownSlice=m.taskOwnerList.slice(0,ownMax);
+    const colN=Math.max(1,ownSlice.length);
+    const colW=(halfW-0.44)/colN;
+    const bx0=rightBx+0.22;
+    const barTop=chartY+0.66;
+    ownSlice.forEach(([name,c],i)=>{
+      const barH=c?Math.max(0.12,(c/maxT)*maxBarStack):0;
+      s.addText(String(c),{x:bx0+i*colW,y:barTop,w:colW,h:0.16,fontSize:9,bold:true,color:'0F7669',align:'center',fontFace:'Arial',wrap:false});
+      if(barH>0)s.addShape(pptx.ShapeType.rect,{x:bx0+i*colW+Math.max(0.04,(colW-0.36)/2),y:barTop+0.2+(maxBarStack-barH),w:0.36,h:barH,fill:{color:'16A34A'},rectRadius:0.04});
+      const lab=pptxSanitize((String(name||'').trim().split(/\s+/)[0]||'—'),36);
+      s.addText(lab,{x:bx0+i*colW,y:barTop+0.2+maxBarStack+0.04,w:colW,h:0.26,fontSize:8.5,color:BLACK,align:'center',fontFace:'Arial',wrap:false});
     });
     atlasPptxDateBottom(s,dateStr);
   }
