@@ -2696,25 +2696,6 @@ const HEARTBEAT_PPTX_ROWS=[
   {title:'Other / Program Level',key:'programLevel'}
 ];
 /** Weekly Heartbeat export: split lenses across this many slides so bullets stay on-slide. */
-const WEEKLY_HEARTBEAT_PPTX_SLIDE_COUNT=5;
-/** Distribute `items` across up to `slideCount` chunks (first chunks get an extra item when remainder > 0). */
-function chunkItemsForPptxSlides(items,slideCount){
-  const arr=items||[];
-  const n=arr.length;
-  if(!n)return[];
-  const sc=Math.max(1,Math.min(Math.floor(Number(slideCount)||1),n));
-  const base=Math.floor(n/sc);
-  const extra=n%sc;
-  const chunks=[];
-  let i=0;
-  for(let s=0;s<sc;s++){
-    const sz=base+(s<extra?1:0);
-    if(sz<1)continue;
-    chunks.push(arr.slice(i,i+sz));
-    i+=sz;
-  }
-  return chunks.length?chunks:[arr];
-}
 function wsMatchesLensFilter(w,filt){
   if(!filt)return true;
   const eff=effectiveHeartbeatLensForWorkstream(w);
@@ -7341,7 +7322,7 @@ function openAtlasProgramPptxModal(){
     <p style="font-size:13px;color:var(--muted);margin:0 0 14px;line-height:1.5">Select slides to include (16:9, white background, Arial). Weekly Heartbeat uses OpenAI for a first draft when your API key is set; refine text in PowerPoint after download.</p>
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-pipeline" checked style="margin-top:3px"/> <span><strong>Vertical AI Pipeline</strong> — L2 “AI for the Business” workstreams and lifecycle bar</span></label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-heartbeat" checked style="margin-top:3px"/> <span><strong>Weekly Heartbeat</strong> — five slides by lens (AI summary when API key set)</span></label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-heartbeat" checked style="margin-top:3px"/> <span><strong>Weekly Heartbeat</strong> — one slide, all lenses (AI summary when API key set)</span></label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-resource" checked style="margin-top:3px"/> <span><strong>Resourcing summary</strong> — leads/co-leads and workstream counts</span></label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer"><input type="checkbox" id="pptx-sl-health" checked style="margin-top:3px"/> <span><strong>Health / target date</strong> — red if past target date (not closed), else green</span></label>
     </div>
@@ -7492,13 +7473,10 @@ async function generateAtlasProgramPptx(opts){
       hb=await draftHeartbeatWithAi();
       if(!hb)hb=fallbackHeartbeatBullets();
     }else hb=fallbackHeartbeatBullets();
-    const hbChunks=chunkItemsForPptxSlides(HEARTBEAT_PPTX_ROWS,WEEKLY_HEARTBEAT_PPTX_SLIDE_COUNT);
-    hbChunks.forEach((slice,ci)=>{
-      page++;
-      const s=pptx.addSlide();
-      s.background={fill:'FFFFFF'};
-      pptxPopulateWeeklyHeartbeatSlide(pptx,s,hb,dateStr,{rows:slice,partIdx:ci,partTotal:hbChunks.length});
-    });
+    page++;
+    const s=pptx.addSlide();
+    s.background={fill:'FFFFFF'};
+    pptxPopulateWeeklyHeartbeatSlide(pptx,s,hb,dateStr);
   }
   const allProgWs=allProgramWorkstreamsSorted();
   if(opts.resourcing){
@@ -7558,7 +7536,7 @@ const EXEC_PPTX_SLIDES_KEY='atlas_report_deck_slides_v4';
 /** Minimum rows per Workstream Status slide; chunk step grows so the section stays within WS_STATUS_PPTX_MAX_SLIDES. */
 const WS_STATUS_PPTX_ROWS_PER_SLIDE=7;
 /** Workstream Status (Slide 4) may not span more than this many slides in the program report PPTX. */
-const WS_STATUS_PPTX_MAX_SLIDES=3;
+const WS_STATUS_PPTX_MAX_SLIDES=5;
 function openExecPptxSlideModal(){
   if(typeof PptxGenJS==='undefined'){toast('PptxGenJS library not loaded');return}
   const lb=D.pptxExportLabels||{};
@@ -7568,7 +7546,7 @@ function openExecPptxSlideModal(){
   const prev=(n)=>n<=5?`<button type="button" class="mbtn" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0;white-space:nowrap" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=function(){openExecPptxSlideModal()};openProgramReportSlidePreview(${n})">Content preview</button>`:n===6?`<button type="button" class="mbtn" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0;white-space:nowrap" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=null;previewDailyDigest()">Content preview</button>`:`<button type="button" class="mbtn" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0;white-space:nowrap" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=function(){openExecPptxSlideModal()};openProgramReportSlidePreview(${n})">Content preview</button>`;
   openModal(`<div class="m-hd"><h3>Export program report (PowerPoint)</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
-    <p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.5">White 16:9 deck. Slide 2: AI summarizes each L2 vertical from the <strong>last 7 calendar days</strong> (≤20 words each) when your API key is set. Use <strong>Content preview</strong> to check layout before exporting.</p>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.5">White 16:9 deck. Slide 2: AI summarizes each L2 vertical using <strong>recent activity</strong>, <strong>open work</strong>, and <strong>what’s next</strong> (≤34 words each) when your API key is set. Use <strong>Content preview</strong> to check layout before exporting.</p>
     <div class="fg" style="margin-bottom:8px"><label style="font-size:11px;font-weight:700">Exec Committee gate (shown on pipeline slide)</label><input id="rptdeck-gate" value="${esc(eg)}" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px"></div>
     <p style="font-size:11px;color:var(--muted);margin:0 0 12px;line-height:1.45">Which verticals appear above vs below the CDO divider on slide 2 is set on each <strong>AI for the Business</strong> L2 workstream (<strong>Edit workstream → CDO delivery line</strong>). <strong>Auto</strong> uses lifecycle (Executing / Roadmapping = above).</p>
     <p style="font-size:12px;font-weight:700;margin:0 0 8px">Slides to include</p>
@@ -7578,8 +7556,8 @@ function openExecPptxSlideModal(){
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px">
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl1',saved.s1)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 1 — Title</strong> — program title, subtitle, date</span>${prev(1)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl2',saved.s2)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 2 — Vertical AI pipeline</strong> — L2 under AI for the Business; AI status (7 days, newest first; linked WS + actions), ≤20 words</span>${prev(2)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl3',saved.s3)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Weekly heartbeat</strong> — five slides (after title &amp; pipeline when selected); AI summary when API key set</span>${prev(3)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl2',saved.s2)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 2 — Vertical AI pipeline</strong> — L2 under AI for the Business; AI status: recent, in progress, upcoming (≤34 words)</span>${prev(2)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl3',saved.s3)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 3 — Weekly heartbeat</strong> — one slide, all lenses; AI summary when API key set</span>${prev(3)}</label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl4',saved.s4)} <span style="flex:1;min-width:0"><strong>Slide 4 — Workstream status</strong> — L1/L2 table (preview); export uses <strong>at most ${WS_STATUS_PPTX_MAX_SLIDES} slides</strong> (~${WS_STATUS_PPTX_ROWS_PER_SLIDE}+ rows each when short; more rows per slide when the tree is long)</span>${prev(4)}</label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl5',saved.s5)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 5 — Program Snapshot</strong> — same metrics as Program Snapshot on the dashboard</span>${prev(5)}</label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl6',saved.s6)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 6 — Daily Priorities</strong> — overdue, due soon, blocked (same logic as on the dashboard)</span>${prev(6)}</label>
@@ -7925,6 +7903,46 @@ function buildVerticalWsActivityLines(w,start,end){
   events.sort((a,b)=>b.ms-a.ms);
   return events.slice(0,30).map(e=>e.line);
 }
+/** Rich context for Vertical AI pipeline AI summary: recent activity, open work, near-term due dates, workstream “what’s next”. */
+function buildVerticalWsPipelineAiContext(w,start,end){
+  const ids=collectDescendantWorkstreamIds(w.id);
+  const allWs=D.workstreams||[];
+  const act=buildVerticalWsActivityLines(w,start,end);
+  const out=[];
+  out.push('RECENT (last 7 calendar days):');
+  out.push(act.length?act.join('\n'):'(none in window)');
+  const openTasks=(D.tasks||[]).filter(t=>t.workstream&&ids.has(t.workstream)&&t.status!=='done');
+  const inProg=openTasks.slice().sort((a,b)=>{
+    const ua=Date.parse(a.updatedAt||a.created||0)||0;
+    const ub=Date.parse(b.updatedAt||b.created||0)||0;
+    return ub-ua;
+  }).slice(0,12).map(t=>{
+    const tl=(t.title||'Untitled').replace(/\s+/g,' ').trim();
+    return '- '+tl.slice(0,92)+' ['+taskStatusLabel(t.status)+']'+(t.due?' · due '+String(t.due).slice(0,10):'');
+  });
+  out.push('\nIN PROGRESS (open action items in this vertical):');
+  out.push(inProg.length?inProg.join('\n'):'(none)');
+  const tdy=today();
+  const horizon=addDaysIso(tdy,21);
+  const upcoming=openTasks.filter(t=>t.due&&String(t.due).slice(0,10)>=tdy&&String(t.due).slice(0,10)<=horizon)
+    .sort((a,b)=>(a.due||'').localeCompare(b.due||''))
+    .slice(0,10)
+    .map(t=>'- '+((t.title||'').replace(/\s+/g,' ').trim().slice(0,92))+' · due '+String(t.due).slice(0,10));
+  out.push('\nCOMING UP (due within ~3 weeks):');
+  out.push(upcoming.length?upcoming.join('\n'):'(no dated items in window)');
+  const nxLines=[];
+  allWs.filter(cw=>ids.has(cw.id)).forEach(cw=>{
+    const raw=String((cw.whatsNext||'').trim()||whatsNextFromApp(cw.id)||'').replace(/\s+/g,' ').trim();
+    if(!raw)return;
+    const tag=cw.id===w.id?'':('['+String(cw.name||'').slice(0,42)+'] ');
+    nxLines.push('- '+tag+raw.slice(0,150));
+  });
+  if(nxLines.length){
+    out.push('\nSTATED NEXT STEPS (workstream What’s next / derived):');
+    out.push(nxLines.slice(0,8).join('\n'));
+  }
+  return out.join('\n');
+}
 function truncateToMaxWords(text,maxWords){
   const t=String(text||'').trim().replace(/\s+/g,' ');
   if(!t)return'';
@@ -7937,10 +7955,9 @@ async function aiSummarizeVerticalPipelineRows7d(verticalRows){
   if(!OPENAI_KEY||!verticalRows||!verticalRows.length)return out;
   const{start,end}=programReportLast7DayRange();
   const blocks=verticalRows.map(w=>{
-    const act=buildVerticalWsActivityLines(w,start,end);
-    return'WS_ID: '+w.id+'\nWS_NAME: '+w.name+'\nACTIVITY (last 7 calendar days):\n'+(act.length?act.join('\n'):'(no dated changes in window)');
+    return'WS_ID: '+w.id+'\nWS_NAME: '+w.name+'\n'+buildVerticalWsPipelineAiContext(w,start,end);
   });
-  const sys='You summarize ATLAS program updates for an executive pipeline slide. Output ONLY valid JSON: one object whose keys are workstream ids (exactly as in WS_ID: lines) and values are English phrases of at most 20 words, summarizing what changed in the activity window. Activity lines are newest-first; prefer the most recent items when compressing. No markdown. If nothing meaningful, use exactly: No material updates this week.';
+  const sys='You summarize ATLAS vertical pipeline status for executives. Output ONLY valid JSON: one object whose keys are workstream ids (exactly as WS_ID) and values are English prose of at most 34 words each. Each value must weave together three threads: (1) what was done or changed recently (RECENT section), (2) what is in progress now (IN PROGRESS), (3) what is coming up next (COMING UP and/or STATED NEXT STEPS). If a thread is empty, say so briefly rather than inventing. No markdown. If all sections are empty, use exactly: No material activity to report.';
   const raw=await callAI(sys,blocks.join('\n\n---\n\n')+'\n\nToday: '+today(),{temperature:0.25});
   if(!raw)return out;
   let s=raw.trim();
@@ -7949,7 +7966,7 @@ async function aiSummarizeVerticalPipelineRows7d(verticalRows){
     const j=JSON.parse(s);
     verticalRows.forEach(w=>{
       const v=j[w.id];
-      if(typeof v==='string'&&v.trim())out[w.id]=truncateToMaxWords(v,20);
+      if(typeof v==='string'&&v.trim())out[w.id]=truncateToMaxWords(v,34);
     });
   }catch(e){}
   return out;
@@ -8164,7 +8181,7 @@ async function buildProgramReportSlidePreviewBodyHtml(slideNum){
         '<div style="margin:12px 0;padding:9px 10px;background:#4C1D95;color:#fff;border-radius:8px;text-align:center;font-size:11px;font-weight:700;line-height:1.35">CDO delivery capacity — Above: active engagement | Below: planning &amp; support</div>'+
         rowHtml(split.below,'#94a3b8')):'';
       return '<div style="font-size:18px;font-weight:800;margin-bottom:8px">Vertical AI | Pipeline</div>'+
-        '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">'+esc(dateStr)+' · Status: ≤20 words from last 7 days (AI), most recent activity first</div>'+
+        '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">'+esc(dateStr)+' · Status: AI blends recent work, in progress, and what’s next (≤34 words)</div>'+
         fbBanner+emptyBanner+pipelineBody;
     }catch(e){
       console.error(e);
@@ -8202,12 +8219,12 @@ async function openProgramReportSlidePreview(slideNum){
   if(slideNum<1||slideNum>7){toast('Unknown slide');return;}
   const body=await buildProgramReportSlidePreviewBodyHtml(slideNum);
   let sub='';
-  if(slideNum===3)sub='<p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">Weekly Heartbeat — export uses five slides (all lenses shown below in one scrollable preview)</p>';
+  if(slideNum===3)sub='<p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">Weekly Heartbeat — one slide in export (all lenses below)</p>';
   if(slideNum===4)sub='<p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">Workstream Status</p>';
   if(slideNum===5)sub='<p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">Program Snapshot</p>';
   if(slideNum===6)sub='<p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">Daily Priorities</p>';
   if(slideNum===7)sub='<p style="margin:6px 0 0;font-size:13px;font-weight:600;color:var(--muted)">6 slides in the export (one per lens)</p>';
-  const h3=slideNum===7?'Preview — Heartbeat Lens (quad)':slideNum===3?'Preview — Weekly Heartbeat (5 slides in export)':'Preview — Slide '+slideNum;
+  const h3=slideNum===7?'Preview — Heartbeat Lens (quad)':slideNum===3?'Preview — Weekly Heartbeat':'Preview — Slide '+slideNum;
   const hdrAlign=slideNum===1?'':' style="align-items:flex-start"';
   const hdrInner=slideNum===1?'<h3>'+h3+'</h3>':'<div><h3 style="margin:0">'+h3+'</h3>'+sub+'</div>';
   let mBdStyle='';
@@ -8224,8 +8241,8 @@ async function openProgramReportSlidePreview(slideNum){
 function wrapReportsPreviewSection(slideNum,innerBodyHtml){
   const meta={
     1:{num:'1',label:'Slide 1 — Title',desc:'Program title, subtitle, and date.'},
-    2:{num:'2',label:'Slide 2 — Vertical AI pipeline',desc:'L2 under AI for the Business; AI status from last 7 days (newest activity first; includes linked WS + actions), ≤20 words.'},
-    3:{num:'3',label:'Weekly heartbeat (5 slides)',desc:'First heartbeat slide; export uses five slides total for all lenses (AI summary when API key set).'},
+    2:{num:'2',label:'Slide 2 — Vertical AI pipeline',desc:'L2 under AI for the Business; AI status covers recent activity, in-progress work, and what’s next (≤34 words).'},
+    3:{num:'3',label:'Slide 3 — Weekly heartbeat',desc:'Single slide with all six lenses (AI summary when API key set).'},
     4:{num:'4',label:'Slide 4 — Workstream status',desc:'L1/L2 table; export uses at most '+WS_STATUS_PPTX_MAX_SLIDES+' slides (~'+WS_STATUS_PPTX_ROWS_PER_SLIDE+'+ rows each when short; more rows per slide when the tree is long).'},
     5:{num:'5',label:'Slide 5 — Program Snapshot',desc:'Same metrics as Program Snapshot on the dashboard.'},
     6:{num:'6',label:'Slide 6 — Daily Priorities',desc:'Past due & blocked on first slide when present; “Due next 7 days” on continued slide — wide item column, compact owner/due (same data as dashboard digest).'},
@@ -8318,7 +8335,7 @@ function rReports(c){
   c.innerHTML=`
   <div class="card" style="margin-bottom:20px;padding:22px 24px">
     <h2 style="margin:0 0 8px;font-size:20px;font-weight:800">Program report</h2>
-    <p style="margin:0 0 18px;font-size:13px;color:var(--muted);line-height:1.5">White 16:9 deck. Select slides, run <strong>Generate content preview</strong> to review on this page, then <strong>Build PowerPoint</strong> when ready. Slide 2: AI summarizes each L2 vertical from the <strong>last 7 calendar days</strong> (≤20 words each) when your API key is set.</p>
+    <p style="margin:0 0 18px;font-size:13px;color:var(--muted);line-height:1.5">White 16:9 deck. Select slides, run <strong>Generate content preview</strong> to review on this page, then <strong>Build PowerPoint</strong> when ready. Slide 2: AI summarizes each L2 vertical (recent, in progress, upcoming; ≤34 words) when your API key is set.</p>
     <div class="fg" style="margin-bottom:8px"><label style="font-size:11px;font-weight:700">Exec Committee gate (shown on pipeline slide)</label><input id="reports-pptx-gate" value="${esc(eg)}" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px" onchange="if(!D.pptxExportLabels)D.pptxExportLabels={};D.pptxExportLabels.execGate=this.value.trim();save();"></div>
     <p style="font-size:11px;color:var(--muted);margin:0 0 14px;line-height:1.45">Which verticals appear above vs below the CDO divider on slide 2 is set on each <strong>AI for the Business</strong> L2 workstream (<strong>Edit workstream → CDO delivery line</strong>). <strong>Auto</strong> uses lifecycle (Executing / Roadmapping = above).</p>
     <p style="font-size:12px;font-weight:700;margin:0 0 8px">Slides to include</p>
@@ -8331,8 +8348,8 @@ function rReports(c){
     </div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('rep-pptx-sl1')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 1 — Title</strong> — program title, subtitle, date</span>${prev(1)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('rep-pptx-sl2')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 2 — Vertical AI pipeline</strong> — L2 under AI for the Business; AI status (7 days, newest first; linked WS + actions), ≤20 words</span>${prev(2)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('rep-pptx-sl3')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Weekly heartbeat</strong> — five slides (after title &amp; pipeline when selected); AI summary when API key set</span>${prev(3)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('rep-pptx-sl2')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 2 — Vertical AI pipeline</strong> — L2 under AI for the Business; AI: recent, in progress, upcoming (≤34 words)</span>${prev(2)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('rep-pptx-sl3')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 3 — Weekly heartbeat</strong> — one slide, all lenses; AI summary when API key set</span>${prev(3)}</label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('rep-pptx-sl4')} <span style="flex:1;min-width:0"><strong>Slide 4 — Workstream status</strong> — L1/L2 table (preview); export uses <strong>at most ${WS_STATUS_PPTX_MAX_SLIDES} slides</strong> (~${WS_STATUS_PPTX_ROWS_PER_SLIDE}+ rows each when short; more rows per slide when the tree is long)</span>${prev(4)}</label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('rep-pptx-sl5')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 5 — Program Snapshot</strong> — same metrics as Program Snapshot on the dashboard</span>${prev(5)}</label>
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('rep-pptx-sl6')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 6 — Daily Priorities</strong> — overdue, due soon, blocked (same logic as on the dashboard)</span>${prev(6)}</label>
@@ -8430,7 +8447,7 @@ function pptxPopulateVerticalAiPipelineSlide(pptxGen,s,verticalRows,pipelineAiSu
       const fillW=trackW*((vi+1)/stageN);
       s.addText(pptxSanitize(w.name,500),{x:leftM,y:y,w:labelW-0.05,h:rowH,fontSize:10,color:BLACK,fontFace:'Arial',bold:true,valign:'middle',wrap:true});
       const note=pipelineAiSummaries[w.id]||(((w.desc||'').trim().slice(0,180))||wsStatusLabel(w.status));
-      s.addText(pptxSanitize(String(note),600),{x:updateX,y:y,w:updateW,h:rowH,fontSize:8.5,color:BLACK,fontFace:'Arial',valign:'middle',wrap:true,lineSpacingMultiple:1.05});
+      s.addText(pptxSanitize(String(note),800),{x:updateX,y:y,w:updateW,h:rowH,fontSize:8,color:BLACK,fontFace:'Arial',valign:'middle',wrap:true,lineSpacingMultiple:1.04});
       const barY=y+(rowH-barH)/2;
       s.addShape(pptxGen.ShapeType.rect,{x:trackL,y:barY,w:Math.min(trackW,Math.max(0.02,fillW)),h:barH,fill:{color:barHex},line:{color:'CCCCCC',width:1},rectRadius:0.04});
       y+=rowH+rowGap;
@@ -8446,31 +8463,25 @@ function pptxPopulateVerticalAiPipelineSlide(pptxGen,s,verticalRows,pipelineAiSu
   if(!verticalRows.length)s.addText('No L2 workstreams under AI for the Business matched this slide — set each row’s parent to the AI for the Business L1 (direct children appear here).',{x:0.5,y:1.35,w:12,h:0.45,fontSize:10,color:BLACK,fontFace:'Arial'});
   atlasPptxDateBottom(s,dateStr);
 }
-/**
- * Weekly Heartbeat — one slide chunk. `part` indexes multi-slide export (see WEEKLY_HEARTBEAT_PPTX_SLIDE_COUNT).
- * @param {{rows?:typeof HEARTBEAT_PPTX_ROWS,partIdx?:number,partTotal?:number}} [sliceOpts]
- */
-function pptxPopulateWeeklyHeartbeatSlide(pptxGen,s,hb,dateStr,sliceOpts){
+/** Weekly Heartbeat — single slide, all six lenses. */
+function pptxPopulateWeeklyHeartbeatSlide(pptxGen,s,hb,dateStr){
   const BLACK='000000';
-  const rows=(sliceOpts&&sliceOpts.rows)||HEARTBEAT_PPTX_ROWS;
-  const pi=sliceOpts&&sliceOpts.partIdx!=null?sliceOpts.partIdx:0;
-  const pt=sliceOpts&&sliceOpts.partTotal!=null?sliceOpts.partTotal:1;
-  const suffix=pt>1?' ('+(pi+1)+' of '+pt+')':'';
-  s.addText('AI Program Update | Weekly Heartbeat'+suffix,{x:0.5,y:0.28,w:12,h:0.38,fontSize:pt>1?26:30,bold:true,color:BLACK,fontFace:'Arial'});
+  const rows=HEARTBEAT_PPTX_ROWS;
+  s.addText('AI Program Update | Weekly Heartbeat',{x:0.5,y:0.28,w:12,h:0.38,fontSize:30,bold:true,color:BLACK,fontFace:'Arial'});
   let y=0.96;
   const slideContentBot=6.66;
-  const n=Math.max(1,rows.length);
+  const n=rows.length;
   const gap=0.08;
   const avail=slideContentBot-y;
   const hbBoxH=Math.min(1.95,Math.max(0.52,(avail-(n-1)*gap)/n));
   const hbLensLeft=0.45,hbLensW=2.2,hbGap=0.08,hbBoxX=hbLensLeft+hbLensW+hbGap,hbBoxW=13.333-hbBoxX-0.42;
   rows.forEach(r=>{
     s.addShape(pptxGen.ShapeType.rect,{x:hbBoxX,y:y-0.02,w:hbBoxW,h:hbBoxH,fill:{color:'F1F5F9'},line:{color:'E2E8F0',width:0.5}});
-    s.addText(r.title,{x:hbLensLeft,y:y,w:hbLensW,h:hbBoxH+0.04,fontSize:n>=3?12:13,bold:true,color:BLACK,fontFace:'Arial',wrap:true,valign:'top'});
+    s.addText(r.title,{x:hbLensLeft,y:y,w:hbLensW,h:hbBoxH+0.04,fontSize:n>=5?11.5:12.5,bold:true,color:BLACK,fontFace:'Arial',wrap:true,valign:'top'});
     const lineList=expandHeartbeatLinesForBullets(hb[r.key]);
     const bullets=lineList.length
-      ?lineList.map(t=>({text:pptxSanitize(String(t),2000),options:{fontSize:n>=3?8.5:9,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'},paraSpaceAfter:3}}))
-      :[{text:'—',options:{fontSize:9,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'}}}];
+      ?lineList.map(t=>({text:pptxSanitize(String(t),2000),options:{fontSize:n>=5?8:8.5,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'},paraSpaceAfter:3}}))
+      :[{text:'—',options:{fontSize:8.5,color:BLACK,fontFace:'Arial',bullet:{type:'bullet'}}}];
     s.addText(bullets,{x:hbBoxX+0.06,y:y+0.04,w:hbBoxW-0.12,h:hbBoxH-0.08,valign:'top',fontFace:'Arial',wrap:true,lineSpacingMultiple:1.06});
     y+=hbBoxH+gap;
   });
@@ -8591,13 +8602,10 @@ async function exportExecPptx(opts){
   if(opts.s3){
     if(OPENAI_KEY){hb=await draftHeartbeatWithAi();if(!hb)hb=fallbackHeartbeatBullets()}
     else hb=fallbackHeartbeatBullets();
-    const hbChunks=chunkItemsForPptxSlides(HEARTBEAT_PPTX_ROWS,WEEKLY_HEARTBEAT_PPTX_SLIDE_COUNT);
-    hbChunks.forEach((slice,ci)=>{
-      page++;
-      const s=pptx.addSlide();
-      s.background={fill:'FFFFFF'};
-      pptxPopulateWeeklyHeartbeatSlide(pptx,s,hb,dateStr,{rows:slice,partIdx:ci,partTotal:hbChunks.length});
-    });
+    page++;
+    const s=pptx.addSlide();
+    s.background={fill:'FFFFFF'};
+    pptxPopulateWeeklyHeartbeatSlide(pptx,s,hb,dateStr);
   }
 
   if(opts.s4){
