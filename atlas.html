@@ -716,9 +716,10 @@ label.ws-cdo-opt:has(input:checked){border-color:var(--accent);background:rgba(9
     <div id="sidebar-links"></div>
   </div>
   <div class="side-ft">
-    <div class="ni" data-v="workmetrics" onclick="go('workmetrics')" style="margin-bottom:8px">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
-      Metrics
+    <div class="ni" data-v="workmetrics" onclick="go('workmetrics')" id="nav-workmetrics" style="margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:nowrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+      <span style="flex:1;min-width:0">Metrics</span>
+      <span id="nb-metrics-orphan" title="Orphaned action items (no workstream)" class="badge warn" style="display:none;font-size:10px;padding:2px 6px;flex-shrink:0">!</span>
     </div>
     <div style="border-top:1px solid rgba(255,255,255,.1);margin-bottom:8px"></div>
     <div class="user-badge" onclick="changeName()" id="userBadge" title="Click to change your name">
@@ -1832,6 +1833,12 @@ function badges(){
   const overdue=open.filter(t=>t.due&&t.due<today());
   const wsCount=allProgramWorkstreams().length;
   const ai=document.getElementById('nb-actionitems');if(ai){ai.textContent=open.length;ai.className='badge'+(overdue.length?' warn':open.length?' hot':'');}
+  const mo=document.getElementById('nb-metrics-orphan');
+  if(mo){
+    const orphanCt=(D.tasks||[]).filter(t=>!t.workstream).length;
+    if(orphanCt>0){mo.textContent=orphanCt>99?'99+':String(orphanCt);mo.style.display='inline-flex';mo.title=orphanCt+' action item(s) without a workstream — open Metrics';}
+    else{mo.style.display='none';}
+  }
   const ee=document.getElementById('nb-eng');if(ee)ee.textContent=(D.engagements||[]).length;
   const we=document.getElementById('nb-ws');if(we)we.textContent=wsCount;
   const we2=document.getElementById('nb-ws2');if(we2){we2.textContent=wsCount;we2.className='badge'+(wsCount?' hot':'');}
@@ -3143,17 +3150,17 @@ function renderExecutiveSnapshotHtml(){
           <div style="font-size:24px;font-weight:800;margin:6px 0;line-height:1">${activeWsTotal}</div>
           <div style="font-size:12px;opacity:.8">L1: ${l1} · L2: ${l2} · L3: ${l3}</div>
         </div>
-        <div role="button" tabindex="0" style="${kpiBlueBsm}" onclick="taskStatusFilter='open';taskFilter='all';taskOwnerFilter='';taskWsFilter='';taskViewMode='list';go('actionitems')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}">
+        <div role="button" tabindex="0" style="${kpiBlueBsm}" onclick="aiPastDueFilter=false;aiKbStatusFilter='';aiOwnerFilter='';aiL1Filter='';go('actionitems')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}">
           <div style="font-size:10px;font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.04em">Open action items</div>
           <div style="font-size:24px;font-weight:800;margin:6px 0;line-height:1">${openTaskCount}</div>
           <div style="font-size:12px;opacity:.8">Not done</div>
         </div>
-        <div role="button" tabindex="0" style="${kpiPastDuesm}" onclick="taskStatusFilter='open';taskFilter='overdue';taskOwnerFilter='';taskWsFilter='';taskViewMode='list';go('actionitems')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}">
+        <div role="button" tabindex="0" style="${kpiPastDuesm}" onclick="aiPastDueFilter=true;aiKbStatusFilter='';aiOwnerFilter='';aiL1Filter='';go('actionitems')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();aiPastDueFilter=true;aiKbStatusFilter='';aiOwnerFilter='';aiL1Filter='';go('actionitems')}" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}">
           <div style="font-size:10px;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:.04em">Past due</div>
           <div style="font-size:24px;font-weight:800;margin:6px 0;line-height:1">${pastDueCount}</div>
           <div style="font-size:12px;opacity:.88">Due before today</div>
         </div>
-        <div role="button" tabindex="0" style="${kpiBlockedsm}" onclick="taskStatusFilter='open';taskFilter='blockeddep';taskViewMode='list';go('actionitems')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}">
+        <div role="button" tabindex="0" style="${kpiBlockedsm}" onclick="aiPastDueFilter=false;aiKbStatusFilter='blocked-dependency';aiOwnerFilter='';aiL1Filter='';go('actionitems')" onmouseenter="${kpiHIn}" onmouseleave="${kpiHOut}">
           <div style="font-size:10px;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.04em">Blocked / dependency</div>
           <div style="font-size:24px;font-weight:800;margin:6px 0;line-height:1">${blockedDepCount}</div>
           <div style="font-size:12px;opacity:.85">Waiting on another team</div>
@@ -4614,48 +4621,9 @@ function removeDragGhost(){
 // ═══════════════════════════════════════════════════
 // NEW ACTION ITEMS VIEW (Kanban only, My/All filter)
 // ═══════════════════════════════════════════════════
-let aiMyFilter=false,aiStatusFilter='',aiOwnerFilter='',aiL1Filter='',aiKbStatusFilter='';
-let aiBulkSelectedIds=new Set();
-function toggleAiTaskSelect(taskId,checked){
-  if(checked)aiBulkSelectedIds.add(taskId);
-  else aiBulkSelectedIds.delete(taskId);
-  render();
-}
-function clearAiBulkSelection(){
-  aiBulkSelectedIds.clear();
-  render();
-}
-function selectAllVisibleActionItems(ids){
-  (ids||[]).forEach(id=>aiBulkSelectedIds.add(id));
-  render();
-}
-function applyAiBulkMoveWorkstream(){
-  const sel=document.getElementById('ai-bulk-target-ws');
-  const wsId=sel?String(sel.value||''):'';
-  if(aiBulkSelectedIds.size===0){toast('Select at least one action item');return}
-  const destName=wsId?((D.workstreams||[]).find(w=>w.id===wsId)?.name||'workstream'):'— none —';
-  if(!confirm(`Move ${aiBulkSelectedIds.size} action item(s) under “${destName}”?`))return;
-  let n=0;
-  aiBulkSelectedIds.forEach(id=>{
-    const t=(D.tasks||[]).find(x=>x.id===id);
-    if(t){
-      t.workstream=wsId;
-      t.updatedBy=ME||'';
-      t.updatedAt=new Date().toISOString();
-      n++;
-    }
-  });
-  save();
-  log(`Bulk moved ${n} action item(s) → ${destName}`);
-  aiBulkSelectedIds.clear();
-  render();
-  toast(`Moved ${n} action item(s)`);
-}
+let aiMyFilter=false,aiStatusFilter='',aiOwnerFilter='',aiL1Filter='',aiKbStatusFilter='',aiPastDueFilter=false;
 function rActionItemsNew(c){
   const me=ME||'';
-  Array.from(aiBulkSelectedIds).forEach(id=>{
-    if(!(D.tasks||[]).some(t=>t.id===id))aiBulkSelectedIds.delete(id);
-  });
   const q=(document.getElementById('search').value||'').toLowerCase();
   let items=(D.tasks||[]);
 
@@ -4687,6 +4655,10 @@ function rActionItemsNew(c){
   if(q){
     baseFiltered=baseFiltered.filter(t=>(t.title+' '+t.owner+' '+t.notes+' '+wsNamePlain(t.workstream)).toLowerCase().includes(q));
   }
+  if(aiPastDueFilter){
+    const cmp=today();
+    baseFiltered=baseFiltered.filter(t=>t.status!=='done'&&t.due&&t.due<cmp);
+  }
 
   // Calculate counts based on filtered items (before status filter)
   const totalCount=baseFiltered.length;
@@ -4712,11 +4684,7 @@ function rActionItemsNew(c){
     const wc=wsColor(t.workstream)||'var(--muted)';
     const isOD=t.status!=='done'&&t.due&&t.due<today();
     const isDone=t.status==='done';
-    const sel=aiBulkSelectedIds.has(t.id)?' checked':'';
-    return `<div class="kb-card${isOD?' kb-overdue':''}" draggable="true" data-task-id="${t.id}" style="border-left:3px solid ${wc};cursor:grab;padding-left:30px" onclick="if(!event.target.closest('.ai-bulk-cb'))openTaskModal('${t.id}')" ondragstart="if(event.target.closest('.ai-bulk-cb')){event.preventDefault();return}event.dataTransfer.setData('text/plain','task:${t.id}');this.classList.add('dragging');createDragGhost('${esc(t.title).replace(/'/g,"\\'")}');document.addEventListener('dragover',moveDragGhost)" ondragend="this.classList.remove('dragging');removeDragGhost();document.removeEventListener('dragover',moveDragGhost)">
-      <label class="ai-bulk-cb" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()" style="position:absolute;left:8px;top:10px;cursor:pointer;z-index:2">
-        <input type="checkbox"${sel} onclick="event.stopPropagation();toggleAiTaskSelect('${t.id}',this.checked)" aria-label="Select for bulk move" style="cursor:pointer;width:15px;height:15px;accent-color:var(--accent)">
-      </label>
+    return `<div class="kb-card${isOD?' kb-overdue':''}" draggable="true" data-task-id="${t.id}" style="border-left:3px solid ${wc};cursor:grab;padding-left:12px" onclick="openTaskModal('${t.id}')" ondragstart="event.dataTransfer.setData('text/plain','task:${t.id}');this.classList.add('dragging');createDragGhost('${esc(t.title).replace(/'/g,"\\'")}');document.addEventListener('dragover',moveDragGhost)" ondragend="this.classList.remove('dragging');removeDragGhost();document.removeEventListener('dragover',moveDragGhost)">
       <div style="font-size:12px;${isDone?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</div>
       <div style="font-size:10px;color:var(--muted);margin-top:4px">${esc(t.owner||'Unassigned')}</div>
       ${w?`<div style="font-size:9px;color:var(--light);margin-top:2px">${esc(w.name)}</div>`:''}
@@ -4738,10 +4706,11 @@ function rActionItemsNew(c){
     </div>`;
   }
 
-  const hasFilters=aiOwnerFilter||aiL1Filter;
+  const hasFilters=aiOwnerFilter||aiL1Filter||aiPastDueFilter;
   
   // Build active filter chips (like Workstreams page)
   const filterChips=[];
+  if(aiPastDueFilter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(239,68,68,.12);color:#b91c1c;border-radius:20px;font-size:11px;font-weight:500">Past due<span onclick="aiPastDueFilter=false;render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
   if(aiOwnerFilter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--accent-lt);color:var(--accent);border-radius:20px;font-size:11px;font-weight:500">Owner: ${aiOwnerFilter==='__unassigned__'?'Unassigned':aiOwnerFilter}<span onclick="aiOwnerFilter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
   if(aiL1Filter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(16,185,129,.1);color:#10b981;border-radius:20px;font-size:11px;font-weight:500">${l1Workstreams.find(w=>w.id===aiL1Filter)?.name||'Workstream'}<span onclick="aiL1Filter='';render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
 
@@ -4772,24 +4741,10 @@ function rActionItemsNew(c){
           <option value="">Workstream</option>
           ${l1Workstreams.map(w=>`<option value="${w.id}"${aiL1Filter===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}
         </select>
-        ${filterChips.length?`<span style="color:var(--light);margin:0 4px">|</span>${filterChips.join('')}<button onclick="aiOwnerFilter='';aiL1Filter='';render()" style="padding:4px 8px;font-size:11px;background:none;border:none;color:var(--red);cursor:pointer;font-weight:500">Clear all</button>`:''}
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;white-space:nowrap;margin-left:4px;padding:6px 10px;border-radius:6px;border:1px solid ${aiPastDueFilter?'#fecaca':'var(--border)'};background:${aiPastDueFilter?'#fef2f2':'var(--bg-card)'};color:var(--fg)"><input type="checkbox" ${aiPastDueFilter?'checked':''} onchange="aiPastDueFilter=this.checked;render()" style="accent-color:#dc2626;width:15px;height:15px"/> Past due</label>
+        ${filterChips.length?`<span style="color:var(--light);margin:0 4px">|</span>${filterChips.join('')}<button onclick="aiOwnerFilter='';aiL1Filter='';aiPastDueFilter=false;render()" style="padding:4px 8px;font-size:11px;background:none;border:none;color:var(--red);cursor:pointer;font-weight:500">Clear all</button>`:''}
       </div>
       <span style="font-size:12px;color:var(--muted)">${items.length} items</span>
-    </div>
-
-    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:var(--bg-subtle);border-radius:8px;border:1px solid var(--border-lt)">
-      <span style="font-size:12px;font-weight:600;color:var(--fg)">Bulk move</span>
-      <button type="button" onclick="selectAllVisibleActionItems(${JSON.stringify(items.map(t=>t.id))})" style="padding:6px 12px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);cursor:pointer"${items.length?'':' disabled'}>Select all visible (${items.length})</button>
-      <button type="button" onclick="clearAiBulkSelection()" style="padding:6px 12px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);cursor:pointer"${aiBulkSelectedIds.size?'':' disabled'}>Clear selection</button>
-      <span style="font-size:12px;color:var(--muted)"><strong style="color:var(--accent)">${aiBulkSelectedIds.size}</strong> selected</span>
-      <span style="color:var(--border)">|</span>
-      <label style="font-size:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">Parent workstream
-        <select id="ai-bulk-target-ws" style="padding:6px 10px;border-radius:6px;min-width:200px;max-width:min(420px,90vw);font-size:12px;border:1px solid var(--border);background:var(--bg-card);color:var(--fg)">
-          <option value="">— None (unassigned) —</option>
-          ${wsOptsHierarchy('',null)}
-        </select>
-      </label>
-      <button type="button" onclick="applyAiBulkMoveWorkstream()" style="padding:6px 14px;font-size:12px;font-weight:600;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer"${aiBulkSelectedIds.size?'':' disabled'}>Move here</button>
     </div>
 
     <div class="kb-board" style="display:flex;gap:12px;overflow-x:auto;padding-bottom:16px">
