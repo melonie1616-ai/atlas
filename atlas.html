@@ -1601,6 +1601,30 @@ async function initFirebase(){
   }
 }
 let presenceRef=null;
+let _reportsPreviewBusy=0;
+let _pendingFirebaseRender=false;
+let _firebaseRenderDebounce=null;
+function scheduleFirebaseRender(){
+  clearTimeout(_firebaseRenderDebounce);
+  _firebaseRenderDebounce=setTimeout(()=>{
+    _firebaseRenderDebounce=null;
+    if(_reportsPreviewBusy>0){
+      _pendingFirebaseRender=true;
+      return;
+    }
+    render();
+  },150);
+}
+function beginReportsAsyncOp(){_reportsPreviewBusy++}
+function endReportsAsyncOp(){
+  _reportsPreviewBusy=Math.max(0,_reportsPreviewBusy-1);
+  if(_reportsPreviewBusy===0)flushPendingFirebaseRender();
+}
+function flushPendingFirebaseRender(){
+  if(!_pendingFirebaseRender||_reportsPreviewBusy>0)return;
+  _pendingFirebaseRender=false;
+  render();
+}
 function connectFirebase(onReady){
   dbRef=firebase.database().ref('teams/'+TEAM_KEY);
   presenceRef=firebase.database().ref('teams/'+TEAM_KEY+'/_presence');
@@ -1646,7 +1670,11 @@ function connectFirebase(onReady){
           ensureReportNotesBusinessOutcomesDefaults();
           saveLs();
           renderLinks();
-          render()
+          if(_reportsPreviewBusy>0){
+            _pendingFirebaseRender=true;
+            return;
+          }
+          scheduleFirebaseRender();
         }
       });
       startPresence();
@@ -8184,35 +8212,45 @@ async function runReportsPageContentPreview(){
   const sel=[];
   ids.forEach((id,i)=>{if(document.getElementById(id)?.checked)sel.push(i+1)});
   if(!sel.length){toast('Select at least one slide to preview');return}
-  panel.innerHTML='<p style="color:var(--muted);padding:12px">Building previews…</p>';
-  wrap.style.display='block';
-  let html='';
-  for(const n of sel){
-    try{
-      const body=await buildProgramReportSlidePreviewBodyHtml(n);
-      html+=wrapReportsPreviewSection(n,body);
-    }catch(e){
-      console.error(e);
-      html+=wrapReportsPreviewSection(n,'<p style="color:#dc2626">Could not build this preview.</p>');
+  beginReportsAsyncOp();
+  try{
+    panel.innerHTML='<p style="color:var(--muted);padding:12px">Building previews…</p>';
+    wrap.style.display='block';
+    let html='';
+    for(const n of sel){
+      try{
+        const body=await buildProgramReportSlidePreviewBodyHtml(n);
+        html+=wrapReportsPreviewSection(n,body);
+      }catch(e){
+        console.error(e);
+        html+=wrapReportsPreviewSection(n,'<p style="color:#dc2626">Could not build this preview.</p>');
+      }
     }
+    panel.innerHTML=html;
+    wrap.scrollIntoView({behavior:'smooth',block:'start'});
+  }finally{
+    endReportsAsyncOp();
   }
-  panel.innerHTML=html;
-  wrap.scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function runReportsPagePreviewOne(slideNum){
   const panel=document.getElementById('reports-preview-inner');
   const wrap=document.getElementById('reports-preview-wrap');
   if(!panel||!wrap)return;
-  panel.innerHTML='<p style="color:var(--muted);padding:12px">Loading preview…</p>';
-  wrap.style.display='block';
+  beginReportsAsyncOp();
   try{
-    const body=await buildProgramReportSlidePreviewBodyHtml(slideNum);
-    panel.innerHTML=wrapReportsPreviewSection(slideNum,body);
-  }catch(e){
-    console.error(e);
-    panel.innerHTML=wrapReportsPreviewSection(slideNum,'<p style="color:#dc2626">Could not build this preview.</p>');
+    panel.innerHTML='<p style="color:var(--muted);padding:12px">Loading preview…</p>';
+    wrap.style.display='block';
+    try{
+      const body=await buildProgramReportSlidePreviewBodyHtml(slideNum);
+      panel.innerHTML=wrapReportsPreviewSection(slideNum,body);
+    }catch(e){
+      console.error(e);
+      panel.innerHTML=wrapReportsPreviewSection(slideNum,'<p style="color:#dc2626">Could not build this preview.</p>');
+    }
+    wrap.scrollIntoView({behavior:'smooth',block:'start'});
+  }finally{
+    endReportsAsyncOp();
   }
-  wrap.scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function runReportsPageBuildPptx(){
   if(typeof PptxGenJS==='undefined'){toast('PptxGenJS library not loaded');return}
@@ -8221,16 +8259,21 @@ async function runReportsPageBuildPptx(){
   const opts={};
   ids.forEach((id,i)=>{const el=document.getElementById(id);opts[keys[i]]=!!(el&&el.checked)});
   if(!opts.s1&&!opts.s2&&!opts.s3&&!opts.s4&&!opts.s5&&!opts.s6&&!opts.s7){toast('Select at least one slide');return}
-  opts.execGate=(document.getElementById('reports-pptx-gate')?.value||'').trim();
-  opts.aboveLine='';
-  opts.belowLine='';
-  if(!D.pptxExportLabels)D.pptxExportLabels={};
-  D.pptxExportLabels.execGate=opts.execGate;
-  D.pptxExportLabels.aboveLine='';
-  D.pptxExportLabels.belowLine='';
-  save();
-  try{localStorage.setItem(EXEC_PPTX_SLIDES_KEY,JSON.stringify({s1:opts.s1,s2:opts.s2,s3:opts.s3,s4:opts.s4,s5:opts.s5,s6:opts.s6,s7:opts.s7}))}catch(e){}
-  await exportExecPptx(opts);
+  beginReportsAsyncOp();
+  try{
+    opts.execGate=(document.getElementById('reports-pptx-gate')?.value||'').trim();
+    opts.aboveLine='';
+    opts.belowLine='';
+    if(!D.pptxExportLabels)D.pptxExportLabels={};
+    D.pptxExportLabels.execGate=opts.execGate;
+    D.pptxExportLabels.aboveLine='';
+    D.pptxExportLabels.belowLine='';
+    save();
+    try{localStorage.setItem(EXEC_PPTX_SLIDES_KEY,JSON.stringify({s1:opts.s1,s2:opts.s2,s3:opts.s3,s4:opts.s4,s5:opts.s5,s6:opts.s6,s7:opts.s7}))}catch(e){}
+    await exportExecPptx(opts);
+  }finally{
+    endReportsAsyncOp();
+  }
 }
 function rReports(c){
   const lb=D.pptxExportLabels||{};
