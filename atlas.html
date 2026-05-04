@@ -426,6 +426,9 @@ label.ws-cdo-opt:has(input:checked){border-color:var(--accent);background:rgba(9
 [data-theme="dark"] .kb-card{background:var(--bg-card);border-color:var(--border)}
 [data-theme="dark"] .kb-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.4)}
 [data-theme="dark"] #export-menu{background:var(--bg-card);border-color:var(--border)}
+/* Program report: unstyled .mbtn keeps UA button text color — force theme foreground */
+button.rep-pptx-mini{color:var(--text);font-weight:600}
+[data-theme="dark"] button.rep-pptx-mini{color:#fff}
 
 /* TASK CHECKMARKS */
 .task-chk{width:20px;height:20px;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;color:transparent;cursor:pointer;transition:all .15s;font-size:11px;flex-shrink:0}
@@ -3119,22 +3122,22 @@ function renderExecutiveSnapshotHtml(){
   const piePieces=heartbeatLensPiePiecesFromRows(lensRows,noLensCount);
   const pieBg=heartbeatLensPieBackgroundCss(piePieces);
   const ariaPie=piePieces.length?piePieces.map(p=>p.label+' '+p.count).join(', '):'No lens segments';
-  const legendHtml=piePieces.length?piePieces.map(p=>'<button type="button" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:6px 8px;margin:0;border-radius:8px;border:1px solid transparent;background:rgba(255,255,255,.5);cursor:pointer;font-size:11px;font-weight:600;color:var(--fg);transition:background .15s,transform .12s" onmouseenter="'+kpiHIn+'" onmouseleave="'+kpiHOut+'" onclick=\'wsLensFilter='+JSON.stringify(p.value)+';wsL1Filter="";go("workstreams")\' title="Filter Workstreams by this lens">'+
+  const legendHtml=piePieces.length?piePieces.map(p=>'<button type="button" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:6px 8px;margin:0;border-radius:8px;border:1px solid transparent;background:rgba(255,255,255,.5);cursor:pointer;font-size:11px;font-weight:600;color:#334155;transition:background .15s,transform .12s" onmouseenter="'+kpiHIn+'" onmouseleave="'+kpiHOut+'" onclick=\'wsLensFilter='+JSON.stringify(p.value)+';wsL1Filter="";go("workstreams")\' title="Filter Workstreams by this lens">'+
     '<span style="width:10px;height:10px;border-radius:2px;flex-shrink:0;background:'+p.colorHex+';border:1px solid rgba(15,23,42,.12)"></span>'+
     '<span style="flex:1;min-width:0;line-height:1.25">'+esc(p.label)+'</span>'+
-    '<span style="font-variant-numeric:tabular-nums;font-weight:800;color:#1e40af">'+p.count+'</span></button>').join(''):'<div style="padding:8px 4px;color:var(--muted);font-size:12px;line-height:1.4">No workstreams counted in lens buckets (assign heartbeat lenses on workstreams).</div>';
+    '<span style="font-variant-numeric:tabular-nums;font-weight:800;color:#1e40af">'+p.count+'</span></button>').join(''):'<div style="padding:8px 4px;color:#64748b;font-size:12px;line-height:1.4">No workstreams counted in lens buckets (assign heartbeat lenses on workstreams).</div>';
   const maxWsLead=Math.max(1,...wsLeadList.map(([,c])=>c));
   const wsBarChart=wsLeadList.length?wsLeadList.map(([name,c])=>{
     const pct=Math.round(c/maxWsLead*100);
     const short=name.includes(' ')?name.split(' ')[0]:name;
     return`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:11px">
-      <div style="width:76px;flex-shrink:0;font-weight:600;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(name)}">${esc(short)}</div>
+      <div style="width:76px;flex-shrink:0;font-weight:600;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(name)}">${esc(short)}</div>
       <div style="flex:1;height:16px;background:rgba(255,255,255,.65);border-radius:999px;overflow:hidden;border:1px solid #ddd6fe">
         <div style="width:${pct}%;min-width:${c?4:0}px;height:100%;background:linear-gradient(90deg,#a78bfa,#6d28d9);border-radius:999px;transition:width .4s ease"></div>
       </div>
       <span style="width:22px;text-align:right;font-weight:800;color:#5b21b6;flex-shrink:0;font-size:11px">${c}</span>
     </div>`;
-  }).join(''):'<div style="padding:12px;color:var(--muted);font-size:12px;border:1px dashed var(--border);border-radius:10px">No lead assignments.</div>';
+  }).join(''):'<div style="padding:12px;color:#64748b;font-size:12px;border:1px dashed #c4b5fd;border-radius:10px">No lead assignments.</div>';
   const maxTaskOwn=Math.max(1,...taskOwnerList.map(([,c])=>c));
   const chartH=100;
   const taskColChart=taskOwnerList.length?`<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:2px;width:100%;height:${chartH+28}px;padding:4px 2px 0;border:1px solid #5eead4;border-radius:10px;background:linear-gradient(180deg,#f0fdfa,#ecfdf5);box-sizing:border-box">
@@ -3144,10 +3147,10 @@ function renderExecutiveSnapshotHtml(){
       return`<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">
         <span style="font-size:10px;font-weight:800;color:#0f7669;margin-bottom:2px">${c}</span>
         <div style="width:min(100%,28px);height:${barH}px;background:linear-gradient(180deg,#2dd4bf,#0f7669);border-radius:6px 6px 2px 2px;box-shadow:0 1px 4px rgba(15,118,110,.28)"></div>
-        <div style="font-size:9px;font-weight:600;color:#115e59;margin-top:4px;text-align:center;line-height:1.1;max-height:28px;overflow:hidden" title="${esc(name)}">${esc(short)}</div>
+        <div style="font-size:9px;font-weight:600;color:#0f172a;margin-top:4px;text-align:center;line-height:1.1;max-height:28px;overflow:hidden" title="${esc(name)}">${esc(short)}</div>
       </div>`;
     }).join('')}
-  </div>`:'<div style="padding:12px;color:var(--muted);font-size:12px;border:1px dashed var(--border);border-radius:10px">No open owners.</div>';
+  </div>`:'<div style="padding:12px;color:#64748b;font-size:12px;border:1px dashed #5eead4;border-radius:10px">No open owners.</div>';
   return`
   <div class="ws-section" id="dashSec-exec" style="margin-bottom:20px;width:100%;box-sizing:border-box">
     <div class="ws-section-hd" onclick="toggleWsSection('dashSec-exec')" style="background:var(--bg-card);padding:14px 18px;border-radius:var(--r-sm) var(--r-sm) 0 0;border:1px solid var(--border)"><h4 style="font-size:16px;font-weight:800;color:var(--text)">Program Snapshot</h4><span class="ws-section-arrow">&#9660;</span></div>
@@ -3190,19 +3193,17 @@ function renderExecutiveSnapshotHtml(){
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;align-items:stretch;box-sizing:border-box">
         <div style="padding:10px 12px;border-radius:12px;border:1px solid #ddd6fe;background:linear-gradient(180deg,#faf5ff,#f3e8ff);min-width:0;box-sizing:border-box">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px">
+          <div style="margin-bottom:6px">
             <span style="font-size:10px;font-weight:700;color:#5b21b6;text-transform:uppercase;letter-spacing:.04em;line-height:1.2">Workstreams per team member</span>
-            <button type="button" class="mbtn mb-add" style="font-size:10px;padding:3px 8px;flex-shrink:0" onclick="go('workmetrics')">Metrics</button>
           </div>
-          <div style="font-size:10px;color:var(--muted);margin-bottom:6px">Lead only · top ${wsLeadList.length||0}</div>
+          <div style="font-size:10px;color:#64748b;margin-bottom:6px">Lead only · top ${wsLeadList.length||0}</div>
           ${wsBarChart}
         </div>
         <div style="padding:10px 12px;border-radius:12px;border:1px solid #99f6e4;background:linear-gradient(180deg,#f0fdfa,#ecfdf5);min-width:0;box-sizing:border-box">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px">
+          <div style="margin-bottom:6px">
             <span style="font-size:10px;font-weight:700;color:#0f7669;text-transform:uppercase;letter-spacing:.04em;line-height:1.2">Open action items by owner</span>
-            <button type="button" class="mbtn mb-add" style="font-size:10px;padding:3px 8px;flex-shrink:0" onclick="go('workmetrics')">Metrics</button>
           </div>
-          <div style="font-size:10px;color:var(--muted);margin-bottom:6px">Column chart · top ${taskOwnerList.length||0}</div>
+          <div style="font-size:10px;color:#64748b;margin-bottom:6px">Column chart · top ${taskOwnerList.length||0}</div>
           ${taskColChart}
         </div>
       </div>
@@ -4750,7 +4751,7 @@ function rActionItemsNew(c){
           <option value="">Workstream</option>
           ${l1Workstreams.map(w=>`<option value="${w.id}"${aiL1Filter===w.id?' selected':''}>${esc(w.name)}</option>`).join('')}
         </select>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;white-space:nowrap;margin-left:4px;padding:6px 10px;border-radius:6px;border:1px solid ${aiPastDueFilter?'#fecaca':'var(--border)'};background:${aiPastDueFilter?'#fef2f2':'var(--bg-card)'};color:var(--fg)"><input type="checkbox" ${aiPastDueFilter?'checked':''} onchange="aiPastDueFilter=this.checked;render()" style="accent-color:#dc2626;width:15px;height:15px"/> Past due</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;white-space:nowrap;margin-left:4px;padding:6px 10px;border-radius:6px;border:1px solid ${aiPastDueFilter?'#fecaca':'var(--border)'};background:${aiPastDueFilter?'#fef2f2':'var(--bg-card)'};color:${aiPastDueFilter?'#111827':'var(--text)'}"><input type="checkbox" ${aiPastDueFilter?'checked':''} onchange="aiPastDueFilter=this.checked;render()" style="accent-color:#dc2626;width:15px;height:15px"/> Past due</label>
         ${filterChips.length?`<span style="color:var(--light);margin:0 4px">|</span>${filterChips.join('')}<button onclick="aiOwnerFilter='';aiL1Filter='';aiPastDueFilter=false;render()" style="padding:4px 8px;font-size:11px;background:none;border:none;color:var(--red);cursor:pointer;font-weight:500">Clear all</button>`:''}
       </div>
       <span style="font-size:12px;color:var(--muted)">${items.length} items</span>
@@ -7543,7 +7544,7 @@ function openExecPptxSlideModal(){
   const eg=lb.execGate!=null?String(lb.execGate):'▼ Exec Committee Gate';
   const saved={s1:false,s2:false,s3:false,s4:false,s5:false,s6:false,s7:false};
   const chk=(id,on)=>`<input type="checkbox" id="${id}" ${on?'checked':''} style="margin-top:3px"/>`;
-  const prev=(n)=>n<=5?`<button type="button" class="mbtn" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0;white-space:nowrap" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=function(){openExecPptxSlideModal()};openProgramReportSlidePreview(${n})">Content preview</button>`:n===6?`<button type="button" class="mbtn" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0;white-space:nowrap" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=null;previewDailyDigest()">Content preview</button>`:`<button type="button" class="mbtn" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0;white-space:nowrap" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=function(){openExecPptxSlideModal()};openProgramReportSlidePreview(${n})">Content preview</button>`;
+  const prev=(n)=>n<=5?`<button type="button" class="mbtn rep-pptx-mini" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0;white-space:nowrap" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=function(){openExecPptxSlideModal()};openProgramReportSlidePreview(${n})">Content preview</button>`:n===6?`<button type="button" class="mbtn rep-pptx-mini" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0;white-space:nowrap" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=null;previewDailyDigest()">Content preview</button>`:`<button type="button" class="mbtn rep-pptx-mini" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0;white-space:nowrap" onclick="event.preventDefault();event.stopPropagation();window._afterModalCloseOnce=function(){openExecPptxSlideModal()};openProgramReportSlidePreview(${n})">Content preview</button>`;
   openModal(`<div class="m-hd"><h3>Export program report (PowerPoint)</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
     <p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.5">White 16:9 deck. Slide 2: AI summarizes each L2 vertical using <strong>recent activity</strong>, <strong>open work</strong>, and <strong>what’s next</strong> (≤34 words each) when your API key is set. Use <strong>Content preview</strong> to check layout before exporting.</p>
@@ -7551,17 +7552,17 @@ function openExecPptxSlideModal(){
     <p style="font-size:11px;color:var(--muted);margin:0 0 12px;line-height:1.45">Which verticals appear above vs below the CDO divider on slide 2 is set on each <strong>AI for the Business</strong> L2 workstream (<strong>Edit workstream → CDO delivery line</strong>). <strong>Auto</strong> uses lifecycle (Executing / Roadmapping = above).</p>
     <p style="font-size:12px;font-weight:700;margin:0 0 8px">Slides to include</p>
     <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-      <button type="button" class="mbtn" style="font-size:11px;padding:4px 10px" onclick="document.querySelectorAll('[id^=exec-pptx-sl]').forEach(c=>{c.checked=true})">Select all</button>
-      <button type="button" class="mbtn" style="font-size:11px;padding:4px 10px" onclick="document.querySelectorAll('[id^=exec-pptx-sl]').forEach(c=>{c.checked=false})">Clear all</button>
+      <button type="button" class="mbtn rep-pptx-mini" style="font-size:11px;padding:4px 10px" onclick="document.querySelectorAll('[id^=exec-pptx-sl]').forEach(c=>{c.checked=true})">Select all</button>
+      <button type="button" class="mbtn rep-pptx-mini" style="font-size:11px;padding:4px 10px" onclick="document.querySelectorAll('[id^=exec-pptx-sl]').forEach(c=>{c.checked=false})">Clear all</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px">
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl1',saved.s1)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 1 — Title</strong> — program title, subtitle, date</span>${prev(1)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl2',saved.s2)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 2 — Vertical AI pipeline</strong> — L2 under AI for the Business; AI status: recent, in progress, upcoming (≤34 words)</span>${prev(2)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl3',saved.s3)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 3 — Weekly heartbeat</strong> — one slide, all lenses; AI summary when API key set</span>${prev(3)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl4',saved.s4)} <span style="flex:1;min-width:0"><strong>Slide 4 — Workstream status</strong> — L1/L2 table (preview); export uses <strong>at most ${WS_STATUS_PPTX_MAX_SLIDES} slides</strong> (~${WS_STATUS_PPTX_ROWS_PER_SLIDE}+ rows each when short; more rows per slide when the tree is long)</span>${prev(4)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl5',saved.s5)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 5 — Program Snapshot</strong> — same metrics as Program Snapshot on the dashboard</span>${prev(5)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('exec-pptx-sl6',saved.s6)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 6 — Daily Priorities</strong> — overdue, due soon, blocked (same logic as on the dashboard)</span>${prev(6)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('exec-pptx-sl7',saved.s7)} <span style="flex:1;min-width:0"><strong>Slides 7+ — Lens Quad Update</strong> — one slide per heartbeat lens.</span>${prev(7)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;color:var(--text);flex-wrap:nowrap">${chk('exec-pptx-sl1',saved.s1)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 1 — Title</strong> — program title, subtitle, date</span>${prev(1)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;color:var(--text);flex-wrap:nowrap">${chk('exec-pptx-sl2',saved.s2)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 2 — Vertical AI pipeline</strong> — L2 under AI for the Business; AI status: recent, in progress, upcoming (≤34 words)</span>${prev(2)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;color:var(--text);flex-wrap:nowrap">${chk('exec-pptx-sl3',saved.s3)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 3 — Weekly heartbeat</strong> — one slide, all lenses; AI summary when API key set</span>${prev(3)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;color:var(--text);flex-wrap:nowrap">${chk('exec-pptx-sl4',saved.s4)} <span style="flex:1;min-width:0"><strong>Slide 4 — Workstream status</strong> — L1/L2 table (preview); export uses <strong>at most ${WS_STATUS_PPTX_MAX_SLIDES} slides</strong> (~${WS_STATUS_PPTX_ROWS_PER_SLIDE}+ rows each when short; more rows per slide when the tree is long)</span>${prev(4)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;color:var(--text);flex-wrap:nowrap">${chk('exec-pptx-sl5',saved.s5)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 5 — Program Snapshot</strong> — same metrics as Program Snapshot on the dashboard</span>${prev(5)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;color:var(--text);flex-wrap:nowrap">${chk('exec-pptx-sl6',saved.s6)} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 6 — Daily Priorities</strong> — overdue, due soon, blocked (same logic as on the dashboard)</span>${prev(6)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;color:var(--text)">${chk('exec-pptx-sl7',saved.s7)} <span style="flex:1;min-width:0"><strong>Slides 7+ — Lens Quad Update</strong> — one slide per heartbeat lens.</span>${prev(7)}</label>
     </div>
   </div>
   <div class="m-ft">
@@ -7757,36 +7758,42 @@ async function aiLensQuadLookAheadFromTasks(lensLabel,tasks){
 }
 /** HTML card matching one Heartbeat Lens PPTX slide (2×2 quad) — used by slide 7 preview. */
 function renderLensQuadPreviewCard(lensLabel,accomBullets,lookAheadBullets,milestoneTasks,watchRiskTitles,dateStr){
-  const acLi=(accomBullets||[]).length?(accomBullets||[]).map(b=>'<li style="margin:3px 0;font-size:11px;line-height:1.35;color:var(--fg)">'+esc(String(b))+'</li>').join(''):'<li style="font-size:11px;color:var(--muted)">No ATLAS-dated activity in the last 14 days for this lens.</li>';
-  const lkLi=(lookAheadBullets||[]).length?(lookAheadBullets||[]).map(b=>'<li style="margin:3px 0;font-size:11px;line-height:1.35;color:var(--fg)">'+esc(String(b))+'</li>').join(''):'<li style="font-size:11px;color:var(--muted)">No open action items with target dates for this lens.</li>';
+  const onLight='#0f172a';
+  const onLightMuted='#475569';
+  const cellBorder='#cbd5e1';
+  const acLi=(accomBullets||[]).length?(accomBullets||[]).map(b=>'<li style="margin:3px 0;font-size:11px;line-height:1.35;color:'+onLight+'">'+esc(String(b))+'</li>').join(''):'<li style="font-size:11px;color:'+onLightMuted+'">No ATLAS-dated activity in the last 14 days for this lens.</li>';
+  const lkLi=(lookAheadBullets||[]).length?(lookAheadBullets||[]).map(b=>'<li style="margin:3px 0;font-size:11px;line-height:1.35;color:'+onLight+'">'+esc(String(b))+'</li>').join(''):'<li style="font-size:11px;color:'+onLightMuted+'">No open action items with target dates for this lens.</li>';
   let mtHtml='';
   if((milestoneTasks||[]).length){
-    mtHtml='<table class="tbl" style="width:100%;font-size:11px;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:4px 6px;border:1px solid var(--border-lt)">Name</th><th style="padding:4px 6px;border:1px solid var(--border-lt)">Status</th><th style="padding:4px 6px;border:1px solid var(--border-lt)">Target Date</th></tr></thead><tbody>'+
-      milestoneTasks.map(t=>'<tr><td style="padding:4px 6px;border:1px solid var(--border-lt)">'+esc((t.title||'').slice(0,200))+'</td><td style="padding:4px 6px;border:1px solid var(--border-lt)">'+esc(taskStatusLabel(t.status))+'</td><td style="padding:4px 6px;border:1px solid var(--border-lt)">'+(t.due?esc(fmtDate(t.due)):'—')+'</td></tr>').join('')+'</tbody></table>';
+    const th='style="text-align:left;padding:4px 6px;border:1px solid '+cellBorder+';background:#f1f5f9;color:'+onLight+';font-weight:700"';
+    const td='style="padding:4px 6px;border:1px solid '+cellBorder+';color:'+onLight+'"';
+    mtHtml='<table class="tbl" style="width:100%;font-size:11px;border-collapse:collapse;color:'+onLight+'"><thead><tr><th '+th+'>Name</th><th '+th.replace('text-align:left;','')+'>Status</th><th '+th.replace('text-align:left;','')+'>Target Date</th></tr></thead><tbody>'+
+      milestoneTasks.map(t=>'<tr><td '+td+'>'+esc((t.title||'').slice(0,200))+'</td><td '+td+'>'+esc(taskStatusLabel(t.status))+'</td><td '+td+'">'+(t.due?esc(fmtDate(t.due)):'—')+'</td></tr>').join('')+'</tbody></table>';
   }else{
-    mtHtml='<p style="margin:0;font-size:11px;color:var(--muted)">No Not Started, Open, or Blocked/Dependency action items for this lens.</p>';
+    mtHtml='<p style="margin:0;font-size:11px;color:'+onLightMuted+'">No Not Started, Open, or Blocked/Dependency action items for this lens.</p>';
   }
-  const wrLi=(watchRiskTitles||[]).length?watchRiskTitles.map(t=>'<li style="margin:3px 0;font-size:11px;line-height:1.35">'+esc(String(t))+'</li>').join(''):'<li style="font-size:11px;color:var(--muted)">No open risks on L1 workstreams for this lens.</li>';
+  const wrLi=(watchRiskTitles||[]).length?watchRiskTitles.map(t=>'<li style="margin:3px 0;font-size:11px;line-height:1.35;color:'+onLight+'">'+esc(String(t))+'</li>').join(''):'<li style="font-size:11px;color:'+onLightMuted+'">No open risks on L1 workstreams for this lens.</li>';
+  const quadBox='border:1px solid #CBD5E1;border-radius:8px;padding:10px;background:#F8FAFC;min-height:120px;color:'+onLight;
   return `<div style="margin-bottom:24px;border:1px solid var(--border-lt);border-radius:12px;overflow:hidden;background:var(--bg-card)">
     <div style="padding:12px 16px;background:var(--bg-subtle);border-bottom:1px solid var(--border-lt)">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">AI Program Update | Heartbeat Lens</div>
       <div style="font-size:17px;font-weight:800;color:var(--text);margin-top:4px">${esc(lensLabel)}</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px;align-items:start">
-      <div style="border:1px solid #CBD5E1;border-radius:8px;padding:10px;background:#F8FAFC;min-height:120px">
-        <div style="font-weight:800;font-size:12px;margin-bottom:8px;color:var(--text)">Accomplishments</div>
+      <div style="${quadBox}">
+        <div style="font-weight:800;font-size:12px;margin-bottom:8px;color:${onLight}">Accomplishments</div>
         <ul style="margin:0;padding-left:18px">${acLi}</ul>
       </div>
-      <div style="border:1px solid #CBD5E1;border-radius:8px;padding:10px;background:#F8FAFC;min-height:120px">
-        <div style="font-weight:800;font-size:12px;margin-bottom:8px;color:var(--text)">Look Ahead (Next 1-2 Weeks)</div>
+      <div style="${quadBox}">
+        <div style="font-weight:800;font-size:12px;margin-bottom:8px;color:${onLight}">Look Ahead (Next 1-2 Weeks)</div>
         <ul style="margin:0;padding-left:18px">${lkLi}</ul>
       </div>
-      <div style="border:1px solid #CBD5E1;border-radius:8px;padding:10px;background:#F8FAFC;min-height:120px">
-        <div style="font-weight:800;font-size:12px;margin-bottom:8px;color:var(--text)">Milestones</div>
+      <div style="${quadBox}">
+        <div style="font-weight:800;font-size:12px;margin-bottom:8px;color:${onLight}">Milestones</div>
         ${mtHtml}
       </div>
-      <div style="border:1px solid #CBD5E1;border-radius:8px;padding:10px;background:#F8FAFC;min-height:120px">
-        <div style="font-weight:800;font-size:12px;margin-bottom:8px;color:var(--text)">Watch List</div>
+      <div style="${quadBox}">
+        <div style="font-weight:800;font-size:12px;margin-bottom:8px;color:${onLight}">Watch List</div>
         <ul style="margin:0;padding-left:18px">${wrLi}</ul>
       </div>
     </div>
@@ -8081,7 +8088,7 @@ function renderWorkstreamStatusPreviewTableHtml(){
   }).join('');
   return'<style>'+
     '.ws-st-prev-wrap table.ws-st-table{width:100%;border-collapse:collapse;font-size:11px;line-height:1.35;table-layout:fixed}'+
-    '.ws-st-prev-wrap th{background:#f1f5f9;font-weight:700;padding:6px 8px;border:1px solid #cbd5e1;text-align:left;position:sticky;top:0;z-index:1;box-shadow:0 1px 0 #cbd5e1}'+
+    '.ws-st-prev-wrap th{background:#f1f5f9;color:#0f172a;font-weight:700;padding:6px 8px;border:1px solid #cbd5e1;text-align:left;position:sticky;top:0;z-index:1;box-shadow:0 1px 0 #cbd5e1}'+
     '.ws-st-prev-wrap td{padding:5px 8px;border:1px solid #e2e8f0;vertical-align:top;word-break:break-word}'+
     '.ws-st-prev-wrap td.ws-st-l2{padding-left:22px}'+
     '.ws-st-prev-wrap .ws-st-muted{color:var(--muted);font-size:10px}'+
@@ -8154,7 +8161,7 @@ async function buildProgramReportSlidePreviewBodyHtml(slideNum){
     </div>`;
   }
   if(slideNum===2){
-    const pipeGridCols='minmax(120px,15%) minmax(200px,38%) minmax(180px,1fr)';
+    const pipeGridCols='minmax(96px,11%) minmax(220px,1fr) minmax(168px,27%)';
     try{
       const {rows:verticalRows,fallbackNote}=verticalAiPipelineWorkstreamsForDeck();
       const sum=OPENAI_KEY&&verticalRows.length?await aiSummarizeVerticalPipelineRows7d(verticalRows):{};
@@ -8163,18 +8170,18 @@ async function buildProgramReportSlidePreviewBodyHtml(slideNum){
         const vi=verticalLifecycleIndex(w.verticalLifecycleStage);
         const pct=((vi+1)/VERTICAL_LIFECYCLE_STAGES.length)*100;
         const note=sum[w.id]||((w.desc||'').trim().slice(0,180)||wsStatusLabel(w.status));
-        return`<div style="display:grid;grid-template-columns:${pipeGridCols};gap:6px 10px;align-items:center;margin-bottom:9px;font-size:11px">
-        <strong style="min-width:0">${esc(w.name)}</strong>
-        <span style="color:var(--muted);font-size:10px;line-height:1.3;min-width:0;white-space:normal;word-break:break-word">${esc(note)}</span>
-        <div style="min-width:0;height:10px;background:#e2e8f0;border-radius:6px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:6px"></div></div>
+        return`<div style="display:grid;grid-template-columns:${pipeGridCols};gap:10px 18px;align-items:start;margin-bottom:16px;font-size:11px;padding:4px 0;min-height:44px">
+        <strong style="min-width:0;padding-top:2px;line-height:1.25">${esc(w.name)}</strong>
+        <span style="color:var(--muted);font-size:10px;line-height:1.45;min-width:0;white-space:normal;word-break:break-word;padding-right:4px">${esc(note)}</span>
+        <div style="min-width:0;height:10px;background:#e2e8f0;border-radius:6px;overflow:hidden;align-self:center;margin-top:2px"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:6px"></div></div>
       </div>`;
       }).join('');
       const pctEach=100/VERTICAL_LIFECYCLE_STAGES.length;
       const stageChips=VERTICAL_LIFECYCLE_STAGES.map(s=>'<span style="display:inline-block;width:'+pctEach+'%;text-align:center;font-size:10px;font-weight:700">'+esc(s.label)+'</span>').join('');
       const fbBanner=fallbackNote?'<div style="font-size:11px;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:8px;margin-bottom:10px">'+esc(fallbackNote)+'</div>':'';
       const emptyBanner=!verticalRows.length?'<div style="font-size:12px;color:var(--muted);padding:16px;background:#f8fafc;border-radius:8px;border:1px dashed var(--border)">No <strong>direct L2</strong> workstreams under <strong>AI for the Business</strong> — set each pipeline row’s parent to that L1. If none match, the export falls back to all rows under that L1.</div>':'';
-      const stageRow='<div style="display:grid;grid-template-columns:'+pipeGridCols+';gap:8px 14px;align-items:end;margin-bottom:10px">'+
-        '<div></div><div></div><div style="display:flex;width:100%;min-width:0">'+stageChips+'</div></div>';
+      const stageRow='<div style="display:grid;grid-template-columns:'+pipeGridCols+';gap:8px 18px;align-items:end;margin-bottom:12px">'+
+        '<div></div><div></div><div style="display:flex;width:100%;min-width:0;align-self:end">'+stageChips+'</div></div>';
       const pipelineBody=verticalRows.length?('<div style="color:#dc2626;font-size:12px;font-weight:700;margin-bottom:6px;text-align:center">'+esc(gateTxt)+'</div>'+
         stageRow+
         rowHtml(split.above,'#2563eb')+
@@ -8190,12 +8197,13 @@ async function buildProgramReportSlidePreviewBodyHtml(slideNum){
   }
   if(slideNum===3){
     const hb=OPENAI_KEY?(await draftHeartbeatWithAi())||fallbackHeartbeatBullets():fallbackHeartbeatBullets();
+    const hbOnLight='#0f172a';
     return HEARTBEAT_PPTX_ROWS.map(r=>{
       const lineList=expandHeartbeatLinesForBullets(hb[r.key]);
-      const lines=lineList.length?lineList.map(t=>'<li style="margin:2px 0">'+esc(t)+'</li>').join(''):'<li>—</li>';
+      const lines=lineList.length?lineList.map(t=>'<li style="margin:2px 0;color:'+hbOnLight+'">'+esc(t)+'</li>').join(''):'<li style="color:'+hbOnLight+'">—</li>';
       return`<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;margin-bottom:14px;align-items:start">
           <strong style="font-size:13px">${esc(r.title)}</strong>
-          <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:12px"><ul style="margin:0;padding-left:18px;font-size:10px;line-height:1.4">${lines}</ul></div>
+          <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:12px;color:${hbOnLight}"><ul style="margin:0;padding-left:18px;font-size:10px;line-height:1.4;color:${hbOnLight}">${lines}</ul></div>
         </div>`;
     }).join('');
   }
@@ -8331,7 +8339,7 @@ function rReports(c){
   const lb=D.pptxExportLabels||{};
   const eg=lb.execGate!=null?String(lb.execGate):'▼ Exec Committee Gate';
   const chk=(id)=>`<input type="checkbox" id="${id}" style="margin-top:3px"/>`;
-  const prev=(n)=>`<button type="button" class="mbtn" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0;white-space:nowrap" onclick="event.preventDefault();runReportsPagePreviewOne(${n})">Content preview</button>`;
+  const prev=(n)=>`<button type="button" class="mbtn rep-pptx-mini" style="font-size:10px;padding:2px 8px;margin-left:6px;flex-shrink:0;white-space:nowrap" onclick="event.preventDefault();runReportsPagePreviewOne(${n})">Content preview</button>`;
   c.innerHTML=`
   <div class="card" style="margin-bottom:20px;padding:22px 24px">
     <h2 style="margin:0 0 8px;font-size:20px;font-weight:800">Program report</h2>
@@ -8340,20 +8348,20 @@ function rReports(c){
     <p style="font-size:11px;color:var(--muted);margin:0 0 14px;line-height:1.45">Which verticals appear above vs below the CDO divider on slide 2 is set on each <strong>AI for the Business</strong> L2 workstream (<strong>Edit workstream → CDO delivery line</strong>). <strong>Auto</strong> uses lifecycle (Executing / Roadmapping = above).</p>
     <p style="font-size:12px;font-weight:700;margin:0 0 8px">Slides to include</p>
     <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
-      <button type="button" class="mbtn" style="font-size:11px;padding:4px 10px" onclick="document.querySelectorAll('[id^=rep-pptx-sl]').forEach(x=>{x.checked=true})">Select all</button>
-      <button type="button" class="mbtn" style="font-size:11px;padding:4px 10px" onclick="document.querySelectorAll('[id^=rep-pptx-sl]').forEach(x=>{x.checked=false})">Clear all</button>
+      <button type="button" class="mbtn rep-pptx-mini" style="font-size:11px;padding:4px 10px" onclick="document.querySelectorAll('[id^=rep-pptx-sl]').forEach(x=>{x.checked=true})">Select all</button>
+      <button type="button" class="mbtn rep-pptx-mini" style="font-size:11px;padding:4px 10px" onclick="document.querySelectorAll('[id^=rep-pptx-sl]').forEach(x=>{x.checked=false})">Clear all</button>
       <span style="flex:1"></span>
       <button type="button" class="tb-btn" style="font-size:13px;padding:8px 14px;font-weight:700" onclick="runReportsPageContentPreview()">Generate content preview</button>
       <button type="button" class="tb-btn" style="background:#00274C;color:#fff;font-size:13px;padding:8px 14px;font-weight:700;border-radius:var(--r-sm)" onclick="runReportsPageBuildPptx()">Build PowerPoint</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px">
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('rep-pptx-sl1')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 1 — Title</strong> — program title, subtitle, date</span>${prev(1)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('rep-pptx-sl2')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 2 — Vertical AI pipeline</strong> — L2 under AI for the Business; AI: recent, in progress, upcoming (≤34 words)</span>${prev(2)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('rep-pptx-sl3')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 3 — Weekly heartbeat</strong> — one slide, all lenses; AI summary when API key set</span>${prev(3)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('rep-pptx-sl4')} <span style="flex:1;min-width:0"><strong>Slide 4 — Workstream status</strong> — L1/L2 table (preview); export uses <strong>at most ${WS_STATUS_PPTX_MAX_SLIDES} slides</strong> (~${WS_STATUS_PPTX_ROWS_PER_SLIDE}+ rows each when short; more rows per slide when the tree is long)</span>${prev(4)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('rep-pptx-sl5')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 5 — Program Snapshot</strong> — same metrics as Program Snapshot on the dashboard</span>${prev(5)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;flex-wrap:nowrap">${chk('rep-pptx-sl6')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 6 — Daily Priorities</strong> — overdue, due soon, blocked (same logic as on the dashboard)</span>${prev(6)}</label>
-      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer">${chk('rep-pptx-sl7')} <span style="flex:1;min-width:0"><strong>Slides 7+ — Lens Quad Update</strong> — one slide per heartbeat lens.</span>${prev(7)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;color:var(--text);flex-wrap:nowrap">${chk('rep-pptx-sl1')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 1 — Title</strong> — program title, subtitle, date</span>${prev(1)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;color:var(--text);flex-wrap:nowrap">${chk('rep-pptx-sl2')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 2 — Vertical AI pipeline</strong> — L2 under AI for the Business; AI: recent, in progress, upcoming (≤34 words)</span>${prev(2)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;color:var(--text);flex-wrap:nowrap">${chk('rep-pptx-sl3')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 3 — Weekly heartbeat</strong> — one slide, all lenses; AI summary when API key set</span>${prev(3)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;color:var(--text)">${chk('rep-pptx-sl4')} <span style="flex:1;min-width:0"><strong>Slide 4 — Workstream status</strong> — L1/L2 table (preview); export uses <strong>at most ${WS_STATUS_PPTX_MAX_SLIDES} slides</strong> (~${WS_STATUS_PPTX_ROWS_PER_SLIDE}+ rows each when short; more rows per slide when the tree is long)</span>${prev(4)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;color:var(--text);flex-wrap:nowrap">${chk('rep-pptx-sl5')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 5 — Program Snapshot</strong> — same metrics as Program Snapshot on the dashboard</span>${prev(5)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;color:var(--text);flex-wrap:nowrap">${chk('rep-pptx-sl6')} <span style="flex:1;min-width:0;white-space:nowrap"><strong>Slide 6 — Daily Priorities</strong> — overdue, due soon, blocked (same logic as on the dashboard)</span>${prev(6)}</label>
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer;color:var(--text)">${chk('rep-pptx-sl7')} <span style="flex:1;min-width:0"><strong>Slides 7+ — Lens Quad Update</strong> — one slide per heartbeat lens.</span>${prev(7)}</label>
     </div>
   </div>
   <div id="reports-preview-wrap" style="display:none;margin-bottom:24px">
@@ -8422,10 +8430,10 @@ function pptxPopulateVerticalAiPipelineSlide(pptxGen,s,verticalRows,pipelineAiSu
     s.addText(pipeNoteX,{x:0.5,y:0.78,w:12,h:0.2,fontSize:5.5,color:BLACK,fontFace:'Arial',wrap:true});
     barTop=1.28;
   }
-  const slideW=13.333,leftM=0.48,labelW=2.05,colGap=0.06,updateW=2.75,barLeadGap=0.05,rightM=0.36;
+  const slideW=13.333,leftM=0.48,labelW=2.0,colGap=0.06,updateW=3.35,barLeadGap=0.1,rightM=0.36;
   const updateX=leftM+labelW+colGap;
   const trackL=updateX+updateW+barLeadGap;
-  const trackW=Math.max(4.85,slideW-trackL-rightM);
+  const trackW=Math.max(4.35,slideW-trackL-rightM);
   const stageN=VERTICAL_LIFECYCLE_STAGES.length,segW=trackW/stageN;
   const rmIx=VERTICAL_LIFECYCLE_STAGES.findIndex(st=>st.value==='roadmapping');
   const gateIxRm=rmIx>=0?rmIx:3;
@@ -8434,9 +8442,9 @@ function pptxPopulateVerticalAiPipelineSlide(pptxGen,s,verticalRows,pipelineAiSu
   VERTICAL_LIFECYCLE_STAGES.forEach((st,i)=>{s.addText(pptxSanitize(st.label,80),{x:trackL+i*segW,y:barTop,w:segW,h:0.22,fontSize:9,bold:true,color:BLACK,fontFace:'Arial',align:'center',wrap:true})});
   s.addText(gateDisplayText,{x:gateX,y:barTop-0.36,w:gateW,h:0.3,fontSize:8.5,color:'CC0000',fontFace:'Arial',align:'center',bold:true,wrap:true});
   const split=splitVerticalPipelineRows(verticalRows);
-  const rowH=0.34;
-  const rowGap=0.09;
-  const barH=0.16;
+  const rowH=0.42;
+  const rowGap=0.12;
+  const barH=0.17;
   const yPurpleClear=6.58;
   const drawRows=(rows,y0,maxY,sectionLabel,barHex)=>{
     let y=y0;
