@@ -1357,7 +1357,7 @@ const APP_HELP_BY_ROUTE={
   ado:'ADO Sync: linkage and activity with Azure DevOps.',
   metrics:'Success metrics and KPI tracker.',
   tasks:'Action Items (same task list as the main Action Items page).',
-  extract:'Inbox: turn captured notes into tasks and route them to workstreams.',
+  extract:'Paste notes and Analyze &amp; update — update existing action items and route net-new lines from triage.',
   workitems:'Work items linked to engagements.',
   engagements:'Engagements and related delivery records.'
 };
@@ -1636,7 +1636,7 @@ function updateAIDot(){
 function configureAI(){
   openModal(`<div class="m-hd"><h3>OpenAI Configuration</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
-    <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px">Enter your OpenAI API key to enable AI features: smart task extraction, report summarization, and program insights. The key is stored only in your browser's local storage and sent directly to OpenAI.</p>
+    <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px">Enter your OpenAI API key to enable AI features: <strong>Analyze &amp; update</strong> on pasted notes (existing-item edits + new lines to triage in one pass), report summarization, and program insights. The key is stored only in your browser's local storage and sent directly to OpenAI.</p>
     <div class="fg"><label>OpenAI API Key</label><input id="ai-key-input" type="password" value="${OPENAI_KEY?'••••••••'+OPENAI_KEY.slice(-4):''}" placeholder="sk-..."></div>
     <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
       <div style="width:8px;height:8px;border-radius:50%;background:${OPENAI_KEY?'var(--green)':'var(--red)'}"></div>
@@ -2005,7 +2005,7 @@ function go(v){
   else{document.getElementById('viewTitle').textContent=titles[v]||v;}
   const ab=document.getElementById('addBtn');
   if(v==='engagements')v=V='workitems';
-  if(v==='extract'){taskFilter='inbox';v=V='workitems'}
+  if(v==='extract'){taskFilter='inbox';v=V='actionitems'}
   if(v==='workitems'){ab.style.display='none'}
   else if(v==='people'){ab.style.display='';ab.textContent='+ Add Person'}
   else{ab.style.display='none'}
@@ -5004,6 +5004,7 @@ function removeDragGhost(){
 // ═══════════════════════════════════════════════════
 let aiMyFilter=false,aiStatusFilter='',aiOwnerFilter='',aiL1Filter='',aiKbStatusFilter='',aiPastDueFilter=false;
 function rActionItemsNew(c){
+  if(taskFilter==='inbox'){rTasksInbox(c);return}
   const me=ME||'';
   const q=(document.getElementById('search').value||'').toLowerCase();
   let items=(D.tasks||[]);
@@ -5088,7 +5089,8 @@ function rActionItemsNew(c){
   }
 
   const hasFilters=aiOwnerFilter||aiL1Filter||aiPastDueFilter;
-  
+  const inboxWaitingCt=(D.inbox||[]).filter(x=>!x.processed).length;
+
   // Build active filter chips (like Workstreams page)
   const filterChips=[];
   if(aiPastDueFilter)filterChips.push(`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(239,68,68,.12);color:#b91c1c;border-radius:20px;font-size:11px;font-weight:500">Past due<span onclick="aiPastDueFilter=false;render()" style="cursor:pointer;margin-left:2px">&times;</span></span>`);
@@ -5099,7 +5101,10 @@ function rActionItemsNew(c){
   <div class="page-wrap kb-page">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
       <h1 data-app-help="Every task in the program: switch list or Kanban, filter by owner or workstream, and drag cards to change status." style="font-size:24px;font-weight:600;color:var(--fg);margin:0">Action Items</h1>
-      <button onclick="openTaskModal()" style="padding:8px 14px;font-size:13px;font-weight:500;background:#10b981;color:#fff;border:none;border-radius:6px;cursor:pointer;transition:opacity .15s" onmouseenter="this.style.opacity='.85'" onmouseleave="this.style.opacity='1'">+ Action Item</button>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <button type="button" data-app-help="Paste notes here and run Analyze &amp; update (needs AI key). Badge counts drafts waiting in triage." onclick="taskFilter='inbox';render()" style="padding:8px 14px;font-size:13px;font-weight:500;background:var(--bg-card);color:var(--fg);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:border-color .15s,background .15s" onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor='var(--border)'">Paste notes &amp; update${inboxWaitingCt?` <span class="badge warn" style="margin-left:2px;font-size:10px;vertical-align:1px">${inboxWaitingCt}</span>`:''}</button>
+        <button onclick="openTaskModal()" style="padding:8px 14px;font-size:13px;font-weight:500;background:#10b981;color:#fff;border:none;border-radius:6px;cursor:pointer;transition:opacity .15s" onmouseenter="this.style.opacity='.85'" onmouseleave="this.style.opacity='1'">+ Action Item</button>
+      </div>
     </div>
 
     <div data-app-help="Focus the board on one workflow column, or All to show every status. Counts use owner, workstream, past due, and search." style="display:flex;gap:6px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px">
@@ -5816,12 +5821,12 @@ function rTasks(c){
   <div class="page-wrap tasks-page">
   <div class="page-toolbar">
     <span class="page-title">Action Items</span>
-    <div class="pill-filters" data-app-help="Filter the list: open vs done, overdue, due this week, blocked-by-dependency, or quick-capture inbox.">
+    <div class="pill-filters" data-app-help="Filter the list: open vs done, overdue, due this week, blocked-by-dependency, or paste notes / triage drafts.">
       <div class="pill${taskFilter==='all'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='all';render()">Open (${open})</div>
       <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
       <div class="pill${taskFilter==='thisweek'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='thisweek';render()" style="${thisWeekCount?'':'opacity:.6'}">&#128197; This Week (${thisWeekCount})</div>
       <div class="pill${taskFilter==='blockeddep'?' pill-r':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='blockeddep';render()" style="${blockedDepCount?'':'opacity:.6'}">Blocked (${blockedDepCount})</div>
-      <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
+      <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='inbox';render()" style="margin-left:6px">Paste &amp; update${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
       <div class="pill${taskStatusFilter==='done'?' pill-i':' pill-m'}" onclick="taskStatusFilter='done';taskFilter='all';render()" style="margin-left:auto">Done (${done})</div>
     </div>
     <div class="pill-actions">
@@ -6250,13 +6255,18 @@ function rTasksInbox(c){
     <span class="page-title">Action Items</span>
     <div class="pill-filters">
       <div class="pill pill-m" onclick="taskStatusFilter='open';taskFilter='all';render()">Open (${open})</div>
-      <div class="pill pill-i" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
+      <div class="pill pill-i" style="margin-left:6px">Paste &amp; update${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
       <div class="pill pill-m" onclick="taskStatusFilter='done';taskFilter='all';render()" style="margin-left:auto">Done (${done})</div>
     </div>
   </div>
   <div class="card" style="margin-bottom:20px;padding:24px">
     <h4 style="font-size:17px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px">Paste Anything ${OPENAI_KEY?'<span class="pill pill-g" style="font-size:10px;font-weight:500;vertical-align:middle">AI Powered</span>':''}</h4>
-    <p style="font-size:13.5px;color:var(--muted);line-height:1.65;margin-bottom:16px">Drop in meeting notes, an email thread, a Teams chat, a status update — anything. ${OPENAI_KEY?'<strong>AI will extract action items</strong> and you can route content to the right place in ATLAS.':'The app will scan for action items and let you route content where it belongs.'}</p>
+    <p style="font-size:13.5px;color:var(--muted);line-height:1.65;margin-bottom:12px">Drop in meeting notes, an email thread, a Teams chat, a status update — anything.</p>
+    <div style="padding:12px 14px;margin-bottom:14px;border-radius:var(--r-sm);background:var(--bg-subtle);border:1px solid var(--border);font-size:12.5px;color:var(--text);line-height:1.55">
+      <strong style="color:var(--fg)">One AI pass for mixed notes</strong>
+      <p style="margin:8px 0 0;font-size:12.5px"><strong>Analyze &amp; update</strong> proposes edits to <em>existing</em> action items and extracts <em>net-new</em> follow-ups in a single review screen. You don’t need to know which is which beforehand. New lines land in <strong>triage</strong> below for routing; updates apply directly when you confirm.</p>
+      ${OPENAI_KEY?'':'<p style="margin:10px 0 0;font-size:12px;color:var(--muted)">Set an OpenAI key in the sidebar to run Analyze &amp; update on your paste.</p>'}
+    </div>
     <div style="padding:10px 14px;margin-bottom:14px;border-radius:var(--r-sm);background:#eff6ff;border:1px solid #3b82f6;font-size:12.5px;color:#1e40af">
       <strong style="color:#1d4ed8">&#128193; Need to upload documents?</strong> Visit the <a href="https://digitalrealtyeur.sharepoint.com/sites/AITransformationProgram/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FAITransformationProgram%2FShared%20Documents%2FGeneral&viewid=be024a85%2D931b%2D4a01%2Dacac%2D217f020d89c0" target="_blank" style="color:#2563eb;text-decoration:underline;font-weight:600">AI Transformation Program SharePoint folder</a>
     </div>
@@ -6265,9 +6275,8 @@ function rTasksInbox(c){
       <div class="fg"><label>Source Type</label><select id="in-src" onchange="inboxSrc=this.value"><option value="meeting-notes">Meeting Notes</option><option value="email">Email Thread</option><option value="teams-chat">Teams Chat</option><option value="status-update">Status Update</option><option value="presentation">Presentation</option><option value="other">Other</option></select></div>
     </div>
     <div class="fg"><label>Content</label><textarea id="in-content" style="min-height:160px" placeholder="Paste the full text here — meeting notes, email chain, chat thread, anything..."></textarea></div>
-    <div style="display:flex;justify-content:flex-end;gap:8px">
-      <button class="mbtn mb-cancel" onclick="if(document.getElementById('in-content').value.trim()){saveToInbox()}else{toast('Paste content first')}" style="font-size:13px">Save to Inbox</button>
-      <button class="tb-btn" onclick="submitInbox()" style="font-size:13.5px">Scan &amp; Extract Tasks</button>
+    <div style="display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px">
+      <button type="button" class="tb-btn" onclick="submitInboxAnalyzeAndUpdate()" style="font-size:13.5px;background:linear-gradient(135deg,#7c3aed 0%,#6366f1 100%);border:none;color:#fff" title="Requires OpenAI key — matches existing items + extracts new lines; review then Apply">Analyze &amp; update</button>
     </div>
   </div>
   ${waiting.length?`<div style="font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px">Needs Attention <span class="badge hot">${waiting.length}</span></div>`+waiting.map(d=>{
@@ -6415,12 +6424,12 @@ function rKanban(c){
   <div class="page-wrap tasks-page">
   <div class="page-toolbar">
     <span class="page-title">Action Items</span>
-    <div class="pill-filters" data-app-help="Same filters as list view: slice by time/blocking state or switch to done / inbox.">
+    <div class="pill-filters" data-app-help="Same filters as list view: slice by time/blocking state or switch to done / paste notes.">
       <div class="pill${taskFilter==='all'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='all';render()">Open (${open})</div>
       <div class="pill${taskFilter==='overdue'?' pill-r':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='overdue';render()" style="${overdueCount?'':'opacity:.6'}">&#9888; Overdue (${overdueCount})</div>
       <div class="pill${taskFilter==='thisweek'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='thisweek';render()" style="${thisWeekCount?'':'opacity:.6'}">&#128197; This Week (${thisWeekCount})</div>
       <div class="pill${taskFilter==='blockeddep'?' pill-r':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='blockeddep';render()" style="${blockedDepCount?'':'opacity:.6'}">Blocked (${blockedDepCount})</div>
-      <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='inbox';render()" style="margin-left:6px">Inbox${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
+      <div class="pill${taskFilter==='inbox'?' pill-i':' pill-m'}" onclick="taskStatusFilter='open';taskFilter='inbox';render()" style="margin-left:6px">Paste &amp; update${inboxCount?' <span class="badge warn" style="margin-left:4px;font-size:10px">'+inboxCount+'</span>':''}</div>
       <div class="pill${taskStatusFilter==='done'?' pill-i':' pill-m'}" onclick="taskStatusFilter='done';taskFilter='all';render()" style="margin-left:auto">Done (${done})</div>
     </div>
     <div class="pill-actions">
@@ -6484,15 +6493,19 @@ function rExtract(c){
   c.innerHTML=`
   <div class="card" style="margin-bottom:20px;padding:24px">
     <h4 style="font-size:17px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px">Paste Anything ${OPENAI_KEY?'<span class="pill pill-g" style="font-size:10px;font-weight:500;vertical-align:middle">AI Powered</span>':''}</h4>
-    <p style="font-size:13.5px;color:var(--muted);line-height:1.65;margin-bottom:16px">Drop in meeting notes, an email thread, a Teams chat, a status update — anything. ${OPENAI_KEY?'<strong>AI will extract action items</strong> and you can route content to the right place in ATLAS.':'The app will scan for action items and let you route content where it belongs.'}</p>
+    <p style="font-size:13.5px;color:var(--muted);line-height:1.65;margin-bottom:12px">Drop in meeting notes, an email thread, a Teams chat, a status update — anything.</p>
+    <div style="padding:12px 14px;margin-bottom:14px;border-radius:var(--r-sm);background:var(--bg-subtle);border:1px solid var(--border);font-size:12.5px;color:var(--text);line-height:1.55">
+      <strong style="color:var(--fg)">Analyze &amp; update</strong>
+      <p style="margin:8px 0 0;font-size:12.5px">One button runs AI on your paste: suggested edits to <em>existing</em> action items plus <em>new</em> follow-ups saved to the inbox after you review.</p>
+      ${OPENAI_KEY?'':'<p style="margin:10px 0 0;font-size:12px;color:var(--muted)">Set an OpenAI key to enable this.</p>'}
+    </div>
     <div class="fg-row">
       <div class="fg"><label>Title</label><input id="in-title" placeholder="e.g. Weekly sync notes, Forrest's email about licensing"></div>
       <div class="fg"><label>Source Type</label><select id="in-src" onchange="inboxSrc=this.value"><option value="meeting-notes">Meeting Notes</option><option value="email">Email Thread</option><option value="teams-chat">Teams Chat</option><option value="status-update">Status Update</option><option value="presentation">Presentation</option><option value="other">Other</option></select></div>
     </div>
     <div class="fg"><label>Content</label><textarea id="in-content" style="min-height:160px" placeholder="Paste the full text here — meeting notes, email chain, chat thread, anything..."></textarea></div>
-    <div style="display:flex;justify-content:flex-end;gap:8px">
-      <button class="mbtn mb-cancel" onclick="if(document.getElementById('in-content').value.trim()){saveToInbox()}else{toast('Paste content first')}" style="font-size:13px">Save to Inbox</button>
-      <button class="tb-btn" onclick="submitInbox()" style="font-size:13.5px">Scan &amp; Extract Tasks</button>
+    <div style="display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px">
+      <button type="button" class="tb-btn" onclick="submitInboxAnalyzeAndUpdate()" style="font-size:13.5px;background:linear-gradient(135deg,#7c3aed 0%,#6366f1 100%);border:none;color:#fff" title="Requires OpenAI key — matches existing items + extracts new lines; review then Apply">Analyze &amp; update</button>
     </div>
   </div>
   ${waiting.length?`<div style="font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px">Needs Attention <span class="badge hot">${waiting.length}</span></div>`+waiting.map(d=>{
@@ -6596,6 +6609,307 @@ ${text}`;
   render();toast(ex.tasks.length?ex.tasks.length+' tasks found — review below':'Document added'+(OPENAI_KEY?'':' (set AI key for smarter extraction)'));
 }
 
+function excerptOneLine(s,maxLen){
+  const one=String(s||'').replace(/\s+/g,' ').trim();
+  if(!one)return'';
+  if(one.length<=maxLen)return one;
+  return one.slice(0,Math.max(0,maxLen-1))+'…';
+}
+/** Compact catalog of existing action items only — ids, labels, and note excerpts help the model tie NOTES to rows. */
+function buildAtlasCatalogForAiTaskUpdates(){
+  const MAX_TASKS=400,NOTE_EXCERPT=200;
+  let truncated=false;
+  let tasks=(D.tasks||[]).slice();
+  if(tasks.length>MAX_TASKS){tasks=tasks.slice(0,MAX_TASKS);truncated=true}
+  const tab=s=>String(s||'').replace(/\t/g,' ').replace(/\r?\n/g,' ');
+  const taskLines=tasks.map(t=>{
+    const ref=taskRefLabel(t)?taskRefLabel(t):'';
+    const wsRow=t.workstream?(D.workstreams||[]).find(x=>x.id===t.workstream):null;
+    const wsLabel=wsRow?tab(wsRow.name||t.workstream):tab(t.workstream||'');
+    const ex=excerptOneLine(t.notes,NOTE_EXCERPT);
+    return `TASK\t${t.id}\tref:${ref||'—'}\ttitle:${tab(t.title)}\tstatus:${tab(normalizeTaskStatus(t.status))}\towner:${tab(t.owner)}\tdue:${tab(t.due)}\tblocked:${tab(t.blockedBy)}\tws:${wsLabel}\texisting_notes_excerpt:${tab(ex)}`;
+  });
+  return{taskBlock:taskLines.join('\n'),truncated};
+}
+function normalizeUnifiedTaskUpdateRow(x){
+  if(!x||typeof x!=='object')return null;
+  const id=x.targetId||x.taskId||x.id;
+  if(!id)return null;
+  const tt=(x.targetType||'task').toLowerCase();
+  if(tt!=='task')return null;
+  return{targetType:'task',targetId:String(id),confidence:x.confidence,tieHow:x.tieHow||x.tie||'',reason:x.reason||'',changes:x.changes&&typeof x.changes==='object'?x.changes:{}};
+}
+/** Parse single-shot Analyze response: updates to existing tasks + net-new tasks. */
+function parseUnifiedAnalyzeResult(raw){
+  const out={taskUpdates:[],newTasks:[]};
+  if(!raw)return out;
+  const cleaned=String(raw).replace(/```json?\s*/gi,'').replace(/```/g,'').trim();
+  let o;
+  try{o=JSON.parse(cleaned)}catch(e){
+    try{
+      const m=cleaned.match(/\{[\s\S]*\}/);
+      if(m)o=JSON.parse(m[0]);
+    }catch(e2){}
+  }
+  if(!o||typeof o!=='object')return out;
+  const tu=o.taskUpdates||o.updates;
+  if(Array.isArray(tu))out.taskUpdates=tu.map(normalizeUnifiedTaskUpdateRow).filter(Boolean);
+  if(Array.isArray(o.newTasks)){
+    out.newTasks=o.newTasks.filter(nt=>nt&&String(nt.title||'').trim()).map(nt=>({
+      title:String(nt.title||'').trim(),
+      owner:String(nt.owner||'').trim(),
+      due:String(nt.due||'').trim(),
+      priority:['high','medium','low'].includes(String(nt.priority||'').toLowerCase())?String(nt.priority).toLowerCase():'medium',
+      workstream:String(nt.workstream||'').trim(),
+      why_new:String(nt.why_new||nt.reason||'').trim()
+    }));
+  }
+  return out;
+}
+function isAiTaskStatusAllowed(v){const k=normalizeTaskStatus(v);return Object.prototype.hasOwnProperty.call(TASK_STATUSES,k)}
+/** Read edited controls for row idx; only includes keys that differ from task t (plus notes_append when non-empty). */
+function collectAiRowChangesFromUI(idx,t){
+  const ch={};
+  const stEl=document.getElementById('ai-upd-status-'+idx);
+  if(stEl&&String(stEl.value||'').trim()){
+    const want=stEl.value.trim();
+    if(isAiTaskStatusAllowed(want)){
+      const ns=normalizeTaskStatus(want);
+      if(normalizeTaskStatus(t.status)!==ns)ch.status=want;
+    }
+  }
+  const owEl=document.getElementById('ai-upd-owner-'+idx);
+  if(owEl){const v=owEl.value.trim();if(v!==String(t.owner||'').trim())ch.owner=v}
+  const dueEl=document.getElementById('ai-upd-due-'+idx);
+  if(dueEl){const v=dueEl.value.trim();if(v!==String(t.due||'').trim())ch.due=v}
+  const blkEl=document.getElementById('ai-upd-blocked-'+idx);
+  if(blkEl){const v=blkEl.value.trim();if(v!==String(t.blockedBy||'').trim())ch.blockedBy=v}
+  const nEl=document.getElementById('ai-upd-notes-'+idx);
+  if(nEl&&String(nEl.value||'').trim())ch.notes_append=nEl.value.trim();
+  return ch;
+}
+function aiUpdatesApplyChangesToTask(t,ch,stamp,u){
+  const logParts=[];
+  let touched=false;
+  if(ch.status!==undefined&&String(ch.status).trim()!==''){
+    const want=String(ch.status).trim();
+    if(isAiTaskStatusAllowed(want)){
+      const ns=normalizeTaskStatus(want);
+      if(normalizeTaskStatus(t.status)!==ns){logParts.push(`Status → ${taskStatusLabel(ns)}`);t.status=ns;touched=true}
+    }
+  }
+  if(ch.owner!==undefined){const L=String(ch.owner).trim();if(L!==String(t.owner||'').trim()){logParts.push(`Owner → "${L||'—'}"`);t.owner=L;touched=true}}
+  if(ch.due!==undefined){const L=String(ch.due).trim();if(L!==String(t.due||'').trim()){logParts.push(`Due → ${L||'—'}`);t.due=L;touched=true}}
+  if(ch.blockedBy!==undefined){const L=String(ch.blockedBy).trim();if(L!==String(t.blockedBy||'').trim()){logParts.push('Blocked-by updated');t.blockedBy=L;touched=true}}
+  if(ch.notes_append&&String(ch.notes_append).trim()){
+    const add='\n\n'+stamp+'\n'+String(ch.notes_append).trim();
+    t.notes=(t.notes||'')+add;
+    logParts.push('Notes appended');
+    touched=true;
+  }
+  if(touched&&logParts.length){
+    const tie=u.tieHow?` [tie: ${String(u.tieHow).slice(0,120)}]`:'';
+    atlasAppendChangelog(t,[`Applied AI action-item suggestion (edited in review): ${logParts.join('; ')}${tie}${u.reason?` — ${String(u.reason).slice(0,200)}`:''}`]);
+    t.updatedBy=ME;t.updatedAt=new Date().toISOString();
+    return true;
+  }
+  return false;
+}
+function applyCheckedAiUpdatesFromModal(){
+  const props=window._aiUpdateProposals||[];
+  const notesRef=(window._aiUpdateNotesRef||'').trim();
+  const stamp=`[From pasted notes${notesRef?': '+notesRef:''} · ${new Date().toISOString().slice(0,10)}]`;
+  let applied=0;
+  [...document.querySelectorAll('.ai-upd-chk:checked')].forEach(cb=>{
+    const idx=parseInt(cb.dataset.i,10);if(Number.isNaN(idx))return;
+    const u=props[idx];if(!u||u.targetType!=='task')return;
+    const t=(D.tasks||[]).find(x=>x.id===u.targetId);if(!t)return;
+    const ch=collectAiRowChangesFromUI(idx,t);
+    if(aiUpdatesApplyChangesToTask(t,ch,stamp,u))applied++;
+  });
+  return applied;
+}
+function openUnifiedAnalyzeModal(parsed,notesPreview,fullText,docTitle){
+  const taskUpdates=parsed.taskUpdates||[];
+  const newTasks=parsed.newTasks||[];
+  const valid=[];
+  taskUpdates.forEach((u,i)=>{
+    if(!u)return;
+    const tid=u.targetId||u.taskId;
+    if(!tid)return;
+    const t=(D.tasks||[]).find(x=>x.id===tid);if(!t)return;
+    const tieHow=u.tieHow||u.tie||'';
+    valid.push({rawIndex:i,targetType:'task',targetId:t.id,confidence:u.confidence||'',tieHow:String(tieHow),reason:u.reason||'',changes:u.changes&&typeof u.changes==='object'?u.changes:{},label:(taskRefLabel(t)?taskRefLabel(t)+' · ':'')+t.title});
+  });
+  if(!valid.length&&!newTasks.length){toast('Nothing suggested — try clearer notes, distinct titles, or A# references');return}
+  window._aiUpdateProposals=valid;
+  window._aiUpdateNotesRef=(notesPreview||'').slice(0,120);
+  window._analyzeFullText=fullText||'';
+  window._analyzeDocTitle=docTitle||'';
+  const rows=valid.map((u,idx)=>{
+    const t=(D.tasks||[]).find(x=>x.id===u.targetId);
+    const ch=u.changes||{};
+    const stPref=(ch.status&&isAiTaskStatusAllowed(ch.status))?normalizeTaskStatus(ch.status):'';
+    const statusOpts=['not-started','open','blocked-dependency','done'].map(k=>`<option value="${k}"${stPref===k?' selected':''}>${esc(taskStatusLabel(k))}</option>`).join('');
+    const owPref=ch.owner!==undefined?String(ch.owner):'';
+    const duePref=ch.due!==undefined&&/^\d{4}-\d{2}-\d{2}$/.test(String(ch.due))?String(ch.due):'';
+    const blkPref=ch.blockedBy!==undefined?String(ch.blockedBy):'';
+    const notesPref=ch.notes_append?String(ch.notes_append):'';
+    const curOwn=String(t.owner||'');
+    const curDue=String(t.due||'');
+    const curBlk=String(t.blockedBy||'');
+    return `<tr>
+      <td style="vertical-align:top;padding-top:10px"><input type="checkbox" class="ai-upd-chk" data-i="${idx}" checked title="Apply this row"></td>
+      <td style="vertical-align:top;font-size:12.5px;padding-top:10px;max-width:200px">${esc(u.label)}</td>
+      <td style="vertical-align:top;font-size:11px;padding-top:10px">${esc(u.confidence)}</td>
+      <td style="vertical-align:top;font-size:11px;color:var(--muted);max-width:140px;padding-top:10px">${esc(u.tieHow)}</td>
+      <td style="vertical-align:top;font-size:11px;color:var(--muted);max-width:160px;padding-top:10px">${esc(u.reason)}</td>
+      <td style="vertical-align:top;min-width:300px;padding:8px 6px">
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:11px">
+          <label style="display:flex;flex-direction:column;gap:3px;color:var(--muted)">Status <span style="font-size:10px">Now: ${esc(taskStatusLabel(t.status))}</span>
+            <select id="ai-upd-status-${idx}" class="ai-upd-status" style="padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--fg);font-size:12px;max-width:220px">
+              <option value="">— No change —</option>${statusOpts}</select></label>
+          <label style="display:flex;flex-direction:column;gap:3px;color:var(--muted)">Owner <span style="font-size:10px">Now: ${curOwn?esc(curOwn):'—'}</span>
+            <input id="ai-upd-owner-${idx}" type="text" value="${esc(owPref)}" placeholder="${curOwn?esc(curOwn):'Leave blank for no change'}" style="padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--fg);font-size:12px"/></label>
+          <label style="display:flex;flex-direction:column;gap:3px;color:var(--muted)">Due <span style="font-size:10px">Now: ${curDue?esc(curDue):'—'}</span>
+            <input id="ai-upd-due-${idx}" type="date" value="${esc(duePref)}" style="padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--fg);font-size:12px;max-width:180px"/></label>
+          <label style="display:flex;flex-direction:column;gap:3px;color:var(--muted)">Blocked by <span style="font-size:10px">Now: ${curBlk?esc(curBlk):'—'}</span>
+            <input id="ai-upd-blocked-${idx}" type="text" value="${esc(blkPref)}" style="padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--fg);font-size:12px"/></label>
+          <label style="display:flex;flex-direction:column;gap:3px;color:var(--muted)">Append to notes
+            <textarea id="ai-upd-notes-${idx}" rows="3" placeholder="Text appended when you apply…" style="padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--fg);font-size:12px;resize:vertical">${esc(notesPref)}</textarea></label>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  const newRowsHtml=newTasks.map((nt,j)=>{
+    const prio=nt.priority||'medium';
+    const duePref=nt.due&&/^\d{4}-\d{2}-\d{2}$/.test(nt.due)?nt.due:'';
+    const wsValid=(D.workstreams||[]).some(w=>w.id===nt.workstream)?nt.workstream:'';
+    return `<tr>
+      <td style="vertical-align:top;padding-top:8px"><input type="checkbox" class="ai-new-chk" data-j="${j}" checked title="Save to inbox"></td>
+      <td style="vertical-align:top;padding:6px"><input id="ai-new-title-${j}" type="text" value="${esc(nt.title)}" style="width:100%;min-width:160px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--fg);font-size:12px"/></td>
+      <td style="vertical-align:top;padding:6px"><input id="ai-new-owner-${j}" type="text" value="${esc(nt.owner)}" style="width:100%;min-width:90px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--fg);font-size:12px"/></td>
+      <td style="vertical-align:top;padding:6px"><input id="ai-new-due-${j}" type="date" value="${esc(duePref)}" style="padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--fg);font-size:12px"/></td>
+      <td style="vertical-align:top;padding:6px"><select id="ai-new-prio-${j}" style="padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--fg);font-size:12px">
+        <option value="high"${prio==='high'?' selected':''}>High</option>
+        <option value="medium"${prio==='medium'?' selected':''}>Medium</option>
+        <option value="low"${prio==='low'?' selected':''}>Low</option>
+      </select></td>
+      <td style="vertical-align:top;padding:6px"><select id="ai-new-ws-${j}" style="max-width:200px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--fg);font-size:11px"><option value="">— None —</option>${wsOpts(wsValid)}</select></td>
+      <td style="vertical-align:top;font-size:11px;color:var(--muted);max-width:130px;padding:6px">${esc(nt.why_new)}</td>
+    </tr>`;
+  }).join('');
+  const updatesBlock=valid.length?`<h4 style="font-size:14px;font-weight:700;margin:0 0 10px;color:var(--fg)">Updates to existing action items (${valid.length})</h4>
+    <p style="font-size:12.5px;color:var(--muted);margin-bottom:10px">Edit fields before applying. Uncheck a row to skip. Status &quot;— No change —&quot; leaves status as-is.</p>
+    <div style="overflow-x:auto;margin-bottom:22px">
+    <table class="tbl" style="width:100%;font-size:12px;border-collapse:collapse;min-width:720px">
+      <thead><tr><th style="width:28px"></th><th>Action item</th><th>Conf.</th><th>Tie</th><th>Evidence</th><th>Edit before apply</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>`:`<p style="font-size:12.5px;color:var(--muted);margin-bottom:22px"><strong>Existing items:</strong> none tied confidently — nothing to update here.</p>`;
+  const newBlock=newTasks.length?`<h4 style="font-size:14px;font-weight:700;margin:0 0 10px;color:var(--fg)">New tasks (${newTasks.length})</h4>
+    <p style="font-size:12.5px;color:var(--muted);margin-bottom:10px">Checked rows are saved as one <strong>triage</strong> draft (single inbox entry with all suggested new lines). Edit titles or routing before Apply.</p>
+    <div style="overflow-x:auto">
+    <table class="tbl" style="width:100%;font-size:12px;border-collapse:collapse;min-width:640px">
+      <thead><tr><th style="width:28px"></th><th>Title</th><th>Owner</th><th>Due</th><th>Priority</th><th>Workstream</th><th>Why new</th></tr></thead>
+      <tbody>${newRowsHtml}</tbody>
+    </table>
+    </div>`:`<p style="font-size:12.5px;color:var(--muted);margin:0"><strong>New tasks:</strong> none extracted — paste may only reference existing work.</p>`;
+  openModal(`<div class="m-hd"><h3>Analyze &amp; update</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd" style="max-height:72vh;overflow:auto">
+    <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px">One pass from your paste: apply checked updates to tracked items and/or add checked new lines to the inbox. Nothing is saved until you confirm.</p>
+    ${updatesBlock}
+    ${newBlock}
+  </div>
+  <div class="m-ft">
+    <button type="button" class="mbtn mb-cancel" onclick="closeModal();window._aiUpdateProposals=null;window._aiUpdateNotesRef=null;window._analyzeFullText=null;window._analyzeDocTitle=null">Cancel</button>
+    <button type="button" class="mbtn mb-save" onclick="applyUnifiedAnalyze()">Apply selected</button>
+  </div>`);
+}
+function applyUnifiedAnalyze(){
+  const appliedUpd=applyCheckedAiUpdatesFromModal();
+  const newRows=[];
+  [...document.querySelectorAll('.ai-new-chk:checked')].forEach(cb=>{
+    const j=parseInt(cb.dataset.j,10);if(Number.isNaN(j))return;
+    const tEl=document.getElementById('ai-new-title-'+j);
+    const title=tEl?tEl.value.trim():'';
+    if(!title)return;
+    newRows.push({
+      title,
+      owner:(document.getElementById('ai-new-owner-'+j)?.value||'').trim(),
+      due:(document.getElementById('ai-new-due-'+j)?.value||'').trim(),
+      priority:(document.getElementById('ai-new-prio-'+j)?.value||'medium'),
+      workstream:(document.getElementById('ai-new-ws-'+j)?.value||'').trim()
+    });
+  });
+  let inboxAdded=0;
+  const full=window._analyzeFullText||'';
+  const docTitle=window._analyzeDocTitle||('Analyze — '+new Date().toLocaleDateString());
+  if(newRows.length){
+    const docId=uid();
+    const aiTasks=newRows.map(t=>({title:t.title,owner:t.owner,due:t.due,priority:t.priority||'medium',workstream:t.workstream||''}));
+    D.inbox.push({id:docId,title:docTitle,source:inboxSrc,content:full,created:new Date().toISOString(),extractedTasks:newRows.map(t=>t.title),aiTasks,people:[],dateFound:'',addedBy:ME,analyzeUnified:true});
+    inboxAdded=newRows.length;
+    log('Unified analyze: '+inboxAdded+' new inbox task line(s) — '+esc(docTitle));
+  }
+  window._aiUpdateProposals=null;
+  window._aiUpdateNotesRef=null;
+  window._analyzeFullText=null;
+  window._analyzeDocTitle=null;
+  save();closeModal();render();
+  const parts=[];
+  if(appliedUpd)parts.push(appliedUpd+' update(s) applied');
+  if(inboxAdded)parts.push(inboxAdded+' new line(s) in inbox');
+  if(parts.length){
+    toast(parts.join(' · '));
+    const ti=document.getElementById('in-title');
+    const tc=document.getElementById('in-content');
+    if(ti)ti.value='';
+    if(tc)tc.value='';
+  }else toast('Nothing applied — check rows or edit fields');
+}
+async function submitInboxAnalyzeAndUpdate(){
+  const text=(document.getElementById('in-content')?.value||'').trim();
+  if(!text){toast('Paste some content first');return}
+  if(!OPENAI_KEY){toast('Set your OpenAI API key first (sidebar)');return}
+  const title=(document.getElementById('in-title')?.value||'').trim();
+  const docTitle=title||('Notes — '+new Date().toLocaleDateString());
+  toast('AI is analyzing your paste…');
+  const cat=buildAtlasCatalogForAiTaskUpdates();
+  const truncNote=cat.truncated?'\n(Action-item catalog truncated — prefer A# or distinctive title phrases.)':'';
+  const wsContext=(D.workstreams||[]).map(w=>w.id+': '+w.name).join('\n');
+  const sys=`You analyze pasted NOTES for ATLAS (Digital Realty AI Transformation Program). Return ONE JSON object with two arrays: taskUpdates (edits to existing action items) and newTasks (net-new follow-ups). No markdown.
+
+PART A — taskUpdates (existing rows only):
+Match NOTES to TASK lines in the catalog. For each confident match, emit {"taskId":"<exact id from TASK line>","confidence":"high"|"medium"|"low","tieHow":"<one line>","reason":"<evidence from NOTES>","changes":{...}}
+Tie priority: (1) A# / id mention (2) distinctive shared title phrase (3) owner + topic (4) due date + topic. If ambiguous between rows, omit.
+changes keys only when justified: status (not-started|open|blocked-dependency|done), owner, due (YYYY-MM-DD), blockedBy, notes_append (concise).
+Max 20 taskUpdates.
+
+PART B — newTasks (net-new only):
+Extract actionable follow-ups that are NOT updates to catalog rows already listed in taskUpdates. Do not duplicate the same work as a taskUpdate.
+Each item: {"title":"","owner":"","due":"","priority":"high"|"medium"|"low","workstream":"<exact id from WORKSTREAM list or empty>","why_new":"<one line>"}
+Max 30 newTasks.
+
+Rules: Never invent taskIds for updates. For newTasks.workstream use only ids from the WORKSTREAM list or "". Prefer fewer, higher-confidence entries.`;
+
+  const user=`ACTION ITEM CATALOG:
+${cat.taskBlock||'(none)'}
+${truncNote}
+
+WORKSTREAMS (ids for newTasks.workstream):
+${wsContext||'(none)'}
+
+NOTES:
+${text}`;
+
+  const result=await callAI(sys,user,{temperature:0.18,max_tokens:8192});
+  if(!result){toast('No AI response');return}
+  const parsed=parseUnifiedAnalyzeResult(result);
+  const titleHint=title.slice(0,80)||text.slice(0,80);
+  openUnifiedAnalyzeModal(parsed,titleHint,text,docTitle);
+}
+
 function editDoc(id){
   const d=D.inbox.find(x=>x.id===id);if(!d)return;
   openModal(`<div class="m-hd"><h3>Edit Document</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
@@ -6636,15 +6950,6 @@ function routeDoc(id){
     d.processed=true;d.updatedBy=ME;
     save();log(items.length+' item(s) from: '+esc(d.title));go('tasks');toast(items.length+' action items created');
   }
-}
-function saveToInbox(){
-  const text=(document.getElementById('in-content').value||'').trim();
-  if(!text){toast('Paste content first');return}
-  const title=document.getElementById('in-title').value.trim()||('Note — '+new Date().toLocaleDateString());
-  D.inbox.push({id:uid(),title,source:inboxSrc,content:text,created:new Date().toISOString(),extractedTasks:[],people:[],dateFound:'',addedBy:ME});
-  save();log('Saved to inbox: '+esc(title));
-  document.getElementById('in-title').value='';document.getElementById('in-content').value='';
-  render();toast('Saved to inbox');
 }
 function markInboxDone(id){
   const d=(D.inbox||[]).find(x=>x.id===id);if(!d)return;
