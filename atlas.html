@@ -884,6 +884,81 @@ function timeAgo(iso){
   return 'just now';
 }
 
+const ATLAS_CHANGELOG_MAX=80;
+function atlasAppendChangelog(entity,deltaLines){
+  if(!entity||!deltaLines||!deltaLines.length)return;
+  if(!entity.changelog)entity.changelog=[];
+  entity.changelog.push({
+    id:uid(),
+    ts:new Date().toISOString(),
+    author:ME||'',
+    changes:deltaLines.slice()
+  });
+  if(entity.changelog.length>ATLAS_CHANGELOG_MAX)entity.changelog=entity.changelog.slice(-ATLAS_CHANGELOG_MAX);
+}
+function parentWsChangelogLabel(wsId){
+  if(!wsId)return'— Top level —';
+  const p=(D.workstreams||[]).find(x=>x.id===wsId);
+  if(!p)return String(wsId);
+  const ref=wsRefLabel(p)?wsRefLabel(p)+' · ':'';
+  return ref+(p.name||'(unnamed)');
+}
+function verticalLifecycleChangelogLabel(v){const o=VERTICAL_LIFECYCLE_STAGES.find(s=>s.value===v);return o?o.label:String(v||'—')}
+function heartbeatLensChangelogLabel(v){const o=HEARTBEAT_LENS_OPTS.find(s=>s.value===v);return o?o.label:String(v||'—')}
+function buildWsChangelogDeltas(prev,w){
+  if(!prev||!w)return[];
+  const d=[];
+  const eq=(a,b)=>String(a??'')===String(b??'');
+  if(!eq(prev.name,w.name))d.push(`Name: "${prev.name}" → "${w.name}"`);
+  if(!eq(prev.requestor,w.requestor||''))d.push(`Requestor: "${prev.requestor||'—'}" → "${w.requestor||'—'}"`);
+  if(!eq(prev.primaryOwner,w.primaryOwner||''))d.push(`Lead: "${prev.primaryOwner||'—'}" → "${w.primaryOwner||'—'}"`);
+  if(!eq(prev.secondaryOwner,w.secondaryOwner||''))d.push(`Co-Lead: "${prev.secondaryOwner||'—'}" → "${w.secondaryOwner||'—'}"`);
+  if(!eq(prev.parentWs,w.parentWs||''))d.push(`Parent: ${parentWsChangelogLabel(prev.parentWs)} → ${parentWsChangelogLabel(w.parentWs)}`);
+  if(!eq(prev.status,w.status||''))d.push(`Status: ${wsStatusLabel(prev.status)} → ${wsStatusLabel(w.status)}`);
+  if(!eq(prev.targetStart,w.targetStart||''))d.push(`Start date: ${prev.targetStart||'—'} → ${w.targetStart||'—'}`);
+  if(!eq(prev.targetDate,w.targetDate||''))d.push(`Target date: ${prev.targetDate||'—'} → ${w.targetDate||'—'}`);
+  if(!eq(prev.priority,w.priority||''))d.push(`Priority: ${prev.priority||'—'} → ${w.priority||'—'}`);
+  if(!eq(prev.alignments,w.alignments||''))d.push('Alignments / dependencies updated');
+  if(prev.stakeholdersJson!==JSON.stringify([...(w.stakeholders||[])].sort()))d.push('Stakeholders updated');
+  if(!eq(prev.desc,w.desc||''))d.push('Description updated');
+  if(!eq(prev.businessOutcome,w.businessOutcome||''))d.push('Business outcome updated');
+  if(!eq(prev.verticalLifecycleStage,w.verticalLifecycleStage||''))d.push(`Vertical lifecycle: ${verticalLifecycleChangelogLabel(prev.verticalLifecycleStage)} → ${verticalLifecycleChangelogLabel(w.verticalLifecycleStage)}`);
+  if(!eq(prev.heartbeatLens,w.heartbeatLens||''))d.push(`Heartbeat lens: ${heartbeatLensChangelogLabel(prev.heartbeatLens)} → ${heartbeatLensChangelogLabel(w.heartbeatLens)}`);
+  const prevCdo=String(prev.pipelineCdoBand||''),newCdo=String(w.pipelineCdoBand||'');
+  if(prevCdo!==newCdo)d.push(`Pipeline CDO line: ${prevCdo||'auto/unset'} → ${newCdo||'auto/unset'}`);
+  return d;
+}
+function buildTaskChangelogDeltas(prev,t){
+  if(!prev||!t)return[];
+  const d=[];
+  const eq=(a,b)=>String(a??'')===String(b??'');
+  if(!eq(prev.title,t.title||''))d.push(`Title: "${prev.title}" → "${t.title}"`);
+  if(!eq(prev.owner,t.owner||''))d.push(`Owner: "${prev.owner||'—'}" → "${t.owner||'—'}"`);
+  if(!eq(prev.requestor,t.requestor||''))d.push(`Requestor: "${prev.requestor||'—'}" → "${t.requestor||'—'}"`);
+  if(!eq(prev.workstream,t.workstream||''))d.push(`Parent workstream: ${parentWsChangelogLabel(prev.workstream)} → ${parentWsChangelogLabel(t.workstream)}`);
+  if(!eq(prev.startDate,t.startDate||''))d.push(`Start date: ${prev.startDate||'—'} → ${t.startDate||'—'}`);
+  if(!eq(prev.due,t.due||''))d.push(`Target date: ${prev.due||'—'} → ${t.due||'—'}`);
+  if(!eq(prev.status,t.status||''))d.push(`Status: ${taskStatusLabel(normalizeTaskStatus(prev.status))} → ${taskStatusLabel(normalizeTaskStatus(t.status))}`);
+  if(!eq(prev.blockedBy,t.blockedBy||''))d.push('Blocked by updated');
+  if(!eq(prev.notes,t.notes||''))d.push('Notes updated');
+  return d;
+}
+function renderAtlasChangelogSection(entries,emptyText){
+  const list=(entries||[]).slice().reverse().slice(0,40);
+  if(!list.length)return `<div class="fg" style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)"><label>Change log</label><div style="font-size:12px;color:var(--muted);padding:8px 0">${emptyText}</div></div>`;
+  const blocks=list.map(ent=>{
+    const who=esc(ent.author||'Someone');
+    const when=timeAgo(ent.ts);
+    const detail=(ent.changes||[]).map(c=>`<div style="padding:3px 0 3px 12px;border-left:2px solid var(--border-lt);margin:4px 0;line-height:1.45">${esc(c)}</div>`).join('');
+    return `<div style="margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border-lt)"><div style="font-size:11px;color:var(--muted);margin-bottom:6px"><strong>${who}</strong> · ${when}<span style="margin-left:8px;opacity:.75;font-weight:500" title="${esc(ent.ts||'')}">${esc((ent.ts||'').slice(0,19).replace('T',' '))}</span></div>${detail||'<div style="color:var(--muted)">(no details)</div>'}</div>`;
+  }).join('');
+  return `<div class="fg" style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)">
+    <label>Change log</label>
+    <p style="font-size:11px;color:var(--muted);margin:0 0 8px">Saved edits and moves (newest first).</p>
+    <div style="max-height:240px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;background:var(--bg-subtle);font-size:12px">${blocks}</div>
+  </div>`;
+}
+
 // PASTE YOUR FIREBASE CONFIG HERE
 const firebaseConfig = {
   apiKey: "AIzaSyDkh48LXID_51EBrmXg81pyzZicRMHRG68",
@@ -2273,6 +2348,7 @@ function finishInlineEdit(wsId,newName,oldName,span,input){
   const w=(D.workstreams||[]).find(x=>x.id===wsId);
   if(!w)return;
   w.name=newName;
+  atlasAppendChangelog(w,[`Name (inline edit): "${oldName}" → "${newName}"`]);
   w.updatedAt=new Date().toISOString();
   w.updatedBy=ME||'Unknown';
   save();
@@ -2308,6 +2384,8 @@ function finishInlineDateEdit(wsId,field,newVal,oldVal,span,input){
   const w=(D.workstreams||[]).find(x=>x.id===wsId);
   if(!w)return;
   w[field]=newVal;
+  const dlLabel=field==='targetDate'?'Target date':'Start date';
+  atlasAppendChangelog(w,[`${dlLabel} (inline edit): ${oldVal||'—'} → ${newVal||'—'}`]);
   w.updatedAt=new Date().toISOString();
   w.updatedBy=ME||'Unknown';
   save();
@@ -4836,8 +4914,10 @@ function wsHierarchyDrop(event,targetWsId){
     if(!t)return;
     if(t.workstream===targetWsId)return;
     const oldWs=(D.workstreams||[]).find(w=>w.id===t.workstream);
+    const oldTParent=parentWsChangelogLabel(t.workstream);
     t.workstream=targetWsId;
     t.updatedBy=ME;t.updatedAt=new Date().toISOString();
+    atlasAppendChangelog(t,[`Parent workstream (drag-and-drop): ${oldTParent} → ${parentWsChangelogLabel(targetWsId)}`]);
     save();render();
     toast('Moved "'+t.title+'" to '+targetWs.name);
   }else if(data.startsWith('ws:')){
@@ -4859,11 +4939,13 @@ function wsHierarchyDrop(event,targetWsId){
       return;
     }
     
-    const oldParent=(D.workstreams||[]).find(p=>p.id===w.parentWs);
+    const oldParentLabel=parentWsChangelogLabel(w.parentWs);
+    const newParentLabel=parentWsChangelogLabel(targetWsId);
     w.parentWs=targetWsId;
     w.level=targetLevel+1;
     w.category=targetWs.category;
     w.updatedBy=ME;w.updatedAt=new Date().toISOString();
+    atlasAppendChangelog(w,[`Parent (drag-and-drop): ${oldParentLabel} → ${newParentLabel}`]);
     
     function updateChildLevels(parentId,parentLevel){
       (D.workstreams||[]).filter(c=>c.parentWs===parentId).forEach(c=>{
@@ -5363,7 +5445,7 @@ function openWsEdit(id){
     ${w?`<div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px">
       <h4 style="font-size:13px;font-weight:700;margin:0 0 10px 0">Linked Items</h4>
       ${wsLinkedItems(w.id)}
-    </div>`:''}
+    </div>${renderAtlasChangelogSection(w.changelog,'No saved edits yet — changes appear after you save.')}`:''}
   </div>
   <div class="m-ft">
     ${w?'<button class="mbtn mb-del" onclick="delWs(\''+w.id+'\');closeModal()">Delete</button>':''}
@@ -5510,6 +5592,24 @@ function saveWs(id){
   if(!w){w={id:uid(),phase:'0-30',color:'#6366f1'};D.workstreams.push(w)}
   if(typeof w.seq!=='number'||w.seq<1)w.seq=nextWorkstreamSeq();
   if(isNew&&!w.created)w.created=new Date().toISOString();
+  const prev=isNew?null:{
+    name:w.name||'',
+    requestor:w.requestor||'',
+    primaryOwner:w.primaryOwner||w.owner||'',
+    secondaryOwner:w.secondaryOwner||'',
+    parentWs:w.parentWs||'',
+    status:w.status||'',
+    targetStart:w.targetStart||'',
+    targetDate:w.targetDate||'',
+    priority:w.priority||'',
+    alignments:w.alignments||'',
+    stakeholdersJson:JSON.stringify([...(w.stakeholders||[])].sort()),
+    desc:w.desc||'',
+    businessOutcome:w.businessOutcome||'',
+    verticalLifecycleStage:w.verticalLifecycleStage||'',
+    heartbeatLens:w.heartbeatLens||'',
+    pipelineCdoBand:String(w.pipelineCdoBand||'')
+  };
   w.name=name;
   w.requestor=(document.getElementById('ws-requestor')?.value||'').trim();
   w.primaryOwner=(document.getElementById('ws-primaryOwner')?.value||'').trim();
@@ -5544,6 +5644,8 @@ function saveWs(id){
     else delete w.pipelineCdoBand;
   }else delete w.pipelineCdoBand;
   w.updatedBy=ME;w.updatedAt=new Date().toISOString();
+  if(isNew)atlasAppendChangelog(w,['Workstream created']);
+  else{const deltas=buildWsChangelogDeltas(prev,w);if(deltas.length)atlasAppendChangelog(w,deltas)}
   save();log((isNew?'Added':'Updated')+' workstream: '+esc(w.name));closeModal();render();
   toast(isNew?'Workstream added':'Workstream updated');
 }
@@ -5823,6 +5925,7 @@ function openTaskModal(id){
     <div class="fg"><label>Status</label><select id="t-status"><option value="not-started"${(!t||defaultStatus==='not-started'||!t.status)?' selected':''}>Not Started</option><option value="open"${defaultStatus==='open'?' selected':''}>Open</option><option value="blocked-dependency"${defaultStatus==='blocked-dependency'?' selected':''}>Blocked/Dependency</option><option value="done"${defaultStatus==='done'?' selected':''}>Done</option></select></div>
     <div class="fg"><label>Blocked By</label><input id="t-blocked-by" value="${t?esc(t.blockedBy||''):''}" placeholder="Optional: group or person blocking progress"></div>
     <div class="fg"><label>Notes</label><textarea id="t-notes" style="min-height:90px;resize:vertical" placeholder="Optional details, context, or next steps">${t?esc(t.notes):''}</textarea></div>
+    ${t?renderAtlasChangelogSection(t.changelog,'No saved edits yet — changes appear after you save.'):''}
     ${t?`<div class="fg" style="margin-top:4px">
       <label style="display:flex;align-items:center;justify-content:space-between">Discussion <span style="font-size:11px;color:var(--light);font-weight:400">${(t.comments||[]).length} comment${(t.comments||[]).length!==1?'s':''}</span></label>
       <div class="comment-thread" id="t-comments">
@@ -5854,6 +5957,17 @@ function saveTask(id){
   const isNew=!t;
   if(!t){t={id:uid(),created:today(),source:'',addedBy:ME,priority:'medium',startDate:''};if(!D.tasks)D.tasks=[];D.tasks.push(t)}
   if(typeof t.seq!=='number'||t.seq<1)t.seq=nextTaskSeq();
+  const prev=isNew?null:{
+    title:t.title||'',
+    owner:t.owner||'',
+    requestor:t.requestor||'',
+    startDate:t.startDate||'',
+    due:t.due||'',
+    status:t.status||'',
+    blockedBy:t.blockedBy||'',
+    workstream:t.workstream||'',
+    notes:t.notes||''
+  };
   t.title=title;t.owner=document.getElementById('t-owner').value.trim();
   t.requestor=(document.getElementById('t-requestor')?.value||'').trim();
   t.startDate=document.getElementById('t-start').value;
@@ -5864,6 +5978,8 @@ function saveTask(id){
   t.workstream=document.getElementById('t-ws').value;
   t.notes=document.getElementById('t-notes').value;
   t.updatedBy=ME;t.updatedAt=new Date().toISOString();
+  if(isNew)atlasAppendChangelog(t,['Action item created']);
+  else{const deltas=buildTaskChangelogDeltas(prev,t);if(deltas.length)atlasAppendChangelog(t,deltas)}
   save();log((isNew?'Added':'Updated')+' action item: '+esc(title));
   closeModal();render();toast(isNew?'Action item added':'Action item updated');
 }
@@ -5989,8 +6105,9 @@ function doConvertToWorkstream(taskId){
   
   if(!D.workstreams)D.workstreams=[];
   D.workstreams.push(newWs);
-  
   const deleteOriginal=document.getElementById('cvt-delete').checked;
+  atlasAppendChangelog(newWs,[`Created from action item conversion${deleteOriginal?' — original action item deleted':' — original action item retained'}`]);
+
   if(deleteOriginal){
     const idx=D.tasks.findIndex(x=>x.id===taskId);
     if(idx>=0)D.tasks.splice(idx,1);
