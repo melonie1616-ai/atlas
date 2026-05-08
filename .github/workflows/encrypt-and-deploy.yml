@@ -33,6 +33,8 @@ jobs:
       - name: Encrypt HTML
         run: |
           mkdir -p _site
+          # Production site: Program only (hide CDO Portfolio area / switch). Local repo keeps full app.
+          sed -i 's/const ATLAS_INCLUDE_CDO_PORTFOLIO = true/const ATLAS_INCLUDE_CDO_PORTFOLIO = false/' atlas.html
           pagecrypt atlas.html _site/index.html "${{ secrets.SITE_PASSWORD }}"
           cp favicon.svg _site/favicon.svg
           # Inject favicon link into the encrypted page's head

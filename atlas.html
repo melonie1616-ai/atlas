@@ -139,8 +139,13 @@ body.app-helper-on [data-app-help]{cursor:help}
 
 /* MAIN */
 .main{margin-left:230px;flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left .2s ease}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 36px;background:var(--bg-card);border-bottom:1px solid var(--border-lt);position:sticky;top:0;z-index:50}
-.topbar h2{font-size:22px;font-weight:800;letter-spacing:-.01em}
+.topbar{display:flex;align-items:center;gap:16px;padding:20px 36px;background:var(--bg-card);border-bottom:1px solid var(--border-lt);position:sticky;top:0;z-index:50}
+.topbar h2{font-size:22px;font-weight:800;letter-spacing:-.01em;flex:1;min-width:0;margin:0}
+.area-switch{display:inline-flex;align-items:center;flex-shrink:0;background:var(--bg-subtle);border:1px solid var(--border-lt);border-radius:var(--r-sm);padding:3px;gap:2px}
+.area-pill{padding:6px 14px;border:none;border-radius:var(--r-xs);font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);font-family:inherit;transition:background .15s,color .15s,box-shadow .15s}
+.area-pill:hover{color:var(--text)}
+.area-pill.on{background:var(--accent);color:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.area-pill:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .topbar .tb-right{display:flex;align-items:center;gap:12px}
 .topbar input[type=text]{padding:8px 16px 8px 36px;border:1px solid var(--border-lt);border-radius:var(--r-sm);font-size:14px;width:260px;outline:none;background:var(--bg-card);color:var(--text);transition:border-color .15s;background-image:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23888" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>');background-repeat:no-repeat;background-position:10px center;background-size:16px}
 .topbar input[type=text]:focus{border-color:var(--accent)}
@@ -684,7 +689,7 @@ button.rep-pptx-mini{color:var(--text);font-weight:600}
 
 <nav class="side" id="sidebar">
   <div class="side-hd" style="position:relative">
-    <div class="top-row" role="button" tabindex="0" title="Go to Dashboard" onclick="go('dashboard')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();go('dashboard')}">
+    <div class="top-row" role="button" tabindex="0" title="Go to area home" onclick="goHomeInCurrentArea()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHomeInCurrentArea()}">
       <div class="logo" style="background:transparent;padding:0"><img src="favicon.svg" alt="" style="width:100%;height:100%;object-fit:contain"></div>
       <h1 style="margin:0">ATLAS</h1>
     </div>
@@ -693,6 +698,7 @@ button.rep-pptx-mini{color:var(--text);font-weight:600}
     <span class="sub2">Corporate Data Office</span>
   </div>
   <div class="nav">
+    <div id="nav-program-wrap">
     <div class="ni on" data-v="dashboard" data-app-help="Program home: timeline, Program Snapshot, and shortcuts to add work, run delivery, and build reports." onclick="go('dashboard')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       Dashboard
@@ -712,6 +718,10 @@ button.rep-pptx-mini{color:var(--text);font-weight:600}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
       Workstreams
     </div>
+    <div class="ni" data-v="milestones" data-app-help="Key milestones with dates, owners, what blocks what, and highlight the dependency chain to your goal." onclick="go('milestones')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/><circle cx="12" cy="12" r="3"/></svg>
+      Milestones
+    </div>
     <span id="nb-ws2" style="display:none"></span>
     <div class="ni" data-v="actionitems" data-app-help="All tasks: list or Kanban, status columns, filters (owner, workstream, past due), comments, and drag to update status." onclick="go('actionitems')" id="nav-actionitems">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
@@ -726,6 +736,13 @@ button.rep-pptx-mini{color:var(--text);font-weight:600}
     <div class="ni" data-v="governance" data-app-help="Decision log and risk register: capture, filter, and track governance items alongside program delivery." onclick="go('governance')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       Decisions & Risks
+    </div>
+    </div>
+    <div id="nav-cdo-wrap" style="display:none">
+    <div class="ni" data-v="cdo" data-area="cdo" data-app-help="CDO Portfolio: initiatives, domains, health, and links to the AI program workstreams when relevant." onclick="go('cdo')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/><path d="M6 11h4M6 15h4M14 11h4M14 15h4"/></svg>
+      Portfolio
+    </div>
     </div>
     <div id="sidebar-links"></div>
   </div>
@@ -760,6 +777,10 @@ button.rep-pptx-mini{color:var(--text);font-weight:600}
 <div class="main">
   <div class="topbar">
     <button class="topbar-menu" onclick="toggleSidebar()" title="Expand sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="area-switch" id="areaSwitch" role="tablist" aria-label="ATLAS area">
+      <button type="button" class="area-pill on" role="tab" data-area="program" aria-selected="true" onclick="setAtlasArea('program')">Program</button>
+      <button type="button" class="area-pill" role="tab" data-area="cdo" aria-selected="false" onclick="setAtlasArea('cdo')">CDO</button>
+    </div>
     <h2 id="viewTitle">Dashboard</h2>
     <div class="tb-right">
       <input type="text" id="search" placeholder="Search anything..." oninput="render()">
@@ -779,7 +800,52 @@ button.rep-pptx-mini{color:var(--text);font-weight:600}
 
 
 <script>
-let D,V=localStorage.getItem('atlas_view')||'dashboard',ME='',dbRef=null,firebaseReady=false,ganttZoom='3m',ganttCustomStart='',pplStakeholdersOnly=false;
+/** Full app (local / dev): CDO Portfolio area + Program. GitHub Pages workflow sets this to `false` before encrypt so production is Program-only. */
+const ATLAS_INCLUDE_CDO_PORTFOLIO = true;
+const CD_AREA_VIEWS=new Set(['cdo']);
+let cdoPfStatus='all',cdoPfHealth='all',cdoPfSort='name',cdoPfLens='all',cdoPfContainer='all',cdoShowInactiveContainers=false;
+/** Portfolio stages (above-the-waterline). Legacy `status` maps here on load. */
+const PORTFOLIO_STAGES=[
+  {value:'stub',label:'Stub (demand)',hint:'Stage 0 — working title, no lead required yet'},
+  {value:'needs_lead',label:'Needs accountable lead',hint:'Stage 1 gate — assign one lead before progressing'},
+  {value:'committed',label:'Committed',hint:'Lead assigned — define binary deliverables'},
+  {value:'on_hold',label:'On hold',hint:''},
+  {value:'complete',label:'Complete',hint:''},
+  {value:'cancelled',label:'Cancelled',hint:''}
+];
+const PORTFOLIO_STAGE_ORDER=PORTFOLIO_STAGES.map(s=>s.value);
+const CDO_PORTFOLIO_STATUSES=PORTFOLIO_STAGES;
+const CDO_PORTFOLIO_HEALTH_OPTS=[
+  {value:'',label:'Not set'},
+  {value:'green',label:'Green'},
+  {value:'yellow',label:'Yellow'},
+  {value:'red',label:'Red'}
+];
+const CDO_PORTFOLIO_PRIORITY_OPTS=[
+  {value:'',label:'—'},
+  {value:'p1',label:'P1 — Highest'},
+  {value:'p2',label:'P2'},
+  {value:'p3',label:'P3'}
+];
+/** Milestone row: manually selected phase-style status + free-text narrative (%, dates, etc.). */
+const CDO_MILESTONE_PHASE_STATUS_OPTS=[
+  {value:'',label:'— Select —'},
+  {value:'not-started',label:'Not started'},
+  {value:'in-progress',label:'In progress'},
+  {value:'complete',label:'Complete'},
+  {value:'recurring',label:'Recurring'},
+  {value:'on-hold',label:'On hold'},
+  {value:'other',label:'Other (see details)'}
+];
+function getStoredAtlasArea(){try{if(!ATLAS_INCLUDE_CDO_PORTFOLIO)return'program';return localStorage.getItem('atlas_area')||'program'}catch(e){return'program'}}
+let ATLAS_AREA=getStoredAtlasArea();
+function loadInitialViewForArea(){
+  try{
+    if(ATLAS_INCLUDE_CDO_PORTFOLIO&&ATLAS_AREA==='cdo')return localStorage.getItem('atlas_cdo_view')||'cdo';
+    return localStorage.getItem('atlas_view')||'dashboard';
+  }catch(e){return'dashboard'}
+}
+let D,V=loadInitialViewForArea(),ME='',dbRef=null,firebaseReady=false,ganttZoom='3m',ganttCustomStart='',pplStakeholdersOnly=false;
 const RELEASE_VERSION='2026-03-27';
 const RELEASE_NOTES=[
   {date:'March 27, 2026',whatsNew:[
@@ -1215,8 +1281,281 @@ function defaults(){
     ],
     groups:['CDO Leadership','CDO Team','Executive','Legal','HR','IT/Security','Business Stakeholder','Other'],
     reportNotes:{accomplishments:'',blockers:'',nextPeriod:'',asOf:'',executiveSummary:'',businessOutcomes:'• Time savings from automation across BUs\n• Reduced manual effort in key processes\n• Stronger governance and risk control'},
+    milestones:[],
+    cdoPortfolio:[],
+    strategicContainers:[
+      {id:'sc-ai',name:'AI',description:'',activeFlag:true,createdDate:new Date().toISOString().slice(0,10),changeLog:[]},
+      {id:'sc-data',name:'Data',description:'',activeFlag:true,createdDate:new Date().toISOString().slice(0,10),changeLog:[]},
+      {id:'sc-analytics',name:'Analytics',description:'',activeFlag:true,createdDate:new Date().toISOString().slice(0,10),changeLog:[]},
+      {id:'sc-cm',name:'Change Management',description:'',activeFlag:true,createdDate:new Date().toISOString().slice(0,10),changeLog:[]}
+    ],
+    /** Managed initiative tags (anyone can apply on initiatives; catalog maintained here). */
+    portfolioTags:[],
+    /** Managed deliverable / milestone types. */
+    cdoDeliverableTypes:['Prototype','Document','App','Dataset','Dashboard','Decision'],
+    /** Names offered in accountable-lead dropdowns (merged with Team Directory on load). */
+    cdoAccountableLeadOptions:[],
     log:[{id:uid(),ts:new Date().toISOString(),text:'ATLAS initialized'}]
   };
+}
+
+/**
+ * Rich sample CDO portfolio rows for evaluating the UI (Gantt-style signals, variance, rollup warning, tags).
+ * Applied once when `cdoPortfolio` is empty — see `cdoEnsureDemoPortfolioSeed`.
+ */
+function cdoBuildDemoPortfolioPayload(){
+  const tags=[
+    'Trusted Data','Enablement','External-facing','Governance','TPRM','Survey','Analytics','Superworker','Executive reporting','Pilot','MDM','Vendor selection','Hold','Variance demo'
+  ];
+  const extraContainers=[
+    {id:'sc-archive-demo',name:'Legacy programs (sample)',description:'Inactive bucket for demo — toggle “Show inactive containers” to filter here.',activeFlag:false,createdDate:'2025-11-01',changeLog:[
+      {ts:'2026-02-04T16:20:00.000Z',changedBy:'',summary:'Created as archive bucket'},
+      {ts:'2026-03-18T11:00:00.000Z',changedBy:'',summary:'Renamed from “Sunset experiments”'},
+      {ts:'2026-04-22T09:30:00.000Z',changedBy:'',summary:'Marked inactive — work consolidated under Data container'}
+    ]}
+  ];
+  const portfolio=[
+    {
+      id:'demo-pf-trusted-data',
+      name:'Trusted Data 101 video series',
+      strategicContainerId:'sc-data',
+      executiveSponsor:'Chris Sharp <csharp@digitalrealty.com>',
+      requester:'Data Communications',
+      description:'Short-form videos explaining trusted data concepts for business audiences; complements the Trusted Data narrative.',
+      portfolioTags:['Trusted Data','Enablement','External-facing'],
+      portfolioStage:'committed',
+      status:'active',
+      owner:'Melonie Poole',
+      health:'green',
+      priority:'p1',
+      startDate:'2026-04-01',
+      baselineTargetDate:'2026-07-15',
+      baselineFrozen:false,
+      targetDate:'2026-07-10',
+      timingNotes:'Rollout aligned with Q3 comms; episode drops staged biweekly.',
+      notesInternal:'Episode 2 script waiting on Legal.',
+      notesExternal:'Three episodes planned for general employee audience.',
+      portfolioChangeEvents:[
+        {id:'demo-pevt-td1',ts:'2026-05-02T14:00:00.000Z',changeType:'Scope',scopeSubtype:'tags',deliverableId:'',oldValue:'Trusted Data',newValue:'Trusted Data|Enablement|External-facing',changeReason:'Split enablement vs external messaging',changedBy:''}
+      ],
+      commitLog:[
+        {ts:'2026-05-05T10:00:00.000Z',summary:'Portfolio commitment date moved from 2026-08-30 → 2026-07-10 (leadership pull-in)'}
+      ],
+      deliverables:[
+        {id:'demo-d-td1',title:'Episode 1 — script & storyboard',deliverableType:'Document',baselineDueDate:'2026-05-10',plannedDueDate:'2026-05-18',actualCompletionDate:'',done:false,assignee:'Melonie Poole',phaseStatus:'in-progress',statusDetail:'Outline approved 5/4'},
+        {id:'demo-d-td2',title:'Episode 2 — studio production',deliverableType:'Prototype',baselineDueDate:'2026-06-01',plannedDueDate:'2026-06-28',actualCompletionDate:'',done:false,assignee:'Eva Madrid',phaseStatus:'not-started',statusDetail:''},
+        {id:'demo-d-td3',title:'Launch comms pack',deliverableType:'Document',baselineDueDate:'2026-07-30',plannedDueDate:'2026-08-15',actualCompletionDate:'',done:false,assignee:'Forrest Hook',phaseStatus:'not-started',statusDetail:''},
+        {id:'demo-d-td4',title:'Brand template kit (pilot)',deliverableType:'Dashboard',baselineDueDate:'2026-04-15',plannedDueDate:'2026-04-15',actualCompletionDate:'2026-04-14',done:true,assignee:'Melonie Poole',phaseStatus:'in-progress',statusDetail:'Pilot complete — rolled into episode workflow'}
+      ]
+    },
+    {
+      id:'demo-pf-ai-survey',
+      name:'Enterprise AI usage baseline survey',
+      strategicContainerId:'sc-ai',
+      executiveSponsor:'Stephen Farkouh <sfarkouh@digitalrealty.com>',
+      requester:'AI Program',
+      description:'Annual pulse on AI tool adoption, shadow IT signals, and training gaps across BUs.',
+      portfolioTags:['Survey','Governance','Analytics'],
+      portfolioStage:'committed',
+      status:'active',
+      owner:'Brian Letort',
+      health:'yellow',
+      priority:'p1',
+      startDate:'2026-05-01',
+      baselineTargetDate:'2026-05-20',
+      baselineFrozen:true,
+      targetDate:'2026-06-06',
+      timingNotes:'Fielding closes Friday; analysis deck for leadership readout.',
+      notesInternal:'Reminder nudge going to BU liaisons.',
+      notesExternal:'Anonymous aggregation only; results summarized by region.',
+      portfolioChangeEvents:[],
+      commitLog:[],
+      deliverables:[
+        {id:'demo-d-sv1',title:'Final questionnaire & routing',deliverableType:'Document',baselineDueDate:'2026-05-08',plannedDueDate:'2026-05-06',actualCompletionDate:'2026-05-06',done:true,assignee:'Brian Letort',phaseStatus:'in-progress',statusDetail:'Signed off'},
+        {id:'demo-d-sv2',title:'Field survey (wave 1)',deliverableType:'Decision',baselineDueDate:'2026-05-22',plannedDueDate:'2026-05-24',actualCompletionDate:'',done:false,assignee:'Jeremy Bailey',phaseStatus:'in-progress',statusDetail:'~62% response rate'},
+        {id:'demo-d-sv3',title:'Results dashboard & readout',deliverableType:'Dashboard',baselineDueDate:'2026-06-06',plannedDueDate:'2026-06-06',actualCompletionDate:'',done:false,assignee:'Fred Chun',phaseStatus:'not-started',statusDetail:''}
+      ]
+    },
+    {
+      id:'demo-pf-tprm',
+      name:'TPRM AI tooling shortlist',
+      strategicContainerId:'sc-ai',
+      executiveSponsor:'Theresa Leong <tleong@digitalrealty.com>',
+      requester:'InfoSec TPRM',
+      description:'Narrow vendor long-list to 3 candidates with security, privacy, and EU residency criteria.',
+      portfolioTags:['TPRM','Vendor selection','Pilot'],
+      portfolioStage:'committed',
+      status:'active',
+      owner:'Anthony Marguccio',
+      health:'green',
+      priority:'p2',
+      startDate:'2026-03-15',
+      baselineTargetDate:'2026-06-30',
+      baselineFrozen:false,
+      targetDate:'2026-06-30',
+      timingNotes:'POCs staggered; procurement engaged.',
+      notesInternal:'',
+      notesExternal:'Outcome feeds AI platform standards update.',
+      portfolioChangeEvents:[],
+      commitLog:[],
+      deliverables:[
+        {id:'demo-d-tr1',title:'Security questionnaire pack',deliverableType:'Document',baselineDueDate:'2026-05-01',plannedDueDate:'2026-05-08',actualCompletionDate:'',done:false,assignee:'Theresa Leong',phaseStatus:'in-progress',statusDetail:''},
+        {id:'demo-d-tr2',title:'Vendor POC — cohort A',deliverableType:'App',baselineDueDate:'2026-06-15',plannedDueDate:'2026-06-30',actualCompletionDate:'',done:false,assignee:'Anthony Marguccio',phaseStatus:'not-started',statusDetail:''}
+      ]
+    },
+    {
+      id:'demo-pf-mdm',
+      name:'MDM platform backlog hygiene',
+      strategicContainerId:'sc-data',
+      executiveSponsor:'Brian Letort <bletort@digitalrealty.com>',
+      requester:'Data Architecture',
+      description:'Normalize MDM initiative backlog: duplicates merged, owners clarified, dates refreshed.',
+      portfolioTags:['MDM','Governance','Variance demo'],
+      portfolioStage:'committed',
+      status:'active',
+      owner:'Greg Kolb',
+      health:'red',
+      priority:'p2',
+      startDate:'2026-04-20',
+      baselineTargetDate:'2026-08-01',
+      baselineFrozen:false,
+      targetDate:'2026-08-01',
+      timingNotes:'Weekly scrub with platform team.',
+      notesInternal:'Several rows still missing baseline dates.',
+      notesExternal:'Targeting clean backlog for FY planning.',
+      portfolioChangeEvents:[],
+      commitLog:[],
+      deliverables:[
+        {id:'demo-d-mdm1',title:'Duplicate epic merge',deliverableType:'Decision',baselineDueDate:'2026-05-30',plannedDueDate:'2026-06-14',actualCompletionDate:'',done:false,assignee:'Greg Kolb',phaseStatus:'in-progress',statusDetail:'14 dupes resolved'},
+        {id:'demo-d-mdm2',title:'Owner reassignment pass',deliverableType:'Document',baselineDueDate:'2026-07-15',plannedDueDate:'2026-07-15',actualCompletionDate:'',done:false,assignee:'Vishal Sinha',phaseStatus:'not-started',statusDetail:''},
+        {id:'demo-d-mdm3',title:'Date refresh in tracker',deliverableType:'Dataset',baselineDueDate:'2026-08-01',plannedDueDate:'2026-09-05',actualCompletionDate:'',done:false,assignee:'Greg Kolb',phaseStatus:'not-started',statusDetail:'Slip vs baseline for variance demo'}
+      ]
+    },
+    {
+      id:'demo-pf-superworker',
+      name:'Superworker advisory — roadmap refresh',
+      strategicContainerId:'sc-cm',
+      executiveSponsor:'Melonie Poole <mpoole@digitalrealty.com>',
+      requester:'Advisory Group',
+      description:'Re-baseline advisory themes and quarterly asks after workshop series #3.',
+      portfolioTags:['Superworker','Hold'],
+      portfolioStage:'on_hold',
+      status:'on-hold',
+      owner:'Melonie Poole',
+      health:'yellow',
+      priority:'p3',
+      startDate:'2026-01-10',
+      baselineTargetDate:'2026-05-01',
+      baselineFrozen:false,
+      targetDate:'2026-05-01',
+      timingNotes:'Paused pending Nexus training milestones.',
+      notesInternal:'Resume after HR literacy milestone.',
+      notesExternal:'',
+      portfolioChangeEvents:[],
+      commitLog:[
+        {ts:'2026-04-28T17:00:00.000Z',summary:'Placed on hold — conflicting dependency with HR training wave'}
+      ],
+      deliverables:[
+        {id:'demo-d-sw1',title:'Roadmap draft v2',deliverableType:'Document',baselineDueDate:'2026-04-15',plannedDueDate:'2026-04-15',actualCompletionDate:'',done:false,assignee:'Jeremy Bailey',phaseStatus:'not-started',statusDetail:'Blocked'}
+      ]
+    },
+    {
+      id:'demo-pf-exec-dash',
+      name:'Executive AI dashboard — metric definitions',
+      strategicContainerId:'sc-analytics',
+      executiveSponsor:'Chris Hunsaker <chunsaker@digitalrealty.com>',
+      requester:'Executive Communications',
+      description:'Define vetted KPI definitions before rebuilding the exec-facing dashboard.',
+      portfolioTags:['Executive reporting','Analytics'],
+      portfolioStage:'needs_lead',
+      status:'planning',
+      owner:'',
+      health:'',
+      priority:'p2',
+      startDate:'',
+      baselineTargetDate:'',
+      baselineFrozen:false,
+      targetDate:'',
+      timingNotes:'Needs accountable analytics lead before baseline freeze.',
+      notesInternal:'Candidate: BI chapter — confirm capacity.',
+      notesExternal:'',
+      portfolioChangeEvents:[],
+      commitLog:[],
+      deliverables:[]
+    },
+    {
+      id:'demo-pf-archive',
+      name:'Retired — BU sandbox experiments (archived)',
+      strategicContainerId:'sc-archive-demo',
+      executiveSponsor:'Former sponsor (historical record)',
+      requester:'Business Innovation',
+      description:'Early BU-led sandbox; kept for history under inactive strategic container.',
+      portfolioTags:['Pilot'],
+      portfolioStage:'complete',
+      status:'complete',
+      owner:'Anthony Marguccio',
+      health:'green',
+      priority:'p3',
+      startDate:'2025-06-01',
+      baselineTargetDate:'2026-01-31',
+      baselineFrozen:true,
+      targetDate:'2026-01-31',
+      timingNotes:'Closed — outcomes folded into platform pilot.',
+      notesInternal:'',
+      notesExternal:'Completed successfully.',
+      portfolioChangeEvents:[],
+      commitLog:[],
+      deliverables:[
+        {id:'demo-d-ar1',title:'Sandbox teardown checklist',deliverableType:'Decision',baselineDueDate:'2026-01-31',plannedDueDate:'2026-01-31',actualCompletionDate:'2026-01-30',done:true,assignee:'Anthony Marguccio',phaseStatus:'in-progress',statusDetail:'Closed'}
+      ]
+    },
+    {
+      id:'demo-pf-stub-intake',
+      name:'Data lineage pilot — intake (stub)',
+      strategicContainerId:'sc-data',
+      executiveSponsor:'',
+      requester:'Finance transformation',
+      description:'Stub record only — awaiting prioritization against MDM work.',
+      portfolioTags:['Pilot'],
+      portfolioStage:'stub',
+      status:'ideation',
+      owner:'',
+      health:'',
+      priority:'p3',
+      startDate:'',
+      baselineTargetDate:'',
+      baselineFrozen:false,
+      targetDate:'',
+      timingNotes:'',
+      notesInternal:'May merge with MDM hygiene if same sponsor.',
+      notesExternal:'',
+      portfolioChangeEvents:[],
+      commitLog:[],
+      deliverables:[]
+    }
+  ];
+  return{portfolio,tags,extraContainers};
+}
+function cdoEnsureDemoPortfolioSeed(){
+  if(D._cdoPortfolioDemoLoaded)return;
+  if(!Array.isArray(D.cdoPortfolio)||D.cdoPortfolio.length>0)return;
+  D._cdoPortfolioDemoLoaded=true;
+  const demo=cdoBuildDemoPortfolioPayload();
+  demo.tags.forEach(t=>{
+    if(t&&!D.portfolioTags.includes(t))D.portfolioTags.push(t);
+  });
+  D.portfolioTags.sort((a,b)=>a.localeCompare(b));
+  demo.extraContainers.forEach(c=>{
+    if(!(D.strategicContainers||[]).some(x=>x.id===c.id))D.strategicContainers.push(c);
+  });
+  (D.strategicContainers||[]).forEach(c=>{
+    if(!c.id)c.id=uid();
+    if(c.description===undefined)c.description='';
+    if(c.activeFlag===undefined)c.activeFlag=true;
+    if(!c.createdDate)c.createdDate=today();
+    if(!Array.isArray(c.changeLog))c.changeLog=[];
+  });
+  D.cdoPortfolio=demo.portfolio.slice();
 }
 
 function saveLs(){try{localStorage.setItem('ai-tracker',JSON.stringify(D))}catch(e){}}
@@ -1274,8 +1613,108 @@ function loadLs(){
   if(!D.engagements)D.engagements=[];
   if(!D.tasks)D.tasks=[];
   ensureGroups();
-  (D.tasks||[]).forEach(t=>{delete t.isMilestone});
-  if(D.milestones)delete D.milestones;
+  if(!D.milestones)D.milestones=[];
+  (D.milestones||[]).forEach(m=>{
+    if(!Array.isArray(m.predecessorIds))m.predecessorIds=[];
+  });
+  if(!Array.isArray(D.cdoAccountableLeadOptions))D.cdoAccountableLeadOptions=[];
+  if(!Array.isArray(D.strategicContainers))D.strategicContainers=[];
+  if(!D.strategicContainers.length){
+    D.strategicContainers=[
+      {id:'sc-ai',name:'AI',description:'',activeFlag:true,createdDate:today(),changeLog:[]},
+      {id:'sc-data',name:'Data',description:'',activeFlag:true,createdDate:today(),changeLog:[]},
+      {id:'sc-analytics',name:'Analytics',description:'',activeFlag:true,createdDate:today(),changeLog:[]},
+      {id:'sc-cm',name:'Change Management',description:'',activeFlag:true,createdDate:today(),changeLog:[]}
+    ];
+  }
+  (D.strategicContainers||[]).forEach(c=>{
+    if(!c.id)c.id=uid();
+    if(c.description===undefined)c.description='';
+    if(c.activeFlag===undefined)c.activeFlag=true;
+    if(!c.createdDate)c.createdDate=today();
+    if(!Array.isArray(c.changeLog))c.changeLog=[];
+  });
+  if(!Array.isArray(D.portfolioTags))D.portfolioTags=[];
+  if(!Array.isArray(D.cdoDeliverableTypes)||!D.cdoDeliverableTypes.length){
+    D.cdoDeliverableTypes=['Prototype','Document','App','Dataset','Dashboard','Decision'];
+  }
+  if(!D.cdoPortfolio)D.cdoPortfolio=[];
+  cdoEnsureDemoPortfolioSeed();
+  let stripCdoPortfolioSupport=false;
+  const ownersForLeadSeed=new Set();
+  (D.cdoPortfolio||[]).forEach(p=>{
+    if(p.requester===undefined)p.requester='';
+    if(p.description===undefined)p.description='';
+    if(!Array.isArray(p.businessOutcomes))p.businessOutcomes=[];
+    if(p.businessOutcomes.length>3)p.businessOutcomes=p.businessOutcomes.slice(0,3);
+    while(p.businessOutcomes.length<3)p.businessOutcomes.push('');
+    p.businessOutcomes=p.businessOutcomes.slice(0,3).map(s=>String(s||'').trim());
+    if(!p.strategicContainerId){
+      const bos=p.businessOutcomes.map(x=>String(x||'').trim()).filter(Boolean);
+      let matched=false;
+      for(let bi=0;bi<bos.length;bi++){
+        const m=(D.strategicContainers||[]).find(c=>(c.name||'').toLowerCase()===bos[bi].toLowerCase());
+        if(m){p.strategicContainerId=m.id;matched=true;break;}
+      }
+      if(!matched){
+        const first=(D.strategicContainers||[]).find(c=>c.activeFlag!==false)||(D.strategicContainers||[])[0];
+        if(first)p.strategicContainerId=first.id;
+      }
+    }
+    if(!Array.isArray(p.portfolioTags))p.portfolioTags=[];
+    if(!p.portfolioTags.length&&(p.domain||'').trim()){
+      p.portfolioTags=(p.domain||'').split(/[,;]/).map(s=>s.trim()).filter(Boolean).slice(0,5);
+      (p.portfolioTags||[]).forEach(t=>{
+        if(t&&!D.portfolioTags.includes(t))D.portfolioTags.push(t);
+      });
+      D.portfolioTags.sort((a,b)=>a.localeCompare(b));
+    }
+    if(p.portfolioTags.length>5)p.portfolioTags=p.portfolioTags.slice(0,5);
+    if(p.executiveSponsor===undefined)p.executiveSponsor=(p.sponsor!==undefined?p.sponsor:'');
+    if(Object.prototype.hasOwnProperty.call(p,'sponsor'))delete p.sponsor;
+    if(!Array.isArray(p.portfolioChangeEvents))p.portfolioChangeEvents=[];
+    if(p.timingNotes===undefined)p.timingNotes='';
+    if(p.notesInternal===undefined){
+      p.notesInternal=(p.notes!==undefined?p.notes:'');
+    }
+    if(p.notesExternal===undefined)p.notesExternal='';
+    if(p.baselineFrozen===undefined)p.baselineFrozen=false;
+    if(!Array.isArray(p.deliverables))p.deliverables=[];
+    if(!Array.isArray(p.commitLog))p.commitLog=[];
+    if(Object.prototype.hasOwnProperty.call(p,'supportContributors')){
+      delete p.supportContributors;
+      stripCdoPortfolioSupport=true;
+    }
+    if(Object.prototype.hasOwnProperty.call(p,'notes'))delete p.notes;
+    p.deliverables.forEach(d=>{
+      if(!d.id)d.id=uid();
+      if(d.done===undefined)d.done=false;
+      if(!d.title)d.title='';
+      if(!d.dueDate)d.dueDate='';
+      if(d.plannedDueDate===undefined)d.plannedDueDate=d.dueDate||'';
+      if(d.baselineDueDate===undefined)d.baselineDueDate=d.plannedDueDate||d.dueDate||'';
+      if(d.actualCompletionDate===undefined)d.actualCompletionDate='';
+      if(d.deliverableType===undefined)d.deliverableType='';
+      if(!Array.isArray(d.changeEvents))d.changeEvents=[];
+      if(d.assignee===undefined)d.assignee='';
+      if(d.phaseStatus===undefined)d.phaseStatus='';
+      if(d.statusDetail===undefined)d.statusDetail='';
+    });
+    if(!p.portfolioStage){
+      const leg={ideation:'stub',planning:'needs_lead',active:'committed','on-hold':'on_hold',complete:'complete',cancelled:'cancelled'};
+      p.portfolioStage=leg[p.status]||'stub';
+    }
+    if(!p.status)p.status='ideation';
+    if(p.health===undefined)p.health='';
+    if(p.priority===undefined)p.priority='';
+    if(!p.name)p.name='';
+    if(p.baselineTargetDate===undefined)p.baselineTargetDate='';
+    if((p.owner||'').trim())ownersForLeadSeed.add((p.owner||'').trim());
+  });
+  ownersForLeadSeed.forEach(n=>{
+    if(n&&!D.cdoAccountableLeadOptions.includes(n))D.cdoAccountableLeadOptions.push(n);
+  });
+  D.cdoAccountableLeadOptions.sort((a,b)=>a.localeCompare(b));
   if(!D.meetings)D.meetings=[];
   if(!D.inbox)D.inbox=[];
   if(!D.people)D.people=[];
@@ -1295,6 +1734,9 @@ function loadLs(){
     const existing=(D.people||[]).find(p=>p.name.toLowerCase().trim()===sp.name.toLowerCase().trim());
     if(existing&&!existing.username)existing.username=sp.username;
   });
+  (D.people||[]).forEach(p=>{
+    if(p.portfolioEligible===undefined)p.portfolioEligible=true;
+  });
   if(!D.log)D.log=[];
   if(!D.reportNotes)D.reportNotes={accomplishments:'',blockers:'',nextPeriod:'',asOf:'',executiveSummary:'',businessOutcomes:''};
   if(D.reportNotes.businessOutcomes===undefined)D.reportNotes.businessOutcomes='• Time savings from automation across BUs\n• Reduced manual effort in key processes\n• Stronger governance and risk control';
@@ -1308,6 +1750,7 @@ function loadLs(){
   if(!D.lessons)D.lessons=[];
   ensureWorkstreamsV3AndBusinessOutcomes();
   ensureWorkstreamReportingFields();
+  if(stripCdoPortfolioSupport)save();
 }
 
 function log(t){
@@ -1345,6 +1788,7 @@ const APP_HELP_BY_ROUTE={
   reports:'You are on Reports: choose slides, preview deck content here, then build the program PowerPoint.',
   mywork:'You are on My Work: your tasks and workstreams, weekly checklist, list/Kanban, and daily updates.',
   workstreams:'You are on Workstreams: program hierarchy, status board, filters, and exports.',
+  milestones:'You are on Milestones: program checkpoints, dependencies between milestones, and a highlighted driver chain to your goal.',
   actionitems:'You are on Action Items: all tasks with status board, filters, and drag-and-drop in Kanban.',
   people:'You are on People: team roster, groups, and stakeholder tags.',
   governance:'You are on Decisions & Risks: decision log, risk register, and related governance views.',
@@ -1357,9 +1801,10 @@ const APP_HELP_BY_ROUTE={
   ado:'ADO Sync: linkage and activity with Azure DevOps.',
   metrics:'Success metrics and KPI tracker.',
   tasks:'Action Items (same task list as the main Action Items page).',
-  extract:'Paste notes and Analyze &amp; update — update existing action items and route net-new lines from triage.',
+  extract:'Paste notes and use <strong>AI-assisted Add Action Items</strong> — update existing action items and route net-new lines from triage.',
   workitems:'Work items linked to engagements.',
-  engagements:'Engagements and related delivery records.'
+  engagements:'Engagements and related delivery records.',
+  cdo:'CDO Portfolio: business outcomes (labels), accountable leads, optional milestones with status + narrative, internal vs publish notes, timing text, frozen baselines, slip & publish reports — Program holds execution detail.'
 };
 let _appHelperListenersBound=false;
 let _appHelperHideTimer=null;
@@ -1636,7 +2081,7 @@ function updateAIDot(){
 function configureAI(){
   openModal(`<div class="m-hd"><h3>OpenAI Configuration</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
-    <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px">Enter your OpenAI API key to enable AI features: <strong>Analyze &amp; update</strong> on pasted notes (existing-item edits + new lines to triage in one pass), report summarization, and program insights. The key is stored only in your browser's local storage and sent directly to OpenAI.</p>
+    <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px">Enter your OpenAI API key to enable AI features: <strong>AI-assisted Add Action Items</strong> on pasted notes (existing-item edits + new lines to triage in one pass), report summarization, and program insights. The key is stored only in your browser's local storage and sent directly to OpenAI.</p>
     <div class="fg"><label>OpenAI API Key</label><input id="ai-key-input" type="password" value="${OPENAI_KEY?'••••••••'+OPENAI_KEY.slice(-4):''}" placeholder="sk-..."></div>
     <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
       <div style="width:8px;height:8px;border-radius:50%;background:${OPENAI_KEY?'var(--green)':'var(--red)'}"></div>
@@ -1783,7 +2228,8 @@ async function applyNewTeamPassword(){
 function hideConnectingAndBoot(){
   const el=document.getElementById('connecting');
   if(el)el.classList.add('hide');
-  loadLs();loadMe();renderLinks();authGate();go(V);
+  loadLs();loadMe();renderLinks();authGate();
+  applyAtlasAreaUI();reconcileAtlasRoute();go(V);
   if(ME&&SESSION_VERIFIED)setTimeout(checkReleaseNotes,600);
 }
 function isLocalOrOffline(){
@@ -1898,7 +2344,7 @@ function connectFirebase(onReady){
       }
       firebaseReady=true;
       document.getElementById('connecting').classList.add('hide');
-      loadMe();renderLinks();authGate();go(V);
+      loadMe();renderLinks();authGate();applyAtlasAreaUI();reconcileAtlasRoute();go(V);
       if(ME&&SESSION_VERIFIED)setTimeout(checkReleaseNotes,600);
       if(typeof onReady==='function')onReady();
       dbRef.on('value',snap=>{
@@ -1922,7 +2368,7 @@ function connectFirebase(onReady){
     });
   }).catch(()=>{
     document.getElementById('connecting').classList.add('hide');
-    loadLs();loadMe();renderLinks();authGate();go(V);
+    loadLs();loadMe();renderLinks();authGate();applyAtlasAreaUI();reconcileAtlasRoute();go(V);
     if(ME&&SESSION_VERIFIED)setTimeout(checkReleaseNotes,600);
     if(typeof onReady==='function')onReady();
   });
@@ -1985,22 +2431,82 @@ function restoreNavSections(){
   });
 }
 
+function applyAtlasAreaUI(){
+  ATLAS_AREA=getStoredAtlasArea();
+  const prog=document.getElementById('nav-program-wrap');
+  const cdoW=document.getElementById('nav-cdo-wrap');
+  const areaSw=document.getElementById('areaSwitch');
+  if(areaSw)areaSw.style.display=ATLAS_INCLUDE_CDO_PORTFOLIO?'':'none';
+  if(prog)prog.style.display=ATLAS_AREA==='program'?'':'none';
+  if(cdoW)cdoW.style.display=ATLAS_INCLUDE_CDO_PORTFOLIO&&ATLAS_AREA==='cdo'?'':'none';
+  document.querySelectorAll('#areaSwitch .area-pill').forEach(b=>{
+    const on=b.dataset.area===ATLAS_AREA;
+    b.classList.toggle('on',on);
+    b.setAttribute('aria-selected',on?'true':'false');
+  });
+}
+function reconcileAtlasRoute(){
+  if(ATLAS_AREA==='cdo'){
+    if(!CD_AREA_VIEWS.has(V))V='cdo';
+  }else if(CD_AREA_VIEWS.has(V)){
+    try{V=localStorage.getItem('atlas_last_program_view')||localStorage.getItem('atlas_view')||'dashboard'}catch(e){V='dashboard'}
+  }
+}
+function setAtlasArea(a){
+  if(!ATLAS_INCLUDE_CDO_PORTFOLIO&&a==='cdo')return;
+  if(a!=='program'&&a!=='cdo')return;
+  if(a===ATLAS_AREA)return;
+  try{
+    if(a==='cdo'&&ATLAS_AREA==='program')localStorage.setItem('atlas_last_program_view',V);
+    if(a==='program'&&ATLAS_AREA==='cdo')localStorage.setItem('atlas_cdo_view',V);
+    localStorage.setItem('atlas_area',a);
+  }catch(e){}
+  ATLAS_AREA=a;
+  applyAtlasAreaUI();
+  if(a==='program'){
+    let dest='dashboard';
+    try{dest=localStorage.getItem('atlas_last_program_view')||localStorage.getItem('atlas_view')||'dashboard'}catch(e){}
+    go(dest);
+  }else{
+    let dest='cdo';
+    try{dest=localStorage.getItem('atlas_cdo_view')||'cdo'}catch(e){}
+    go(dest);
+  }
+}
+function goHomeInCurrentArea(){
+  if(ATLAS_INCLUDE_CDO_PORTFOLIO&&ATLAS_AREA==='cdo')go('cdo');
+  else go('dashboard');
+}
 function go(v){
   if(v==='tasks'||v==='workitems')v='actionitems';
+  if(!ATLAS_INCLUDE_CDO_PORTFOLIO&&v==='cdo')v='dashboard';
   if(v==='stakeholders'){pplStakeholdersOnly=true;v='people'}
   V=v;
   if(v==='mywork')myWorkTab='week';
-  try{localStorage.setItem('atlas_view',v);}catch(e){}
-  document.querySelectorAll('.ni').forEach(n=>n.classList.toggle('on',n.dataset.v===v&&n.dataset.v!=='mywork'));
+  if(ATLAS_AREA==='cdo'&&!CD_AREA_VIEWS.has(v)){
+    try{localStorage.setItem('atlas_area','program')}catch(e){}
+    ATLAS_AREA='program';
+    applyAtlasAreaUI();
+  }else if(ATLAS_AREA==='program'&&CD_AREA_VIEWS.has(v)){
+    try{localStorage.setItem('atlas_area','cdo')}catch(e){}
+    ATLAS_AREA='cdo';
+    applyAtlasAreaUI();
+  }
+  try{
+    if(CD_AREA_VIEWS.has(v))localStorage.setItem('atlas_cdo_view',v);
+    else localStorage.setItem('atlas_view',v);
+  }catch(e){}
+  document.querySelectorAll('#nav-program-wrap .ni, #nav-cdo-wrap .ni').forEach(n=>n.classList.toggle('on',n.dataset.v===v&&n.dataset.v!=='mywork'));
   document.querySelectorAll('.nav-section').forEach(sec=>{
     if(sec.querySelector('.ni.on'))sec.classList.remove('collapsed');
     const arrow=sec.querySelector('.nav-arrow');
     if(arrow)arrow.classList.toggle('collapsed',sec.classList.contains('collapsed'));
   });
-  const titles={dashboard:'Dashboard',workstreams:'Workstreams',actionitems:'Action Items',engagements:'Engagements',
+  const titles={dashboard:'Dashboard',workstreams:'Workstreams',milestones:'Milestones',actionitems:'Action Items',engagements:'Engagements',
     tasks:'Action Items',mywork:'My Work',people:'Team Directory',
     report:'Report Out',reports:'Reports',ask:'Ask AI',aiinsights:'AI Insights',decisions:'Decision Log',
-    risks:'Risk Register',governance:'Decisions & Risks',ado:'ADO Sync',metrics:'Success Metrics',workmetrics:'Metrics',triage:'Triage Unassigned'};
+    risks:'Risk Register',governance:'Decisions & Risks',ado:'ADO Sync',metrics:'Success Metrics',workmetrics:'Metrics',triage:'Triage Unassigned',
+    cdo:'CDO Portfolio'};
   if(v==='mywork'&&ME){document.getElementById('viewTitle').textContent=ME;}
   else{document.getElementById('viewTitle').textContent=titles[v]||v;}
   const ab=document.getElementById('addBtn');
@@ -2008,16 +2514,20 @@ function go(v){
   if(v==='extract'){taskFilter='inbox';v=V='actionitems'}
   if(v==='workitems'){ab.style.display='none'}
   else if(v==='people'){ab.style.display='';ab.textContent='+ Add Person'}
+  else if(v==='cdo'){ab.style.display='';ab.textContent='+ Add initiative'}
   else{ab.style.display='none'}
   const sb=document.getElementById('search');
-  const searchViews=['workstreams','actionitems','people','decisions','risks'];
+  const searchViews=['workstreams','milestones','actionitems','people','decisions','risks','cdo'];
   sb.style.display=searchViews.includes(v)?'':'none';
   if(!searchViews.includes(v))sb.value='';
+  if(v==='cdo')sb.placeholder='Search portfolio (name, outcomes, owner, timing, notes…)';
+  else sb.placeholder='Search anything...';
   render();
 }
 function handleAdd(){
   if(V==='tasks')openTaskModal();
   else if(V==='people')openPersonModal();
+  else if(V==='cdo')openCdoPortfolioModal();
 }
 
 function myWorkWeekNavNeedsAttention(){
@@ -2093,9 +2603,9 @@ function render(){
   const c=document.getElementById('content');
   if(taskFilter==='priorities')taskFilter='all';
   if(taskFilter==='milestones')taskFilter='all';
-  ({dashboard:rDash,workstreams:rWorkstreamsNew,actionitems:rActionItemsNew,
+  ({dashboard:rDash,workstreams:rWorkstreamsNew,milestones:rMilestones,actionitems:rActionItemsNew,
     tasks:rTasks,extract:rExtract,mywork:rMyWork,people:rPeople,report:rReport,reports:rReports,ask:rAsk,aiinsights:rAIInsights,
-    decisions:rDecisions,risks:rRisks,governance:rGovernance,ado:rAdo,metrics:rMetrics,workmetrics:rWorkMetrics,triage:rTriageUnassigned  })[V]?.(c);
+    decisions:rDecisions,risks:rRisks,governance:rGovernance,ado:rAdo,metrics:rMetrics,workmetrics:rWorkMetrics,triage:rTriageUnassigned,cdo:rCDO  })[V]?.(c);
   badges();updateMyWorkNavHighlight();syncAppHelperChrome();
 }
 
@@ -2889,6 +3399,23 @@ function peopleOpts(sel){
   const ppl=(D.people||[]).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   return `<option value="">— Unassigned —</option>`+ppl.map(p=>`<option value="${esc(p.name)}"${sel===p.name?' selected':''}>${esc(p.name)}</option>`).join('');
 }
+/** CDO portfolio + milestone accountable leads: curated ∪ portfolio-eligible people ∪ historical assignee name. */
+function cdoLeadOpts(sel){
+  const selN=(sel||'').trim();
+  const fromList=(D.cdoAccountableLeadOptions||[]).map(s=>String(s).trim()).filter(Boolean);
+  const eligible=(D.people||[]).filter(p=>p.portfolioEligible!==false).map(p=>p.name||'').filter(Boolean);
+  const set=new Set([...fromList,...eligible]);
+  if(selN)set.add(selN);
+  const names=[...set].sort((a,b)=>a.localeCompare(b));
+  return `<option value="">— Unassigned —</option>`+names.map(n=>`<option value="${esc(n)}"${selN===n?' selected':''}>${esc(n)}</option>`).join('');
+}
+function saveCdoLeadListFromTextarea(){
+  const ta=document.getElementById('cdo-lead-list-ta');
+  if(!ta)return;
+  const lines=ta.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  D.cdoAccountableLeadOptions=lines;
+  save();toast('Lead options saved');
+}
 const WS_STATUSES=[
   {value:'intake',label:'Intake'},
   {value:'planning-support',label:'Planning/Support'},
@@ -3359,18 +3886,6 @@ function renderExecutiveSnapshotHtml(){
     count:wsForLensCounts.filter(w=>effectiveHeartbeatLensForWorkstream(w)===o.value).length
   }));
   const noLensCount=wsForLensCounts.filter(w=>effectiveHeartbeatLensForWorkstream(w)==='').length;
-  const wsLeadCounts={};
-  openWs.forEach(w=>{
-    const lead=w.primaryOwner||w.owner;
-    if(!lead||String(lead).includes('/'))return;
-    wsLeadCounts[lead]=(wsLeadCounts[lead]||0)+1;
-  });
-  const wsLeadList=Object.entries(wsLeadCounts).sort((a,b)=>b[1]-a[1]).slice(0,12);
-  const taskOwnerCounts={};
-  allTasks.filter(t=>t.status!=='done'&&t.owner&&!String(t.owner).includes('/')).forEach(t=>{
-    taskOwnerCounts[t.owner]=(taskOwnerCounts[t.owner]||0)+1;
-  });
-  const taskOwnerList=Object.entries(taskOwnerCounts).sort((a,b)=>b[1]-a[1]).slice(0,12);
   const kpiSm='min-width:0;width:100%;border-radius:14px;padding:12px 14px;cursor:pointer;text-align:left;transition:transform .12s,box-shadow .12s;border:1px solid;box-shadow:0 1px 3px rgba(15,23,42,.06);box-sizing:border-box';
   const kpiHIn='this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 6px 16px rgba(15,23,42,.1)\'';
   const kpiHOut='this.style.transform=\'\';this.style.boxShadow=\'0 1px 3px rgba(15,23,42,.06)\'';
@@ -3386,31 +3901,6 @@ function renderExecutiveSnapshotHtml(){
     '<span style="width:10px;height:10px;border-radius:2px;flex-shrink:0;background:'+p.colorHex+';border:1px solid rgba(15,23,42,.12)"></span>'+
     '<span style="flex:1;min-width:0;line-height:1.25">'+esc(p.label)+'</span>'+
     '<span style="font-variant-numeric:tabular-nums;font-weight:800;color:#1e40af">'+p.count+'</span></button>').join(''):'<div style="padding:8px 4px;color:#64748b;font-size:12px;line-height:1.4">No workstreams counted in lens buckets (assign heartbeat lenses on workstreams).</div>';
-  const maxWsLead=Math.max(1,...wsLeadList.map(([,c])=>c));
-  const wsBarChart=wsLeadList.length?wsLeadList.map(([name,c])=>{
-    const pct=Math.round(c/maxWsLead*100);
-    const short=name.includes(' ')?name.split(' ')[0]:name;
-    return`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:11px">
-      <div style="width:76px;flex-shrink:0;font-weight:600;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(name)}">${esc(short)}</div>
-      <div style="flex:1;height:16px;background:rgba(255,255,255,.65);border-radius:999px;overflow:hidden;border:1px solid #ddd6fe">
-        <div style="width:${pct}%;min-width:${c?4:0}px;height:100%;background:linear-gradient(90deg,#a78bfa,#6d28d9);border-radius:999px;transition:width .4s ease"></div>
-      </div>
-      <span style="width:22px;text-align:right;font-weight:800;color:#5b21b6;flex-shrink:0;font-size:11px">${c}</span>
-    </div>`;
-  }).join(''):'<div style="padding:12px;color:#64748b;font-size:12px;border:1px dashed #c4b5fd;border-radius:10px">No lead assignments.</div>';
-  const maxTaskOwn=Math.max(1,...taskOwnerList.map(([,c])=>c));
-  const chartH=100;
-  const taskColChart=taskOwnerList.length?`<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:2px;width:100%;height:${chartH+28}px;padding:4px 2px 0;border:1px solid #5eead4;border-radius:10px;background:linear-gradient(180deg,#f0fdfa,#ecfdf5);box-sizing:border-box">
-    ${taskOwnerList.map(([name,c])=>{
-      const barH=Math.max(c?4:0,Math.round(c/maxTaskOwn*chartH));
-      const short=name.includes(' ')?name.split(' ')[0]:name.slice(0,7);
-      return`<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">
-        <span style="font-size:10px;font-weight:800;color:#0f7669;margin-bottom:2px">${c}</span>
-        <div style="width:min(100%,28px);height:${barH}px;background:linear-gradient(180deg,#2dd4bf,#0f7669);border-radius:6px 6px 2px 2px;box-shadow:0 1px 4px rgba(15,118,110,.28)"></div>
-        <div style="font-size:9px;font-weight:600;color:#0f172a;margin-top:4px;text-align:center;line-height:1.1;max-height:28px;overflow:hidden" title="${esc(name)}">${esc(short)}</div>
-      </div>`;
-    }).join('')}
-  </div>`:'<div style="padding:12px;color:#64748b;font-size:12px;border:1px dashed #5eead4;border-radius:10px">No open owners.</div>';
   return`
   <div class="ws-section" id="dashSec-exec" style="margin-bottom:20px;width:100%;box-sizing:border-box">
     <div class="ws-section-hd" onclick="toggleWsSection('dashSec-exec')" style="background:var(--bg-card);padding:14px 18px;border-radius:var(--r-sm) var(--r-sm) 0 0;border:1px solid var(--border)"><h4 style="font-size:16px;font-weight:800;color:var(--text)">Program Snapshot</h4><span class="ws-section-arrow">&#9660;</span></div>
@@ -3451,22 +3941,777 @@ function renderExecutiveSnapshotHtml(){
           </div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;align-items:stretch;box-sizing:border-box">
-        <div style="padding:10px 12px;border-radius:12px;border:1px solid #ddd6fe;background:linear-gradient(180deg,#faf5ff,#f3e8ff);min-width:0;box-sizing:border-box">
-          <div style="margin-bottom:6px">
-            <span style="font-size:10px;font-weight:700;color:#5b21b6;text-transform:uppercase;letter-spacing:.04em;line-height:1.2">Workstreams per team member</span>
-          </div>
-          <div style="font-size:10px;color:#64748b;margin-bottom:6px">Lead only · top ${wsLeadList.length||0}</div>
-          ${wsBarChart}
-        </div>
-        <div style="padding:10px 12px;border-radius:12px;border:1px solid #99f6e4;background:linear-gradient(180deg,#f0fdfa,#ecfdf5);min-width:0;box-sizing:border-box">
-          <div style="margin-bottom:6px">
-            <span style="font-size:10px;font-weight:700;color:#0f7669;text-transform:uppercase;letter-spacing:.04em;line-height:1.2">Open action items by owner</span>
-          </div>
-          <div style="font-size:10px;color:#64748b;margin-bottom:6px">Column chart · top ${taskOwnerList.length||0}</div>
-          ${taskColChart}
-        </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// CDO AREA — Portfolio operating model (above the waterline)
+// ═══════════════════════════════════════════════════
+function cdoStrategicContainerById(id){
+  return(D.strategicContainers||[]).find(c=>c.id===id)||null;
+}
+function cdoVisibleStrategicContainers(){
+  const all=D.strategicContainers||[];
+  if(cdoShowInactiveContainers)return all.slice();
+  return all.filter(c=>c.activeFlag!==false);
+}
+function cdoContainersForFilterDropdown(){
+  const base=D.strategicContainers||[];
+  const rows=cdoShowInactiveContainers?base.slice():base.filter(c=>c.activeFlag!==false);
+  return rows.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+}
+function cdoStrategicContainerOptsHtml(selId){
+  const rows=cdoVisibleStrategicContainers();
+  const legacy=(D.strategicContainers||[]).find(c=>c.id===selId);
+  const showLegacy=legacy&&!rows.some(c=>c.id===selId);
+  let opts=rows.map(c=>`<option value="${esc(c.id)}"${selId===c.id?' selected':''}>${esc(c.name)}${c.activeFlag===false?' (inactive)':''}</option>`).join('');
+  if(showLegacy)opts+=`<option value="${esc(legacy.id)}" selected>${esc(legacy.name)} (inactive)</option>`;
+  return opts||'<option value="">— No container —</option>';
+}
+function cdoPortfolioTagsSelectOpts(selected){
+  const sel=(selected||'').trim();
+  const cats=(D.portfolioTags||[]).slice().sort((a,b)=>a.localeCompare(b));
+  return `<option value="">${sel?'— Clear —':'— Tag —'}</option>`+cats.map(t=>`<option value="${esc(t)}"${sel===t?' selected':''}>${esc(t)}</option>`).join('');
+}
+function cdoDeliverableTypeOptsHtml(sel){
+  const types=(D.cdoDeliverableTypes||[]).slice().sort((a,b)=>a.localeCompare(b));
+  const v=(sel||'').trim();
+  return `<option value="">— Type —</option>`+types.map(t=>`<option value="${esc(t)}"${v===t?' selected':''}>${esc(t)}</option>`).join('');
+}
+/** Latest planned due among open deliverables — rollup vs editable portfolio target date. */
+function cdoComputedPortfolioRollupDate(p){
+  const d=(p.deliverables||[]).filter(x=>(x.title||'').trim()&&!x.done);
+  let max='';
+  d.forEach(x=>{
+    const pd=(x.plannedDueDate||x.dueDate||'').trim();
+    if(!pd)return;
+    if(!max||pd>max)max=pd;
+  });
+  return max;
+}
+function appendStrategicContainerChangeLog(container,summary){
+  if(!container)return;
+  if(!Array.isArray(container.changeLog))container.changeLog=[];
+  container.changeLog.push({ts:new Date().toISOString(),changedBy:ME||'',summary});
+}
+function saveStrategicContainersFromModal(){
+  if(!Array.isArray(D.strategicContainers))D.strategicContainers=[];
+  document.querySelectorAll('#scd-tbody tr[data-scid]').forEach(tr=>{
+    const id=tr.getAttribute('data-scid');
+    let c=D.strategicContainers.find(x=>x.id===id);
+    const nm=(tr.querySelector('.scd-name')?.value||'').trim();
+    const activeCb=tr.querySelector('.scd-active');
+    const active=activeCb?!!activeCb.checked:true;
+    if(!c&&nm){
+      c={id,name:nm,description:'',activeFlag:active,createdDate:today(),changeLog:[]};
+      appendStrategicContainerChangeLog(c,'Created');
+      D.strategicContainers.push(c);
+    }
+    if(!c)return;
+    const oldName=c.name||'';
+    const oldAct=c.activeFlag!==false;
+    if(nm&&nm!==oldName){
+      appendStrategicContainerChangeLog(c,'Renamed: '+oldName+' → '+nm);
+      c.name=nm;
+    }
+    if(active!==oldAct){
+      appendStrategicContainerChangeLog(c,active?'Activated':'Marked inactive');
+      c.activeFlag=active;
+    }
+  });
+  save();closeModal();render();toast('Strategic containers saved');
+}
+function openStrategicContainersManageModal(){
+  const rows=(D.strategicContainers||[]).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(c=>{
+    const id=c.id;
+    return`<tr data-scid="${esc(id)}">
+      <td style="padding:8px 10px"><input class="scd-name" value="${esc(c.name||'')}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:13px"></td>
+      <td style="padding:8px 10px;text-align:center"><input type="checkbox" class="scd-active"${c.activeFlag!==false?' checked':''} title="Active"></td>
+      <td style="padding:8px 10px"><button type="button" class="mbtn mb-cancel" style="font-size:11px" onclick="event.stopPropagation();openStrategicContainerChangelogModal('${id}')">Changelog</button></td>
+    </tr>`;
+  }).join('');
+  openModal(`<div class="m-hd"><h3>Strategic containers</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd" style="max-height:70vh;overflow:auto">
+    <p style="font-size:12px;color:var(--muted);margin:0 0 12px">Anyone can edit names or active status; each change is appended to that container’s changelog.</p>
+    <table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:var(--bg-subtle);text-align:left"><th style="padding:8px 10px">Name</th><th style="padding:8px 10px;width:88px">Active</th><th style="padding:8px 10px;width:100px"></th></tr></thead><tbody id="scd-tbody">${rows}</tbody></table>
+    <button type="button" class="mbtn mb-add" style="margin-top:12px;font-size:12px" onclick="cdoAddStrategicContainerRow()">+ Add container</button>
+  </div>
+  <div class="m-ft"><button type="button" class="mbtn mb-cancel" onclick="closeModal()">Cancel</button><button type="button" class="mbtn mb-save" onclick="saveStrategicContainersFromModal()">Save</button></div>`);
+}
+function cdoAddStrategicContainerRow(){
+  const tb=document.getElementById('scd-tbody');
+  if(!tb)return;
+  const id=uid();
+  tb.insertAdjacentHTML('beforeend',`<tr data-scid="${esc(id)}">
+    <td style="padding:8px 10px"><input class="scd-name" value="New container" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:13px"></td>
+    <td style="padding:8px 10px;text-align:center"><input type="checkbox" class="scd-active" checked title="Active"></td>
+    <td style="padding:8px 10px"><button type="button" class="mbtn mb-cancel" style="font-size:11px" onclick="openStrategicContainerChangelogModal('${id}')" disabled title="Save first">Changelog</button></td>
+  </tr>`);
+}
+function openStrategicContainerChangelogModal(scId){
+  const c=(D.strategicContainers||[]).find(x=>x.id===scId);
+  if(!c)return;
+  const lines=(c.changeLog||[]).slice().reverse().slice(0,40).map(e=>{
+    const ts=(e.ts||'').slice(0,19).replace('T',' ');
+    return`<div style="font-size:11.5px;color:var(--muted);margin-bottom:6px;border-left:2px solid var(--border);padding-left:8px"><span style="color:var(--light)">${esc(ts)}</span> ${e.changedBy?' · '+esc(e.changedBy):''} — ${esc(e.summary||'')}</div>`;
+  }).join('')||'<div style="font-size:12px;color:var(--muted)">No entries yet.</div>';
+  openModal(`<div class="m-hd"><h3>Changelog — ${esc(c.name)}</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd" style="max-height:60vh;overflow:auto">${lines}</div>
+  <div class="m-ft"><button type="button" class="mbtn mb-cancel" onclick="closeModal()">Close</button></div>`);
+}
+function openPortfolioTagsCatalogModal(){
+  const txt=(D.portfolioTags||[]).join('\n');
+  openModal(`<div class="m-hd"><h3>Portfolio tags catalog</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd">
+    <p style="font-size:12px;color:var(--muted);margin:0 0 10px">One tag per line. People admin normally curates this list; anyone can save changes.</p>
+    <textarea id="pt-cat-ta" style="width:100%;min-height:140px;font-family:ui-monospace,monospace;font-size:12px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm)">${esc(txt)}</textarea>
+  </div>
+  <div class="m-ft"><button type="button" class="mbtn mb-cancel" onclick="closeModal()">Cancel</button><button type="button" class="mbtn mb-save" onclick="savePortfolioTagsCatalogFromModal()">Save</button></div>`);
+}
+function savePortfolioTagsCatalogFromModal(){
+  const ta=document.getElementById('pt-cat-ta');
+  if(!ta)return;
+  D.portfolioTags=ta.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  D.portfolioTags.sort((a,b)=>a.localeCompare(b));
+  save();closeModal();render();toast('Tag catalog saved');
+}
+function openDeliverableTypesCatalogModal(){
+  const txt=(D.cdoDeliverableTypes||[]).join('\n');
+  openModal(`<div class="m-hd"><h3>Deliverable types</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd">
+    <p style="font-size:12px;color:var(--muted);margin:0 0 10px">One type per line (e.g. Prototype, Document).</p>
+    <textarea id="dt-cat-ta" style="width:100%;min-height:140px;font-family:ui-monospace,monospace;font-size:12px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm)">${esc(txt)}</textarea>
+  </div>
+  <div class="m-ft"><button type="button" class="mbtn mb-cancel" onclick="closeModal()">Cancel</button><button type="button" class="mbtn mb-save" onclick="saveDeliverableTypesCatalogFromModal()">Save</button></div>`);
+}
+function saveDeliverableTypesCatalogFromModal(){
+  const ta=document.getElementById('dt-cat-ta');
+  if(!ta)return;
+  D.cdoDeliverableTypes=ta.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  save();closeModal();render();toast('Deliverable types saved');
+}
+function cdoPortfolioStageShort(st){
+  const o=PORTFOLIO_STAGES.find(x=>x.value===st);
+  if(!o)return st||'—';
+  if(st==='stub')return'Stub';
+  if(st==='needs_lead')return'Needs lead';
+  if(st==='committed')return'Committed';
+  return o.label;
+}
+function cdoPortfolioHealthPill(h){
+  if(h==='red')return'pill-r';
+  if(h==='yellow')return'pill-a';
+  if(h==='green')return'pill-i';
+  return'pill-m';
+}
+function cdoPortfolioHealthLabel(h){
+  if(!h)return'Not set';
+  const o=CDO_PORTFOLIO_HEALTH_OPTS.find(x=>x.value===h);
+  return o?o.label:h;
+}
+function cdoMilestonePhaseStatusOptsHtml(sel){
+  return CDO_MILESTONE_PHASE_STATUS_OPTS.map(o=>`<option value="${esc(o.value)}"${(sel||'')===o.value?' selected':''}>${esc(o.label)}</option>`).join('');
+}
+function cdoMilestonePhaseLabel(v){
+  const o=CDO_MILESTONE_PHASE_STATUS_OPTS.find(x=>x.value===v);
+  return o?o.label:(v||'—');
+}
+function cdoPortfolioDelivRollup(p){
+  const d=(p.deliverables||[]).filter(x=>(x.title||'').trim());
+  const done=d.filter(x=>x.done).length;
+  const open=d.filter(x=>!x.done);
+  const dueOf=x=>(x.plannedDueDate||x.dueDate||'').trim();
+  let nextDue='';
+  let nextAssignee='';
+  const dated=open.filter(x=>dueOf(x));
+  if(dated.length){
+    dated.forEach(x=>{
+      const du=dueOf(x);
+      if(!nextDue||du<nextDue){
+        nextDue=du;
+        nextAssignee=x.assignee||'';
+      }
+    });
+  }else if(open.length){
+    nextAssignee=open[0].assignee||'';
+  }
+  return{total:d.length,done,nextDue,nextAssignee,openCt:open.length};
+}
+function cdoPortfolioOpenMilestoneAssignedTo(p,name){
+  if(!name)return false;
+  return (p.deliverables||[]).some(d=>!d.done&&(d.assignee||'')===name&&(d.title||'').trim());
+}
+function cdoWeekEndStr(){
+  const t=today();
+  const d=new Date(t+'T12:00:00');
+  d.setDate(d.getDate()+7);
+  return d.toISOString().slice(0,10);
+}
+function cdoDeliverablesDueThisWeekCount(all){
+  const wk=cdoWeekEndStr();
+  const cmp=today();
+  let n=0;
+  (all||[]).forEach(p=>{
+    (p.deliverables||[]).forEach(d=>{
+      const du=(d.plannedDueDate||d.dueDate||'').trim();
+      if(d.done||!du)return;
+      if(du>=cmp&&du<=wk)n++;
+    });
+  });
+  return n;
+}
+function cdoPortfolioDelivRowHtml(d){
+  const rawId=(d.id&&String(d.id).trim())||uid();
+  const title=esc(d.title||'');
+  const base=esc((d.baselineDueDate||d.plannedDueDate||d.dueDate||''));
+  const plan=esc((d.plannedDueDate||d.dueDate||''));
+  const actual=esc(d.actualCompletionDate||'');
+  const done=d.done?' checked':'';
+  const asg=cdoLeadOpts(d.assignee||'');
+  const det=esc(d.statusDetail||'');
+  const phOpts=cdoMilestonePhaseStatusOptsHtml(d.phaseStatus||'');
+  const dtOpts=cdoDeliverableTypeOptsHtml(d.deliverableType||'');
+  return`<tr data-did="${rawId}">
+    <td style="padding:6px 8px;vertical-align:top"><input type="text" class="cdp-d-title" value="${title}" placeholder="Deliverable name" style="width:100%;min-width:120px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:12px"></td>
+    <td style="padding:6px 8px;vertical-align:top;min-width:100px"><select class="cdp-d-type" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:11px">${dtOpts}</select></td>
+    <td style="padding:6px 8px;vertical-align:top;min-width:118px"><select class="cdp-d-phase" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:11px">${phOpts}</select></td>
+    <td style="padding:6px 8px;vertical-align:top"><textarea class="cdp-d-status-detail" rows="2" placeholder="Status narrative" style="width:100%;min-width:120px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:11px;resize:vertical;font-family:inherit">${det}</textarea></td>
+    <td style="padding:6px 8px;vertical-align:top;min-width:124px"><select class="cdp-d-assignee" style="max-width:220px;width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:12px">${asg}</select></td>
+    <td style="padding:6px 8px;vertical-align:top"><input type="date" class="cdp-d-base" value="${base}" title="Baseline due" style="padding:6px 8px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:11px"></td>
+    <td style="padding:6px 8px;vertical-align:top"><input type="date" class="cdp-d-plan" value="${plan}" title="Planned due" style="padding:6px 8px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:11px"></td>
+    <td style="padding:6px 8px;vertical-align:top"><input type="date" class="cdp-d-actual" value="${actual}" title="Actual completion" style="padding:6px 8px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:11px"></td>
+    <td style="padding:6px 8px;text-align:center;vertical-align:top"><input type="checkbox" class="cdp-d-done"${done} title="Delivered"></td>
+    <td style="padding:6px 8px;vertical-align:top"><button type="button" class="mbtn mb-cancel" style="font-size:11px;padding:4px 8px" onclick="this.closest('tr').remove()">Remove</button></td>
+  </tr>`;
+}
+function cdoPortfolioAddDelivRow(){
+  const tb=document.getElementById('cdp-deliv-tbody');
+  if(!tb)return;
+  const d={id:uid(),title:'',baselineDueDate:'',plannedDueDate:'',dueDate:'',actualCompletionDate:'',done:false,assignee:'',phaseStatus:'',statusDetail:'',deliverableType:'',changeEvents:[]};
+  tb.insertAdjacentHTML('beforeend',cdoPortfolioDelivRowHtml(d));
+}
+function cdoJumpToProgramWorkstream(wsId){
+  if(!wsId)return;
+  try{
+    localStorage.setItem('atlas_area','program');
+    localStorage.setItem('atlas_view','workstreams');
+    localStorage.setItem('atlas_last_program_view','workstreams');
+  }catch(e){}
+  ATLAS_AREA='program';
+  applyAtlasAreaUI();
+  go('workstreams');
+  setTimeout(()=>{try{openWsDetail(wsId)}catch(e){}},120);
+}
+function cdoEnsureLeadInOptions(nm){
+  const n=(nm||'').trim();
+  if(!n)return;
+  if(!Array.isArray(D.cdoAccountableLeadOptions))D.cdoAccountableLeadOptions=[];
+  if(!D.cdoAccountableLeadOptions.includes(n)){
+    D.cdoAccountableLeadOptions.push(n);
+    D.cdoAccountableLeadOptions.sort((a,b)=>a.localeCompare(b));
+  }
+}
+/** Slip / variance: planned vs baseline per deliverable (both dates set). */
+function openCdoPortfolioSlipReport(){
+  const lines=[];
+  (D.cdoPortfolio||[]).forEach(p=>{
+    const pin=p.name||'—';
+    const sc=cdoStrategicContainerById(p.strategicContainerId);
+    const scn=sc?sc.name:'—';
+    (p.deliverables||[]).forEach(d=>{
+      if(!(d.title||'').trim())return;
+      const b=(d.baselineDueDate||'').trim();
+      const pl=(d.plannedDueDate||d.dueDate||'').trim();
+      if(!b||!pl||b===pl)return;
+      lines.push({p,pin,scn,d});
+    });
+  });
+  lines.sort((a,b)=>((a.pin)||'').localeCompare((b.pin)||''));
+  const rows=lines.map(x=>`<tr>
+      <td style="padding:8px 10px;vertical-align:top;font-weight:600">${esc(x.pin)}</td>
+      <td style="padding:8px 10px;font-size:12px;color:var(--muted);vertical-align:top">${esc(x.scn)}</td>
+      <td style="padding:8px 10px;vertical-align:top">${esc(x.d.title||'—')}</td>
+      <td style="padding:8px 10px;vertical-align:top">${esc(x.d.assignee||'—')}</td>
+      <td style="padding:8px 10px;vertical-align:top;white-space:nowrap">${x.d.baselineDueDate?fmtDate(x.d.baselineDueDate):'—'}</td>
+      <td style="padding:8px 10px;vertical-align:top;white-space:nowrap">${(x.d.plannedDueDate||x.d.dueDate)?fmtDate(x.d.plannedDueDate||x.d.dueDate):'—'}</td>
+    </tr>`).join('');
+  openModal(`<div class="m-hd"><h3>Slip / variance (deliverables)</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd" style="max-height:70vh;overflow:auto">
+    <p style="font-size:12px;color:var(--muted);margin:0 0 12px"><strong>Planned</strong> vs <strong>baseline</strong> due date per deliverable (both set and different).</p>
+    ${lines.length?`<div style="overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-sm)"><table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="background:var(--bg-subtle);text-align:left"><th style="padding:8px 10px">Initiative</th><th style="padding:8px 10px">Container</th><th style="padding:8px 10px">Deliverable</th><th style="padding:8px 10px">Owner</th><th style="padding:8px 10px">Baseline</th><th style="padding:8px 10px">Planned</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`:'<p style="font-size:13px;color:var(--muted)">No variances found.</p>'}
+  </div>
+  <div class="m-ft"><button type="button" class="mbtn mb-cancel" onclick="closeModal()">Close</button></div>`);
+  document.getElementById('modal').classList.add('modal-wide');
+}
+/** Critical path (no dependency links yet): ordered deliverables + latest planned date. */
+function openCdoPortfolioCriticalPathReport(){
+  const blocks=(D.cdoPortfolio||[]).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(p=>{
+    const ds=(p.deliverables||[]).filter(x=>(x.title||'').trim());
+    let latest='';
+    ds.forEach(d=>{
+      const pl=(d.plannedDueDate||d.dueDate||'').trim();
+      if(pl&&(!latest||pl>latest))latest=pl;
+    });
+    const ordered=ds.map((d,i)=>{
+      const du=d.plannedDueDate||d.dueDate||'—';
+      return`<div style="font-size:12px;margin-bottom:4px;padding-left:8px;border-left:2px solid var(--border)">${i+1}. <strong>${esc(d.title)}</strong> · planned ${du==='—'?'—':fmtDate(du)} · ${esc(d.assignee||'—')}</div>`;
+    }).join('');
+    return`<section style="margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border-lt)">
+      <div style="font-weight:700;font-size:14px;margin-bottom:6px">${esc(p.name||'—')}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Latest planned date (max): <strong>${latest?fmtDate(latest):'—'}</strong></div>
+      ${ds.length?ordered:'<div style="font-size:12px;color:var(--muted)">No deliverables.</div>'}
+    </section>`;
+  }).join('');
+  openModal(`<div class="m-hd"><h3>Critical path (ordered list)</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd" style="max-height:72vh;overflow:auto">
+    <p style="font-size:12px;color:var(--muted);margin:0 0 14px">Deliverables are shown in <strong>saved order</strong>. Dependencies are not modeled yet; “critical path” here means sequence + latest planned due.</p>
+    ${blocks||'<p style="color:var(--muted)">No initiatives.</p>'}
+  </div>
+  <div class="m-ft"><button type="button" class="mbtn mb-cancel" onclick="closeModal()">Close</button></div>`);
+  document.getElementById('modal').classList.add('modal-wide');
+}
+/** Only accountable leads see publishable content for initiatives they own. */
+function openCdoPortfolioPublishReport(){
+  if(!(ME||'').trim()){toast('Set your name in the sidebar to verify accountable lead');return;}
+  const mine=(D.cdoPortfolio||[]).filter(p=>(p.owner||'')===ME).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  if(!mine.length){toast('Only accountable leads can open the publishable report — no initiatives list you as lead.');return;}
+  const blocks=mine.map(p=>{
+    const sc=cdoStrategicContainerById(p.strategicContainerId);
+    const scn=sc?sc.name:'—';
+    const miles=(p.deliverables||[]).filter(d=>(d.title||'').trim());
+    const mRows=miles.map(d=>`<tr>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--border-lt)">${esc(d.title||'—')}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--border-lt);font-size:12px">${esc(cdoMilestonePhaseLabel(d.phaseStatus))}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--border-lt);font-size:12px">${esc(d.statusDetail||'—')}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--border-lt)">${esc(d.assignee||'—')}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--border-lt);white-space:nowrap;font-size:11px">${d.plannedDueDate||d.dueDate?fmtDate(d.plannedDueDate||d.dueDate):'—'}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--border-lt)">${d.done?'Yes':'No'}</td>
+    </tr>`).join('');
+    const mileTable=miles.length?`<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px"><thead><tr style="background:var(--bg-subtle)"><th style="padding:6px 8px;text-align:left">Deliverable</th><th style="padding:6px 8px;text-align:left">Status</th><th style="padding:6px 8px;text-align:left">Details</th><th style="padding:6px 8px;text-align:left">Owner</th><th style="padding:6px 8px;text-align:left">Planned</th><th style="padding:6px 8px;text-align:left">Done</th></tr></thead><tbody>${mRows}</tbody></table>`:'<p style="font-size:12px;color:var(--muted);margin:8px 0 0">No deliverables recorded.</p>';
+    return`<section style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+      <h4 style="margin:0 0 6px;font-size:14px">${esc(p.name||'—')}</h4>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px"><strong>Strategic container:</strong> ${esc(scn)}${p.executiveSponsor?` · <strong>Sponsor:</strong> ${esc(p.executiveSponsor)}`:''}</div>
+      <div style="font-size:12px;margin-bottom:6px"><strong>Timing:</strong> ${esc((p.timingNotes||'').trim()||'—')}</div>
+      <div style="font-size:12px;line-height:1.5"><strong>Published notes:</strong><br>${esc((p.notesExternal||'').trim()||'—')}</div>
+      ${mileTable}
+    </section>`;
+  }).join('');
+  openModal(`<div class="m-hd"><h3>Publishable portfolio summary</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd" style="max-height:72vh;overflow:auto">
+    <p style="font-size:12px;color:var(--muted);margin:0 0 14px">Showing initiatives where you are the <strong>accountable lead</strong> (${mine.length}). External notes and timing fields are OK to publish.</p>
+    ${blocks}
+  </div>
+  <div class="m-ft"><button type="button" class="mbtn mb-cancel" onclick="closeModal()">Close</button></div>`);
+  document.getElementById('modal').classList.add('modal-wide');
+}
+function openCdoPortfolioModal(editId){
+  const p=editId?(D.cdoPortfolio||[]).find(x=>x.id===editId):null;
+  const id=p?p.id:'';
+  const wsOpts=wsOptsHierarchy(p?.linkWorkstream||'');
+  const stg=p?.portfolioStage||'stub';
+  const stOpts=PORTFOLIO_STAGES.map(s=>`<option value="${esc(s.value)}"${stg===s.value?' selected':''}>${esc(s.label)}</option>`).join('');
+  const hlOpts=CDO_PORTFOLIO_HEALTH_OPTS.map(s=>`<option value="${esc(s.value)}"${(p?.health??'')===s.value?' selected':''}>${esc(s.label)}</option>`).join('');
+  const prOpts=CDO_PORTFOLIO_PRIORITY_OPTS.map(s=>`<option value="${esc(s.value)}"${(p?.priority??'')===s.value?' selected':''}>${esc(s.label)}</option>`).join('');
+  const blFrozen=!!p?.baselineFrozen;
+  const _cdpD=p?.deliverables||[];
+  const delivRows=_cdpD.length?_cdpD.map(cdoPortfolioDelivRowHtml).join(''):'';
+  const rollupDate=p?cdoComputedPortfolioRollupDate(p):'';
+  const commitWarn=rollupDate&&(p?.targetDate||'').trim()&&rollupDate!==(p.targetDate||'').trim();
+  const tags=p?.portfolioTags||[];
+  const tagGrid=[1,2,3,4,5].map(i=>`<select id="cdp-tag-${i}" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12px;background:var(--bg-card);color:var(--text)">${cdoPortfolioTagsSelectOpts(tags[i-1]||'')}</select>`).join('');
+  const structLines=(p?.portfolioChangeEvents||[]).slice(-6).reverse().map(e=>{
+    const ts=(e.ts||'').slice(0,16).replace('T',' ');
+    return`<div style="font-size:10.5px;color:var(--muted);margin-bottom:4px">${esc(ts)} · ${esc(e.changeType||'')} ${e.scopeSubtype?'('+esc(e.scopeSubtype)+')':''}${e.changeReason?' — '+esc(e.changeReason):''}</div>`;
+  }).join('')||'<div style="font-size:11px;color:var(--muted)">No structured events yet.</div>';
+  const logLines=(p?.commitLog||[]).slice(-8).reverse().map(e=>{
+    const ts=(e.ts||'').slice(0,16).replace('T',' ');
+    return`<div style="font-size:11.5px;color:var(--muted);margin-bottom:6px;border-left:2px solid var(--border);padding-left:8px"><span style="color:var(--light)">${esc(ts)}</span> — ${esc(e.summary||'')}</div>`;
+  }).join('')||'<div style="font-size:12px;color:var(--muted)">No changes logged yet. Date moves and manual notes appear here.</div>';
+  openModal(`<div class="m-hd"><h3>${p?'Edit portfolio item':'New portfolio item (stub)'}</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd" style="max-height:72vh;overflow-y:auto">
+    <input type="hidden" id="cdp-id" value="${esc(id)}">
+    <p style="font-size:12px;color:var(--muted);margin:0 0 14px;line-height:1.5"><strong>Above the waterline only</strong> — commitments, accountable leads, milestones (optional), timing &amp; publish notes. Task execution stays in <strong>Program</strong> or your team’s tools.</p>
+    <h4 style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 10px">Stage 0 — demand</h4>
+    <div class="fg"><label>Initiative name <span style="color:var(--red)">*</span></label><input id="cdp-name" value="${esc(p?.name||'')}" placeholder="Working title"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="fg"><label>Strategic container</label><select id="cdp-strategic">${cdoStrategicContainerOptsHtml(p?.strategicContainerId||'')}</select></div>
+      <div class="fg"><label>Executive sponsor</label><input id="cdp-exec-sponsor" value="${esc(p?.executiveSponsor||'')}" placeholder="Name / email (free text)"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="fg"><label>Requester</label><input id="cdp-requester" value="${esc(p?.requester||'')}" placeholder="Who asked / where demand came from"></div>
+      <div class="fg"><label>&nbsp;</label><span style="font-size:11px;color:var(--muted);display:block;padding-top:8px"><button type="button" class="mbtn mb-cancel" style="font-size:11px;padding:4px 10px" onclick="openPortfolioTagsCatalogModal()">Manage tag catalog</button></span></div>
+    </div>
+    <div class="fg"><label>Tags (pick up to 5)</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${tagGrid}</div></div>
+    <div class="fg"><label>Add new tag to catalog on Save</label><input id="cdp-new-tag" placeholder="Creates tag if missing — then pick from dropdowns after reload" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12px"></div>
+    <div class="fg"><label>Why it matters (short)</label><textarea id="cdp-description" rows="3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);font-family:inherit;font-size:13px;resize:vertical">${esc(p?.description||'')}</textarea></div>
+    <h4 style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:18px 0 10px">Governance &amp; commitment</h4>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="fg"><label>Portfolio stage</label><select id="cdp-portfolio-stage">${stOpts}</select></div>
+      <div class="fg"><label>Accountable lead (exactly one)</label><select id="cdp-owner">${cdoLeadOpts(p?.owner||'')}</select></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="fg"><label>Health signal</label><select id="cdp-health">${hlOpts}</select></div>
+      <div class="fg"><label>Priority</label><select id="cdp-priority">${prOpts}</select></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+      <div class="fg"><label>Start date</label><input id="cdp-start" type="date" value="${esc(p?.startDate||'')}"></div>
+      <div class="fg"><label>Baseline commitment date</label><input id="cdp-baseline" type="date" value="${esc(p?.baselineTargetDate||'')}" ${blFrozen?'disabled':''} title="Original commitment"></div>
+      <div class="fg"><label>Portfolio commitment date (editable summary)</label><input id="cdp-target" type="date" value="${esc(p?.targetDate||'')}" title="Rollup from deliverables is shown below — edit when leadership agrees a different date"></div>
+    </div>
+    <div class="fg" style="margin-top:-4px"><p style="font-size:11px;color:var(--muted);margin:0;line-height:1.45">Computed rollup (latest <strong>planned</strong> due among <strong>open</strong> deliverables): <strong>${rollupDate?fmtDate(rollupDate):'—'}</strong>${commitWarn?' <span style="color:#b45309;font-weight:700;margin-left:8px">⚠ Differs from commitment date above</span>':''}</p></div>
+    <div class="fg" style="margin-top:8px"><label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:600"><input type="checkbox" id="cdp-baseline-frozen"${p?.baselineFrozen?' checked':''}${blFrozen?' disabled':''}> Freeze baseline — once saved as frozen, the baseline date cannot change</label>
+    <p style="font-size:11px;color:var(--muted);margin:6px 0 0 24px">Check when leadership agrees the baseline; leave unchecked until then.</p></div>
+    <div class="fg"><label>Timing (free text — for reports)</label><textarea id="cdp-timing" rows="2" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);font-family:inherit;font-size:13px;resize:vertical" placeholder="Schedules, site rollouts, narrative dates…">${esc(p?.timingNotes||'')}</textarea></div>
+    <h4 style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:18px 0 8px">Deliverables / milestones (optional)</h4>
+    <p style="font-size:11.5px;color:var(--muted);margin:0 0 8px">Each row: one accountable assignee; baseline vs planned drives variance reporting. <button type="button" class="mbtn mb-cancel" style="font-size:10px;padding:2px 8px;vertical-align:middle" onclick="openDeliverableTypesCatalogModal()">Manage types</button></p>
+    <div style="overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:8px">
+      <table style="width:100%;border-collapse:collapse;font-size:11px">
+        <thead><tr style="background:var(--bg-subtle);text-align:left"><th style="padding:8px 6px">Name</th><th style="padding:8px 6px;min-width:90px">Type</th><th style="padding:8px 6px;min-width:100px">Status</th><th style="padding:8px 6px;min-width:120px">Details</th><th style="padding:8px 6px;min-width:118px">Assignee</th><th style="padding:8px 6px">Baseline</th><th style="padding:8px 6px">Planned</th><th style="padding:8px 6px">Actual</th><th style="padding:8px 6px;width:44px">Done</th><th style="padding:8px 6px;width:64px"></th></tr></thead>
+        <tbody id="cdp-deliv-tbody">${delivRows}</tbody>
+      </table>
+    </div>
+    <button type="button" class="mbtn mb-add" style="font-size:12px;margin-bottom:16px" onclick="cdoPortfolioAddDelivRow()">+ Add deliverable row</button>
+    <div class="fg"><label>Linked program workstream (optional)</label><select id="cdp-ws"><option value="">— None — below-the-waterline link only —</option>${wsOpts}</select></div>
+    <div class="fg"><label>Internal notes (not for published reports)</label><textarea id="cdp-notes-internal" rows="2" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);font-family:inherit;font-size:13px;resize:vertical">${esc(p?.notesInternal||'')}</textarea></div>
+    <div class="fg"><label>External / publishable notes</label><textarea id="cdp-notes-external" rows="2" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);font-family:inherit;font-size:13px;resize:vertical" placeholder="OK to include in publishable summary">${esc(p?.notesExternal||'')}</textarea></div>
+    <h4 style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:18px 0 8px">Structured change trail (recent)</h4>
+    <div style="margin-bottom:12px;padding:10px 12px;background:var(--bg-subtle);border-radius:var(--r-sm);border:1px solid var(--border-lt)">${structLines}</div>
+    <h4 style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:18px 0 8px">Visible change log</h4>
+    <div style="margin-bottom:10px">${logLines}</div>
+    <div class="fg"><label>Change reason (optional — attached to structured events when filled)</label><input id="cdp-change-note" placeholder="Why dates/owners/scope changed"></div>
+  </div>
+  <div class="m-ft">
+    ${p?'<button type="button" class="mbtn mb-del" onclick="delCdoPortfolioItem(\''+id+'\')">Delete</button>':''}
+    <button type="button" class="mbtn mb-cancel" onclick="closeModal()">Cancel</button>
+    <button type="button" class="mbtn mb-save" onclick="saveCdoPortfolioFromModal()">Save</button>
+  </div>`);
+  document.getElementById('modal').classList.add('modal-wide');
+}
+function saveCdoPortfolioFromModal(){
+  const idEl=document.getElementById('cdp-id');
+  const rawId=idEl&&idEl.value?idEl.value.trim():'';
+  const name=(document.getElementById('cdp-name').value||'').trim();
+  if(!name){toast('Initiative name is required');return;}
+  const id=rawId||uid();
+  const prev=(D.cdoPortfolio||[]).find(x=>x.id===id);
+  const prevClone=prev?JSON.parse(JSON.stringify(prev)):null;
+  const oldTarget=prev?.targetDate||'';
+  let p=prev;
+  if(!p){p={id};(D.cdoPortfolio||[]).push(p);}
+  const reason=(document.getElementById('cdp-change-note')?.value||'').trim();
+  const newTagInput=(document.getElementById('cdp-new-tag')?.value||'').trim();
+  if(newTagInput){
+    if(!Array.isArray(D.portfolioTags))D.portfolioTags=[];
+    if(!D.portfolioTags.includes(newTagInput)){D.portfolioTags.push(newTagInput);D.portfolioTags.sort((a,b)=>a.localeCompare(b));}
+  }
+  const pt=[];
+  for(let ti=1;ti<=5;ti++){
+    const tv=(document.getElementById('cdp-tag-'+ti)?.value||'').trim();
+    if(tv&&!pt.includes(tv))pt.push(tv);
+  }
+  p.portfolioTags=pt.slice(0,5);
+  p.strategicContainerId=(document.getElementById('cdp-strategic')?.value||'').trim();
+  p.executiveSponsor=(document.getElementById('cdp-exec-sponsor')?.value||'').trim();
+  p.name=name;
+  p.requester=(document.getElementById('cdp-requester').value||'').trim();
+  p.description=(document.getElementById('cdp-description').value||'').trim();
+  if(Array.isArray(p.businessOutcomes)){p.businessOutcomes.length=0;}
+  p.owner=(document.getElementById('cdp-owner').value||'').trim();
+  cdoEnsureLeadInOptions(p.owner);
+  p.portfolioStage=document.getElementById('cdp-portfolio-stage').value||'stub';
+  p.status=p.portfolioStage==='committed'?'active':p.portfolioStage==='needs_lead'?'planning':p.portfolioStage==='stub'?'ideation':p.portfolioStage==='on_hold'?'on-hold':p.portfolioStage==='complete'?'complete':p.portfolioStage==='cancelled'?'cancelled':'ideation';
+  p.health=document.getElementById('cdp-health').value||'';
+  p.priority=document.getElementById('cdp-priority').value||'';
+  p.startDate=(document.getElementById('cdp-start').value||'').trim();
+  const prevFrozen=!!prev?.baselineFrozen;
+  const wantFreeze=!!document.getElementById('cdp-baseline-frozen')?.checked;
+  let newBaseline=(document.getElementById('cdp-baseline').value||'').trim();
+  const newTarget=(document.getElementById('cdp-target').value||'').trim();
+  if(!p.commitLog)p.commitLog=[];
+  if(oldTarget&&newTarget&&oldTarget!==newTarget){
+    p.commitLog.push({ts:new Date().toISOString(),summary:'Portfolio commitment date moved from '+oldTarget+' → '+newTarget});
+  }
+  if(prevFrozen){
+    p.baselineTargetDate=(prev.baselineTargetDate||'').trim();
+    p.baselineFrozen=true;
+  }else{
+    p.baselineTargetDate=newBaseline;
+    if(!prev&&!newBaseline&&newTarget)p.baselineTargetDate=newTarget;
+    if(wantFreeze){
+      if(!(p.baselineTargetDate||'').trim()&&newTarget)p.baselineTargetDate=newTarget;
+      if(!(p.baselineTargetDate||'').trim()){
+        toast('Set a baseline or commitment date before freezing the baseline');
+        return;
+      }
+      p.baselineFrozen=true;
+    }else{
+      p.baselineFrozen=false;
+    }
+  }
+  p.targetDate=newTarget;
+  p.timingNotes=(document.getElementById('cdp-timing')?.value||'').trim();
+  if(reason)p.commitLog.push({ts:new Date().toISOString(),summary:reason});
+  p.notesInternal=(document.getElementById('cdp-notes-internal')?.value||'').trim();
+  p.notesExternal=(document.getElementById('cdp-notes-external')?.value||'').trim();
+  p.linkWorkstream=(document.getElementById('cdp-ws').value||'').trim();
+  if(!Array.isArray(p.portfolioChangeEvents))p.portfolioChangeEvents=[];
+  const prevDelMap=new Map((prevClone?.deliverables||[]).map(d=>[d.id,d]));
+  function pushDelivEvt(dObj,etype,st,ov,nv){
+    if(!Array.isArray(dObj.changeEvents))dObj.changeEvents=[];
+    dObj.changeEvents.push({id:uid(),ts:new Date().toISOString(),changeType:etype,scopeSubtype:st||'',oldValue:String(ov??''),newValue:String(nv??''),changeReason:reason,changedBy:ME||''});
+  }
+  function pushPortEvt(etype,st,did,ov,nv){
+    p.portfolioChangeEvents.push({id:uid(),ts:new Date().toISOString(),changeType:etype,scopeSubtype:st||'',deliverableId:did||'',oldValue:String(ov??''),newValue:String(nv??''),changeReason:reason,changedBy:ME||''});
+    if(p.portfolioChangeEvents.length>400)p.portfolioChangeEvents=p.portfolioChangeEvents.slice(-400);
+  }
+  const delivs=[];
+  const trList=document.querySelectorAll('#cdp-deliv-tbody tr');
+  for(let i=0;i<trList.length;i++){
+    const tr=trList[i];
+    const title=(tr.querySelector('.cdp-d-title')?.value||'').trim();
+    const assignee=(tr.querySelector('.cdp-d-assignee')?.value||'').trim();
+    const baselineDueDate=(tr.querySelector('.cdp-d-base')?.value||'').trim();
+    const plannedDueDate=(tr.querySelector('.cdp-d-plan')?.value||'').trim();
+    const actualCompletionDate=(tr.querySelector('.cdp-d-actual')?.value||'').trim();
+    const deliverableType=(tr.querySelector('.cdp-d-type')?.value||'').trim();
+    const done=!!tr.querySelector('.cdp-d-done')?.checked;
+    const phaseStatus=(tr.querySelector('.cdp-d-phase')?.value||'').trim();
+    const statusDetail=(tr.querySelector('.cdp-d-status-detail')?.value||'').trim();
+    const did=tr.getAttribute('data-did')||uid();
+    const hasAny=title||plannedDueDate||baselineDueDate||actualCompletionDate||done||assignee||phaseStatus||statusDetail||deliverableType;
+    if(!hasAny)continue;
+    if(!title){toast('Each deliverable row needs a name when other fields are filled');return;}
+    if(!assignee){toast('Each deliverable needs exactly one accountable assignee');return;}
+    cdoEnsureLeadInOptions(assignee);
+    const od=prevDelMap.get(did);
+    const priorEvt=Array.isArray(od?.changeEvents)?od.changeEvents.slice():[];
+    const dueDate=plannedDueDate||baselineDueDate||'';
+    delivs.push({id:did,title,baselineDueDate,plannedDueDate,dueDate,actualCompletionDate,done,assignee,phaseStatus,statusDetail,deliverableType,changeEvents:priorEvt});
+  }
+  if(prevClone){
+    const tagStr=a=>[...(a||[])].filter(Boolean).sort().join('|');
+    if((prevClone.description||'')!==(p.description||'')){
+      pushPortEvt('Scope','initiative_description','',prevClone.description||'',p.description||'');
+    }
+    if(tagStr(prevClone.portfolioTags)!==tagStr(p.portfolioTags)){
+      pushPortEvt('Scope','tags','',tagStr(prevClone.portfolioTags),tagStr(p.portfolioTags));
+    }
+    if((prevClone.strategicContainerId||'')!==(p.strategicContainerId||'')){
+      pushPortEvt('Scope','strategic_container','',prevClone.strategicContainerId||'',p.strategicContainerId||'');
+    }
+    (prevClone.deliverables||[]).forEach(od=>{
+      if((od.title||'').trim()&&!delivs.some(x=>x.id===od.id)){
+        pushPortEvt('Scope','deliverable_removed',od.id,od.title||'','');
+      }
+    });
+    delivs.forEach(d=>{
+      if(!prevDelMap.has(d.id)){
+        pushPortEvt('Scope','deliverable_added',d.id,'',d.title||'');
+      }
+    });
+    delivs.forEach(d=>{
+      const od=prevDelMap.get(d.id);
+      if(!od)return;
+      if((od.baselineDueDate||'')!==(d.baselineDueDate||'')){
+        pushDelivEvt(d,'Date','baseline',od.baselineDueDate||'',d.baselineDueDate||'');
+      }
+      const oldPl=(od.plannedDueDate||od.dueDate||'').trim();
+      const newPl=(d.plannedDueDate||'').trim();
+      if(oldPl!==newPl){
+        pushDelivEvt(d,'Date','planned',oldPl,newPl);
+      }
+      if((od.assignee||'')!==(d.assignee||'')){
+        pushDelivEvt(d,'Owner','',od.assignee||'',d.assignee||'');
+      }
+    });
+  }
+  p.deliverables=delivs;
+  if((p.portfolioStage==='committed'||p.portfolioStage==='on_hold')&&!(p.owner||'').trim()){
+    toast('Tip: committed / on-hold items should have an accountable lead');
+  }
+  save();closeModal();render();toast('Portfolio item saved');
+}
+function delCdoPortfolioItem(id){
+  if(!id)return;
+  if(!confirm('Remove this portfolio item?'))return;
+  D.cdoPortfolio=(D.cdoPortfolio||[]).filter(x=>x.id!==id);
+  save();closeModal();render();toast('Portfolio item removed');
+}
+function rCDO(c){
+  const all=D.cdoPortfolio||[];
+  const kpiTotal=all.length;
+  const kpiStub=all.filter(p=>(p.portfolioStage||'')==='stub').length;
+  const kpiNeedLead=all.filter(p=>p.portfolioStage==='needs_lead').length;
+  const kpiCommitted=all.filter(p=>p.portfolioStage==='committed').length;
+  const kpiAtRisk=all.filter(p=>p.health==='red'||p.health==='yellow').length;
+  const kpiDueWeek=cdoDeliverablesDueThisWeekCount(all);
+  let kpiDelivVar=0;
+  all.forEach(p=>{
+    (p.deliverables||[]).forEach(d=>{
+      if(!(d.title||'').trim())return;
+      const b=(d.baselineDueDate||'').trim();
+      const pl=(d.plannedDueDate||d.dueDate||'').trim();
+      if(b&&pl&&b!==pl)kpiDelivVar++;
+    });
+  });
+
+  const q=(document.getElementById('search')?.value||'').trim().toLowerCase();
+  let rows=all.slice();
+  if(cdoPfLens==='my'&&ME)rows=rows.filter(p=>(p.owner||'')===ME||cdoPortfolioOpenMilestoneAssignedTo(p,ME));
+  if(cdoPfStatus!=='all')rows=rows.filter(p=>(p.portfolioStage||'stub')===cdoPfStatus);
+  if(cdoPfHealth!=='all'){
+    if(cdoPfHealth==='unset')rows=rows.filter(p=>!p.health);
+    else rows=rows.filter(p=>p.health===cdoPfHealth);
+  }
+  if(cdoPfContainer!=='all')rows=rows.filter(p=>(p.strategicContainerId||'')===cdoPfContainer);
+  if(q){
+    rows=rows.filter(p=>{
+      const milAsg=(p.deliverables||[]).map(d=>d.assignee||'').join(' ');
+      const scn=(cdoStrategicContainerById(p.strategicContainerId)?.name||'');
+      const tags=(p.portfolioTags||[]).join(' ');
+      const hay=[p.name,p.executiveSponsor,p.owner,p.requester,p.description,p.notesInternal,p.notesExternal,p.timingNotes,p.nextMilestone,tags,scn,milAsg].map(x=>(x||'').toLowerCase()).join(' ');
+      return hay.includes(q);
+    });
+  }
+  const stageIx=st=>{const i=PORTFOLIO_STAGE_ORDER.indexOf(st||'stub');return i<0?99:i};
+  rows.sort((a,b)=>{
+    if(cdoPfSort==='target'){
+      const ta=a.targetDate||'\uffff',tb=b.targetDate||'\uffff';
+      if(ta!==tb)return ta.localeCompare(tb);
+    }else if(cdoPfSort==='stage'){
+      const d=stageIx(a.portfolioStage)-stageIx(b.portfolioStage);
+      if(d)return d;
+    }
+    return (a.name||'').localeCompare(b.name||'');
+  });
+
+  const stFilterOpts=`<option value="all"${cdoPfStatus==='all'?' selected':''}>All stages</option>`+PORTFOLIO_STAGES.map(s=>`<option value="${esc(s.value)}"${cdoPfStatus===s.value?' selected':''}>${esc(s.label)}</option>`).join('');
+  const hlFilterOpts=`<option value="all"${cdoPfHealth==='all'?' selected':''}>All health</option><option value="unset"${cdoPfHealth==='unset'?' selected':''}>Not set</option>`+CDO_PORTFOLIO_HEALTH_OPTS.filter(o=>o.value).map(o=>`<option value="${esc(o.value)}"${cdoPfHealth===o.value?' selected':''}>${esc(o.label)}</option>`).join('');
+  const contFilterOpts=`<option value="all"${cdoPfContainer==='all'?' selected':''}>All containers</option>`+cdoContainersForFilterDropdown().map(c=>`<option value="${esc(c.id)}"${cdoPfContainer===c.id?' selected':''}>${esc(c.name)}${c.activeFlag===false?' (inactive)':''}</option>`).join('');
+
+  const tableRows=rows.length?rows.map(p=>{
+    const st=p.portfolioStage||'stub';
+    const ws=p.linkWorkstream;
+    const wsN=ws?(D.workstreams||[]).find(w=>w.id===ws):null;
+    const late=p.targetDate&&p.targetDate<today()&&!['complete','cancelled'].includes(st);
+    const prLab=(p.priority||'').toUpperCase();
+    const prShow=p.priority?`<span class="badge" style="font-size:9px;margin-left:6px;vertical-align:middle;opacity:.85">${esc(prLab)}</span>`:'';
+    const roll=cdoPortfolioDelivRollup(p);
+    const delivTxt=roll.total?`${roll.done}/${roll.total}`:'—';
+    const nextMilAsg=roll.nextAssignee?`<div style="font-size:10px;color:var(--muted);margin-top:2px;font-weight:500">${esc(roll.nextAssignee)}</div>`:'';
+    const nextD=roll.nextDue?fmtDate(roll.nextDue):'—';
+    const needLead=!((p.owner||'').trim())&&st!=='stub'&&st!=='cancelled';
+    const scO=cdoStrategicContainerById(p.strategicContainerId);
+    const scLab=scO?(scO.name+(scO.activeFlag===false?' · inactive':'')):'—';
+    const tagPills=(p.portfolioTags||[]).filter(Boolean).slice(0,5).map(t=>`<span class="pill pill-m" style="font-size:9px;margin:3px 6px 0 0;display:inline-block">${esc(t)}</span>`).join('')||'<span style="font-size:11px;color:var(--muted)">—</span>';
+    const rollupR=cdoComputedPortfolioRollupDate(p);
+    const rollWarn=(p.targetDate||'').trim()&&rollupR&&rollupR!==(p.targetDate||'').trim();
+    const timRaw=(p.timingNotes||'').trim();
+    const timShow=timRaw?(timRaw.length>72?esc(timRaw.slice(0,72))+'…':esc(timRaw)):'—';
+    return`<tr style="cursor:pointer;border-bottom:1px solid var(--border-lt);transition:background .12s" onmouseenter="this.style.background='var(--bg-subtle)'" onmouseleave="this.style.background=''" onclick="openCdoPortfolioModal('${p.id}')">
+      <td style="padding:10px 12px;vertical-align:top"><strong style="font-size:13px">${esc(p.name||'—')}</strong>${prShow}<div style="margin-top:6px;display:flex;flex-wrap:wrap;align-items:center">${tagPills}</div>${needLead?'<div style="margin-top:4px"><span class="badge warn" style="font-size:9px">Needs lead</span></div>':''}</td>
+      <td style="padding:10px 12px;font-size:11.5px;color:var(--muted);vertical-align:top;max-width:200px;line-height:1.35"><strong style="color:var(--text);font-size:12px">${esc(scLab)}</strong></td>
+      <td style="padding:10px 12px;font-size:12px;vertical-align:top"><span class="pill pill-m" style="font-size:10px">${esc(cdoPortfolioStageShort(st))}</span></td>
+      <td style="padding:10px 12px;font-size:12.5px;vertical-align:top">${esc(p.owner||'—')}</td>
+      <td style="padding:10px 12px;font-size:12px;color:var(--muted);vertical-align:top">${esc(p.requester||'—')}</td>
+      <td style="padding:10px 12px;font-size:12px;vertical-align:top;font-weight:600">${delivTxt}${nextMilAsg}</td>
+      <td style="padding:10px 12px;font-size:12px;white-space:nowrap;vertical-align:top">${nextD}</td>
+      <td style="padding:10px 12px;font-size:11.5px;color:var(--muted);vertical-align:top;max-width:200px;line-height:1.35">${timShow}</td>
+      <td style="padding:10px 12px;font-size:12px;white-space:nowrap;vertical-align:top">${p.targetDate?fmtDate(p.targetDate):'—'}${late?' <span class="badge hot" style="font-size:9px">Past</span>':''}${rollWarn?' <span style="font-size:10px;color:#b45309;font-weight:700" title="Commitment date differs from computed rollup">⚠</span>':''}</td>
+      <td style="padding:10px 12px;vertical-align:top"><span class="pill ${cdoPortfolioHealthPill(p.health)}" style="font-size:10px">${esc(cdoPortfolioHealthLabel(p.health))}</span></td>
+      <td style="padding:10px 12px;vertical-align:top">${ws&&wsN?`<button type="button" class="mbtn mb-add" style="font-size:10px;padding:4px 10px" onclick="event.stopPropagation();cdoJumpToProgramWorkstream('${p.linkWorkstream}')" title="${wsRefLabel(wsN)?esc(wsRefLabel(wsN))+' · ':''}${esc(wsN.name)}">Open</button>`:'—'}</td>
+    </tr>`;
+  }).join(''):`<tr><td colspan="11" style="padding:32px 16px;text-align:center;color:var(--muted)">No portfolio items match. <button type="button" class="mbtn mb-save" style="margin-top:10px" onclick="openCdoPortfolioModal()">Create stub</button></td></tr>`;
+
+  c.innerHTML=`<div class="page-wrap" style="background:linear-gradient(180deg,var(--bg-subtle) 0%,var(--bg-card) 48%);padding:20px 18px 28px;border-radius:16px;border:1px solid var(--border-lt);box-sizing:border-box">
+    <details style="margin-bottom:16px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-card);padding:0;box-shadow:0 1px 2px rgba(15,23,42,.04)">
+      <summary style="padding:12px 16px;cursor:pointer;font-size:13px;font-weight:700;color:var(--text);list-style-position:outside">Operating model (CDO portfolio)</summary>
+      <div style="padding:0 16px 14px;font-size:12.5px;color:var(--muted);line-height:1.55;border-top:1px solid var(--border-lt)">
+        <p style="margin:12px 0 8px;color:var(--text)"><strong>Anchor:</strong> Strategic containers roll up to initiatives with deliverables (baseline vs planned), structured change events, and portfolio-eligible leads.</p>
+        <ul style="margin:0;padding-left:18px">
+          <li><strong>Strategic containers</strong> — editable by anyone; changelog per container. Toggle <strong>inactive</strong> to hide from defaults.</li>
+          <li><strong>Tags</strong> — managed catalog (People admin norm); up to five per initiative.</li>
+          <li><strong>Commitment date</strong> — editable summary; warning when it differs from rollup (latest planned due among open deliverables).</li>
+          <li><strong>Utilization</strong> — capacity view is planned next (see panel below).</li>
+        </ul>
       </div>
+    </details>
+    <details style="margin-bottom:16px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-card);padding:0">
+      <summary style="padding:12px 16px;cursor:pointer;font-size:13px;font-weight:700;color:var(--text);list-style-position:outside">Accountable lead dropdown list</summary>
+      <div style="padding:12px 16px 16px;font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--border-lt)">
+        <p style="margin:0 0 10px">One name per line. These names are merged with the <strong>Team Directory</strong> for initiative and milestone lead dropdowns.</p>
+        <textarea id="cdo-lead-list-ta" style="width:100%;min-height:88px;font-family:ui-monospace,monospace;font-size:12px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);color:var(--text);resize:vertical">${esc((D.cdoAccountableLeadOptions||[]).join('\n'))}</textarea>
+        <button type="button" class="mbtn mb-save" style="margin-top:10px;font-size:12px" onclick="saveCdoLeadListFromTextarea();render()">Save lead list</button>
+      </div>
+    </details>
+    <div class="kpi-row" style="margin-bottom:16px">
+      <div class="card" style="padding:14px 16px"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Portfolio items</div><div style="font-size:24px;font-weight:800">${kpiTotal}</div></div>
+      <div class="card" style="padding:14px 16px"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Stubs</div><div style="font-size:24px;font-weight:800;color:#6366f1">${kpiStub}</div></div>
+      <div class="card" style="padding:14px 16px"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Needs lead</div><div style="font-size:24px;font-weight:800;color:#b45309">${kpiNeedLead}</div></div>
+      <div class="card" style="padding:14px 16px"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Committed</div><div style="font-size:24px;font-weight:800;color:#059669">${kpiCommitted}</div></div>
+      <div class="card" style="padding:14px 16px"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Yellow / Red</div><div style="font-size:24px;font-weight:800;color:${kpiAtRisk?'#dc2626':'var(--text)'}">${kpiAtRisk}</div></div>
+      <div class="card" style="padding:14px 16px"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Deliverable variance</div><div style="font-size:24px;font-weight:800;color:${kpiDelivVar?'#b45309':'var(--text)'}">${kpiDelivVar}</div></div>
+      <div class="card" style="padding:14px 16px"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Milestones due ≤7d</div><div style="font-size:24px;font-weight:800;color:var(--text)">${kpiDueWeek}</div></div>
+    </div>
+    <div class="card" style="padding:14px 16px;margin-bottom:12px;border-left:4px solid #3b82f6;background:linear-gradient(90deg,rgba(59,130,246,.06),transparent)">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">Resource utilization (planned)</div>
+      <p style="font-size:12px;color:var(--muted);margin:0;line-height:1.5">Placeholder for a capacity-style view (teams / roles vs portfolio demand), inspired by planning tools with timelines + utilization bands. Next build: tie deliverable owners and dates to a lightweight heatmap.</p>
+    </div>
+    <div class="card" style="padding:10px 14px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+      <button type="button" class="mbtn mb-add" style="font-size:12px" onclick="openStrategicContainersManageModal()">Strategic containers</button>
+      <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"${cdoShowInactiveContainers?' checked':''} onchange="cdoShowInactiveContainers=this.checked;render()"> Show inactive containers</label>
+      <button type="button" class="mbtn mb-add" style="font-size:12px" onclick="openCdoPortfolioSlipReport()">Slip / variance</button>
+      <button type="button" class="mbtn mb-save" style="font-size:12px" onclick="openCdoPortfolioCriticalPathReport()">Critical path</button>
+      <button type="button" class="mbtn mb-save" style="font-size:12px" onclick="openCdoPortfolioPublishReport()">Publishable summary</button>
+      <span style="font-size:11px;color:var(--muted)">Publishable summary: initiatives where you are the accountable lead.</span>
+    </div>
+    <div class="card" style="padding:12px 14px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-right:4px">View</span>
+      <div class="pill${cdoPfLens==='all'?' pill-i':' pill-m'}" style="cursor:pointer;font-size:12px" onclick="cdoPfLens='all';render()">All</div>
+      <div class="pill${cdoPfLens==='my'?' pill-i':' pill-m'}" style="cursor:pointer;font-size:12px" title="You are the accountable lead, or you are assigned to an open milestone / deliverable" onclick="cdoPfLens='my';render()">My commitments</div>
+    </div>
+    <div class="card" style="padding:14px 16px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+      <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px">Stage
+        <select style="padding:6px 10px;border-radius:var(--r-sm);border:1px solid var(--border);font-size:13px;background:var(--bg-card);color:var(--text)" onchange="cdoPfStatus=this.value;render()">${stFilterOpts}</select>
+      </label>
+      <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px">Health
+        <select style="padding:6px 10px;border-radius:var(--r-sm);border:1px solid var(--border);font-size:13px;background:var(--bg-card);color:var(--text)" onchange="cdoPfHealth=this.value;render()">${hlFilterOpts}</select>
+      </label>
+      <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px">Container
+        <select style="padding:6px 10px;border-radius:var(--r-sm);border:1px solid var(--border);font-size:13px;background:var(--bg-card);color:var(--text);max-width:220px" onchange="cdoPfContainer=this.value;render()">${contFilterOpts}</select>
+      </label>
+      <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px">Sort
+        <select style="padding:6px 10px;border-radius:var(--r-sm);border:1px solid var(--border);font-size:13px;background:var(--bg-card);color:var(--text)" onchange="cdoPfSort=this.value;render()">
+          <option value="name"${cdoPfSort==='name'?' selected':''}>Name</option>
+          <option value="stage"${cdoPfSort==='stage'?' selected':''}>Stage</option>
+          <option value="target"${cdoPfSort==='target'?' selected':''}>Current target</option>
+        </select>
+      </label>
+      <button type="button" class="mbtn mb-add" style="margin-left:auto;font-size:12px" onclick="openCdoPortfolioModal()">+ New stub / item</button>
+    </div>
+    <div class="card" style="overflow-x:auto;padding:0">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="text-align:left;background:var(--bg-subtle);border-bottom:2px solid var(--border)">
+            <th style="padding:10px 12px;font-weight:700">Initiative</th>
+            <th style="padding:10px 12px;font-weight:700">Strategic container</th>
+            <th style="padding:10px 12px;font-weight:700">Stage</th>
+            <th style="padding:10px 12px;font-weight:700">Accountable lead</th>
+            <th style="padding:10px 12px;font-weight:700">Requester</th>
+            <th style="padding:10px 12px;font-weight:700">Milestones</th>
+            <th style="padding:10px 12px;font-weight:700">Next due</th>
+            <th style="padding:10px 12px;font-weight:700">Timing</th>
+            <th style="padding:10px 12px;font-weight:700">Current target</th>
+            <th style="padding:10px 12px;font-weight:700">Health</th>
+            <th style="padding:10px 12px;font-weight:700">Program</th>
+          </tr>
+        </thead>
+        <tbody>${tableRows}</tbody>
+      </table>
     </div>
   </div>`;
 }
@@ -3509,6 +4754,9 @@ function rDash(c){
           <button onclick="openWsEdit()" style="flex:1;padding:12px 16px;background:rgba(255,255,255,.95);border:none;border-radius:var(--r-sm);font-size:13px;font-weight:600;color:#059669;cursor:pointer;transition:all .15s" onmouseenter="this.style.background='#fff';this.style.transform='translateY(-1px)'" onmouseleave="this.style.background='rgba(255,255,255,.95)';this.style.transform=''">New Workstream</button>
           <button onclick="openTaskModal()" style="flex:1;padding:12px 16px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:var(--r-sm);font-size:13px;font-weight:600;color:#fff;cursor:pointer;transition:all .15s" onmouseenter="this.style.background='rgba(255,255,255,.3)';this.style.transform='translateY(-1px)'" onmouseleave="this.style.background='rgba(255,255,255,.2)';this.style.transform=''">New Action Item</button>
         </div>
+        <button type="button" onclick="goIntakePasteBulk()" title="Opens paste workspace — AI splits pasted lines into draft action items" style="width:100%;padding:11px 14px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.45);border-radius:var(--r-sm);font-size:12px;font-weight:700;color:#fff;cursor:pointer;transition:all .15s;line-height:1.35;text-align:center" onmouseenter="this.style.background='rgba(255,255,255,.28)';this.style.transform='translateY(-1px)'" onmouseleave="this.style.background='rgba(255,255,255,.18)';this.style.transform=''">
+          Paste / bulk-add action items <span style="opacity:.9;font-weight:600">· AI helps parse</span>
+        </button>
         <button type="button" onclick="go('triage')" title="${triageUnassignedCount?triageUnassignedCount+' unassigned — click to triage':'No unassigned items'}" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:${triageUnassignedCount?'11px 14px':'10px 14px'};background:${triageUnassignedCount?'rgba(254,252,232,.98)':'rgba(255,255,255,.12)'};border:${triageUnassignedCount?'2px solid #fbbf24':'1px solid rgba(255,255,255,.35)'};border-radius:var(--r-sm);font-size:12px;font-weight:700;color:${triageUnassignedCount?'#78350f':'#fff'};cursor:pointer;transition:all .15s;box-shadow:${triageUnassignedCount?'0 4px 14px rgba(245,158,11,.35)':'none'}" onmouseenter="this.style.background='${triageUnassignedCount?'#fffbeb':'rgba(255,255,255,.22)'}';this.style.transform='translateY(-1px)'" onmouseleave="this.style.background='${triageUnassignedCount?'rgba(254,252,232,.98)':'rgba(255,255,255,.12)'}';this.style.transform=''">
           <span style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;line-height:1.25">
             <span style="font-size:12px;letter-spacing:.02em">Triage Unassigned Items</span>
@@ -3533,10 +4781,10 @@ function rDash(c){
           <button onclick="go('workstreams')" style="flex:1;padding:12px 16px;background:rgba(255,255,255,.95);border:none;border-radius:var(--r-sm);font-size:13px;font-weight:600;color:#6366f1;cursor:pointer;transition:all .15s" onmouseenter="this.style.background='#fff';this.style.transform='translateY(-1px)'" onmouseleave="this.style.background='rgba(255,255,255,.95)';this.style.transform=''">Manage Workstreams</button>
           <button onclick="go('actionitems')" style="flex:1;padding:12px 16px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:var(--r-sm);font-size:13px;font-weight:600;color:#fff;cursor:pointer;transition:all .15s" onmouseenter="this.style.background='rgba(255,255,255,.3)';this.style.transform='translateY(-1px)'" onmouseleave="this.style.background='rgba(255,255,255,.2)';this.style.transform=''">Manage Action Items</button>
         </div>
-        <button type="button" onclick="taskFilter='inbox';go('actionitems')" title="${pasteNotesInboxCount?pasteNotesInboxCount+' triage draft(s). ':''}Opens Action Items paste flow; Analyze and update needs OpenAI key." style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:${pasteNotesInboxCount?'11px 14px':'10px 14px'};background:${pasteNotesInboxCount?'rgba(254,252,232,.98)':'rgba(255,255,255,.12)'};border:${pasteNotesInboxCount?'2px solid #fbbf24':'1px solid rgba(255,255,255,.35)'};border-radius:var(--r-sm);font-size:12px;font-weight:700;color:${pasteNotesInboxCount?'#78350f':'#fff'};cursor:pointer;transition:all .15s;box-shadow:${pasteNotesInboxCount?'0 4px 14px rgba(245,158,11,.35)':'none'}" onmouseenter="this.style.background='${pasteNotesInboxCount?'#fffbeb':'rgba(255,255,255,.22)'}';this.style.transform='translateY(-1px)'" onmouseleave="this.style.background='${pasteNotesInboxCount?'rgba(254,252,232,.98)':'rgba(255,255,255,.12)'}';this.style.transform=''">
+        <button type="button" onclick="taskFilter='inbox';go('actionitems')" title="${pasteNotesInboxCount?pasteNotesInboxCount+' triage draft(s). ':''}Opens paste flow: Quick add or AI-assisted Add Action Items (API key for full assist)." style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:${pasteNotesInboxCount?'11px 14px':'10px 14px'};background:${pasteNotesInboxCount?'rgba(254,252,232,.98)':'rgba(255,255,255,.12)'};border:${pasteNotesInboxCount?'2px solid #fbbf24':'1px solid rgba(255,255,255,.35)'};border-radius:var(--r-sm);font-size:12px;font-weight:700;color:${pasteNotesInboxCount?'#78350f':'#fff'};cursor:pointer;transition:all .15s;box-shadow:${pasteNotesInboxCount?'0 4px 14px rgba(245,158,11,.35)':'none'}" onmouseenter="this.style.background='${pasteNotesInboxCount?'#fffbeb':'rgba(255,255,255,.22)'}';this.style.transform='translateY(-1px)'" onmouseleave="this.style.background='${pasteNotesInboxCount?'rgba(254,252,232,.98)':'rgba(255,255,255,.12)'}';this.style.transform=''">
           <span style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;line-height:1.25">
-            <span style="font-size:12px;letter-spacing:.02em">Paste notes and update</span>
-            ${pasteNotesInboxCount?'<span style="font-size:10px;font-weight:600;color:#b45309;opacity:.95">Triage drafts waiting</span>':'<span style="font-size:10px;font-weight:600;color:rgba(255,255,255,.75)">AI analyzes paste → updates + new lines</span>'}
+            <span style="font-size:12px;letter-spacing:.02em">Paste notes &amp; add action items</span>
+            ${pasteNotesInboxCount?'<span style="font-size:10px;font-weight:600;color:#b45309;opacity:.95">Triage drafts waiting</span>':'<span style="font-size:10px;font-weight:600;color:rgba(255,255,255,.75)">Quick add or AI assist → triage below</span>'}
           </span>
           ${pasteNotesInboxCount?`<span style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:32px;padding:0 10px;background:linear-gradient(180deg,#f59e0b 0%,#d97706 100%);color:#fff;font-size:15px;font-weight:800;border-radius:999px;box-shadow:0 2px 10px rgba(217,119,6,.45);border:2px solid #fff">${pasteNotesInboxCount>99?'99+':pasteNotesInboxCount}</span>`:''}
         </button>
@@ -3642,6 +4890,161 @@ function rTriageUnassigned(c){
         </tbody>
       </table>
     </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// MILESTONES (MVP — local planning / driver chain)
+// ═══════════════════════════════════════════════════
+const MILESTONE_STATUSES=[
+  {value:'planned',label:'Planned'},
+  {value:'at-risk',label:'At risk'},
+  {value:'done',label:'Done'},
+  {value:'cancelled',label:'Cancelled'}
+];
+function getMilestoneDriverGoalId(){
+  try{return localStorage.getItem('atlas-milestone-driver-goal')||'';}catch(e){return '';}
+}
+function setMilestoneDriverGoalId(id){
+  try{localStorage.setItem('atlas-milestone-driver-goal',id||'');}catch(e){}
+}
+function milestoneById(id){return(D.milestones||[]).find(x=>x.id===id);}
+function computeMilestoneDriverSet(goalId){
+  const set=new Set();
+  const visiting=new Set();
+  function walk(id){
+    if(!id)return;
+    if(visiting.has(id))return;
+    visiting.add(id);
+    const m=milestoneById(id);
+    if(m){
+      set.add(id);
+      (m.predecessorIds||[]).forEach(walk);
+    }
+    visiting.delete(id);
+  }
+  walk(goalId);
+  return set;
+}
+function milestonePredTitles(m){
+  const ids=m.predecessorIds||[];
+  if(!ids.length)return'—';
+  return ids.map(pid=>{
+    const p=milestoneById(pid);
+    return p?p.title:'(missing)';
+  }).join('; ');
+}
+function openMilestoneModal(id){
+  const m=id?milestoneById(id):null;
+  const preds=new Set(m?.predecessorIds||[]);
+  const others=(D.milestones||[]).filter(x=>x.id!==id);
+  const predChecks=others.map(o=>`<label style="display:flex;align-items:flex-start;gap:8px;font-size:12.5px;margin-bottom:6px;cursor:pointer"><input type="checkbox" class="ms-pred-chk" value="${esc(o.id)}"${preds.has(o.id)?' checked':''}/><span>${esc(o.title)}${o.targetDate?' <span style="color:var(--muted)">('+fmtDate(o.targetDate)+')</span>':''}</span></label>`).join('');
+  openModal(`<div class="m-hd"><h3>${m?'Edit':'New'} Milestone</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd">
+    <div class="fg"><label>Title</label><input id="ms-title" value="${m?esc(m.title):''}" placeholder="e.g. Board-ready AI roadmap"></div>
+    <div class="fg-row">
+      <div class="fg"><label>Target date</label><input type="date" id="ms-date" value="${m&&m.targetDate?m.targetDate:''}"></div>
+      <div class="fg"><label>Owner</label><select id="ms-owner">${peopleOpts(m?.owner||'')}</select></div>
+      <div class="fg"><label>Status</label><select id="ms-status">${MILESTONE_STATUSES.map(s=>'<option value="'+esc(s.value)+'"'+(normalizeMilestoneStatus(m?.status)===s.value?' selected':'')+'>'+esc(s.label)+'</option>').join('')}</select></div>
+    </div>
+    <div class="fg"><label>Linked workstream <span style="font-weight:400;color:var(--muted)">(optional)</span></label><select id="ms-ws"><option value="">— None —</option>${wsOptsHierarchy(m?.linkWorkstream||'',null)}</select></div>
+    <div class="fg"><label>Blocked by <span style="font-weight:400;color:var(--muted)">— milestones that must land first</span></label>
+      <div style="max-height:160px;overflow-y:auto;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle)">${others.length?predChecks:'<span style="font-size:12px;color:var(--muted)">Add other milestones first to chain dependencies.</span>'}</div>
+    </div>
+    <div class="fg"><label>Notes</label><textarea id="ms-notes" rows="3">${m?esc(m.notes||''):''}</textarea></div>
+  </div>
+  <div class="m-ft">
+    ${m?'<button type="button" class="mbtn mb-del" onclick="delMilestone(\''+m.id+'\')">Delete</button>':''}
+    <button type="button" class="mbtn mb-cancel" onclick="closeModal()">Cancel</button>
+    <button type="button" class="mbtn mb-save" onclick="saveMilestone('${id||''}')">Save</button>
+  </div>`);
+}
+function normalizeMilestoneStatus(s){
+  if(s==='done'||s==='cancelled'||s==='at-risk')return s;
+  return'planned';
+}
+function saveMilestone(id){
+  const title=(document.getElementById('ms-title')?.value||'').trim();
+  if(!title){toast('Title is required');return;}
+  let m=id?milestoneById(id):null;
+  if(!m){m={id:uid(),addedBy:ME};if(!D.milestones)D.milestones=[];D.milestones.push(m);}
+  m.title=title;
+  m.targetDate=document.getElementById('ms-date')?.value||'';
+  m.owner=document.getElementById('ms-owner')?.value||'';
+  m.status=normalizeMilestoneStatus(document.getElementById('ms-status')?.value);
+  m.linkWorkstream=document.getElementById('ms-ws')?.value||'';
+  m.notes=(document.getElementById('ms-notes')?.value||'').trim();
+  m.predecessorIds=[...document.querySelectorAll('.ms-pred-chk:checked')].map(cb=>cb.value).filter(Boolean);
+  m.updatedBy=ME;m.updatedAt=new Date().toISOString();
+  save();closeModal();render();toast('Milestone saved');log('Milestone: '+esc(title));
+}
+function delMilestone(id){
+  if(!confirm('Delete this milestone? Other milestones that depended on it will have that link removed.'))return;
+  D.milestones=(D.milestones||[]).filter(x=>x.id!==id);
+  (D.milestones||[]).forEach(x=>{
+    x.predecessorIds=(x.predecessorIds||[]).filter(p=>p!==id);
+  });
+  if(getMilestoneDriverGoalId()===id)setMilestoneDriverGoalId('');
+  save();closeModal();render();toast('Milestone removed');
+}
+function rMilestones(c){
+  const q=(document.getElementById('search')?.value||'').toLowerCase();
+  let items=[...(D.milestones||[])];
+  if(q)items=items.filter(m=>(m.title+' '+m.owner+' '+(m.notes||'')).toLowerCase().includes(q));
+  items.sort((a,b)=>{
+    const da=a.targetDate||'9999';
+    const db=b.targetDate||'9999';
+    if(da!==db)return da.localeCompare(db);
+    return(a.title||'').localeCompare(b.title||'');
+  });
+  const goalId=getMilestoneDriverGoalId();
+  const driverSet=goalId?computeMilestoneDriverSet(goalId):new Set();
+  const goalOpts='<option value="">— No highlight —</option>'+items.map(m=>`<option value="${esc(m.id)}"${goalId===m.id?' selected':''}>${esc(m.title)}</option>`).join('');
+  const todayStr=today();
+  c.innerHTML=`
+  <div class="page-wrap tasks-page">
+    <div class="page-toolbar" style="margin-bottom:16px">
+      <span class="page-title">Milestones</span>
+      <button type="button" class="tb-btn" style="background:var(--accent);color:#fff;border:none" onclick="openMilestoneModal()">+ Milestone</button>
+    </div>
+    <div class="card" style="padding:18px 20px;margin-bottom:16px">
+      <p style="margin:0 0 12px;font-size:13px;color:var(--muted);line-height:1.55"><strong style="color:var(--fg)">Driver chain</strong> — Pick the milestone you care about most (e.g. exec readout). Rows <strong>on the path</strong> from prerequisites up to that milestone are highlighted. This is a simple dependency walk (not full critical-path scheduling).</p>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
+        <label style="font-size:12px;font-weight:600;color:var(--fg)">Highlight path to:</label>
+        <select style="padding:8px 12px;border-radius:var(--r-sm);border:1px solid var(--border);font-size:13px;min-width:220px;max-width:100%" onchange="setMilestoneDriverGoalId(this.value);render()">${goalOpts}</select>
+      </div>
+    </div>
+    ${items.length?`<div style="overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-card)">
+      <table class="tbl" style="width:100%;min-width:720px">
+        <thead><tr>
+          <th style="white-space:nowrap">Target</th>
+          <th>Milestone</th>
+          <th>Owner</th>
+          <th>Status</th>
+          <th>Blocked by</th>
+          <th style="white-space:nowrap">Driver path</th>
+        </tr></thead>
+        <tbody>${items.map(m=>{
+          const st=normalizeMilestoneStatus(m.status);
+          const pill=st==='done'?'pill-g':st==='cancelled'?'pill-v':st==='at-risk'?'pill-r':'pill-m';
+          const late=m.targetDate&&m.targetDate<todayStr&&st!=='done'&&st!=='cancelled';
+          const onPath=driverSet.has(m.id);
+          const rowBg=onPath?'rgba(99,102,241,.08)':late?'rgba(239,68,68,.06)':'';
+          const ws=m.linkWorkstream?(D.workstreams||[]).find(w=>w.id===m.linkWorkstream):null;
+          const wsCell=ws?`<button type="button" class="mbtn mb-add" style="font-size:10px;padding:2px 8px;margin-top:4px" onclick="event.stopPropagation();openWsDetail('${m.linkWorkstream}')">WS</button>`:'';
+          const predTxt=milestonePredTitles(m);
+          const predShort=predTxt.length>180?predTxt.slice(0,180)+'…':predTxt;
+          return`<tr style="cursor:pointer;background:${rowBg}" onclick="openMilestoneModal('${m.id}')">
+            <td style="font-size:12px;white-space:nowrap;vertical-align:top">${m.targetDate?fmtDate(m.targetDate):'—'}${late?' <span class="badge hot" style="font-size:9px">Late</span>':''}</td>
+            <td style="vertical-align:top"><strong style="font-size:13px">${esc(m.title)}</strong>${ws?'<div style="margin-top:4px;font-size:11px;color:var(--muted)">'+esc(ws.name)+'</div>':''}${wsCell}</td>
+            <td style="font-size:12px;vertical-align:top">${esc(m.owner||'')||'—'}</td>
+            <td style="vertical-align:top"><span class="pill ${pill}" style="font-size:10px">${st}</span></td>
+            <td style="font-size:11.5px;color:var(--muted);vertical-align:top;max-width:240px">${predTxt==='—'?'—':esc(predShort)}</td>
+            <td style="vertical-align:top;text-align:center">${onPath?'<span class="pill pill-i" style="font-size:10px">On path</span>':'—'}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>`:'<div class="empty"><h4>No milestones yet</h4><p>Add milestones with target dates, then link “blocked by” to show what must finish first. Use <strong>Highlight path to</strong> to see the chain.</p><button type="button" class="mbtn mb-save" style="margin-top:10px" onclick="openMilestoneModal()">+ First milestone</button></div>'}
   </div>`;
 }
 
@@ -5112,7 +6515,7 @@ function rActionItemsNew(c){
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
       <h1 data-app-help="Every task in the program: switch list or Kanban, filter by owner or workstream, and drag cards to change status." style="font-size:24px;font-weight:600;color:var(--fg);margin:0">Action Items</h1>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <button type="button" data-app-help="Paste notes here and run Analyze &amp; update (needs AI key). Badge counts drafts waiting in triage." onclick="taskFilter='inbox';render()" style="padding:8px 14px;font-size:13px;font-weight:500;background:var(--bg-card);color:var(--fg);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:border-color .15s,background .15s" onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor='var(--border)'">Paste notes &amp; update${inboxWaitingCt?` <span class="badge warn" style="margin-left:2px;font-size:10px;vertical-align:1px">${inboxWaitingCt}</span>`:''}</button>
+        <button type="button" data-app-help="Paste notes here and run AI-assisted Add Action Items (needs API key) or Quick add. Badge counts drafts waiting in triage." onclick="taskFilter='inbox';render()" style="padding:8px 14px;font-size:13px;font-weight:500;background:var(--bg-card);color:var(--fg);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:border-color .15s,background .15s" onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor='var(--border)'">Paste notes &amp; update${inboxWaitingCt?` <span class="badge warn" style="margin-left:2px;font-size:10px;vertical-align:1px">${inboxWaitingCt}</span>`:''}</button>
         <button onclick="openTaskModal()" style="padding:8px 14px;font-size:13px;font-weight:500;background:#10b981;color:#fff;border:none;border-radius:6px;cursor:pointer;transition:opacity .15s" onmouseenter="this.style.opacity='.85'" onmouseleave="this.style.opacity='1'">+ Action Item</button>
       </div>
     </div>
@@ -5385,6 +6788,22 @@ function rWork(c){
   </div>`;
 }
 
+function goIntakePasteBulk(){
+  closeModal();
+  taskFilter='inbox';
+  go('actionitems');
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      const ta=document.getElementById('in-content');
+      if(ta){
+        ta.focus();
+        try{ta.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){ta.scrollIntoView()}
+      }
+      toast('Paste your notes below — then choose Quick add or AI-assisted Add Action Items.');
+    });
+  });
+}
+
 function openIntakeModal(){
   openModal(`<div class="m-hd"><h3>New Item - Intake</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd">
@@ -5397,6 +6816,10 @@ function openIntakeModal(){
       <button onclick="closeModal();openTaskModal()" style="padding:16px 20px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg-subtle);cursor:pointer;text-align:left;transition:all .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.background='rgba(99,102,241,.05)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-subtle)'">
         <div style="font-weight:600;font-size:14px;margin-bottom:4px;color:var(--text)">Action Item</div>
         <div style="font-size:12px;color:var(--muted)">A specific task or deliverable</div>
+      </button>
+      <button onclick="goIntakePasteBulk()" style="padding:16px 20px;border:2px dashed rgba(16,185,129,.55);border-radius:var(--r-sm);background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(5,150,105,.06));cursor:pointer;text-align:left;transition:all .15s" onmouseover="this.style.borderColor='#10b981';this.style.background='rgba(16,185,129,.12)'" onmouseout="this.style.borderColor='rgba(16,185,129,.55)';this.style.background='linear-gradient(135deg,rgba(16,185,129,.08),rgba(5,150,105,.06))'">
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px;color:var(--text)">Paste / bulk-add action items</div>
+        <div style="font-size:12px;color:var(--muted)">Copy a bullet list, email snippet, or notes — AI turns lines into drafts you review before saving (${OPENAI_KEY?'enabled':'set sidebar API key for best results'})</div>
       </button>
     </div>
   </div>
@@ -6271,11 +7694,21 @@ function rTasksInbox(c){
   </div>
   <div class="card" style="margin-bottom:20px;padding:24px">
     <h4 style="font-size:17px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px">Paste Anything ${OPENAI_KEY?'<span class="pill pill-g" style="font-size:10px;font-weight:500;vertical-align:middle">AI Powered</span>':''}</h4>
-    <p style="font-size:13.5px;color:var(--muted);line-height:1.65;margin-bottom:12px">Drop in meeting notes, an email thread, a Teams chat, a status update — anything.</p>
+    <p style="font-size:13.5px;color:var(--muted);line-height:1.65;margin-bottom:14px">Drop in meeting notes, an email thread, a Teams chat, or a bullet list — then run one of the tools below. <strong style="color:var(--fg)">Your main task list does not change</strong> until you promote items from <strong>Needs Attention</strong>.</p>
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-bottom:16px;padding:12px 14px;border-radius:var(--r-sm);background:linear-gradient(135deg,rgba(99,102,241,.07),rgba(124,58,237,.05));border:1px solid var(--border-lt);font-size:12px;color:var(--text)">
+      <span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:var(--fg)"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px">1</span> Name &amp; paste</span>
+      <span style="color:var(--light)">→</span>
+      <span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:var(--fg)"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px">2</span> Run a tool</span>
+      <span style="color:var(--light)">→</span>
+      <span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:var(--fg)"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px">3</span> Create tasks from triage</span>
+    </div>
     <div style="padding:12px 14px;margin-bottom:14px;border-radius:var(--r-sm);background:var(--bg-subtle);border:1px solid var(--border);font-size:12.5px;color:var(--text);line-height:1.55">
-      <strong style="color:var(--fg)">One AI pass for mixed notes</strong>
-      <p style="margin:8px 0 0;font-size:12.5px"><strong>Analyze &amp; update</strong> proposes edits to <em>existing</em> action items and extracts <em>net-new</em> follow-ups in a single review screen. You don’t need to know which is which beforehand. New lines land in <strong>triage</strong> below for routing; updates apply directly when you confirm.</p>
-      ${OPENAI_KEY?'':'<p style="margin:10px 0 0;font-size:12px;color:var(--muted)">Set an OpenAI key in the sidebar to run Analyze &amp; update on your paste.</p>'}
+      <strong style="color:var(--fg)">Which option should I use?</strong>
+      <ul style="margin:8px 0 0;padding-left:18px;font-size:12.5px;line-height:1.55">
+        <li style="margin-bottom:6px"><strong>Quick add — new items only</strong> — fastest when you only want <em>new</em> lines turned into draft action items (bullets, chat dump). Does <em>not</em> match or update tasks you already track.</li>
+        <li><strong>AI-assisted Add Action Items</strong> — best for real meeting notes: proposes updates to <em>existing</em> action items and pulls out new ones; you confirm before anything saves.</li>
+      </ul>
+      <p style="margin:10px 0 0;font-size:12px;color:var(--muted)">Drafts always appear under <strong>Needs Attention</strong> until you create tasks. ${OPENAI_KEY?'':'Add an OpenAI API key in the sidebar for the full AI-assisted path and smarter quick add.'}</p>
     </div>
     <div style="padding:10px 14px;margin-bottom:14px;border-radius:var(--r-sm);background:#eff6ff;border:1px solid #3b82f6;font-size:12.5px;color:#1e40af">
       <strong style="color:#1d4ed8">&#128193; Need to upload documents?</strong> Visit the <a href="https://digitalrealtyeur.sharepoint.com/sites/AITransformationProgram/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FAITransformationProgram%2FShared%20Documents%2FGeneral&viewid=be024a85%2D931b%2D4a01%2Dacac%2D217f020d89c0" target="_blank" style="color:#2563eb;text-decoration:underline;font-weight:600">AI Transformation Program SharePoint folder</a>
@@ -6284,9 +7717,21 @@ function rTasksInbox(c){
       <div class="fg"><label>Title</label><input id="in-title" placeholder="e.g. Weekly sync notes, Forrest's email about licensing"></div>
       <div class="fg"><label>Source Type</label><select id="in-src" onchange="inboxSrc=this.value"><option value="meeting-notes">Meeting Notes</option><option value="email">Email Thread</option><option value="teams-chat">Teams Chat</option><option value="status-update">Status Update</option><option value="presentation">Presentation</option><option value="other">Other</option></select></div>
     </div>
-    <div class="fg"><label>Content</label><textarea id="in-content" style="min-height:160px" placeholder="Paste the full text here — meeting notes, email chain, chat thread, anything..."></textarea></div>
-    <div style="display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px">
-      <button type="button" class="tb-btn" onclick="submitInboxAnalyzeAndUpdate()" style="font-size:13.5px;background:linear-gradient(135deg,#7c3aed 0%,#6366f1 100%);border:none;color:#fff" title="Requires OpenAI key — matches existing items + extracts new lines; review then Apply">Analyze &amp; update</button>
+    <div class="fg" style="padding:14px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--bg-subtle);margin-bottom:4px"><label>Content</label><textarea id="in-content" style="min-height:180px;margin-top:6px;border:1px solid var(--border);border-radius:var(--r-xs);padding:10px;font-size:13px;line-height:1.5;width:100%;box-sizing:border-box;background:var(--bg-card)" placeholder="Paste anything: bullet list (one action per line), email thread, chat export, or meeting notes..."></textarea></div>
+    <div style="margin-top:16px;padding:16px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--bg-subtle)">
+      <div style="font-size:12.5px;font-weight:800;color:var(--fg);margin-bottom:12px;letter-spacing:.02em;text-transform:uppercase">Step 2 — Choose one</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;align-items:stretch">
+        <div style="padding:14px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--bg-card);display:flex;flex-direction:column">
+          <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--fg)">Quick add</div>
+          <p style="font-size:12px;color:var(--muted);margin:0 0 12px;line-height:1.5;flex:1">New lines only. ${OPENAI_KEY?'Uses AI when your key is set; otherwise simple line detection.':'Uses simple line detection until you add an API key.'}</p>
+          <button type="button" class="tb-btn" onclick="submitInbox()" style="font-size:13px;background:#ecfdf5;border:1px solid #10b981;color:#047857;align-self:flex-start" title="Pull out new action items only; uses AI when key is set, else line patterns">Quick add — new items only</button>
+        </div>
+        <div style="padding:14px;border-radius:var(--r-sm);border:2px solid #a78bfa;background:linear-gradient(180deg,rgba(99,102,241,.08),var(--bg-card));display:flex;flex-direction:column;box-shadow:0 1px 8px rgba(99,102,241,.12)">
+          <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--fg);display:flex;align-items:center;gap:8px;flex-wrap:wrap">Full assist ${OPENAI_KEY?'':'<span class="pill pill-m" style="font-size:9px;font-weight:600">OpenAI key required</span>'}</div>
+          <p style="font-size:12px;color:var(--muted);margin:0 0 12px;line-height:1.5;flex:1">Matches your notes to <em>existing</em> action items, suggests edits, and extracts new lines. You review in a popup before applying.</p>
+          <button type="button" class="tb-btn" onclick="submitInboxAnalyzeAndUpdate()" style="font-size:13.5px;background:linear-gradient(135deg,#7c3aed 0%,#6366f1 100%);border:none;color:#fff;align-self:flex-start;font-weight:600" title="Requires OpenAI key — matches existing items + extracts new lines; review then apply">AI-assisted Add Action Items</button>
+        </div>
+      </div>
     </div>
   </div>
   ${waiting.length?`<div style="font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px">Needs Attention <span class="badge hot">${waiting.length}</span></div>`+waiting.map(d=>{
@@ -6503,19 +7948,44 @@ function rExtract(c){
   c.innerHTML=`
   <div class="card" style="margin-bottom:20px;padding:24px">
     <h4 style="font-size:17px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px">Paste Anything ${OPENAI_KEY?'<span class="pill pill-g" style="font-size:10px;font-weight:500;vertical-align:middle">AI Powered</span>':''}</h4>
-    <p style="font-size:13.5px;color:var(--muted);line-height:1.65;margin-bottom:12px">Drop in meeting notes, an email thread, a Teams chat, a status update — anything.</p>
+    <p style="font-size:13.5px;color:var(--muted);line-height:1.65;margin-bottom:14px">Drop in meeting notes, an email thread, a Teams chat, or a bullet list — then run one of the tools below. <strong style="color:var(--fg)">Your main task list does not change</strong> until you promote items from <strong>Needs Attention</strong>.</p>
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-bottom:16px;padding:12px 14px;border-radius:var(--r-sm);background:linear-gradient(135deg,rgba(99,102,241,.07),rgba(124,58,237,.05));border:1px solid var(--border-lt);font-size:12px;color:var(--text)">
+      <span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:var(--fg)"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px">1</span> Name &amp; paste</span>
+      <span style="color:var(--light)">→</span>
+      <span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:var(--fg)"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px">2</span> Run a tool</span>
+      <span style="color:var(--light)">→</span>
+      <span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:var(--fg)"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px">3</span> Create tasks from triage</span>
+    </div>
     <div style="padding:12px 14px;margin-bottom:14px;border-radius:var(--r-sm);background:var(--bg-subtle);border:1px solid var(--border);font-size:12.5px;color:var(--text);line-height:1.55">
-      <strong style="color:var(--fg)">Analyze &amp; update</strong>
-      <p style="margin:8px 0 0;font-size:12.5px">One button runs AI on your paste: suggested edits to <em>existing</em> action items plus <em>new</em> follow-ups saved to the inbox after you review.</p>
-      ${OPENAI_KEY?'':'<p style="margin:10px 0 0;font-size:12px;color:var(--muted)">Set an OpenAI key to enable this.</p>'}
+      <strong style="color:var(--fg)">Which option should I use?</strong>
+      <ul style="margin:8px 0 0;padding-left:18px;font-size:12.5px;line-height:1.55">
+        <li style="margin-bottom:6px"><strong>Quick add — new items only</strong> — fastest when you only want <em>new</em> lines turned into draft action items (bullets, chat dump). Does <em>not</em> match or update tasks you already track.</li>
+        <li><strong>AI-assisted Add Action Items</strong> — best for real meeting notes: proposes updates to <em>existing</em> action items and pulls out new ones; you confirm before anything saves.</li>
+      </ul>
+      <p style="margin:10px 0 0;font-size:12px;color:var(--muted)">Drafts always appear under <strong>Needs Attention</strong> until you create tasks. ${OPENAI_KEY?'':'Add an OpenAI API key in the sidebar for the full AI-assisted path and smarter quick add.'}</p>
+    </div>
+    <div style="padding:10px 14px;margin-bottom:14px;border-radius:var(--r-sm);background:#eff6ff;border:1px solid #3b82f6;font-size:12.5px;color:#1e40af">
+      <strong style="color:#1d4ed8">&#128193; Need to upload documents?</strong> Visit the <a href="https://digitalrealtyeur.sharepoint.com/sites/AITransformationProgram/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FAITransformationProgram%2FShared%20Documents%2FGeneral&viewid=be024a85%2D931b%2D4a01%2Dacac%2D217f020d89c0" target="_blank" style="color:#2563eb;text-decoration:underline;font-weight:600">AI Transformation Program SharePoint folder</a>
     </div>
     <div class="fg-row">
       <div class="fg"><label>Title</label><input id="in-title" placeholder="e.g. Weekly sync notes, Forrest's email about licensing"></div>
       <div class="fg"><label>Source Type</label><select id="in-src" onchange="inboxSrc=this.value"><option value="meeting-notes">Meeting Notes</option><option value="email">Email Thread</option><option value="teams-chat">Teams Chat</option><option value="status-update">Status Update</option><option value="presentation">Presentation</option><option value="other">Other</option></select></div>
     </div>
-    <div class="fg"><label>Content</label><textarea id="in-content" style="min-height:160px" placeholder="Paste the full text here — meeting notes, email chain, chat thread, anything..."></textarea></div>
-    <div style="display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px">
-      <button type="button" class="tb-btn" onclick="submitInboxAnalyzeAndUpdate()" style="font-size:13.5px;background:linear-gradient(135deg,#7c3aed 0%,#6366f1 100%);border:none;color:#fff" title="Requires OpenAI key — matches existing items + extracts new lines; review then Apply">Analyze &amp; update</button>
+    <div class="fg" style="padding:14px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--bg-subtle);margin-bottom:4px"><label>Content</label><textarea id="in-content" style="min-height:180px;margin-top:6px;border:1px solid var(--border);border-radius:var(--r-xs);padding:10px;font-size:13px;line-height:1.5;width:100%;box-sizing:border-box;background:var(--bg-card)" placeholder="Paste anything: bullet list (one action per line), email thread, chat export, or meeting notes..."></textarea></div>
+    <div style="margin-top:16px;padding:16px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--bg-subtle)">
+      <div style="font-size:12.5px;font-weight:800;color:var(--fg);margin-bottom:12px;letter-spacing:.02em;text-transform:uppercase">Step 2 — Choose one</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;align-items:stretch">
+        <div style="padding:14px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--bg-card);display:flex;flex-direction:column">
+          <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--fg)">Quick add</div>
+          <p style="font-size:12px;color:var(--muted);margin:0 0 12px;line-height:1.5;flex:1">New lines only. ${OPENAI_KEY?'Uses AI when your key is set; otherwise simple line detection.':'Uses simple line detection until you add an API key.'}</p>
+          <button type="button" class="tb-btn" onclick="submitInbox()" style="font-size:13px;background:#ecfdf5;border:1px solid #10b981;color:#047857;align-self:flex-start" title="Pull out new action items only; uses AI when key is set, else line patterns">Quick add — new items only</button>
+        </div>
+        <div style="padding:14px;border-radius:var(--r-sm);border:2px solid #a78bfa;background:linear-gradient(180deg,rgba(99,102,241,.08),var(--bg-card));display:flex;flex-direction:column;box-shadow:0 1px 8px rgba(99,102,241,.12)">
+          <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--fg);display:flex;align-items:center;gap:8px;flex-wrap:wrap">Full assist ${OPENAI_KEY?'':'<span class="pill pill-m" style="font-size:9px;font-weight:600">OpenAI key required</span>'}</div>
+          <p style="font-size:12px;color:var(--muted);margin:0 0 12px;line-height:1.5;flex:1">Matches your notes to <em>existing</em> action items, suggests edits, and extracts new lines. You review in a popup before applying.</p>
+          <button type="button" class="tb-btn" onclick="submitInboxAnalyzeAndUpdate()" style="font-size:13.5px;background:linear-gradient(135deg,#7c3aed 0%,#6366f1 100%);border:none;color:#fff;align-self:flex-start;font-weight:600" title="Requires OpenAI key — matches existing items + extracts new lines; review then apply">AI-assisted Add Action Items</button>
+        </div>
+      </div>
     </div>
   </div>
   ${waiting.length?`<div style="font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px">Needs Attention <span class="badge hot">${waiting.length}</span></div>`+waiting.map(d=>{
@@ -6559,9 +8029,23 @@ function rExtract(c){
 }
 
 function extractFromText(text){
-  const tasks=[],people=new Set();let dateFound='';
+  const tasks=[],seen=new Set(),people=new Set();let dateFound='';
+  function pushTask(t){
+    const x=String(t||'').trim();
+    if(x.length<2)return;
+    const k=x.toLowerCase();
+    if(seen.has(k))return;
+    seen.add(k);
+    tasks.push(x);
+  }
   text.split('\n').forEach(l=>{
-    if(/^(action|todo|task|follow.?up|next.?step|deliver|ai:|action item)\s*[:—\-]/i.test(l.trim()))tasks.push(l.trim().replace(/^[^:—\-]*[:—\-]\s*/,''));
+    const trim=l.trim();
+    if(!trim)return;
+    if(/^(action|todo|task|follow.?up|next.?step|deliver|ai:|action item)\s*[:—\-]/i.test(trim))pushTask(trim.replace(/^[^:—\-]*[:—\-]\s*/,''));
+    else if(/^[\-\*•]\s+\S/.test(trim)||/^\d+[\.)]\s+\S/.test(trim)){
+      const stripped=trim.replace(/^[\-\*•]\s+/,'').replace(/^\d+[\.)]\s+/,'').trim();
+      if(stripped.length>2&&!/^_+$/.test(stripped))pushTask(stripped);
+    }
     const names=l.match(/@(\w+(?:\s\w+)?)/g);if(names)names.forEach(n=>people.add(n.replace('@','')));
     if(!dateFound){const dm=l.match(/(\d{4}-\d{2}-\d{2})/);if(dm)dateFound=dm[1]}
   });
@@ -6825,7 +8309,7 @@ function openUnifiedAnalyzeModal(parsed,notesPreview,fullText,docTitle){
       <tbody>${newRowsHtml}</tbody>
     </table>
     </div>`:`<p style="font-size:12.5px;color:var(--muted);margin:0"><strong>New tasks:</strong> none extracted — paste may only reference existing work.</p>`;
-  openModal(`<div class="m-hd"><h3>Analyze &amp; update</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  openModal(`<div class="m-hd"><h3>Review AI suggestions</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
   <div class="m-bd" style="max-height:72vh;overflow:auto">
     <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px">One pass from your paste: apply checked updates to tracked items and/or add checked new lines to the inbox. Nothing is saved until you confirm.</p>
     ${updatesBlock}
@@ -7167,6 +8651,202 @@ function buildVelocityMetricsHtml(){
   </div>`;
 }
 
+/** Tasks excluded from Program Metrics reports when tied to CDO portfolio execution (same scope as Program vs CDO lists). */
+function isPortfolioLinkedProgramTask(t){
+  return !!(t&&(String(t.portfolioItemId||'').trim()||String(t.deliverableId||'').trim()));
+}
+function programScopeTasksForReports(){
+  return (D.tasks||[]).filter(t=>!isPortfolioLinkedProgramTask(t));
+}
+/** Workstreams-per-lead + open action items by owner (Program Metrics only). Tasks chart uses programScopeTasksForReports(). */
+function buildWorkloadOwnershipChartsHtml(){
+  const allWs=D.workstreams||[];
+  const closedStatuses=['closed','value-achieved','deferred-rejected'];
+  const openWs=allWs.filter(w=>!closedStatuses.includes(normalizeWsStatus(w.status)));
+  const wsLeadCounts={};
+  openWs.forEach(w=>{
+    const lead=w.primaryOwner||w.owner;
+    if(!lead||String(lead).includes('/'))return;
+    wsLeadCounts[lead]=(wsLeadCounts[lead]||0)+1;
+  });
+  const wsLeadList=Object.entries(wsLeadCounts).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const taskOwnerCounts={};
+  programScopeTasksForReports().filter(t=>t.status!=='done'&&t.owner&&!String(t.owner).includes('/')).forEach(t=>{
+    taskOwnerCounts[t.owner]=(taskOwnerCounts[t.owner]||0)+1;
+  });
+  const taskOwnerList=Object.entries(taskOwnerCounts).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const maxWsLead=Math.max(1,...wsLeadList.map(([,c])=>c));
+  const wsBarChart=wsLeadList.length?wsLeadList.map(([name,c])=>{
+    const pct=Math.round(c/maxWsLead*100);
+    const short=name.includes(' ')?name.split(' ')[0]:name;
+    return`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:11px">
+      <div style="width:76px;flex-shrink:0;font-weight:600;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(name)}">${esc(short)}</div>
+      <div style="flex:1;height:16px;background:rgba(255,255,255,.65);border-radius:999px;overflow:hidden;border:1px solid #ddd6fe">
+        <div style="width:${pct}%;min-width:${c?4:0}px;height:100%;background:linear-gradient(90deg,#a78bfa,#6d28d9);border-radius:999px;transition:width .4s ease"></div>
+      </div>
+      <span style="width:22px;text-align:right;font-weight:800;color:#5b21b6;flex-shrink:0;font-size:11px">${c}</span>
+    </div>`;
+  }).join(''):'<div style="padding:12px;color:#64748b;font-size:12px;border:1px dashed #c4b5fd;border-radius:10px">No lead assignments.</div>';
+  const maxTaskOwn=Math.max(1,...taskOwnerList.map(([,c])=>c));
+  const chartH=100;
+  const taskColChart=taskOwnerList.length?`<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:2px;width:100%;height:${chartH+28}px;padding:4px 2px 0;border:1px solid #5eead4;border-radius:10px;background:linear-gradient(180deg,#f0fdfa,#ecfdf5);box-sizing:border-box">
+    ${taskOwnerList.map(([name,c])=>{
+      const barH=Math.max(c?4:0,Math.round(c/maxTaskOwn*chartH));
+      const short=name.includes(' ')?name.split(' ')[0]:name.slice(0,7);
+      return`<div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">
+        <span style="font-size:10px;font-weight:800;color:#0f7669;margin-bottom:2px">${c}</span>
+        <div style="width:min(100%,28px);height:${barH}px;background:linear-gradient(180deg,#2dd4bf,#0f7669);border-radius:6px 6px 2px 2px;box-shadow:0 1px 4px rgba(15,118,110,.28)"></div>
+        <div style="font-size:9px;font-weight:600;color:#0f172a;margin-top:4px;text-align:center;line-height:1.1;max-height:28px;overflow:hidden" title="${esc(name)}">${esc(short)}</div>
+      </div>`;
+    }).join('')}
+  </div>`:'<div style="padding:12px;color:#64748b;font-size:12px;border:1px dashed #5eead4;border-radius:10px">No open owners.</div>';
+  return`
+  <div class="card" style="padding:20px;margin-bottom:24px;border:1px solid #c4b5fd;background:linear-gradient(145deg,#faf5ff 0%,var(--bg-card) 100%)">
+    <h3 style="font-size:15px;font-weight:700;color:var(--fg);margin:0 0 6px">Workload & ownership</h3>
+    <p style="font-size:12px;color:var(--muted);margin:0 0 14px;line-height:1.45">Open action items by owner uses <strong>Program</strong> scope (same exclusions as Program action item reports). Workstreams count all non-closed workstreams.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;align-items:stretch;box-sizing:border-box">
+      <div style="padding:10px 12px;border-radius:12px;border:1px solid #ddd6fe;background:linear-gradient(180deg,#faf5ff,#f3e8ff);min-width:0;box-sizing:border-box">
+        <div style="margin-bottom:6px">
+          <span style="font-size:10px;font-weight:700;color:#5b21b6;text-transform:uppercase;letter-spacing:.04em;line-height:1.2">Workstreams per team member</span>
+        </div>
+        <div style="font-size:10px;color:#64748b;margin-bottom:6px">Lead only · top ${wsLeadList.length||0}</div>
+        ${wsBarChart}
+      </div>
+      <div style="padding:10px 12px;border-radius:12px;border:1px solid #99f6e4;background:linear-gradient(180deg,#f0fdfa,#ecfdf5);min-width:0;box-sizing:border-box">
+        <div style="margin-bottom:6px">
+          <span style="font-size:10px;font-weight:700;color:#0f7669;text-transform:uppercase;letter-spacing:.04em;line-height:1.2">Open action items by owner</span>
+        </div>
+        <div style="font-size:10px;color:#64748b;margin-bottom:6px">Column chart · top ${taskOwnerList.length||0}</div>
+        ${taskColChart}
+      </div>
+    </div>
+  </div>`;
+}
+function workstreamNameById(wid){
+  if(!wid)return'—';
+  const w=(D.workstreams||[]).find(x=>x.id===wid);
+  return w?(w.name||wid):String(wid);
+}
+function taskDueYmd(t){
+  const d=(t.due||'').trim();
+  return d.length>=10?d.slice(0,10):'';
+}
+function milestoneDueYmd(m){
+  const d=(m.targetDate||m.date||m.due||'').toString().trim();
+  return d.length>=10?d.slice(0,10):'';
+}
+function milestoneIsOpenForReport(m){
+  const s=(m.status||'').toLowerCase();
+  return s!=='done'&&s!=='cancelled';
+}
+/** Monday–Sunday (local) ISO week containing ymd. */
+function isoWeekRangeContaining(ymd){
+  const ref=new Date(String(ymd)+'T12:00:00');
+  const day=ref.getDay();
+  const diff=day===0?-6:1-day;
+  const mon=new Date(ref);
+  mon.setDate(ref.getDate()+diff);
+  const sun=new Date(mon);
+  sun.setDate(mon.getDate()+6);
+  return{start:mon.toISOString().slice(0,10),end:sun.toISOString().slice(0,10)};
+}
+function buildProgramMetricsReportsPanelHtml(){
+  const asOf=today();
+  const wk=isoWeekRangeContaining(asOf);
+  const endTwo=addDaysIso(asOf,14);
+  return`
+  <div class="card" style="padding:20px;margin-bottom:24px;border:1px solid #93c5fd;background:linear-gradient(145deg,#eff6ff 0%,var(--bg-card) 100%)">
+    <h3 style="font-size:15px;font-weight:700;color:var(--fg);margin:0 0 6px">Program action item reports</h3>
+    <p style="font-size:12px;color:var(--muted);margin:0 0 14px;line-height:1.45">Lists use <strong>Program</strong> action items only (items linked to a CDO portfolio deliverable are excluded). <strong>Completed this week</strong> uses the task’s last <strong>updated</strong> date when status is Done.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+      <button type="button" class="mbtn mb-save" style="font-size:13px" onclick="openProgramMetricsReportModal('openDue')">Open · due on or before today</button>
+      <button type="button" class="mbtn mb-save" style="font-size:13px" onclick="openProgramMetricsReportModal('closedWeek')">Closed this week</button>
+      <button type="button" class="mbtn mb-save" style="font-size:13px" onclick="openProgramMetricsReportModal('dueTwoWeeks')">Due in the next two weeks</button>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin:12px 0 0;line-height:1.4">Reference: <strong>${esc(fmtDate(asOf))}</strong> · This ISO week: ${esc(fmtDate(wk.start))}–${esc(fmtDate(wk.end))} · Next 14-day window ends <strong>${esc(fmtDate(endTwo))}</strong></p>
+  </div>`;
+}
+function openProgramMetricsReportModal(kind){
+  const asOf=today();
+  const wk=isoWeekRangeContaining(asOf);
+  let title='';
+  let sub='';
+  let headers=['Item','Due','Owner','Parent'];
+  let rows=[];
+  const ts=programScopeTasksForReports();
+  if(kind==='openDue'){
+    title='Open · due on or before today';
+    sub='Action items and milestones (not Done) with due date on or before '+fmtDate(asOf)+'.';
+    const out=[];
+    ts.forEach(t=>{
+      if(normalizeTaskStatus(t.status)==='done')return;
+      const d=taskDueYmd(t);
+      if(!d||d>asOf)return;
+      out.push({kind:'task',id:t.id,cells:[t.title||'',fmtDate(t.due)||d,t.owner||'—',workstreamNameById(t.workstream)]});
+    });
+    (D.milestones||[]).forEach(m=>{
+      if(!milestoneIsOpenForReport(m))return;
+      const d=milestoneDueYmd(m);
+      if(!d||d>asOf)return;
+      out.push({kind:'milestone',id:m.id,cells:[m.title||'',fmtDate(d),m.owner||'—',workstreamNameById(m.workstream)]});
+    });
+    out.sort((a,b)=>String(a.cells[1]||'').localeCompare(String(b.cells[1]||''))||String(a.cells[0]||'').localeCompare(String(b.cells[0]||'')));
+    rows=out;
+  }else if(kind==='closedWeek'){
+    title='Completed this week';
+    sub='Tasks with status Done whose completion/update day is between '+fmtDate(wk.start)+' and '+fmtDate(wk.end)+' (from last updated timestamp).';
+    headers=['Item','Owner','Parent','Closed'];
+    rows=ts.filter(t=>normalizeTaskStatus(t.status)==='done').map(t=>{
+      const k=taskCompletionDayKey(t);
+      if(!k||k<wk.start||k>wk.end)return null;
+      return{kind:'task',id:t.id,cells:[t.title||'',t.owner||'—',workstreamNameById(t.workstream),fmtDate(k)]};
+    }).filter(Boolean).sort((a,b)=>String(a.cells[3]||'').localeCompare(String(b.cells[3]||''))||String(a.cells[0]||'').localeCompare(String(b.cells[0]||'')));
+  }else if(kind==='dueTwoWeeks'){
+    title='Open · due in the next two weeks';
+    const end=addDaysIso(asOf,14);
+    sub='Open items with due date after today through '+fmtDate(end)+' inclusive.';
+    const out=[];
+    ts.forEach(t=>{
+      if(normalizeTaskStatus(t.status)==='done')return;
+      const d=taskDueYmd(t);
+      if(!d||d<=asOf||d>end)return;
+      out.push({kind:'task',id:t.id,cells:[t.title||'',fmtDate(t.due)||d,t.owner||'—',workstreamNameById(t.workstream)]});
+    });
+    (D.milestones||[]).forEach(m=>{
+      if(!milestoneIsOpenForReport(m))return;
+      const d=milestoneDueYmd(m);
+      if(!d||d<=asOf||d>end)return;
+      out.push({kind:'milestone',id:m.id,cells:[m.title||'',fmtDate(d),m.owner||'—',workstreamNameById(m.workstream)]});
+    });
+    out.sort((a,b)=>String(a.cells[1]||'').localeCompare(String(b.cells[1]||''))||String(a.cells[0]||'').localeCompare(String(b.cells[0]||'')));
+    rows=out;
+  }else{return;}
+  const th=headers.map(h=>'<th style="text-align:left;padding:8px 10px;border-bottom:2px solid var(--border);font-size:11px;text-transform:uppercase;color:var(--muted)">'+esc(h)+'</th>').join('');
+  const tr=rows.map(r=>{
+    const oc=r.kind==='milestone'
+      ?"closeModal();setTimeout(function(){openMilestoneModal('"+r.id+"')},80)"
+      :"closeModal();setTimeout(function(){openTaskModal('"+r.id+"')},80)";
+    return'<tr style="cursor:pointer" onclick="'+oc+'"><td style="padding:8px 10px;border-bottom:1px solid var(--border-lt);font-size:13px">'+esc(r.cells[0])+'</td>'
+      +(kind==='closedWeek'
+        ?'<td style="padding:8px 10px;border-bottom:1px solid var(--border-lt);font-size:12px">'+esc(r.cells[1])+'</td><td style="padding:8px 10px;border-bottom:1px solid var(--border-lt);font-size:12px;color:var(--muted)">'+esc(r.cells[2])+'</td><td style="padding:8px 10px;border-bottom:1px solid var(--border-lt);font-size:12px">'+esc(r.cells[3])+'</td>'
+        :'<td style="padding:8px 10px;border-bottom:1px solid var(--border-lt);font-size:12px">'+esc(r.cells[1])+'</td><td style="padding:8px 10px;border-bottom:1px solid var(--border-lt);font-size:12px">'+esc(r.cells[2])+'</td><td style="padding:8px 10px;border-bottom:1px solid var(--border-lt);font-size:12px;color:var(--muted)">'+esc(r.cells[3])+'</td>')
+      +'</tr>';
+  }).join('');
+  openModal(`<div class="m-hd"><h3>${esc(title)}</h3><button class="m-close" onclick="closeModal()">&times;</button></div>
+  <div class="m-bd" style="max-height:70vh;overflow:auto">
+    <p style="font-size:12px;color:var(--muted);margin:0 0 12px;line-height:1.45">${esc(sub)}</p>
+    <p style="font-size:12px;font-weight:600;margin:0 0 8px">${rows.length} row(s)</p>
+    <div style="overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-sm)">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr>${th}</tr></thead>
+        <tbody>${tr||'<tr><td colspan="4" style="padding:16px;color:var(--muted)">No rows match.</td></tr>'}</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="m-ft"><button type="button" class="mbtn mb-cancel" onclick="closeModal()">Close</button></div>`);
+  document.getElementById('modal').classList.add('modal-wide');
+}
+
 function rWorkMetrics(c){
   const allTasks=(D.tasks||[]);
   c.innerHTML=`
@@ -7174,6 +8854,8 @@ function rWorkMetrics(c){
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
       <h1 data-app-help="Daily update streaks, velocity, and orphaned tasks that need a parent workstream." style="font-size:24px;font-weight:600;color:var(--fg);margin:0">Metrics</h1>
     </div>
+    ${ATLAS_AREA==='program'?buildProgramMetricsReportsPanelHtml():''}
+    ${ATLAS_AREA==='program'?buildWorkloadOwnershipChartsHtml():''}
     ${buildDailyUpdatesTrackerHtml()}
     ${buildVelocityMetricsHtml()}
     <p style="font-size:12px;color:var(--muted);margin:-8px 0 20px;line-height:1.45">If action items exist without a parent workstream, they appear under <strong>Data cleanup</strong> below.</p>
@@ -7239,6 +8921,12 @@ function openPersonModal(id){
         <span style="color:var(--muted);font-size:12.5px">— use “Stakeholders only” on People to filter the list</span>
       </label>
     </div>
+    <div style="padding:10px 14px;margin:8px 0 12px;border-radius:var(--r-sm);background:var(--bg-subtle);border:1px solid var(--border)">
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px">
+        <input type="checkbox" id="p-portfolio-eligible" ${p?.portfolioEligible!==false?'checked':''} style="margin-top:3px;width:17px;height:17px">
+        <span><strong>Portfolio-eligible</strong><span style="color:var(--muted);font-size:12px;display:block;margin-top:2px">Uncheck to hide from CDO lead dropdowns (historical assignments on deliverables stay visible).</span></span>
+      </label>
+    </div>
     <div class="fg"><label>Notes / Context</label><textarea id="p-notes" style="min-height:80px">${p?esc(p.notes):''}</textarea></div>
     ${p&&p.username&&p.pinHash?'<div style="margin-top:4px;padding:10px 14px;background:var(--bg-subtle);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:space-between"><span style="font-size:12.5px;color:var(--muted)"><span style="color:var(--green)">&#9679;</span> Account active &middot; Username: <strong>'+esc(p.username)+'</strong></span><button style="font-size:12px;color:var(--red);background:none;border:none;cursor:pointer;font-weight:600" onclick="resetPersonPin(\''+p.id+'\')">Reset PIN</button></div>':(p&&p.username&&!p.pinHash?'<div style="margin-top:4px;padding:10px 14px;background:var(--amber-lt);border-radius:var(--r-sm);font-size:12.5px;color:var(--amber)">Username set but no PIN yet — user needs to register.</div>':'')}
   </div>
@@ -7262,6 +8950,7 @@ function savePerson(id){
   if(!p){p={id:uid(),addedBy:ME};D.people.push(p)}
   p.name=name;p.username=uname||p.username||'';p.group=document.getElementById('p-group').value;
   p.isStakeholder=document.getElementById('p-stakeholder').checked;
+  p.portfolioEligible=document.getElementById('p-portfolio-eligible')?document.getElementById('p-portfolio-eligible').checked:true;
   p.notes=document.getElementById('p-notes').value;
   p.updatedBy=ME;p.updatedAt=new Date().toISOString();
   save();log((isNew?'Added':'Updated')+' person: '+esc(name));
