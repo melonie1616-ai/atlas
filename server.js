@@ -1,4 +1,9 @@
-require('dotenv').config();
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+    console.log("Running locally: Loading variables from .env file");
+} else {
+    console.log("Running in Azure: Loading variables from App Settings");
+}
 const express = require('express');
 const { CosmosClient } = require('@azure/cosmos');
 const path = require('path');
