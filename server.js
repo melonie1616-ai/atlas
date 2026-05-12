@@ -10,7 +10,29 @@ const path = require('path');
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
-app.use(express.static('public'));
+
+/** Azure / PM2 cwd may not be repo root — always resolve static assets from this file's directory */
+const publicDir = path.join(__dirname, 'public');
+
+function sendPublicFile(res, fileName) {
+  const fp = path.join(publicDir, fileName);
+  res.sendFile(fp, (err) => {
+    if (err) {
+      console.error(`[static] Missing ${fileName}:`, err.message);
+      res
+        .status(404)
+        .type('text/plain')
+        .send(
+          `Not found: ${fileName}. Ensure "public/${fileName}" is deployed with the app (check GitHub main and the last successful deploy).`
+        );
+    }
+  });
+}
+
+app.get('/atlas.html', (req, res) => sendPublicFile(res, 'atlas.html'));
+app.get('/atlas-portfolio-unified.html', (req, res) => sendPublicFile(res, 'atlas-portfolio-unified.html'));
+
+app.use(express.static(publicDir));
 
 console.log("--- Starting Server ---");
 console.log("Checking environment variables...");
