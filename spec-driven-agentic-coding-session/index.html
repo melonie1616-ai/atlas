@@ -421,22 +421,26 @@
   .endcard .builders-callout strong{color:var(--ink);font-weight:800}
 
   .teams-poll-banner{
-    position:fixed;bottom:72px;left:50%;transform:translateX(-50%);
-    z-index:150;width:min(560px,calc(100vw - 32px));
+    position:fixed;bottom:76px;right:16px;left:auto;transform:none;
+    z-index:150;width:min(268px,calc(100vw - 120px));
     background:linear-gradient(135deg,#1e3a5f,#312e81);
-    border-radius:16px;padding:14px 18px 12px;
-    box-shadow:0 12px 40px rgba(15,23,42,.35);color:#fff;
+    border-radius:12px;padding:8px 10px 6px;
+    box-shadow:0 8px 28px rgba(15,23,42,.35);color:#fff;
   }
   .teams-poll-banner[hidden]{display:none!important}
   .teams-poll-inner{
-    display:flex;flex-direction:column;align-items:stretch;gap:12px;
-    font-size:clamp(1rem,1.9vw,1.18rem);font-weight:700;text-align:left;
+    display:flex;flex-direction:column;align-items:stretch;gap:6px;
+    font-size:.86rem;font-weight:700;text-align:left;
   }
-  .teams-poll-music-row{display:flex;gap:8px;width:100%}
+  .teams-poll-top{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    min-height:0;
+  }
+  .teams-poll-music-row{display:flex;gap:6px;width:100%}
   .teams-poll-music-btn{
     flex:1;pointer-events:auto;font:inherit;
-    font-size:clamp(.82rem,1.55vw,.93rem);font-weight:700;
-    padding:8px 10px;border-radius:9px;border:1px solid rgba(255,255,255,.48);
+    font-size:.78rem;font-weight:700;
+    padding:5px 8px;border-radius:7px;border:1px solid rgba(255,255,255,.48);
     background:rgba(255,255,255,.14);color:#f8fafc;cursor:pointer;
     transition:background .15s,transform .12s;
   }
@@ -445,16 +449,19 @@
   .teams-poll-music-btn[aria-pressed="true"]{
     background:rgba(254,240,138,.28);border-color:rgba(254,240,138,.65);
   }
-  .teams-poll-msg{font-weight:700;font-size:.98rem;flex:1 1 160px}
+  .teams-poll-msg{font-weight:700;font-size:.82rem;line-height:1.25;flex:1 1 auto;min-width:0}
   .teams-poll-start{
-    font:inherit;font-weight:800;font-size:.92rem;padding:9px 18px;border-radius:10px;
-    border:none;cursor:pointer;color:#0f172a;
+    font:inherit;font-weight:800;font-size:.8rem;padding:6px 12px;border-radius:8px;
+    border:none;cursor:pointer;color:#0f172a;width:100%;
     background:linear-gradient(180deg,#67e8f9,#38bdf8);
   }
   .teams-poll-start:disabled{opacity:.45;cursor:not-allowed}
-  .teams-poll-time{font-variant-numeric:tabular-nums;font-weight:800;font-size:1.1rem;min-width:4ch}
+  .teams-poll-time{
+    font-variant-numeric:tabular-nums;font-weight:800;font-size:.95rem;
+    min-width:3.5ch;flex-shrink:0;text-align:right;
+  }
   .teams-poll-time.is-done{color:#cbd5e1}
-  .teams-poll-bar-wrap{margin-top:10px}
+  .teams-poll-bar-wrap{margin-top:4px}
   .teams-poll-bar-wrap[hidden],.teams-poll-time[hidden],.teams-poll-start[hidden]{display:none!important}
   .teams-poll-bar{height:6px;border-radius:999px;background:rgba(255,255,255,.2);overflow:hidden}
   .teams-poll-bar-fill{
@@ -816,13 +823,15 @@
 
 <div id="teamsPollBanner" class="teams-poll-banner" hidden role="region" aria-label="Teams response timer">
   <div class="teams-poll-inner">
-    <span class="teams-poll-msg">Drop your answer in Teams</span>
+    <div class="teams-poll-top">
+      <span class="teams-poll-msg">Drop your answer in Teams</span>
+      <span class="teams-poll-time" id="teamsPollTime" hidden></span>
+    </div>
     <button type="button" class="teams-poll-start" id="teamsPollStartBtn">Start timer (30s)</button>
     <div class="teams-poll-music-row">
       <button type="button" class="teams-poll-music-btn" id="teamsPollMusicPlayBtn" aria-pressed="false" aria-label="Play thinking music">Play music</button>
       <button type="button" class="teams-poll-music-btn" id="teamsPollMusicStopBtn" aria-label="Stop thinking music">Stop music</button>
     </div>
-    <span class="teams-poll-time" id="teamsPollTime" hidden></span>
   </div>
   <div class="teams-poll-bar-wrap" id="teamsPollBarWrap" hidden>
     <div class="teams-poll-bar" aria-hidden="true"><div class="teams-poll-bar-fill" id="teamsPollBarFill"></div></div>
